@@ -83,6 +83,21 @@ export class Party {
     return this.members.filter(m => m.isAlive());
   }
 
+  /**
+   * Enlist a new adventurer (a town recruit). Duplicate names get an
+   * ordinal, same as at draft time. Returns the new member.
+   */
+  addMember(card) {
+    const adventurer = new Adventurer(card);
+    const sameName = this.members.filter(m => m.name.startsWith(card.name)).length;
+    if (sameName > 0) {
+      const ordinals = ['', 'the Second', 'the Third', 'the Fourth', 'the Fifth', 'the Umpteenth'];
+      adventurer.name = `${card.name}, ${ordinals[Math.min(sameName, 5)]}`;
+    }
+    this.members.push(adventurer);
+    return adventurer;
+  }
+
   isAlive() {
     return this.living().length > 0;
   }

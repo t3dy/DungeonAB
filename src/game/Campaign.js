@@ -10,12 +10,23 @@
 
 import { Party } from '../agents/Party.js';
 import { Simulator } from '../sim/Simulator.js';
+import { SeededRandom } from '../draft/PackDraft.js';
+import { CHARACTER_CARDS } from '../game/Cards.js';
 
 export const TOWN_PRICES = {
   healPerHp: 2,     // gold per missing health point
   potion: 15,       // a healing draught, corked and honest
   piousDiscount: 0.75, // temples like the Devout
+  forge: 20,        // the smith's fee, before depth
+  forgeMod: { name: "smith's edge", attack: 2 }, // what sharpening buys
 };
+
+/** The gold a recruit asks for, by their worth and how deep you are. */
+export function hireCost(card, depth = 1) {
+  const s = card.stats;
+  const worth = s.health + s.attack * 2 + s.defense * 2 + s.mind;
+  return Math.round((12 + worth) * (1 + 0.15 * (depth - 1)));
+}
 
 export class Campaign {
   constructor(draftPool, { seed = 'campaign', difficulty = 'medium' } = {}) {
@@ -88,6 +99,70 @@ export class Campaign {
     this.party.gold -= TOWN_PRICES.potion;
     this.party.potions.push({ kind: 'healing-draught', heal: 6 });
     return true;
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* The hiring board — replace the fallen, or just grow bolder        */
+  /* ---------------------------------------------------------------- */
+
+  /**
+   * Two adventurers looking for work, priced for the current depth.
+   * Deterministic per (seed, depth) and stable across re-renders, so
+   * the board doesn't reshuffle every time the town screen redraws.
+   */
+  recruitOffers() {
+    if (this._recruitDepth !== this.depth) {
+      const rng = new SeededRandom(`${this.seed}-hire-${this.depth}`);
+      const shuffled = rng.shuffle(CHARACTER_CARDS);
+      this._recruitDepth = this.depth;
+      this._recruitOffers = shuffled.slice(0, 2).map(card => ({
+        card,
+        cost: hireCost(card, this.depth),
+      }));
+    }
+    return this._recruitOffers.filter(o => o); // holes left by hires
+  }
+
+  /**
+   * Hire a candidate from the board. Returns the new member, or null
+   * if unaffordable / not on offer.
+   */
+  recruit(cardId) {
+    const offers = this.recruitOffers();
+    const idx = offers.findIndex(o => o && o.card.id === cardId);
+    if (idx === -1) return null;
+    const { card, cost } = offers[idx];
+    if (this.party.gold < cost) return null;
+    this.party.gold -= cost;
+    const member = this.party.addMember(card);
+    // Remove from the board (mark the slot spent)
+    const realIdx = this._recruitOffers.findIndex(o => o && o.card.id === cardId);
+    this._recruitOffers[realIdx] = null;
+    return member;
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* The blacksmith — sharpen a weapon (safe per-adventurer mod)       */
+  /* ---------------------------------------------------------------- */
+
+  forgeCost() {
+    return TOWN_PRICES.forge + (this.depth - 1) * 4;
+  }
+
+  /**
+   * Sharpen the hardest hitter's weapon: a permanent +attack mod that
+   * rides on the adventurer (never touches shared card definitions).
+   * Returns { target, mod } or null if unaffordable / no one to arm.
+   */
+  forge() {
+    const cost = this.forgeCost();
+    const living = this.party.living();
+    if (living.length === 0 || this.party.gold < cost) return null;
+    this.party.gold -= cost;
+    const target = living.reduce((a, b) => (a.attack >= b.attack ? a : b));
+    const mod = { ...TOWN_PRICES.forgeMod };
+    target.addWeaponMod(mod);
+    return { target: target.name, mod };
   }
 
   /**

@@ -6,7 +6,7 @@
  */
 
 import { strict as assert } from 'assert';
-import { Campaign, TOWN_PRICES } from '../src/game/Campaign.js';
+import { Campaign, TOWN_PRICES, hireCost } from '../src/game/Campaign.js';
 import { generateDungeon, ROOM_TYPES } from '../src/world/DungeonGen.js';
 import { CHARACTER_CARDS, EQUIPMENT_CARDS, SPELL_CARDS, PERSONALITY_CARDS, CLASSES } from '../src/game/Cards.js';
 import { composeTownInterlude } from '../src/narrative/Narrator.js';
@@ -140,6 +140,97 @@ describe('The town between', () => {
     const text = composeTownInterlude(campaign.party, campaign.depth);
     assert.ok(text.length > 80);
     assert.ok(text.includes(`depth ${campaign.depth + 1}`), 'rumor knows what waits below');
+  });
+});
+
+describe('The hiring board', () => {
+  test('the board offers two candidates, priced and deterministic', () => {
+    const a = new Campaign([fighter], { seed: 'hire-board' });
+    const b = new Campaign([fighter], { seed: 'hire-board' });
+    a.nextDelve(); b.nextDelve();
+    const offersA = a.recruitOffers();
+    const offersB = b.recruitOffers();
+    assert.equal(offersA.length, 2);
+    assert.deepEqual(offersA.map(o => o.card.id), offersB.map(o => o.card.id), 'same seed, same board');
+    for (const o of offersA) assert.ok(o.cost > 0, 'candidates cost gold');
+  });
+
+  test('the board is stable across re-renders but reshuffles by depth', () => {
+    const c = new Campaign([fighter], { seed: 'hire-stable' });
+    c.nextDelve();
+    const first = c.recruitOffers().map(o => o.card.id);
+    assert.deepEqual(c.recruitOffers().map(o => o.card.id), first, 'no reshuffle on redraw');
+    c.nextDelve(); // depth 2
+    c.recruitOffers();            // draws the fresh board for the new depth
+    assert.equal(c._recruitDepth, 2, 'a new depth posts a new board');
+  });
+
+  test('hiring adds the member and deducts the fee', () => {
+    const c = new Campaign([fighter], { seed: 'hire-do' });
+    c.nextDelve();
+    const offer = c.recruitOffers()[0];
+    c.party.gold = offer.cost + 5;
+    const before = c.party.members.length;
+    const member = c.recruit(offer.card.id);
+    assert.ok(member, 'someone was hired');
+    assert.equal(c.party.members.length, before + 1);
+    assert.equal(c.party.gold, 5);
+    assert.ok(!c.recruitOffers().some(o => o.card.id === offer.card.id), 'off the board once hired');
+  });
+
+  test('an empty purse hires no one', () => {
+    const c = new Campaign([fighter], { seed: 'hire-poor' });
+    c.nextDelve();
+    const offer = c.recruitOffers()[0];
+    c.party.gold = offer.cost - 1;
+    assert.equal(c.recruit(offer.card.id), null);
+    assert.equal(c.party.gold, offer.cost - 1, 'the coin stays');
+  });
+
+  test('recruits deeper cost more', () => {
+    assert.ok(hireCost(fighter, 3) > hireCost(fighter, 1), 'depth raises the asking price');
+  });
+});
+
+describe('The blacksmith', () => {
+  test('sharpening adds a permanent +attack mod to the best striker', () => {
+    const c = new Campaign([fighter, wizard], { seed: 'forge-do' });
+    c.nextDelve();
+    c.party.gold = 100;
+    const striker = c.party.living().reduce((a, b) => (a.attack >= b.attack ? a : b));
+    const before = striker.attack;
+    const receipt = c.forge();
+    assert.ok(receipt, 'the smith worked');
+    assert.equal(receipt.target, striker.name);
+    assert.equal(striker.attack, before + TOWN_PRICES.forgeMod.attack);
+    assert.ok(striker.weaponMods.some(m => m.name === TOWN_PRICES.forgeMod.name));
+  });
+
+  test('the forge never mutates shared card definitions', () => {
+    // Two campaigns, same drafted fighter card — sharpening one must
+    // not bleed into the other's copy.
+    const a = new Campaign([fighter], { seed: 'forge-iso-a' });
+    const b = new Campaign([fighter], { seed: 'forge-iso-b' });
+    a.nextDelve(); b.nextDelve();
+    a.party.gold = 100;
+    const bBefore = b.party.members[0].attack;
+    a.forge();
+    assert.equal(b.party.members[0].attack, bBefore, 'the other party is untouched');
+  });
+
+  test('an empty purse forges nothing', () => {
+    const c = new Campaign([fighter], { seed: 'forge-poor' });
+    c.nextDelve();
+    c.party.gold = c.forgeCost() - 1;
+    assert.equal(c.forge(), null);
+  });
+
+  test('the smith charges more the deeper you delve', () => {
+    const c = new Campaign([fighter], { seed: 'forge-depth' });
+    c.nextDelve();
+    const shallow = c.forgeCost();
+    c.nextDelve();
+    assert.ok(c.forgeCost() > shallow);
   });
 });
 

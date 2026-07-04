@@ -347,6 +347,41 @@ function showTown(state) {
       gold >= TOWN_PRICES.potion,
       () => { campaign.buyPotion(); render(); },
     );
+
+    // The hiring board — replace the fallen, or just field a bigger band
+    const label = document.createElement('div');
+    label.style.cssText = 'margin-top:1rem;color:#887755;font-size:0.78rem;border-top:1px dashed #3a2f1e;padding-top:0.7rem;';
+    label.textContent = '🪧 The hiring board — adventurers looking for work:';
+    display.appendChild(label);
+
+    for (const offer of campaign.recruitOffers()) {
+      const s = offer.card.stats;
+      btn(
+        `${offer.card.icon} Hire ${offer.card.name} (${offer.card.class}) — ${offer.cost}g`,
+        gold >= offer.cost,
+        () => {
+          const m = campaign.recruit(offer.card.id);
+          if (m) showToast(offer.card.icon, `${m.name} joins the party.`, 'room');
+          render();
+        },
+        `font-size:0.82rem;padding:0.6rem;background:#1a2617;color:#a8d5b0;`,
+      ).title = `❤️${s.health} ⚔️${s.attack} 🛡️${s.defense} 🧠${s.mind}`;
+    }
+
+    // The blacksmith — sharpen the hardest hitter's weapon
+    const forgeCost = campaign.forgeCost();
+    const striker = campaign.party.living().reduce((a, b) => (a.attack >= b.attack ? a : b));
+    btn(
+      `🔨 Sharpen ${striker.name}'s weapon (+${TOWN_PRICES.forgeMod.attack} atk) — ${forgeCost}g`,
+      gold >= forgeCost,
+      () => {
+        const r = campaign.forge();
+        if (r) showToast('🔨', `The smith sets ${TOWN_PRICES.forgeMod.name} to ${r.target}'s blade.`, 'room');
+        render();
+      },
+      `font-size:0.82rem;padding:0.6rem;background:#26200f;color:#e0c88a;`,
+    );
+
     btn(
       `⛏️ Delve Deeper — depth ${campaign.depth + 1} awaits`,
       true,
@@ -365,6 +400,9 @@ function showTown(state) {
       },
       'background:#2a2213;color:#d8a53f;',
     );
+
+    // Keep the side panels (roster, gold) in step with town purchases
+    updateUI(appState.simulator.getState());
   };
 
   render();
