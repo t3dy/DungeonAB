@@ -6,7 +6,9 @@
 import { PackDraft } from './draft/PackDraft.js';
 import { DraftUI } from './ui/DraftUI.js';
 import { DungeonRenderer } from './ui/DungeonRenderer.js';
+import { IsoDungeonRenderer } from './ui/IsoDungeonRenderer.js';
 import { Simulator } from './sim/Simulator.js';
+import { progression } from './game/Progression.js';
 
 const appState = {
   draft: null,
@@ -53,8 +55,17 @@ function startDelve({ pool, difficulty, seed }) {
   document.getElementById('ui-container').style.display = 'flex';
 
   appState.simulator = new Simulator(pool, seed, difficulty);
+  appState.difficulty = difficulty;
+  appState.runRecorded = false;
+
+  // Torchlit isometric 3D, with the 2D map as a WebGL fallback
   if (!appState.renderer) {
-    appState.renderer = new DungeonRenderer('game-canvas');
+    try {
+      appState.renderer = new IsoDungeonRenderer('game-canvas');
+    } catch (e) {
+      console.warn('WebGL unavailable, using 2D map renderer:', e);
+      appState.renderer = new DungeonRenderer('game-canvas');
+    }
   }
 
   resetStory();
@@ -180,6 +191,16 @@ function endGame(state) {
   document.getElementById('step-btn').disabled = true;
 
   const result = appState.simulator.getRunResult();
+
+  // Record the run once
+  if (!appState.runRecorded) {
+    appState.runRecorded = true;
+    progression.recordRun(appState.difficulty, result);
+  }
+  const best = progression.bestScores[appState.difficulty] || 0;
+  const isNewBest = result.score >= best && result.score > 0;
+  const stats = progression.getStats();
+
   const display = document.getElementById('gameover-display');
 
   display.innerHTML = `
@@ -190,11 +211,13 @@ function endGame(state) {
       ${escapeHtml(result.epitaph || '')}
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem 1.5rem;font-size:0.92rem;">
-      <span style="color:#887755;">Score</span><strong style="color:#d8a53f;text-align:right;">${result.score}</strong>
+      <span style="color:#887755;">Score</span><strong style="color:#d8a53f;text-align:right;">${result.score}${isNewBest ? ' ⭐ New Best!' : ''}</strong>
       <span style="color:#887755;">Gold</span><strong style="text-align:right;">${result.gold}</strong>
       <span style="color:#887755;">Rooms conquered</span><strong style="text-align:right;">${result.roomsCleared}</strong>
       <span style="color:#887755;">Survivors</span><strong style="text-align:right;">${result.survivors} / ${result.partySize}</strong>
       <span style="color:#887755;">Spells learned</span><strong style="text-align:right;">${result.spellsLearned}</strong>
+      <span style="color:#887755;">Best on ${appState.difficulty}</span><strong style="text-align:right;">${Math.max(best, result.score)}</strong>
+      <span style="color:#887755;">Career</span><strong style="text-align:right;">${stats.totalVictories} wins / ${stats.totalRuns} delves</strong>
     </div>
   `;
 
