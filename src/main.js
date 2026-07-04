@@ -10,6 +10,9 @@ import { IsoDungeonRenderer } from './ui/IsoDungeonRenderer.js';
 import { Campaign, TOWN_PRICES } from './game/Campaign.js';
 import { composeTownInterlude } from './narrative/Narrator.js';
 import { progression } from './game/Progression.js';
+import { ROOM_HELP, CARD_TYPE_HELP, describeTickEvents } from './ui/GameGuide.js';
+
+const HELP_SEEN_KEY = 'dungeonab_help_seen';
 
 const appState = {
   draft: null,
@@ -20,10 +23,13 @@ const appState = {
   gameRunning: false,
   lastTickTime: 0,
   speedMultiplier: 1,
+  prevState: null,        // last tick's state, for event diffing
+  seenRoomTypes: null,    // room types explained this campaign
 };
 
 function init() {
   console.log('⚔️ DungeonAB initializing…');
+  setupHelp();
   startNewDraft();
 
   document.getElementById('pause-btn').addEventListener('click', togglePause);
@@ -36,6 +42,69 @@ function init() {
     document.getElementById('show-results-btn').classList.remove('active');
     document.getElementById('gameover-display').classList.add('active');
   });
+}
+
+/* -------------------------------------------------------------- */
+/* How-to-play overlay                                             */
+/* -------------------------------------------------------------- */
+
+function setupHelp() {
+  const overlay = document.getElementById('help-overlay');
+  const openBtn = document.getElementById('help-btn');
+  const closeBtn = document.getElementById('help-close-btn');
+
+  // Populate the card-type legend from the single source of truth
+  document.getElementById('help-card-legend').innerHTML = CARD_TYPE_HELP
+    .map(h => `<dt>${h.label}</dt><dd>${h.text}</dd>`).join('');
+
+  const open = () => overlay.classList.add('active');
+  const close = () => {
+    overlay.classList.remove('active');
+    try { localStorage.setItem(HELP_SEEN_KEY, '1'); } catch (e) { /* private mode */ }
+  };
+
+  openBtn.addEventListener('click', open);
+  closeBtn.addEventListener('click', close);
+  overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+
+  // First-time visitors get the rules before their first pack
+  let seen = false;
+  try { seen = localStorage.getItem(HELP_SEEN_KEY) === '1'; } catch (e) { /* private mode */ }
+  if (!seen) open();
+}
+
+/* -------------------------------------------------------------- */
+/* Event toasts — brief onscreen flags for notable moments        */
+/* -------------------------------------------------------------- */
+
+function showToast(icon, text, kind = '') {
+  const stack = document.getElementById('toast-stack');
+  const toast = document.createElement('div');
+  toast.className = `toast${kind ? ' toast-' + kind : ''}`;
+  toast.innerHTML = `<span class="toast-icon">${icon}</span><span>${escapeHtml(text)}</span>`;
+  stack.appendChild(toast);
+
+  // Fade and remove; keep the stack from overflowing
+  setTimeout(() => {
+    toast.classList.add('fade');
+    setTimeout(() => toast.remove(), 500);
+  }, 3600);
+  while (stack.children.length > 4) stack.removeChild(stack.firstChild);
+}
+
+/**
+ * Surface what just happened: notable state changes, plus a one-time
+ * explanation the first time the party enters each kind of room.
+ */
+function announceEvents(prevState, state) {
+  const roomType = state.narration?.room;
+  if (roomType && appState.seenRoomTypes && !appState.seenRoomTypes.has(roomType) && ROOM_HELP[roomType]) {
+    appState.seenRoomTypes.add(roomType);
+    showToast(state.narration.icon || 'ℹ️', ROOM_HELP[roomType], 'room');
+  }
+  for (const ev of describeTickEvents(prevState, state)) {
+    showToast(ev.icon, ev.text, ev.kind);
+  }
 }
 
 function startNewDraft() {
@@ -59,6 +128,7 @@ function startDelve({ pool, difficulty, seed }) {
   appState.campaign = new Campaign(pool, { seed, difficulty });
   appState.difficulty = difficulty;
   appState.runRecorded = false;
+  appState.seenRoomTypes = new Set();   // explain each room once per campaign
 
   beginDelve(appState.campaign.nextDelve());
 }
@@ -80,6 +150,7 @@ function beginDelve(sim) {
   }
 
   const state = sim.getState();
+  appState.prevState = state;   // baseline for event diffing this delve
   resetStory(state.theme, state.depth);
   document.getElementById('pause-btn').disabled = false;
   document.getElementById('step-btn').disabled = false;
@@ -115,7 +186,9 @@ function processTickResult() {
 
   if (state.narration) {
     appendStory(state.narration, state.roomIndex);
+    announceEvents(appState.prevState, state);
   }
+  appState.prevState = state;
 
   if (state.gameOver) {
     endGame(state);

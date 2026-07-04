@@ -164,6 +164,64 @@
     }
     #show-results-btn.active { display: block; }
 
+    /* Header help button */
+    #help-btn {
+      position: absolute; top: 0.8rem; right: 1rem;
+      padding: 0.35rem 0.7rem; font-size: 0.8rem;
+      background: #2a2213; color: #d8a53f; border: 1px solid #3a2f1e;
+    }
+    #help-btn:hover { background: #3a2f1e; }
+    header { position: relative; }
+
+    /* How-to-play overlay */
+    #help-overlay {
+      display: none;
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,0.75);
+      overflow-y: auto;
+      padding: 2rem 1rem;
+    }
+    #help-overlay.active { display: flex; align-items: flex-start; justify-content: center; }
+    .help-card {
+      background: #14110b;
+      border: 1px solid #d8a53f;
+      border-radius: 8px;
+      padding: 1.75rem;
+      max-width: 640px;
+      width: 100%;
+      box-shadow: 0 0 60px rgba(216, 165, 63, 0.25);
+    }
+    .help-card h2 { color: #d8a53f; font-size: 1.4rem; margin-bottom: 0.3rem; text-align: center; }
+    .help-card .help-sub { color: #887755; font-size: 0.85rem; text-align: center; margin-bottom: 1.25rem; }
+    .help-step { margin-bottom: 1rem; padding-left: 0.6rem; border-left: 2px solid #3a2f1e; }
+    .help-step h3 { color: #e8b954; font-size: 0.95rem; margin-bottom: 0.25rem; }
+    .help-step p { color: #c8b89a; font-size: 0.83rem; line-height: 1.55; }
+    .help-legend { display: grid; grid-template-columns: auto 1fr; gap: 0.3rem 0.7rem; font-size: 0.8rem; margin-top: 0.4rem; }
+    .help-legend dt { color: #d8a53f; font-weight: bold; white-space: nowrap; }
+    .help-legend dd { color: #b8a888; }
+    .help-card button { width: 100%; margin-top: 1.25rem; padding: 0.9rem; font-size: 1rem; }
+
+    /* Event toasts */
+    #toast-stack {
+      position: fixed; top: 4.5rem; left: 50%; transform: translateX(-50%);
+      z-index: 150; display: flex; flex-direction: column; gap: 0.4rem;
+      pointer-events: none; width: min(440px, 92vw);
+    }
+    .toast {
+      background: #1a1610; border: 1px solid #d8a53f; border-radius: 6px;
+      padding: 0.55rem 0.85rem; font-size: 0.82rem; color: #e8d9b3;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+      display: flex; gap: 0.5rem; align-items: center;
+      animation: toast-in 0.25s ease-out;
+    }
+    .toast.fade { animation: toast-out 0.5s ease-in forwards; }
+    .toast-icon { font-size: 1.1rem; }
+    .toast-death { border-color: #e05555; color: #f0b0b0; }
+    .toast-boss { border-color: #e8724a; color: #f0c0a0; }
+    .toast-room { border-color: #6a7f9a; color: #c0d0e0; }
+    @keyframes toast-in { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes toast-out { to { opacity: 0; transform: translateY(-8px); } }
+
     /* Draft cards */
     .pack-grid {
       display: grid;
@@ -209,6 +267,7 @@
     <header>
       <h1>⚔️ DungeonAB</h1>
       <p>Draft the party. Delve the dungeon. Watch the story.</p>
+      <button id="help-btn">? How to Play</button>
     </header>
     <main>
       <div id="draft-container"></div>
@@ -237,6 +296,11 @@
               <span id="speed-label">1.0x</span>
             </label>
           </div>
+          <div style="margin-top:0.5rem;font-size:0.72rem;color:#887755;line-height:1.5;">
+            The party crawls on its own. <strong style="color:#a89868;">Pause</strong> to read,
+            <strong style="color:#a89868;">Step</strong> one room at a time, or set the
+            <strong style="color:#a89868;">Speed</strong>. Watch <span style="color:#d8a53f;">The Chronicle</span> below for what unfolds.
+          </div>
         </div>
         <div class="panel">
           <h2>📖 The Chronicle</h2>
@@ -254,6 +318,40 @@
 
   <div id="gameover-display"></div>
   <button id="show-results-btn">🏆 Show Results</button>
+
+  <!-- Onscreen event messages -->
+  <div id="toast-stack"></div>
+
+  <!-- How-to-play overlay -->
+  <div id="help-overlay">
+    <div class="help-card">
+      <h2>⚔️ How to Play</h2>
+      <div class="help-sub">Draft a party, then watch it delve. You set it up; the dungeon does the rest.</div>
+
+      <div class="help-step">
+        <h3>1 · Draft at the Table</h3>
+        <p>You and three AI rivals pass packs of cards. Take <strong>one</strong> card per pack, then it passes on. Draft characters to grow your party, plus equipment, spells, and personalities to shape it. Packs always hold characters — no dead drafts.</p>
+        <dl class="help-legend" id="help-card-legend"></dl>
+      </div>
+
+      <div class="help-step">
+        <h3>2 · Delve the Dungeon</h3>
+        <p>The party descends room by room, deciding for itself — weighted by the personalities you drafted and the classes present. A rogue disarms traps; a cleric turns undead; an alchemist brews at lab benches. Outcomes are a spectrum, not just win or lose.</p>
+      </div>
+
+      <div class="help-step">
+        <h3>3 · Town, then Deeper</h3>
+        <p>Survive and the party carries its loot and scars to town. Heal, buy potions, then choose: descend to a deeper, meaner dungeon — or retire and bank your score. A wipe ends the campaign.</p>
+      </div>
+
+      <div class="help-step">
+        <h3>Watching the Delve</h3>
+        <p><strong>The Chronicle</strong> narrates every room in three beats. Toasts flag big moments — a hero falling, the boss chamber, a spell learned. Use the controls to pause, step, or change speed.</p>
+      </div>
+
+      <button id="help-close-btn">Got it — let's draft</button>
+    </div>
+  </div>
 
   <script type="module" src="./main.js"></script>
 </body>

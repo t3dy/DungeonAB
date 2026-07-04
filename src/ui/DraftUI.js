@@ -35,7 +35,13 @@ export class DraftUI {
     title.style.cssText = 'text-align:center;margin-bottom:1rem;';
     title.innerHTML = `
       <div style="color:#d8a53f;font-size:1.1rem;font-weight:bold;">Pack ${round} of ${this.draft.numRounds} — Pick ${pick}</div>
-      <div style="color:#887755;font-size:0.8rem;">${dir} · take ONE card: a character, equipment, a spell, or a personality</div>
+      <div style="color:#887755;font-size:0.8rem;">${dir} · click ONE card to draft it, then the pack passes on</div>
+      <div style="font-size:0.72rem;margin-top:0.4rem;display:flex;gap:0.9rem;justify-content:center;flex-wrap:wrap;">
+        <span class="type-character">● Character</span>
+        <span class="type-equipment">● Equipment</span>
+        <span class="type-spell">● Spell</span>
+        <span class="type-personality">● Personality</span>
+      </div>
     `;
     container.appendChild(title);
 
