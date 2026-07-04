@@ -1,6 +1,6 @@
 # ⚔️ DungeonAB — Dungeon-Crawling Autobattler
 
-**▶️ Play the prototype: https://t3dy.github.io/DungeonAB/**
+**▶️ Play the prototype: https://dungeon-ab.vercel.app** &nbsp;·&nbsp; [mirror](https://t3dy.github.io/DungeonAB/)
 
 Draft a party MTG-style — packs passed around a table of AI rivals, one pick per pack — then watch your Fighters, Clerics, Wizards, Rogues, and Alchemists auto-crawl a procedurally generated dungeon: fighting, looting, learning spells, and brewing potions at abandoned lab benches. Survive, spend your gold in town, and delve deeper.
 
@@ -48,7 +48,8 @@ npm test       # 87 tests across 8 suites
 npm run build  # production bundle → dist/
 ```
 
-Every push to `main` runs the tests and deploys the built prototype to GitHub Pages
+The prototype is hosted on **Vercel** ([dungeon-ab.vercel.app](https://dungeon-ab.vercel.app)).
+Every push to `main` also runs the tests and publishes a mirror to GitHub Pages
 (see [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml)).
 
 ## Design Lineage
@@ -67,7 +68,8 @@ Consolidated in `DESIGN.md` from:
 - [x] Trap cards & personalities — cursed gear and The Craven, weak-looking with hidden upside
 - [x] Themed dungeons — five faces, each with its own roster and hazards
 - [x] Campaign mode — town between delves, party carryover, depth scaling
-- [x] Deploy the prototype (GitHub Pages)
+- [x] Onscreen help — how-to-play overlay, event toasts, room/control legends
+- [x] Deploy the prototype (Vercel, with a GitHub Pages mirror)
 - [ ] Recruit replacements for the fallen; blacksmith upgrades in town
 - [ ] Dungeon condition modifiers drafted against rivals (Megabase multiplayer variant)
 - [ ] True multiplayer draft
