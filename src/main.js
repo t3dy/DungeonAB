@@ -7,12 +7,14 @@ import { PackDraft } from './draft/PackDraft.js';
 import { DraftUI } from './ui/DraftUI.js';
 import { DungeonRenderer } from './ui/DungeonRenderer.js';
 import { IsoDungeonRenderer } from './ui/IsoDungeonRenderer.js';
-import { Simulator } from './sim/Simulator.js';
+import { Campaign, TOWN_PRICES } from './game/Campaign.js';
+import { composeTownInterlude } from './narrative/Narrator.js';
 import { progression } from './game/Progression.js';
 
 const appState = {
   draft: null,
   draftUI: null,
+  campaign: null,
   simulator: null,
   renderer: null,
   gameRunning: false,
@@ -46,7 +48,7 @@ function startNewDraft() {
 }
 
 function startDelve({ pool, difficulty, seed }) {
-  console.log(`Entering the dungeon: difficulty=${difficulty}, seed=${seed}`);
+  console.log(`Campaign begins: difficulty=${difficulty}, seed=${seed}`);
 
   const draftContainer = document.getElementById('draft-container');
   draftContainer.innerHTML = '';
@@ -54,9 +56,18 @@ function startDelve({ pool, difficulty, seed }) {
   document.getElementById('world-container').style.display = 'flex';
   document.getElementById('ui-container').style.display = 'flex';
 
-  appState.simulator = new Simulator(pool, seed, difficulty);
+  appState.campaign = new Campaign(pool, { seed, difficulty });
   appState.difficulty = difficulty;
   appState.runRecorded = false;
+
+  beginDelve(appState.campaign.nextDelve());
+}
+
+/**
+ * Run one dungeon of the campaign — depth 1 or depth 9, same loop
+ */
+function beginDelve(sim) {
+  appState.simulator = sim;
 
   // Torchlit isometric 3D, with the 2D map as a WebGL fallback
   if (!appState.renderer) {
@@ -68,12 +79,11 @@ function startDelve({ pool, difficulty, seed }) {
     }
   }
 
-  resetStory();
+  const state = sim.getState();
+  resetStory(state.theme, state.depth);
   document.getElementById('pause-btn').disabled = false;
   document.getElementById('step-btn').disabled = false;
   document.getElementById('pause-btn').textContent = 'Pause';
-
-  const state = appState.simulator.getState();
   appState.renderer.render(state);
   updateUI(state);
 
@@ -180,9 +190,16 @@ function appendStory(narration, roomIndex) {
   panel.scrollTop = panel.scrollHeight;
 }
 
-function resetStory() {
+function resetStory(theme = null, depth = 1) {
+  const depthBadge = depth > 1 ? ` — Depth ${depth}` : '';
+  const banner = theme
+    ? `<div class="story-entry" style="border-left:3px solid #d8a53f;">
+         <div class="story-room" style="font-size:1rem;">${theme.icon} ${escapeHtml(theme.name)}${depthBadge}</div>
+         <div class="story-predicament" style="font-style:italic;">${escapeHtml(theme.tagline)}</div>
+       </div>`
+    : '';
   document.getElementById('story-panel').innerHTML =
-    '<div class="story-empty">The chronicle of this delve is not yet written…</div>';
+    banner + '<div class="story-empty">The chronicle of this delve is not yet written…</div>';
 }
 
 function endGame(state) {
@@ -190,34 +207,140 @@ function endGame(state) {
   document.getElementById('pause-btn').disabled = true;
   document.getElementById('step-btn').disabled = true;
 
-  const result = appState.simulator.getRunResult();
+  appState.campaign.recordDelve(appState.simulator);
 
-  // Record the run once
+  if (state.victory && !appState.campaign.over) {
+    showTown(state);
+  } else {
+    showFinal(state);
+  }
+}
+
+/**
+ * The town between dungeons: heal for gold, stock potions, then
+ * choose — deeper, or out with the score
+ */
+function showTown(state) {
+  const campaign = appState.campaign;
+  const result = appState.simulator.getRunResult();
+  const display = document.getElementById('gameover-display');
+
+  // The interlude joins the chronicle
+  appendStory({
+    room: 'town', icon: '🏘️',
+    predicament: composeTownInterlude(campaign.party, campaign.depth),
+    deliberation: '', resolution: '',
+  }, `— after depth ${campaign.depth}`);
+
+  const render = () => {
+    const healCost = campaign.healCost();
+    const missing = campaign.missingHealth();
+    const gold = campaign.party.gold;
+    const pious = campaign.party.hasPersonality('pious');
+
+    display.innerHTML = `
+      <h2 style="color:#3ddc84;font-size:1.35rem;margin-bottom:0.5rem;text-align:center;">
+        🏘️ The Town Between
+      </h2>
+      <div style="text-align:center;color:#887755;margin-bottom:1rem;">Depth ${campaign.depth} cleared — the road down continues</div>
+      <div style="margin-bottom:1.25rem;padding:0.9rem;background:#151b10;border-left:3px solid #3ddc84;border-radius:4px;color:#d8c9a3;font-style:italic;line-height:1.6;">
+        ${escapeHtml(result.epitaph || '')}
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem 1.5rem;font-size:0.92rem;">
+        <span style="color:#887755;">Campaign score</span><strong style="color:#d8a53f;text-align:right;">${campaign.party.score}</strong>
+        <span style="color:#887755;">Gold</span><strong style="text-align:right;">${gold}</strong>
+        <span style="color:#887755;">Survivors</span><strong style="text-align:right;">${campaign.party.living().length} / ${campaign.party.members.length}</strong>
+        <span style="color:#887755;">Potions</span><strong style="text-align:right;">${campaign.party.potions.length}</strong>
+      </div>
+    `;
+
+    const btn = (label, enabled, onClick, style = '') => {
+      const b = document.createElement('button');
+      b.textContent = label;
+      b.disabled = !enabled;
+      b.style.cssText = `width:100%;margin-top:0.5rem;padding:0.8rem;font-size:0.95rem;${style}${enabled ? '' : 'opacity:0.45;cursor:default;'}`;
+      b.addEventListener('click', onClick);
+      display.appendChild(b);
+      return b;
+    };
+
+    btn(
+      missing === 0 ? '💤 Everyone Is Rested' : `🛏️ Rest & Heal All — ${healCost}g${pious ? ' (temple rate)' : ''}`,
+      missing > 0 && gold >= healCost,
+      () => { campaign.healAll(); render(); },
+    );
+    btn(
+      `🧪 Buy a Healing Draught — ${TOWN_PRICES.potion}g`,
+      gold >= TOWN_PRICES.potion,
+      () => { campaign.buyPotion(); render(); },
+    );
+    btn(
+      `⛏️ Delve Deeper — depth ${campaign.depth + 1} awaits`,
+      true,
+      () => {
+        display.classList.remove('active');
+        beginDelve(campaign.nextDelve());
+      },
+      'margin-top:1.25rem;font-size:1rem;padding:0.9rem;',
+    );
+    btn(
+      '🏡 Retire & Bank the Score',
+      true,
+      () => {
+        campaign.retire();
+        showFinal(appState.simulator.getState());
+      },
+      'background:#2a2213;color:#d8a53f;',
+    );
+  };
+
+  render();
+  display.classList.add('active');
+}
+
+/**
+ * The campaign's last page: a wipe, or a retirement with the loot
+ */
+function showFinal(state) {
+  const campaign = appState.campaign;
+  const summary = campaign.getSummary();
+  const result = appState.simulator.getRunResult();
+  const retired = summary.retired;
+
+  // Record the campaign once
   if (!appState.runRecorded) {
     appState.runRecorded = true;
-    progression.recordRun(appState.difficulty, result);
+    progression.recordRun(appState.difficulty, {
+      score: summary.score,
+      gold: summary.gold,
+      roomsCleared: summary.roomsCleared,
+      victory: retired,
+      survivors: summary.survivors,
+      partySize: summary.partySize,
+    });
   }
   const best = progression.bestScores[appState.difficulty] || 0;
-  const isNewBest = result.score >= best && result.score > 0;
+  const isNewBest = summary.score >= best && summary.score > 0;
   const stats = progression.getStats();
 
   const display = document.getElementById('gameover-display');
 
   display.innerHTML = `
-    <h2 style="color:${state.victory ? '#3ddc84' : '#e05555'};font-size:1.35rem;margin-bottom:1rem;text-align:center;">
-      ${state.victory ? '🏆 The Dungeon Is Beaten!' : '☠️ The Party Has Fallen'}
+    <h2 style="color:${retired ? '#3ddc84' : '#e05555'};font-size:1.35rem;margin-bottom:1rem;text-align:center;">
+      ${retired ? '🏆 Retired in Glory' : '☠️ The Campaign Ends in the Dark'}
     </h2>
-    <div style="margin-bottom:1.25rem;padding:0.9rem;background:#151b10;border-left:3px solid ${state.victory ? '#3ddc84' : '#aa5544'};border-radius:4px;color:#d8c9a3;font-style:italic;line-height:1.6;">
+    <div style="margin-bottom:1.25rem;padding:0.9rem;background:#151b10;border-left:3px solid ${retired ? '#3ddc84' : '#aa5544'};border-radius:4px;color:#d8c9a3;font-style:italic;line-height:1.6;">
       ${escapeHtml(result.epitaph || '')}
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem 1.5rem;font-size:0.92rem;">
-      <span style="color:#887755;">Score</span><strong style="color:#d8a53f;text-align:right;">${result.score}${isNewBest ? ' ⭐ New Best!' : ''}</strong>
-      <span style="color:#887755;">Gold</span><strong style="text-align:right;">${result.gold}</strong>
-      <span style="color:#887755;">Rooms conquered</span><strong style="text-align:right;">${result.roomsCleared}</strong>
-      <span style="color:#887755;">Survivors</span><strong style="text-align:right;">${result.survivors} / ${result.partySize}</strong>
-      <span style="color:#887755;">Spells learned</span><strong style="text-align:right;">${result.spellsLearned}</strong>
-      <span style="color:#887755;">Best on ${appState.difficulty}</span><strong style="text-align:right;">${Math.max(best, result.score)}</strong>
-      <span style="color:#887755;">Career</span><strong style="text-align:right;">${stats.totalVictories} wins / ${stats.totalRuns} delves</strong>
+      <span style="color:#887755;">Campaign score</span><strong style="color:#d8a53f;text-align:right;">${summary.score}${isNewBest ? ' ⭐ New Best!' : ''}</strong>
+      <span style="color:#887755;">Depth reached</span><strong style="text-align:right;">${summary.depth}</strong>
+      <span style="color:#887755;">Gold</span><strong style="text-align:right;">${summary.gold}</strong>
+      <span style="color:#887755;">Rooms conquered</span><strong style="text-align:right;">${summary.roomsCleared}</strong>
+      <span style="color:#887755;">Survivors</span><strong style="text-align:right;">${summary.survivors} / ${summary.partySize}</strong>
+      <span style="color:#887755;">Spells learned</span><strong style="text-align:right;">${summary.spellsLearned}</strong>
+      <span style="color:#887755;">Best on ${appState.difficulty}</span><strong style="text-align:right;">${Math.max(best, summary.score)}</strong>
+      <span style="color:#887755;">Career</span><strong style="text-align:right;">${stats.totalVictories} retirements / ${stats.totalRuns} campaigns</strong>
     </div>
   `;
 

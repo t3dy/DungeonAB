@@ -107,6 +107,21 @@ export class Party {
     return this.living().reduce((sum, m) => sum + m.attack, 0);
   }
 
+  /**
+   * Attack that actually lands in a dungeon fight: corridor frontage.
+   * Only about five blades can work at once — the five hardest
+   * hitters swing freely, everyone behind contributes a quarter
+   * (thrown daggers, shouted advice, the occasional shove).
+   */
+  combatAttack() {
+    const attackers = this.living()
+      .map(m => m.attack)
+      .sort((a, b) => b - a);
+    const front = attackers.slice(0, 5).reduce((s, a) => s + a, 0);
+    const rear = attackers.slice(5).reduce((s, a) => s + a, 0);
+    return Math.round(front + rear * 0.25);
+  }
+
   totalDefense() {
     return this.living().reduce((sum, m) => sum + m.defense, 0);
   }
@@ -121,6 +136,24 @@ export class Party {
 
   totalMaxHealth() {
     return this.members.reduce((sum, m) => sum + m.maxHealth, 0);
+  }
+
+  /**
+   * Class-keyed item actions: the same item does different work in
+   * different hands. Each living member contributes the action their
+   * class unlocks on each classActions item they carry.
+   */
+  combatItemActions() {
+    const actions = [];
+    for (const member of this.living()) {
+      for (const eq of member.equipment) {
+        const action = eq.classActions?.[member.class];
+        if (action) {
+          actions.push({ member: member.name, item: eq.name, ...action });
+        }
+      }
+    }
+    return actions;
   }
 
   /**

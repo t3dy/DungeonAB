@@ -19,6 +19,9 @@ export class SeededRandom {
   constructor(seed) {
     this.seed = this.hashCode(String(seed)) % 2147483647;
     if (this.seed <= 0) this.seed += 2147483646;
+    // Warm up: similar seed strings hash to nearby states, and an
+    // LCG's first draw barely separates them. Three spins decorrelate.
+    for (let i = 0; i < 3; i++) this.next();
   }
   hashCode(str) {
     let h = 0;
@@ -138,6 +141,9 @@ export function scoreCard(card, persona, pool, rng) {
     // Equipment for a class we actually have is worth more
     if (card.bestFor && characters.some(c => c.class === card.bestFor)) score += 1.5;
     if (card.bestFor && !characters.some(c => c.class === card.bestFor)) score -= 0.5;
+    // AI drafters see the curse and flinch; the hidden upside is the
+    // player's to read. Trap picks wheel around the table.
+    if (card.cursed) score -= 0.8;
   }
 
   if (card.type === CARD_TYPES.SPELL) {
@@ -149,6 +155,9 @@ export function scoreCard(card, persona, pool, rng) {
     // One or two personalities is plenty
     const personalities = pool.filter(c => c.type === CARD_TYPES.PERSONALITY);
     score -= personalities.length * 1.2;
+    // Trap personalities read as liabilities to the AI; their hidden
+    // upsides are the player's to spot
+    if (card.trap) score -= 0.6;
   }
 
   // Chaos: AI drafters are not machines. Well. They are. But fun ones.

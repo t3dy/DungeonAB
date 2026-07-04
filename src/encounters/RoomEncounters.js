@@ -119,6 +119,7 @@ const PERSONALITY_WEIGHTS = {
   scholarly: { study: 3, 'deep-study': 3, 'spell-strike': 2, 'spell-bypass': 2 },
   pious: { rest: 3, 'turn-undead': 3, desecrate: -5 },
   reckless: { fight: 2, 'push-through': 3, loot: 2, inspect: -2, 'search-around': -2 },
+  craven: { flee: 3, sneak: 2, disarm: 2, 'search-around': 2, inspect: 1, scatter: 2, fight: -2, 'push-through': -2, brace: -1 },
 };
 
 export function decideRoomAction(room, party) {
@@ -169,13 +170,27 @@ export function resolveRoomAction(room, party, optionId) {
       let monsterHealth = monster.health;
       let partyDamageTaken = 0;
 
-      // Auto-battle: rounds of party attack vs monster attack
+      // Class-keyed items act first: openings land before round one,
+      // wards blunt every round, summons swing alongside the party
+      const itemActions = party.combatItemActions();
+      let opening = 0, ward = 0, summon = 0;
+      for (const a of itemActions) {
+        opening += a.opening || 0;
+        if (monster.undead) opening += a.vsUndead || 0;
+        ward += a.ward || 0;
+        summon += a.summonAttack || 0;
+      }
+      monsterHealth -= opening;
+
+      // Auto-battle: rounds of party attack vs monster attack.
+      // Corridor frontage: only ~5 blades work at once, so a mob
+      // of drafted heroes helps less than it thinks it does.
       let rounds = 0;
       while (monsterHealth > 0 && party.isAlive() && rounds < 12) {
         rounds++;
-        monsterHealth -= Math.max(1, party.totalAttack() + Math.floor(roll() / 3));
+        monsterHealth -= Math.max(1, party.combatAttack() + summon + Math.floor(roll() / 3));
         if (monsterHealth <= 0) break;
-        const incoming = Math.max(1, monster.attack - Math.floor(party.totalDefense() / 3));
+        const incoming = Math.max(1, monster.attack - Math.floor(party.totalDefense() / 3) - ward);
         party.takeDamage(incoming);
         partyDamageTaken += incoming;
         party.quaffIfNeeded();
@@ -188,7 +203,7 @@ export function resolveRoomAction(room, party, optionId) {
         room.cleared = true;
       }
       party.recordEncounter('fight', won);
-      return { success: won, rounds, damage: partyDamageTaken, monster: monster.name };
+      return { success: won, rounds, damage: partyDamageTaken, monster: monster.name, itemActions };
     }
 
     case 'spell-strike': {
@@ -205,7 +220,9 @@ export function resolveRoomAction(room, party, optionId) {
 
     case 'sneak': {
       const rogueMind = Math.max(...party.living().filter(m => m.class === CLASSES.ROGUE).map(m => m.mind));
-      const ok = rogueMind + roll() > 9;
+      // A craven party has already memorized the quiet ways out
+      const cravenEdge = party.hasPersonality('craven') ? 1 : 0;
+      const ok = rogueMind + cravenEdge + roll() > 9;
       if (ok) {
         party.addScore(15);
         room.cleared = true;
@@ -258,9 +275,13 @@ export function resolveRoomAction(room, party, optionId) {
     }
 
     case 'push-through': {
-      party.takeDamage(room.trapDamage || 3);
+      // The Craven's hidden upside: cowards notice tripwires, and
+      // the party steps a little truer for the warning
+      const spotter = party.hasPersonality('craven') ? 1 : 0;
+      const dmg = Math.max(1, (room.trapDamage || 3) - spotter);
+      party.takeDamage(dmg);
       room.cleared = true;
-      return { success: true, damage: room.trapDamage || 3 };
+      return { success: true, damage: dmg, spotted: spotter > 0 };
     }
 
     case 'search-around': {

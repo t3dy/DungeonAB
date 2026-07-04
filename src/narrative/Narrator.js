@@ -9,6 +9,7 @@
 
 import { ROOM_TYPES } from '../world/DungeonGen.js';
 import { CLASSES } from '../game/Cards.js';
+import { getBark } from './Barks.js';
 
 function pick(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
@@ -18,11 +19,32 @@ function pick(arr) {
 /* Predicaments per room type                                          */
 /* ------------------------------------------------------------------ */
 
-const PREDICAMENTS = {
-  entrance: [
+/* Themed arrivals — the dungeon introduces itself at the door */
+const THEME_ENTRANCES = {
+  delve: [
     'The dungeon door stands open, which is never a good sign. Cold air breathes up from below, smelling of wet stone and old ambition.',
     'Torchlight ends three steps past the threshold. Somewhere below, something drips in a rhythm that is almost, but not quite, patient.',
   ],
+  crypt: [
+    'The Ancient Crypt. The lintel is carved with names, and the names are carved with claw marks. Down the party goes, past generations of the politely furious dead.',
+    'Grave-cold rolls up the crypt stairs to meet them. Somewhere below, stone lids are not staying put.',
+  ],
+  volcanic: [
+    'The Cinder Galleries breathe out heat like a sleeping forge. The walls glow faintly at the seams, and the floor is warm through good boots.',
+    'Down into the mountain\'s throat. The air shimmers, the torches are redundant, and something below is keeping the fires fed.',
+  ],
+  library: [
+    'The Drowned Athenaeum. Water-stained shelves climb out of sight, and the silence has the specific weight of a librarian\'s attention.',
+    'Past the flooded card catalogue and down. Every book in the dark is closed. The party tries not to think about what opens them.',
+  ],
+  madlab: [
+    'The Mad Alchemist\'s Dungeon. The welcome mat is a chalk circle, half-scrubbed. The smell is sulfur, roses, and a third thing nobody names aloud.',
+    'Glassware glints in the dark below — miles of it, still bubbling. The experiments did not stop when the alchemist did.',
+  ],
+};
+
+const PREDICAMENTS = {
+  entrance: THEME_ENTRANCES.delve,
   corridor: [
     'A long corridor, scarred by the claws and cart-wheels of every expedition that came before. Most of them came back. Most.',
     'The passage narrows until the fighters walk sideways and the wizard complains about the acoustics.',
@@ -102,6 +124,7 @@ const ARCHETYPE_VOICES = {
   scholarly: 'the Scholarly bent won out — knowledge is the only treasure that walks out on its own legs',
   pious: 'the Devout among them spoke, quietly, and that settled it',
   reckless: 'the Reckless howled loudest, and the Reckless got their way',
+  craven: 'the Craven voice had already counted the exits, and the counting was persuasive',
 };
 
 const CLASS_ADVOCATES = {
@@ -129,7 +152,10 @@ export function composeDeliberation(chosenId, options, party) {
   const advocateClass = CLASS_ADVOCATES[chosenId];
   if (advocateClass && party.hasClass(advocateClass)) {
     const advocate = party.living().find(m => m.class === advocateClass);
-    voice = `${advocate.name} made the case`;
+    const bark = getBark(advocate.class, party.personalities);
+    voice = bark
+      ? `${advocate.name} made the case: "${bark}"`
+      : `${advocate.name} made the case`;
   } else {
     for (const archetype of party.personalities) {
       if (ARCHETYPE_VOICES[archetype]) {
@@ -140,11 +166,15 @@ export function composeDeliberation(chosenId, options, party) {
   }
   if (!voice) voice = 'instinct and tired feet decided';
 
+  // A quoted bark carries its own terminal punctuation; adding a
+  // period after the closing quote doubles it
+  const sep = voice.endsWith('"') ? '' : '.';
+
   if (rejected.length === 0) {
     return `There was only one road: the party chose to ${chosenPhrase}.`;
   }
   const rejectedText = rejected.length === 2 ? `${rejected[0]}, or ${rejected[1]}` : rejected[0];
-  return `They might have chosen to ${rejectedText} — but ${voice}. The party chose to ${chosenPhrase}.`;
+  return `They might have chosen to ${rejectedText} — but ${voice}${sep} The party chose to ${chosenPhrase}.`;
 }
 
 /* ------------------------------------------------------------------ */
@@ -155,14 +185,24 @@ export function composeResolution(room, optionId, result, party) {
   const bits = [];
 
   switch (optionId) {
-    case 'fight':
-      bits.push(result.success
-        ? pick([
-            `⚔️ ${capitalize(result.monster)} falls after ${result.rounds} bloody rounds. The party stands, breathing hard, in possession of the field.`,
-            `⚔️ It takes ${result.rounds} rounds and costs ${result.damage} health in bruises and worse, but ${result.monster} will trouble no one again.`,
-          ])
-        : `☠️ ${capitalize(result.monster)} was too much. The line broke, and the dungeon collected its due.`);
+    case 'fight': {
+      const leadAction = result.itemActions?.find(a => a.opening || a.vsUndead || a.summonAttack);
+      if (leadAction) {
+        bits.push(`🪄 ${leadAction.member}'s ${leadAction.item} answers first — ${leadAction.name}.`);
+      }
+      if (result.success && result.rounds === 0) {
+        bits.push(`⚔️ ${capitalize(result.monster)} is over before it begins. The party steps around what's left.`);
+      } else {
+        const roundsWord = `${result.rounds} bloody round${result.rounds === 1 ? '' : 's'}`;
+        bits.push(result.success
+          ? pick([
+              `⚔️ ${capitalize(result.monster)} falls after ${roundsWord}. The party stands, breathing hard, in possession of the field.`,
+              `⚔️ It takes ${roundsWord} and costs ${result.damage} health in bruises and worse, but ${result.monster} will trouble no one again.`,
+            ])
+          : `☠️ ${capitalize(result.monster)} was too much. The line broke, and the dungeon collected its due.`);
+      }
       break;
+    }
     case 'spell-strike':
       bits.push(result.spell
         ? `🔥 ${result.spell} lights the room before a blade is drawn — the fight that follows is short and one-sided.`
@@ -229,9 +269,13 @@ export function composeResolution(room, optionId, result, party) {
       }
       break;
     }
-    case 'gather':
-      bits.push(`🌿 ${result.materials} bundle${result.materials > 1 ? 's' : ''} of herbs and salts go into the satchel. The alchemist hums approvingly at everything.`);
+    case 'gather': {
+      const coda = party.hasClass(CLASSES.ALCHEMIST)
+        ? 'The alchemist hums approvingly at everything.'
+        : 'Nobody is sure what half of it does, but weight is weight.';
+      bits.push(`🌿 ${result.materials} bundle${result.materials > 1 ? 's' : ''} of herbs and salts go into the satchel. ${coda}`);
       break;
+    }
     case 'brace':
       bits.push(`🌋 Shields up, heads down — the dungeon does its worst (${result.damage} damage's worth) and the party is still there when the dust settles.`);
       break;
@@ -261,19 +305,40 @@ const VICTORY_CODAS = [
   'The boss\'s hoard divides beautifully. Someone proposes retirement. Everyone laughs. They will all be back within the month.',
 ];
 
-export function composePredicament(room) {
+/* ------------------------------------------------------------------ */
+/* The town between — campaign interludes                              */
+/* ------------------------------------------------------------------ */
+
+const TOWN_INTERLUDES = [
+  'The town takes the party in the way towns do: ale first, questions later, prices adjusted for visible wounds. Somewhere below, the next dungeon is already rearranging itself.',
+  'Lamplight, real bread, a bed that is not stone. The innkeeper chalks the party\'s tab with professional optimism — heroes flush with dungeon gold rarely haggle.',
+  'The temple takes donations, the apothecary takes more, and by morning the whole town knows what came crawling out of the dark with full pockets.',
+];
+
+export function composeTownInterlude(party, depth) {
+  const line = pick(TOWN_INTERLUDES);
+  const next = `Rumor already speaks of what waits at depth ${depth + 1}, and rumor sounds impressed.`;
+  return `${line} ${next}`;
+}
+
+export function composePredicament(room, theme = null) {
+  if (room.type === ROOM_TYPES.ENTRANCE && theme && THEME_ENTRANCES[theme.id]) {
+    return pick(THEME_ENTRANCES[theme.id]);
+  }
   const pool = PREDICAMENTS[room.type] || PREDICAMENTS.corridor;
   return pick(pool);
 }
 
-export function composeWipe(party, roomsCleared) {
+export function composeWipe(party, roomsCleared, theme = null) {
   const fallen = party.members.map(m => m.name).join(', ');
-  return `${pick(WIPE_EPITAPHS)} Here ended: ${fallen}. Rooms conquered: ${roomsCleared}.`;
+  const where = theme ? ` in ${theme.name}` : '';
+  return `${pick(WIPE_EPITAPHS)} Here ended${where}: ${fallen}. Rooms conquered: ${roomsCleared}.`;
 }
 
-export function composeVictory(party, roomsCleared) {
+export function composeVictory(party, roomsCleared, theme = null) {
   const survivors = party.living().map(m => m.name).join(', ');
-  return `${pick(VICTORY_CODAS)} Walked out: ${survivors}. Rooms conquered: ${roomsCleared}.`;
+  const where = theme ? ` of ${theme.name}` : '';
+  return `${pick(VICTORY_CODAS)} Walked out${where}: ${survivors}. Rooms conquered: ${roomsCleared}.`;
 }
 
 function capitalize(s) {

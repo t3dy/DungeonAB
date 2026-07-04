@@ -21,6 +21,7 @@ npm test
 ```
 src/
   game/Cards.js          ← Draftable card pool (characters/equipment/spells/personalities)
+  game/Campaign.js       ← Town between dungeons, party carryover, depth scaling
   game/Progression.js    ← Difficulty tiers, run history (from SnakeAB)
   draft/PackDraft.js     ← MTG pack draft engine + AI drafter personas
   agents/Adventurer.js   ← One character: stats, class kit, equipment
@@ -28,6 +29,7 @@ src/
   world/DungeonGen.js    ← Seeded room-graph dungeon generation
   encounters/RoomEncounters.js ← Per-room-type options/outcomes (personality-weighted)
   narrative/Narrator.js  ← Three-beat party narration (predicament/deliberation/resolution)
+  narrative/Barks.js     ← Personality × class dialogue (same archetype, different voice per class)
   sim/Simulator.js       ← Room-by-room auto-crawl loop
   ui/                    ← DraftUI (pack picks), story panel, renderer
 tests/                   ← Node test runner suites

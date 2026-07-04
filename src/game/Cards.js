@@ -47,6 +47,13 @@ export const CHARACTER_CARDS = [
   // Alchemists — potions, weapon mods, labs
   { id: 'char-paracelsus', type: CARD_TYPES.CHARACTER, class: CLASSES.ALCHEMIST, name: 'Paracelsus the Lesser', icon: '⚗️', stats: { health: 12, attack: 3, defense: 2, mind: 6 }, trait: 'Brews potions and mods weapons at any lab bench he finds.' },
   { id: 'char-perenelle', type: CARD_TYPES.CHARACTER, class: CLASSES.ALCHEMIST, name: 'Perenelle of the Green Lion', icon: '⚗️', stats: { health: 11, attack: 2, defense: 3, mind: 6 }, trait: 'Distills two potions from every lab instead of one.' },
+
+  // Second wave — one more face per class, for wider tables
+  { id: 'char-gunnhild', type: CARD_TYPES.CHARACTER, class: CLASSES.FIGHTER, name: 'Gunnhild Half-Door', icon: '⚔️', stats: { health: 17, attack: 5, defense: 5, mind: 1 }, trait: 'Got her name blocking one. Has never explained which half.' },
+  { id: 'char-ash', type: CARD_TYPES.CHARACTER, class: CLASSES.CLERIC, name: 'Canoness Ash', icon: '✨', stats: { health: 12, attack: 3, defense: 2, mind: 6 }, trait: 'Buried three orders of her own sisters. The dead listen when she talks.' },
+  { id: 'char-yarrow', type: CARD_TYPES.CHARACTER, class: CLASSES.WIZARD, name: 'Old Yarrow', icon: '🔮', stats: { health: 11, attack: 2, defense: 2, mind: 6 }, trait: 'Forgot more magic than most learn. Occasionally remembers it mid-fight.' },
+  { id: 'char-silin', type: CARD_TYPES.CHARACTER, class: CLASSES.ROGUE, name: 'Silin the Debt', icon: '🗡️', stats: { health: 12, attack: 4, defense: 3, mind: 4 }, trait: 'Owes everyone. Pays in doors opened and knives thrown.' },
+  { id: 'char-crucible', type: CARD_TYPES.CHARACTER, class: CLASSES.ALCHEMIST, name: 'Magister Crucible', icon: '⚗️', stats: { health: 13, attack: 3, defense: 3, mind: 5 }, trait: 'Expelled from three academies. Each explosion taught him something.' },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -64,6 +71,57 @@ export const EQUIPMENT_CARDS = [
   { id: 'eq-boots', type: CARD_TYPES.EQUIPMENT, name: 'Boots of the Quiet Step', icon: '👢', slot: 'boots', bonus: { defense: 1, mind: 1 }, bestFor: CLASSES.ROGUE, text: 'The floorboards never learn your name.' },
   { id: 'eq-lantern', type: CARD_TYPES.EQUIPMENT, name: 'Everburning Lantern', icon: '🏮', slot: 'tool', bonus: { mind: 1, defense: 1 }, bestFor: CLASSES.CLERIC, text: 'Reveals hazards one room ahead.' },
   { id: 'eq-throwing-knives', type: CARD_TYPES.EQUIPMENT, name: 'Bandolier of Knives', icon: '🔪', slot: 'weapon', bonus: { attack: 2 }, bestFor: CLASSES.ROGUE, text: 'Six answers to most questions.' },
+  { id: 'eq-warded-buckler', type: CARD_TYPES.EQUIPMENT, name: 'Warded Buckler', icon: '🛡️', slot: 'armor', bonus: { defense: 2, mind: 1 }, bestFor: CLASSES.CLERIC, text: 'The prayers are etched on the inside, where they matter.' },
+  { id: 'eq-quicksilver-daggers', type: CARD_TYPES.EQUIPMENT, name: 'Quicksilver Daggers', icon: '🗡️', slot: 'weapon', bonus: { attack: 3 }, bestFor: CLASSES.ROGUE, text: 'They land before the argument starts.' },
+  { id: 'eq-athanor-charm', type: CARD_TYPES.EQUIPMENT, name: 'Athanor Charm', icon: '🔥', slot: 'tool', bonus: { mind: 2 }, bestFor: CLASSES.ALCHEMIST, text: 'A furnace in miniature, always exactly warm enough.' },
+
+  // Class-keyed items: the same item is a different miracle in
+  // different hands. (Megabase: a wand gives a fighter a fireball;
+  // a wizard gets meteors.)
+  {
+    id: 'eq-wand-embers', type: CARD_TYPES.EQUIPMENT, name: 'Wand of Embers', icon: '🪄',
+    slot: 'focus', bonus: { mind: 1 }, bestFor: CLASSES.WIZARD,
+    text: 'Warm to any hand. What comes out depends on whose.',
+    classActions: {
+      [CLASSES.FIGHTER]: { name: 'Ember Shot', opening: 4 },
+      [CLASSES.WIZARD]: { name: 'Meteor Fall', opening: 8 },
+      [CLASSES.CLERIC]: { name: 'Flame Ward', ward: 1 },
+      [CLASSES.ROGUE]: { name: 'Smoke Veil', ward: 1 },
+      [CLASSES.ALCHEMIST]: { name: 'Accelerant Charge', opening: 5 },
+    },
+  },
+  {
+    id: 'eq-holy-symbol', type: CARD_TYPES.EQUIPMENT, name: 'Holy Symbol of Dawn', icon: '☀️',
+    slot: 'focus', bonus: { mind: 1 }, bestFor: CLASSES.CLERIC,
+    text: 'Protection for most. Authority for some. A bad idea for one.',
+    classActions: {
+      [CLASSES.FIGHTER]: { name: 'Shield of Faith', ward: 1 },
+      [CLASSES.ROGUE]: { name: 'Veil of Shadows', ward: 1 },
+      [CLASSES.CLERIC]: { name: 'Radiant Smite', opening: 3, vsUndead: 6 },
+      [CLASSES.WIZARD]: { name: 'Animate Corpse', summonAttack: 3 },
+      [CLASSES.ALCHEMIST]: { name: 'Blessed Reagents', opening: 2 },
+    },
+  },
+
+  // Trap cards: cursed gear with hidden upsides. They look like
+  // mistakes in the pack and play like gambles at the table.
+  {
+    id: 'eq-cursed-blade', type: CARD_TYPES.EQUIPMENT, name: 'Blade of the Adder', icon: '🐍',
+    slot: 'weapon', bonus: { attack: 4, defense: -2 }, bestFor: CLASSES.FIGHTER, cursed: true,
+    text: 'It whispers where to cut. It is usually right. It never says about what.',
+  },
+  {
+    id: 'eq-haunted-armor', type: CARD_TYPES.EQUIPMENT, name: 'Haunted Armor', icon: '👻',
+    slot: 'armor', bonus: { defense: 3, mind: -1 }, bestFor: CLASSES.FIGHTER, cursed: true,
+    text: 'A chill down the spine — but the resident ghost hates monsters more than it hates you.',
+    classActions: {
+      [CLASSES.FIGHTER]: { name: 'The Ghost Objects', summonAttack: 1 },
+      [CLASSES.CLERIC]: { name: 'The Ghost Objects', summonAttack: 1 },
+      [CLASSES.WIZARD]: { name: 'The Ghost Objects', summonAttack: 1 },
+      [CLASSES.ROGUE]: { name: 'The Ghost Objects', summonAttack: 1 },
+      [CLASSES.ALCHEMIST]: { name: 'The Ghost Objects', summonAttack: 1 },
+    },
+  },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -77,6 +135,12 @@ export const SPELL_CARDS = [
   { id: 'sp-shield', type: CARD_TYPES.SPELL, name: 'Aegis of Ash', icon: '🛡️', school: 'abjuration', power: 3, use: 'combat', text: 'Blunts the first blow in each fight.' },
   { id: 'sp-light', type: CARD_TYPES.SPELL, name: 'Dancing Light', icon: '💡', school: 'evocation', power: 2, use: 'utility', text: 'Reveals traps and ambushes in the next room.' },
   { id: 'sp-fear', type: CARD_TYPES.SPELL, name: 'Cause Fear', icon: '😱', school: 'necromancy', power: 4, use: 'combat', text: 'Weak monsters flee before the fight begins.' },
+  { id: 'sp-chain', type: CARD_TYPES.SPELL, name: 'Chain Lightning', icon: '⚡', school: 'evocation', power: 5, use: 'combat', text: 'Arcs from foe to foe until it runs out of foes or enthusiasm.' },
+  { id: 'sp-frost', type: CARD_TYPES.SPELL, name: 'Frost Lance', icon: '❄️', school: 'evocation', power: 5, use: 'combat', text: 'Cold, precise, and deeply personal.' },
+  { id: 'sp-sunder', type: CARD_TYPES.SPELL, name: 'Sunder', icon: '💢', school: 'transmutation', power: 4, use: 'combat', text: 'Armor remembers being ore. This spell reminds it.' },
+  { id: 'sp-balm', type: CARD_TYPES.SPELL, name: 'Balm of Hours', icon: '🌾', school: 'restoration', power: 6, use: 'heal', text: 'Borrows healing from a quieter week and spends it now.' },
+  { id: 'sp-eyes', type: CARD_TYPES.SPELL, name: 'Eyes of the Mouse', icon: '👁️', school: 'divination', power: 2, use: 'utility', text: 'See what the small and cautious see. It is a lot.' },
+  { id: 'sp-feather', type: CARD_TYPES.SPELL, name: 'Feather Step', icon: '🪶', school: 'transmutation', power: 3, use: 'utility', text: 'The floor agrees to pretend nobody is on it.' },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -90,6 +154,9 @@ export const PERSONALITY_CARDS = [
   { id: 'pers-scholarly', type: CARD_TYPES.PERSONALITY, name: 'The Scholarly', icon: '📚', archetype: 'scholarly', text: 'Reads everything; lingers in libraries; learns extra spells.' },
   { id: 'pers-pious', type: CARD_TYPES.PERSONALITY, name: 'The Devout', icon: '🕯️', archetype: 'pious', text: 'Rests at shrines; heals more; abhors desecration.' },
   { id: 'pers-reckless', type: CARD_TYPES.PERSONALITY, name: 'The Reckless', icon: '💥', archetype: 'reckless', text: 'Rushes in. Sometimes that works. Gloriously.' },
+  // Trap personality (Megabase): looks like a liability, spots what
+  // the brave walk into. Cowards notice tripwires.
+  { id: 'pers-craven', type: CARD_TYPES.PERSONALITY, name: 'The Craven', icon: '🐔', archetype: 'craven', trap: true, text: 'Avoids every fight it can. Notices every exit — and every tripwire.' },
 ];
 
 /**

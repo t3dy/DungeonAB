@@ -19,13 +19,20 @@ import {
 } from '../narrative/Narrator.js';
 
 export class Simulator {
-  constructor(draftPool, seed = 'delve', difficulty = 'medium') {
+  /**
+   * @param draftPool  drafted cards — or a living Party carried over
+   *                   from an earlier dungeon (campaign mode)
+   */
+  constructor(draftPool, seed = 'delve', difficulty = 'medium', opts = {}) {
     this.seed = seed;
     this.difficulty = difficulty;
+    this.depth = Math.max(1, opts.depth || 1);
 
-    this.party = new Party(draftPool);
+    this.party = draftPool instanceof Party ? draftPool : new Party(draftPool);
     this.dungeon = generateDungeon(seed, difficulty, {
       wantLab: this.party.hasClass(CLASSES.ALCHEMIST),
+      theme: opts.theme,
+      depth: this.depth,
     });
 
     this.roomIndex = 0;   // Currently at the entrance
@@ -66,7 +73,7 @@ export class Simulator {
     this.party.restStep();
 
     // The room, decided and resolved
-    const predicament = composePredicament(room);
+    const predicament = composePredicament(room, this.dungeon.theme);
     const options = getRoomOptions(room, this.party);
     const chosen = decideRoomAction(room, this.party);
     const result = resolveRoomAction(room, this.party, chosen);
@@ -105,8 +112,8 @@ export class Simulator {
     this.gameOver = true;
     this.victory = victory;
     this.epitaph = victory
-      ? composeVictory(this.party, this.roomsCleared)
-      : composeWipe(this.party, this.roomsCleared);
+      ? composeVictory(this.party, this.roomsCleared, this.dungeon.theme)
+      : composeWipe(this.party, this.roomsCleared, this.dungeon.theme);
     this.addLog(victory ? '🏆 The dungeon is beaten!' : '☠️ The party has fallen.');
   }
 
@@ -115,6 +122,13 @@ export class Simulator {
       turn: this.turn,
       roomIndex: this.roomIndex,
       dungeon: this.dungeon,
+      depth: this.depth,
+      theme: {
+        id: this.dungeon.theme.id,
+        name: this.dungeon.theme.name,
+        icon: this.dungeon.theme.icon,
+        tagline: this.dungeon.theme.tagline,
+      },
       party: {
         members: this.party.members.map(m => ({
           name: m.name, class: m.class, icon: m.icon,
