@@ -1,0 +1,160 @@
+/**
+ * Simulator — the auto-crawl loop
+ *
+ * The drafted party descends room by room. Each tick: enter the
+ * next room, decide (personality-weighted), resolve (gradient),
+ * narrate, march on. Clerics mend between rooms; alchemists brew
+ * when the dungeon provides.
+ */
+
+import { generateDungeon, ROOM_TYPES } from '../world/DungeonGen.js';
+import { Party } from '../agents/Party.js';
+import { CLASSES } from '../game/Cards.js';
+import {
+  getRoomOptions, decideRoomAction, resolveRoomAction,
+} from '../encounters/RoomEncounters.js';
+import {
+  composePredicament, composeDeliberation, composeResolution,
+  composeWipe, composeVictory,
+} from '../narrative/Narrator.js';
+
+export class Simulator {
+  constructor(draftPool, seed = 'delve', difficulty = 'medium') {
+    this.seed = seed;
+    this.difficulty = difficulty;
+
+    this.party = new Party(draftPool);
+    this.dungeon = generateDungeon(seed, difficulty, {
+      wantLab: this.party.hasClass(CLASSES.ALCHEMIST),
+    });
+
+    this.roomIndex = 0;   // Currently at the entrance
+    this.turn = 0;
+    this.roomsCleared = 0;
+    this.gameOver = false;
+    this.victory = false;
+    this.paused = false;
+    this.epitaph = null;
+    this.lastNarration = null;
+    this.log = [];
+
+    // Difficulty score multiplier (mirrors SnakeAB progression)
+    this.scoreMultiplier = { easy: 1, medium: 1.5, hard: 2, nightmare: 3 }[difficulty] || 1;
+  }
+
+  addLog(message) {
+    this.log.push(message);
+  }
+
+  /**
+   * One tick = one room entered, decided, resolved
+   */
+  tick() {
+    if (this.paused || this.gameOver) return;
+
+    this.turn++;
+    this.roomIndex++;
+
+    const room = this.dungeon.getRoom(this.roomIndex);
+    if (!room) {
+      // Walked off the end without a boss?? Treat as victory.
+      this.finish(true);
+      return;
+    }
+
+    // Between-room recovery
+    this.party.restStep();
+
+    // The room, decided and resolved
+    const predicament = composePredicament(room);
+    const options = getRoomOptions(room, this.party);
+    const chosen = decideRoomAction(room, this.party);
+    const result = resolveRoomAction(room, this.party, chosen);
+
+    if (result.success !== false || room.cleared) this.roomsCleared++;
+
+    this.lastNarration = {
+      room: room.type,
+      icon: room.icon,
+      predicament,
+      deliberation: composeDeliberation(chosen, options, this.party),
+      resolution: composeResolution(room, chosen, result, this.party),
+    };
+
+    this.addLog(`${room.icon} Room ${this.roomIndex}: ${room.type} — ${chosen}`);
+
+    // Retreating from a fight backs the party up a room to try again
+    if (result.retreated) {
+      this.roomIndex--;
+    }
+
+    // Death check
+    if (!this.party.isAlive()) {
+      this.finish(false);
+      return;
+    }
+
+    // Boss down = victory
+    if (room.type === ROOM_TYPES.BOSS && room.cleared) {
+      this.party.addScore(Math.round(100 * this.scoreMultiplier));
+      this.finish(true);
+    }
+  }
+
+  finish(victory) {
+    this.gameOver = true;
+    this.victory = victory;
+    this.epitaph = victory
+      ? composeVictory(this.party, this.roomsCleared)
+      : composeWipe(this.party, this.roomsCleared);
+    this.addLog(victory ? '🏆 The dungeon is beaten!' : '☠️ The party has fallen.');
+  }
+
+  getState() {
+    return {
+      turn: this.turn,
+      roomIndex: this.roomIndex,
+      dungeon: this.dungeon,
+      party: {
+        members: this.party.members.map(m => ({
+          name: m.name, class: m.class, icon: m.icon,
+          health: m.health, maxHealth: m.maxHealth,
+          attack: m.attack, defense: m.defense, mind: m.mind,
+          alive: m.isAlive(),
+          equipment: m.equipment.map(e => e.name),
+          weaponMods: m.weaponMods.map(w => w.name),
+        })),
+        gold: this.party.gold,
+        score: this.party.score,
+        materials: this.party.materials,
+        potions: this.party.potions.length,
+        grimoire: this.party.grimoire.map(s => s.name),
+        spellsLearned: this.party.spellsLearned,
+        personalities: this.party.personalities,
+      },
+      gameOver: this.gameOver,
+      victory: this.victory,
+      epitaph: this.epitaph,
+      narration: this.lastNarration,
+      log: this.log.slice(-12),
+    };
+  }
+
+  getRunResult() {
+    return {
+      score: this.party.score,
+      gold: this.party.gold,
+      roomsCleared: this.roomsCleared,
+      turns: this.turn,
+      victory: this.victory,
+      survivors: this.party.living().length,
+      partySize: this.party.members.length,
+      spellsLearned: this.party.spellsLearned,
+      epitaph: this.epitaph,
+    };
+  }
+
+  setPaused(paused) {
+    this.paused = paused;
+  }
+}

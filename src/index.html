@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DungeonAB — Draft. Delve. Watch.</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Courier New', monospace;
+      background: #0a0a0a;
+      color: #e0e0e0;
+      overflow: hidden;
+    }
+    #app { display: flex; flex-direction: column; height: 100vh; }
+    header {
+      background: #16120c;
+      padding: 0.8rem 1rem;
+      border-bottom: 1px solid #3a2f1e;
+      text-align: center;
+    }
+    header h1 { font-size: 1.4rem; color: #d8a53f; margin-bottom: 0.2rem; }
+    header p { font-size: 0.8rem; color: #887755; }
+    main { display: flex; flex: 1; overflow: hidden; }
+
+    /* Draft screen */
+    #draft-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.25rem;
+      max-width: 1100px;
+      margin: 0 auto;
+      width: 100%;
+    }
+    #draft-container:empty { display: none; }
+
+    /* Game screen */
+    #world-container {
+      flex: 0 0 46%;
+      background: #0a0a0a;
+      border-right: 1px solid #3a2f1e;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    canvas { flex: 1; background: #0d0b08; border: 1px solid #3a2f1e; min-height: 0; }
+    #ui-container {
+      flex: 1;
+      background: #12100b;
+      padding: 1rem;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .panel {
+      background: #0a0a0a;
+      border: 1px solid #3a2f1e;
+      border-radius: 4px;
+      padding: 0.9rem;
+    }
+    .panel h2 {
+      color: #d8a53f;
+      font-size: 0.95rem;
+      margin-bottom: 0.6rem;
+      border-bottom: 1px solid #3a2f1e;
+      padding-bottom: 0.4rem;
+    }
+    button {
+      background: #d8a53f;
+      color: #14100a;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: 'Courier New', monospace;
+      font-weight: bold;
+      font-size: 0.85rem;
+      transition: background 0.2s;
+    }
+    button:hover { background: #e8b954; }
+    button:disabled { background: #665; cursor: not-allowed; opacity: 0.5; }
+
+    /* Party roster */
+    .member-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.35rem 0;
+      border-bottom: 1px dashed #2a2318;
+      font-size: 0.82rem;
+    }
+    .member-row:last-child { border-bottom: none; }
+    .member-hp {
+      margin-left: auto;
+      font-weight: bold;
+    }
+    .member-dead { opacity: 0.4; text-decoration: line-through; }
+    .hp-bar {
+      width: 70px; height: 8px;
+      background: #2a1515;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .hp-fill { height: 100%; background: #3ddc84; transition: width 0.3s; }
+
+    /* Story panel */
+    .story {
+      background: #0d1117;
+      border: 1px solid #3a2f1e;
+      border-radius: 4px;
+      padding: 0.75rem;
+      font-size: 0.84rem;
+      max-height: 340px;
+      overflow-y: auto;
+      line-height: 1.55;
+    }
+    .story-empty { color: #555; font-style: italic; }
+    .story-entry { margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px dashed #2a2318; }
+    .story-entry:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+    .story-room { color: #665; font-size: 0.7rem; margin-bottom: 0.3rem; text-transform: uppercase; letter-spacing: 0.08em; }
+    .story-predicament { color: #d8c9a3; margin-bottom: 0.4rem; }
+    .story-deliberation { color: #8fb8dd; font-style: italic; margin-bottom: 0.4rem; }
+    .story-resolution { color: #a8d5b0; }
+
+    .log {
+      background: #000;
+      border: 1px solid #3a2f1e;
+      border-radius: 4px;
+      padding: 0.6rem;
+      font-size: 0.72rem;
+      color: #b8934a;
+      max-height: 140px;
+      overflow-y: auto;
+    }
+    .log-entry { margin-bottom: 0.2rem; word-break: break-word; }
+
+    /* Modal (game over) */
+    #gameover-display {
+      display: none;
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: min(520px, 92vw);
+      max-height: 82vh;
+      overflow-y: auto;
+      background: #14110b;
+      border: 1px solid #d8a53f;
+      border-radius: 8px;
+      padding: 1.5rem;
+      z-index: 100;
+      box-shadow: 0 0 60px rgba(216, 165, 63, 0.3), 0 0 0 100vmax rgba(0,0,0,0.6);
+    }
+    #gameover-display.active { display: block; }
+    @media (min-width: 1025px) {
+      #gameover-display { left: 23%; box-shadow: 0 0 60px rgba(216, 165, 63, 0.3); }
+    }
+    #show-results-btn {
+      display: none;
+      position: fixed; bottom: 1rem; right: 1rem; z-index: 90;
+      padding: 0.7rem 1.2rem;
+      box-shadow: 0 0 20px rgba(216, 165, 63, 0.5);
+    }
+    #show-results-btn.active { display: block; }
+
+    /* Draft cards */
+    .pack-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.6rem;
+    }
+    .draft-card {
+      background: #14110b;
+      border: 2px solid #3a2f1e;
+      border-radius: 6px;
+      padding: 0.7rem;
+      cursor: pointer;
+      transition: all 0.15s;
+      min-height: 120px;
+      display: flex;
+      flex-direction: column;
+    }
+    .draft-card:hover { border-color: #d8a53f; transform: translateY(-3px); }
+    .card-type {
+      font-size: 0.62rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 0.3rem;
+    }
+    .type-character { color: #e8724a; }
+    .type-equipment { color: #8fb8dd; }
+    .type-spell { color: #b07ae8; }
+    .type-personality { color: #d8a53f; }
+    .card-name { font-weight: bold; font-size: 0.85rem; margin-bottom: 0.3rem; }
+    .card-text { font-size: 0.72rem; color: #998866; line-height: 1.4; flex: 1; }
+    .card-stats { font-size: 0.7rem; color: #7a9; margin-top: 0.4rem; }
+
+    @media (max-width: 1024px) {
+      main { flex-direction: column; }
+      #world-container { flex: 0 0 auto; max-height: 42%; border-right: none; border-bottom: 1px solid #3a2f1e; }
+      .pack-grid { grid-template-columns: repeat(2, 1fr); }
+      #gameover-display { left: 50%; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <header>
+      <h1>⚔️ DungeonAB</h1>
+      <p>Draft the party. Delve the dungeon. Watch the story.</p>
+    </header>
+    <main>
+      <div id="draft-container"></div>
+      <div id="world-container" style="display: none;">
+        <canvas id="game-canvas" width="500" height="420"></canvas>
+        <div class="panel" style="display:flex;gap:1.25rem;font-size:0.8rem;flex-wrap:wrap;">
+          <span>Room: <strong id="room-count" style="color:#d8a53f;">0</strong></span>
+          <span>Gold: <strong id="gold-count" style="color:#d8a53f;">0</strong></span>
+          <span>Score: <strong id="score-count" style="color:#d8a53f;">0</strong></span>
+          <span>Materials: <strong id="materials-count" style="color:#7a9;">0</strong></span>
+          <span>Potions: <strong id="potions-count" style="color:#b07ae8;">0</strong></span>
+        </div>
+      </div>
+      <div id="ui-container" style="display: none;">
+        <div class="panel">
+          <h2>🎭 The Party</h2>
+          <div id="party-roster"></div>
+        </div>
+        <div class="panel">
+          <h2>Controls</h2>
+          <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
+            <button id="pause-btn" disabled>Pause</button>
+            <button id="step-btn" disabled>Step</button>
+            <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.8rem;">
+              Speed <input type="range" id="speed-slider" min="0.25" max="4" step="0.25" value="1" />
+              <span id="speed-label">1.0x</span>
+            </label>
+          </div>
+        </div>
+        <div class="panel">
+          <h2>📖 The Chronicle</h2>
+          <div id="story-panel" class="story">
+            <div class="story-empty">The chronicle of this delve is not yet written…</div>
+          </div>
+        </div>
+        <div class="panel">
+          <h2>Log</h2>
+          <div id="debug-log" class="log"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div id="gameover-display"></div>
+  <button id="show-results-btn">🏆 Show Results</button>
+
+  <script type="module" src="./main.js"></script>
+</body>
+</html>
