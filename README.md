@@ -1,6 +1,8 @@
 # ⚔️ DungeonAB — Dungeon-Crawling Autobattler
 
-Draft a party MTG-style — packs passed around a table of AI rivals, one pick per pack — then watch your Fighters, Clerics, Wizards, Rogues, and Alchemists auto-crawl a procedurally generated dungeon: fighting, looting, learning spells, and brewing potions at abandoned lab benches.
+**▶️ Play the prototype: https://t3dy.github.io/DungeonAB/**
+
+Draft a party MTG-style — packs passed around a table of AI rivals, one pick per pack — then watch your Fighters, Clerics, Wizards, Rogues, and Alchemists auto-crawl a procedurally generated dungeon: fighting, looting, learning spells, and brewing potions at abandoned lab benches. Survive, spend your gold in town, and delve deeper.
 
 **Sibling project**: [SnakeAB](https://github.com/t3dy/SnakeAB) — same engine philosophy (personality-driven AI, three-beat narration, gradient outcomes), new genre.
 
@@ -30,7 +32,10 @@ The party descends room by room, deciding for itself (personality-weighted, clas
 - **The Boss** — everything you drafted, tested at once
 
 ### 3. The Chronicle
-Every room is narrated in three beats: the predicament, the party's deliberation (who argued for what — "Vex Threefingers made the case"), and the resolution. Wipes get epitaphs; victories get codas.
+Every room is narrated in three beats: the predicament, the party's deliberation (who argued for what, in character — *"Vex Threefingers made the case: 'I know a spell for this. It's called leaving.'"*), and the resolution. Wipes get epitaphs; victories get codas.
+
+### 4. The Campaign
+Survive a dungeon and the party carries its scars, loot, grimoire, and gold onward. **Town** between delves: heal for coin (temples discount the Devout), stock healing draughts, then choose — descend to a deeper, meaner dungeon, or retire and bank the score. Each of the five **themed dungeons** (the Old Delve, the Ancient Crypt, the Cinder Galleries, the Drowned Athenaeum, the Mad Alchemist's Dungeon) brings its own monster roster, hazards, and arrival.
 
 ---
 
@@ -39,8 +44,12 @@ Every room is narrated in three beats: the predicament, the party's deliberation
 ```bash
 npm install
 npm run dev    # http://localhost:5175
-npm test       # 30+ engine tests
+npm test       # 87 tests across 8 suites
+npm run build  # production bundle → dist/
 ```
+
+Every push to `main` runs the tests and deploys the built prototype to GitHub Pages
+(see [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml)).
 
 ## Design Lineage
 
@@ -51,8 +60,14 @@ Consolidated in `DESIGN.md` from:
 
 ## Roadmap
 
-- [ ] Isometric Three.js dungeon renderer (SnakeAB's IsoRenderer, re-themed)
-- [ ] Progression: difficulty unlocks, run history, leaderboards
+- [x] Isometric Three.js dungeon renderer (SnakeAB's IsoRenderer, re-themed)
+- [x] Progression: difficulty tiers, run history, best scores
+- [x] Personality barks — same archetype, different voice per class
+- [x] Class-keyed equipment — a wand is a fireball for a fighter, meteors for a wizard
+- [x] Trap cards & personalities — cursed gear and The Craven, weak-looking with hidden upside
+- [x] Themed dungeons — five faces, each with its own roster and hazards
+- [x] Campaign mode — town between delves, party carryover, depth scaling
+- [x] Deploy the prototype (GitHub Pages)
+- [ ] Recruit replacements for the fallen; blacksmith upgrades in town
 - [ ] Dungeon condition modifiers drafted against rivals (Megabase multiplayer variant)
 - [ ] True multiplayer draft
-- [ ] Deploy to Vercel
