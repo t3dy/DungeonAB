@@ -5,7 +5,7 @@
  */
 
 import { strict as assert } from 'assert';
-import { DUNGEON_CONDITIONS, getCondition } from '../src/game/Conditions.js';
+import { DUNGEON_CONDITIONS, getCondition, combineConditions } from '../src/game/Conditions.js';
 import { generateDungeon, ROOM_TYPES } from '../src/world/DungeonGen.js';
 import { Simulator } from '../src/sim/Simulator.js';
 import { Campaign } from '../src/game/Campaign.js';
@@ -46,6 +46,43 @@ describe('Condition definitions', () => {
     for (const c of Object.values(DUNGEON_CONDITIONS)) {
       if (c.id !== 'none') assert.ok(c.scoreBonus > 0, `${c.id} pays a premium`);
     }
+  });
+});
+
+describe('Combining conditions (a wager plus a hex)', () => {
+  test('Standard Delve is the identity on both sides', () => {
+    assert.equal(combineConditions('none', 'traps').id, 'traps');
+    assert.equal(combineConditions('traps', 'none').id, 'traps');
+    assert.equal(combineConditions('none', 'none').id, 'none');
+  });
+
+  test('bonuses sum, multipliers multiply, weights add', () => {
+    const combo = combineConditions('traps', 'darkpact');
+    assert.equal(combo.scoreBonus, getCondition('traps').scoreBonus + getCondition('darkpact').scoreBonus);
+    assert.equal(combo.trapBonus, getCondition('traps').trapBonus);
+    assert.equal(combo.goldMult, getCondition('darkpact').goldMult);
+    assert.equal(combo.monsterAttackMult, getCondition('darkpact').monsterAttackMult);
+    assert.equal(combo.weightTweaks.trap, getCondition('traps').weightTweaks.trap);
+    assert.ok(combo.name.includes('Trap-Dense') && combo.name.includes('Dark Pact'));
+  });
+
+  test('a combined condition flows through generation (both effects land)', () => {
+    const plain = generateDungeon('combo-seed', 'medium', { theme: 'delve' });
+    const combo = generateDungeon('combo-seed', 'medium', {
+      theme: 'delve', condition: combineConditions('traps', 'darkpact'),
+    });
+    const maxTrap = d => Math.max(0, ...d.rooms.filter(r => r.trapDamage).map(r => r.trapDamage));
+    if (maxTrap(plain) > 0) assert.ok(maxTrap(combo) > maxTrap(plain), 'the hex\'s traps bite');
+    assert.ok(monsterAvg(combo).atk > monsterAvg(plain).atk, 'the wager\'s monsters hit');
+  });
+
+  test('a combined condition pays its combined premium in the run', () => {
+    const combo = combineConditions('traps', 'darkpact');
+    const sim = new Simulator([fighter], 'combo-run', 'medium', { theme: 'delve', condition: combo });
+    const plain = new Simulator([fighter], 'combo-run', 'medium', { theme: 'delve' });
+    const expected = plain.scoreMultiplier * (1 + combo.scoreBonus);
+    assert.ok(Math.abs(sim.scoreMultiplier - expected) < 1e-9, 'premium sums into the multiplier');
+    assert.ok(sim.getState().condition.name.includes('+') || sim.getState().condition.name.includes(' + '), 'the UI sees the combined name');
   });
 });
 

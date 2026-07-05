@@ -9,6 +9,7 @@
  */
 
 import { Campaign } from './Campaign.js';
+import { getCondition, combineConditions } from './Conditions.js';
 
 /**
  * Run one seat's pool through up to `targetDepth` dungeons, headless,
@@ -34,30 +35,39 @@ function runRival(pool, { seed, difficulty, condition, targetDepth }) {
  *
  * @param draft   the PackDraft (its AI seats hold drafted pools)
  * @param player  the human result: { score, depth }
- * @param opts    { seed, difficulty, condition } shared across the table
- * @returns sorted array of { name, icon, score, depthReached, isPlayer, place }
+ * @param opts    { seed, difficulty, condition, hexes } — condition is
+ *                the table's shared wager; hexes maps a seat id to a
+ *                condition id laid on that rival's run
+ * @returns sorted array of { name, icon, score, depthReached, isPlayer, place, hexIcon }
  */
 export function computeStandings(draft, player, opts = {}) {
-  const { seed = 'table', difficulty = 'medium', condition = 'none' } = opts;
+  const { seed = 'table', difficulty = 'medium', condition = 'none', hexes = {} } = opts;
   const targetDepth = Math.max(1, player.depth || 1);
 
   const rows = [];
 
-  // The rivals actually delve their drafts
+  // The rivals actually delve their drafts — hexed where hexed
   for (const seat of draft.seats.filter(s => s.isAI)) {
+    const hex = hexes[seat.id] ? getCondition(hexes[seat.id]) : null;
+    const seatCondition = hex ? combineConditions(condition, hex) : condition;
     const result = runRival(seat.pool, {
       seed: `${seed}-rival-${seat.id}`,
       difficulty,
-      condition,
+      condition: seatCondition,
       targetDepth,
     });
-    rows.push({ name: seat.name, icon: seat.icon, isPlayer: false, ...result });
+    rows.push({
+      name: seat.name, icon: seat.icon, isPlayer: false,
+      hexIcon: hex && hex.id !== 'none' ? hex.icon : null,
+      ...result,
+    });
   }
 
-  // The player's real run
+  // The player's real run (hexIcon shows the hex a rival laid on them)
   rows.push({
     name: 'You', icon: '🗡️', isPlayer: true,
     score: player.score, depthReached: targetDepth,
+    hexIcon: player.hexIcon || null,
   });
 
   // Rank by score, then by how deep they got

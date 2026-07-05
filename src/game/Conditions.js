@@ -66,3 +66,37 @@ export const DUNGEON_CONDITIONS = {
 export function getCondition(id) {
   return DUNGEON_CONDITIONS[id] || DUNGEON_CONDITIONS.none;
 }
+
+/**
+ * Compose two conditions into one (a wager plus a rival's hex).
+ * Bonuses sum, multipliers multiply, weight tweaks add — so stacking
+ * is meaner AND pays more, never a silent overwrite. Standard Delve
+ * is the identity: combining with it returns the other side.
+ */
+export function combineConditions(a, b) {
+  const left = (a && typeof a === 'object') ? a : getCondition(a);
+  const right = (b && typeof b === 'object') ? b : getCondition(b);
+  if (left.id === 'none') return right;
+  if (right.id === 'none') return left;
+
+  const weightTweaks = { ...(left.weightTweaks || {}) };
+  for (const [type, tweak] of Object.entries(right.weightTweaks || {})) {
+    weightTweaks[type] = (weightTweaks[type] || 0) + tweak;
+  }
+
+  const mult = key => (left[key] || 1) * (right[key] || 1);
+  const combined = {
+    id: `${left.id}+${right.id}`,
+    name: `${left.name} + ${right.name}`,
+    icon: `${left.icon}${right.icon}`,
+    text: `${left.text} ${right.text}`,
+    scoreBonus: (left.scoreBonus || 0) + (right.scoreBonus || 0),
+    weightTweaks,
+    trapBonus: (left.trapBonus || 0) + (right.trapBonus || 0),
+  };
+  for (const key of ['goldMult', 'monsterAttackMult', 'monsterHealthMult', 'bossAttackMult', 'bossHealthMult']) {
+    const v = mult(key);
+    if (v !== 1) combined[key] = v;
+  }
+  return combined;
+}

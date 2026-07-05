@@ -10,8 +10,9 @@ import { IsoDungeonRenderer } from './ui/IsoDungeonRenderer.js';
 import { Campaign, TOWN_PRICES } from './game/Campaign.js';
 import { composeTownInterlude } from './narrative/Narrator.js';
 import { progression, DIFFICULTIES } from './game/Progression.js';
-import { getCondition } from './game/Conditions.js';
+import { getCondition, combineConditions, DUNGEON_CONDITIONS } from './game/Conditions.js';
 import { computeStandings } from './game/Standings.js';
+import { SeededRandom } from './draft/PackDraft.js';
 import { ROOM_HELP, CARD_TYPE_HELP, describeTickEvents } from './ui/GameGuide.js';
 
 const HELP_SEEN_KEY = 'dungeonab_help_seen';
@@ -170,7 +171,7 @@ function startNewDraft() {
   document.getElementById('ui-container').style.display = 'none';
 }
 
-function startDelve({ pool, difficulty, seed, condition }) {
+function startDelve({ pool, difficulty, seed, condition, hexTarget, hexCondition }) {
   console.log(`Campaign begins: difficulty=${difficulty}, seed=${seed}, condition=${condition}`);
 
   const draftContainer = document.getElementById('draft-container');
@@ -179,11 +180,35 @@ function startDelve({ pool, difficulty, seed, condition }) {
   document.getElementById('world-container').style.display = 'flex';
   document.getElementById('ui-container').style.display = 'flex';
 
-  appState.campaign = new Campaign(pool, { seed, difficulty, condition });
+  // The hex exchange (Megabase v2 variant): the player may have laid a
+  // hex on a rival; one seeded rival lays one back. Telegraphed, and
+  // the hex's score premium is the victim's to keep — take-that with
+  // counterplay, not a cliff.
+  const hexRng = new SeededRandom(`${seed}-hexes`);
+  const rivals = appState.draft.seats.filter(s => s.isAI);
+  const hexer = hexRng.pick(rivals);
+  const hexIds = Object.keys(DUNGEON_CONDITIONS).filter(id => id !== 'none');
+  const hexOnPlayer = getCondition(hexRng.pick(hexIds));
+  appState.sabotage = {
+    tableWager: condition,
+    byPlayer: hexCondition && hexCondition !== 'none' ? { seatId: hexTarget, conditionId: hexCondition } : null,
+    onPlayer: { rivalName: hexer.name, rivalIcon: hexer.icon, condition: hexOnPlayer },
+  };
+
+  const playerCondition = combineConditions(getCondition(condition), hexOnPlayer);
+
+  appState.campaign = new Campaign(pool, { seed, difficulty, condition: playerCondition });
   appState.difficulty = difficulty;
   appState.runRecorded = false;
   appState.standings = null;            // recomputed when this campaign ends
   appState.seenRoomTypes = new Set();   // explain each room once per campaign
+
+  showToast(hexer.icon, `${hexer.name} hexes your run: ${hexOnPlayer.name}. Its score premium is yours to keep.`, 'death');
+  if (appState.sabotage.byPlayer) {
+    const laid = getCondition(hexCondition);
+    const victim = rivals.find(s => s.id === hexTarget);
+    showToast(laid.icon, `Your hex — ${laid.name} — settles over ${victim?.name || 'a rival'}'s run.`, 'boss');
+  }
 
   beginDelve(appState.campaign.nextDelve());
 }
@@ -498,18 +523,26 @@ function showFinal(state) {
   const isNewBest = summary.score >= best && summary.score > 0;
   const stats = progression.getStats();
 
-  // The rivals finally delve their drafts — compare scores at the table
+  // The rivals finally delve their drafts — compare scores at the table.
+  // The player's hex lands on its target; the hex laid on the player is
+  // already baked into their real run.
   if (!appState.standings && appState.draft) {
+    const sab = appState.sabotage || {};
     appState.standings = computeStandings(
       appState.draft,
-      { score: summary.score, depth: summary.depth },
-      { seed: campaign.seed, difficulty: campaign.difficulty, condition: campaign.condition },
+      { score: summary.score, depth: summary.depth, hexIcon: sab.onPlayer?.condition?.icon || null },
+      {
+        seed: campaign.seed,
+        difficulty: campaign.difficulty,
+        condition: sab.tableWager ?? campaign.condition,
+        hexes: sab.byPlayer ? { [sab.byPlayer.seatId]: sab.byPlayer.conditionId } : {},
+      },
     );
   }
   const standingsRows = (appState.standings || []).map(r => `
     <div style="display:flex;gap:0.5rem;align-items:baseline;padding:0.28rem 0;border-bottom:1px dashed #2a2318;${r.isPlayer ? 'color:#d8a53f;font-weight:bold;' : 'color:#b0a080;'}">
       <span style="width:1.6rem;">${placeLabel(r.place)}</span>
-      <span>${r.icon} ${escapeHtml(r.name)}</span>
+      <span>${r.icon} ${escapeHtml(r.name)}${r.hexIcon ? ` <span title="hexed">${r.hexIcon}</span>` : ''}</span>
       <span style="margin-left:auto;">${r.score} <span style="color:#776;font-size:0.82em;">· depth ${r.depthReached}</span></span>
     </div>`).join('');
 

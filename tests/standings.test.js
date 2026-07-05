@@ -6,6 +6,9 @@
 import { strict as assert } from 'assert';
 import { PackDraft } from '../src/draft/PackDraft.js';
 import { computeStandings } from '../src/game/Standings.js';
+import { getCondition } from '../src/game/Conditions.js';
+
+const getConditionIcon = id => getCondition(id).icon;
 
 /** Run a full draft so the AI seats hold real pools. */
 function draftedTable(seed) {
@@ -52,6 +55,21 @@ describe('Rival standings', () => {
     for (const r of rows.filter(r => !r.isPlayer)) {
       assert.ok(r.score >= 0, 'rivals post a real, non-negative score');
     }
+  });
+
+  test('a hex lands on its target rival and is marked in the row', () => {
+    const draft = draftedTable('stand-hex');
+    const victim = draft.seats.find(s => s.isAI);
+    const rows = computeStandings(
+      draft,
+      { score: 100, depth: 1, hexIcon: '🌑' },
+      { seed: 'stand-hex', difficulty: 'easy', hexes: { [victim.id]: 'traps' } },
+    );
+    const hexedRow = rows.find(r => r.name === victim.name);
+    assert.equal(hexedRow.hexIcon, getConditionIcon('traps'), 'the victim wears the hex');
+    const cleanRivals = rows.filter(r => !r.isPlayer && r.name !== victim.name);
+    assert.ok(cleanRivals.every(r => !r.hexIcon), 'the others delve unhexed');
+    assert.equal(rows.find(r => r.isPlayer).hexIcon, '🌑', 'the player wears theirs too');
   });
 
   test('rivals delve deeper when the player set a higher target', () => {

@@ -185,6 +185,23 @@ export class DraftUI {
         </label>
         <div id="condition-hint" style="margin-top:0.35rem;font-size:0.75rem;color:#887755;font-style:italic;line-height:1.4;"></div>
       </div>
+      <div style="margin-top:0.9rem;font-size:0.85rem;border-top:1px dashed #3a2f1e;padding-top:0.7rem;">
+        <div style="color:#e8724a;margin-bottom:0.35rem;">🩸 Lay a Hex — curse a rival's run</div>
+        <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
+          <label style="flex:1;min-width:140px;">Rival
+            <select id="hex-target-select" style="width:100%;margin-top:0.3rem;background:#14110b;color:#e0e0e0;border:1px solid #3a2f1e;padding:0.4rem;border-radius:4px;font-family:inherit;">
+              ${this.draft.seats.filter(s => s.isAI).map(s => `<option value="${s.id}">${s.icon} ${s.name}</option>`).join('')}
+            </select>
+          </label>
+          <label style="flex:1;min-width:140px;">Hex
+            <select id="hex-condition-select" style="width:100%;margin-top:0.3rem;background:#14110b;color:#e0e0e0;border:1px solid #3a2f1e;padding:0.4rem;border-radius:4px;font-family:inherit;">
+              <option value="none" selected>No hex — stay civil</option>
+              ${Object.values(DUNGEON_CONDITIONS).filter(c => c.id !== 'none').map(c => `<option value="${c.id}">${c.icon} ${c.name}</option>`).join('')}
+            </select>
+          </label>
+        </div>
+        <div style="margin-top:0.35rem;font-size:0.72rem;color:#887755;font-style:italic;">Fair warning: the table hexes back. One rival will curse your run — but its score premium is yours to keep.</div>
+      </div>
     `;
     container.appendChild(setup);
 
@@ -202,7 +219,9 @@ export class DraftUI {
       const difficulty = document.getElementById('difficulty-select').value;
       const seed = document.getElementById('seed-input').value.trim() || `delve-${Date.now().toString(36)}`;
       const condition = document.getElementById('condition-select').value;
-      this.onComplete({ pool: pool.all, difficulty, seed, condition });
+      const hexTarget = document.getElementById('hex-target-select').value;
+      const hexCondition = document.getElementById('hex-condition-select').value;
+      this.onComplete({ pool: pool.all, difficulty, seed, condition, hexTarget, hexCondition });
     });
     container.appendChild(goBtn);
   }
