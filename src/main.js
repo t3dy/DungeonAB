@@ -11,6 +11,7 @@ import { Campaign, TOWN_PRICES } from './game/Campaign.js';
 import { composeTownInterlude } from './narrative/Narrator.js';
 import { progression, DIFFICULTIES } from './game/Progression.js';
 import { getCondition } from './game/Conditions.js';
+import { computeStandings } from './game/Standings.js';
 import { ROOM_HELP, CARD_TYPE_HELP, describeTickEvents } from './ui/GameGuide.js';
 
 const HELP_SEEN_KEY = 'dungeonab_help_seen';
@@ -181,6 +182,7 @@ function startDelve({ pool, difficulty, seed, condition }) {
   appState.campaign = new Campaign(pool, { seed, difficulty, condition });
   appState.difficulty = difficulty;
   appState.runRecorded = false;
+  appState.standings = null;            // recomputed when this campaign ends
   appState.seenRoomTypes = new Set();   // explain each room once per campaign
 
   beginDelve(appState.campaign.nextDelve());
@@ -496,6 +498,21 @@ function showFinal(state) {
   const isNewBest = summary.score >= best && summary.score > 0;
   const stats = progression.getStats();
 
+  // The rivals finally delve their drafts — compare scores at the table
+  if (!appState.standings && appState.draft) {
+    appState.standings = computeStandings(
+      appState.draft,
+      { score: summary.score, depth: summary.depth },
+      { seed: campaign.seed, difficulty: campaign.difficulty, condition: campaign.condition },
+    );
+  }
+  const standingsRows = (appState.standings || []).map(r => `
+    <div style="display:flex;gap:0.5rem;align-items:baseline;padding:0.28rem 0;border-bottom:1px dashed #2a2318;${r.isPlayer ? 'color:#d8a53f;font-weight:bold;' : 'color:#b0a080;'}">
+      <span style="width:1.6rem;">${placeLabel(r.place)}</span>
+      <span>${r.icon} ${escapeHtml(r.name)}</span>
+      <span style="margin-left:auto;">${r.score} <span style="color:#776;font-size:0.82em;">· depth ${r.depthReached}</span></span>
+    </div>`).join('');
+
   const display = document.getElementById('gameover-display');
 
   display.innerHTML = `
@@ -514,6 +531,10 @@ function showFinal(state) {
       <span style="color:#887755;">Spells learned</span><strong style="text-align:right;">${summary.spellsLearned}</strong>
       <span style="color:#887755;">Best on ${appState.difficulty}</span><strong style="text-align:right;">${Math.max(best, summary.score)}</strong>
       <span style="color:#887755;">Career</span><strong style="text-align:right;">${stats.totalVictories} retirements / ${stats.totalRuns} campaigns</strong>
+    </div>
+    <div style="margin-top:1.25rem;">
+      <div style="color:#d8a53f;font-size:0.85rem;margin-bottom:0.4rem;border-top:1px solid #3a2f1e;padding-top:0.8rem;">🎲 At the Table — how the draft played out</div>
+      ${standingsRows}
     </div>
   `;
 
@@ -543,6 +564,10 @@ function escapeHtml(text) {
   const div = document.createElement('div');
   div.textContent = text;
   return div.innerHTML;
+}
+
+function placeLabel(place) {
+  return ['🥇', '🥈', '🥉'][place - 1] || `${place}.`;
 }
 
 window.addEventListener('DOMContentLoaded', init);

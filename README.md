@@ -72,6 +72,7 @@ Consolidated in `DESIGN.md` from:
 - [x] Town services — hire replacements from the board, sharpen weapons at the smith
 - [x] Onscreen help — how-to-play overlay, event toasts, room/control legends
 - [x] Hall of Records — best scores and past campaigns, persisted locally
+- [x] Rival standings — the AI drafters delve their own parties; scores compared at the table
 - [x] Deploy the prototype (Vercel, with a GitHub Pages mirror)
 - [ ] Dungeon condition modifiers drafted against rivals (Megabase multiplayer variant)
 - [ ] True multiplayer draft
