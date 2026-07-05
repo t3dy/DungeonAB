@@ -68,6 +68,7 @@ Consolidated in `DESIGN.md` from:
 - [x] Trap cards & personalities — cursed gear and The Craven, weak-looking with hidden upside
 - [x] Themed dungeons — five faces, each with its own roster and hazards
 - [x] Campaign mode — town between delves, party carryover, depth scaling
+- [x] Dungeon conditions — wager a meaner delve (swarms, traps, dark pact…) for a bigger score
 - [x] Town services — hire replacements from the board, sharpen weapons at the smith
 - [x] Onscreen help — how-to-play overlay, event toasts, room/control legends
 - [x] Deploy the prototype (Vercel, with a GitHub Pages mirror)

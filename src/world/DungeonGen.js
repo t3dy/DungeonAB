@@ -9,6 +9,7 @@
  */
 
 import { SeededRandom } from '../draft/PackDraft.js';
+import { getCondition } from '../game/Conditions.js';
 
 export const ROOM_TYPES = {
   ENTRANCE: 'entrance',
@@ -53,9 +54,10 @@ function weightedPick(rng, weights) {
 }
 
 export class Dungeon {
-  constructor(rooms, theme) {
-    this.rooms = rooms; // Array of room objects in order
-    this.theme = theme; // One of DUNGEON_THEMES
+  constructor(rooms, theme, condition = null) {
+    this.rooms = rooms;         // Array of room objects in order
+    this.theme = theme;         // One of DUNGEON_THEMES
+    this.condition = condition; // The player's wager, or null
   }
   getRoom(index) {
     return this.rooms[index] || null;
@@ -84,9 +86,17 @@ export function generateDungeon(seed, difficulty = 'medium', opts = {}) {
   const theme = DUNGEON_THEMES[opts.theme]
     || rng.pick(Object.values(DUNGEON_THEMES));
 
-  // Difficulty sets the table; the theme leans on it
+  // The player's wager on the dungeon (a risk/reward modifier)
+  const condition = typeof opts.condition === 'object' && opts.condition
+    ? opts.condition
+    : getCondition(opts.condition);
+
+  // Difficulty sets the table; the theme and the condition lean on it
   const weights = { ...(TYPE_WEIGHTS[difficulty] || TYPE_WEIGHTS.medium) };
   for (const [type, tweak] of Object.entries(theme.weightTweaks)) {
+    weights[type] = Math.max(0.1, (weights[type] || 0) + tweak);
+  }
+  for (const [type, tweak] of Object.entries(condition.weightTweaks || {})) {
     weights[type] = Math.max(0.1, (weights[type] || 0) + tweak);
   }
 
@@ -96,24 +106,24 @@ export function generateDungeon(seed, difficulty = 'medium', opts = {}) {
   const spineLength = 8 + Math.floor(rng.next() * 4); // 8-11 rooms between entrance and boss
   const rooms = [];
 
-  rooms.push(makeRoom(0, ROOM_TYPES.ENTRANCE, rng, theme, depth, statScale));
+  rooms.push(makeRoom(0, ROOM_TYPES.ENTRANCE, rng, theme, depth, statScale, condition));
 
   for (let i = 1; i <= spineLength; i++) {
     const type = weightedPick(rng, weights);
-    rooms.push(makeRoom(i, type, rng, theme, depth, statScale));
+    rooms.push(makeRoom(i, type, rng, theme, depth, statScale, condition));
   }
 
   // Guarantees: at least one library and one shrine; a lab if wanted.
   // Themes add their own identity guarantees on top.
-  ensureRoomType(rooms, ROOM_TYPES.LIBRARY, rng, theme, depth, statScale, theme.minLibraries || 1);
-  ensureRoomType(rooms, ROOM_TYPES.SHRINE, rng, theme, depth, statScale);
+  ensureRoomType(rooms, ROOM_TYPES.LIBRARY, rng, theme, depth, statScale, condition, theme.minLibraries || 1);
+  ensureRoomType(rooms, ROOM_TYPES.SHRINE, rng, theme, depth, statScale, condition);
   if (opts.wantLab || theme.alwaysLab) {
-    ensureRoomType(rooms, ROOM_TYPES.LAB, rng, theme, depth, statScale);
+    ensureRoomType(rooms, ROOM_TYPES.LAB, rng, theme, depth, statScale, condition);
     // A lab without materials is glassware and regret
-    ensureRoomType(rooms, ROOM_TYPES.MATERIALS, rng, theme, depth, statScale, 1);
+    ensureRoomType(rooms, ROOM_TYPES.MATERIALS, rng, theme, depth, statScale, condition, 1);
   }
 
-  rooms.push(makeRoom(rooms.length, ROOM_TYPES.BOSS, rng, theme, depth, statScale));
+  rooms.push(makeRoom(rooms.length, ROOM_TYPES.BOSS, rng, theme, depth, statScale, condition));
 
   // Depth positions for the renderer (a winding descent)
   let x = 0;
@@ -124,7 +134,7 @@ export function generateDungeon(seed, difficulty = 'medium', opts = {}) {
     if (rng.next() < 0.5) x += 1; else y += 1;
   }
 
-  return new Dungeon(rooms, theme);
+  return new Dungeon(rooms, theme, condition);
 }
 
 /**
@@ -137,7 +147,7 @@ const PROTECTED_TYPES = new Set([
   ROOM_TYPES.LIBRARY, ROOM_TYPES.SHRINE, ROOM_TYPES.LAB, ROOM_TYPES.MATERIALS,
 ]);
 
-function ensureRoomType(rooms, type, rng, theme, depth, statScale, minCount = 1) {
+function ensureRoomType(rooms, type, rng, theme, depth, statScale, condition, minCount = 1) {
   const have = rooms.filter(r => r.type === type).length;
   let need = minCount - have;
 
@@ -145,7 +155,7 @@ function ensureRoomType(rooms, type, rng, theme, depth, statScale, minCount = 1)
     const convertible = rooms.filter(r => !PROTECTED_TYPES.has(r.type));
     if (convertible.length === 0) break;
     const target = rng.pick(convertible);
-    const replacement = makeRoom(target.index, type, rng, theme, depth, statScale);
+    const replacement = makeRoom(target.index, type, rng, theme, depth, statScale, condition);
     replacement.x = target.x;
     replacement.y = target.y;
     rooms[rooms.indexOf(target)] = replacement;
@@ -153,7 +163,7 @@ function ensureRoomType(rooms, type, rng, theme, depth, statScale, minCount = 1)
   }
 }
 
-function makeRoom(index, type, rng, theme, depth = 1, statScale = 1) {
+function makeRoom(index, type, rng, theme, depth = 1, statScale = 1, condition = {}) {
   const room = {
     index,
     type,
@@ -162,19 +172,21 @@ function makeRoom(index, type, rng, theme, depth = 1, statScale = 1) {
   };
 
   // Per-type payloads. Depth is the campaign's whetstone: deeper
-  // dungeons hit harder and pay better.
+  // dungeons hit harder and pay better. The condition is the player's
+  // wager on top — meaner monsters, deeper traps, richer hoards.
   if (type === ROOM_TYPES.MONSTER) {
-    room.monster = rollMonster(rng, false, theme, depth, statScale);
+    room.monster = rollMonster(rng, false, theme, depth, statScale, condition);
   }
   if (type === ROOM_TYPES.BOSS) {
-    room.monster = rollMonster(rng, true, theme, depth, statScale);
+    room.monster = rollMonster(rng, true, theme, depth, statScale, condition);
   }
   if (type === ROOM_TYPES.TREASURE) {
-    room.gold = Math.round((20 + Math.floor(rng.next() * 40)) * (1 + 0.2 * (depth - 1)));
+    const base = (20 + Math.floor(rng.next() * 40)) * (1 + 0.2 * (depth - 1));
+    room.gold = Math.round(base * (condition.goldMult || 1));
     room.mimicChance = 0.18;
   }
   if (type === ROOM_TYPES.TRAP) {
-    room.trapDamage = 4 + Math.floor(rng.next() * 4) + (theme.trapBonus || 0) + (depth - 1);
+    room.trapDamage = 4 + Math.floor(rng.next() * 4) + (theme.trapBonus || 0) + (depth - 1) + (condition.trapBonus || 0);
   }
   if (type === ROOM_TYPES.MATERIALS) {
     room.materials = 1 + Math.floor(rng.next() * 2);
@@ -285,14 +297,20 @@ export const STAT_SCALE = {
   nightmare: 1.7,
 };
 
-function rollMonster(rng, isBoss, theme, depth = 1, statScale = 1) {
+function rollMonster(rng, isBoss, theme, depth = 1, statScale = 1, condition = {}) {
   const pool = isBoss ? theme.bosses : theme.monsters;
   const monster = { ...rng.pick(pool) };
 
+  // The player's wager reshapes the foe: bosses and rank-and-file
+  // scale separately (Monster Swarms thins the many; the Long Throne
+  // fattens the one).
+  const condAtk = (isBoss ? condition.bossAttackMult : condition.monsterAttackMult) || 1;
+  const condHp = (isBoss ? condition.bossHealthMult : condition.monsterHealthMult) || 1;
+
   // Depth: things get meaner the farther from daylight
   const depthFactor = 1 + 0.15 * (depth - 1);
-  monster.attack = Math.round(monster.attack * depthFactor * statScale);
-  monster.health = Math.round(monster.health * (1 + 0.2 * (depth - 1)) * statScale);
+  monster.attack = Math.max(1, Math.round(monster.attack * depthFactor * statScale * condAtk));
+  monster.health = Math.max(1, Math.round(monster.health * (1 + 0.2 * (depth - 1)) * statScale * condHp));
   if (isBoss) monster.isBoss = true;
 
   return monster;

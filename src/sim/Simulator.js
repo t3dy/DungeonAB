@@ -33,7 +33,9 @@ export class Simulator {
       wantLab: this.party.hasClass(CLASSES.ALCHEMIST),
       theme: opts.theme,
       depth: this.depth,
+      condition: opts.condition,
     });
+    this.condition = this.dungeon.condition;
 
     this.roomIndex = 0;   // Currently at the entrance
     this.turn = 0;
@@ -45,8 +47,10 @@ export class Simulator {
     this.lastNarration = null;
     this.log = [];
 
-    // Difficulty score multiplier (mirrors SnakeAB progression)
-    this.scoreMultiplier = { easy: 1, medium: 1.5, hard: 2, nightmare: 3 }[difficulty] || 1;
+    // Score multiplier: difficulty (mirrors SnakeAB progression), then
+    // the condition's wager on top — a meaner dungeon pays out more.
+    const base = { easy: 1, medium: 1.5, hard: 2, nightmare: 3 }[difficulty] || 1;
+    this.scoreMultiplier = base * (1 + (this.condition?.scoreBonus || 0));
   }
 
   addLog(message) {
@@ -129,6 +133,9 @@ export class Simulator {
         icon: this.dungeon.theme.icon,
         tagline: this.dungeon.theme.tagline,
       },
+      condition: this.condition && this.condition.id !== 'none'
+        ? { id: this.condition.id, name: this.condition.name, icon: this.condition.icon, text: this.condition.text }
+        : null,
       party: {
         members: this.party.members.map(m => ({
           name: m.name, class: m.class, icon: m.icon,

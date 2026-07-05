@@ -116,8 +116,8 @@ function startNewDraft() {
   document.getElementById('ui-container').style.display = 'none';
 }
 
-function startDelve({ pool, difficulty, seed }) {
-  console.log(`Campaign begins: difficulty=${difficulty}, seed=${seed}`);
+function startDelve({ pool, difficulty, seed, condition }) {
+  console.log(`Campaign begins: difficulty=${difficulty}, seed=${seed}, condition=${condition}`);
 
   const draftContainer = document.getElementById('draft-container');
   draftContainer.innerHTML = '';
@@ -125,7 +125,7 @@ function startDelve({ pool, difficulty, seed }) {
   document.getElementById('world-container').style.display = 'flex';
   document.getElementById('ui-container').style.display = 'flex';
 
-  appState.campaign = new Campaign(pool, { seed, difficulty });
+  appState.campaign = new Campaign(pool, { seed, difficulty, condition });
   appState.difficulty = difficulty;
   appState.runRecorded = false;
   appState.seenRoomTypes = new Set();   // explain each room once per campaign
@@ -151,7 +151,10 @@ function beginDelve(sim) {
 
   const state = sim.getState();
   appState.prevState = state;   // baseline for event diffing this delve
-  resetStory(state.theme, state.depth);
+  resetStory(state.theme, state.depth, state.condition);
+  if (state.condition) {
+    showToast(state.condition.icon, `Wager: ${state.condition.name}. ${state.condition.text}`, 'boss');
+  }
   document.getElementById('pause-btn').disabled = false;
   document.getElementById('step-btn').disabled = false;
   document.getElementById('pause-btn').textContent = 'Pause';
@@ -263,12 +266,16 @@ function appendStory(narration, roomIndex) {
   panel.scrollTop = panel.scrollHeight;
 }
 
-function resetStory(theme = null, depth = 1) {
+function resetStory(theme = null, depth = 1, condition = null) {
   const depthBadge = depth > 1 ? ` — Depth ${depth}` : '';
+  const conditionLine = condition
+    ? `<div style="margin-top:0.4rem;font-size:0.8rem;color:#e8724a;">${condition.icon} Wager — ${escapeHtml(condition.name)}</div>`
+    : '';
   const banner = theme
     ? `<div class="story-entry" style="border-left:3px solid #d8a53f;">
          <div class="story-room" style="font-size:1rem;">${theme.icon} ${escapeHtml(theme.name)}${depthBadge}</div>
          <div class="story-predicament" style="font-style:italic;">${escapeHtml(theme.tagline)}</div>
+         ${conditionLine}
        </div>`
     : '';
   document.getElementById('story-panel').innerHTML =
