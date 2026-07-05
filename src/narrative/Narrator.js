@@ -325,6 +325,22 @@ export function composePredicament(room, theme = null) {
   if (room.type === ROOM_TYPES.ENTRANCE && theme && THEME_ENTRANCES[theme.id]) {
     return pick(THEME_ENTRANCES[theme.id]);
   }
+  // Name the foe when we have one — a boss earns a dramatic entrance,
+  // a monster a specific one. (The generic pools remain the fallback.)
+  if (room.type === ROOM_TYPES.BOSS && room.monster) {
+    return pick([
+      `The final chamber. ${capitalize(room.monster.name)} waits at its heart, and it has been expecting visitors far better armed than you.`,
+      `Every dungeon keeps its worst for last. The door swings wide on ${room.monster.name}.`,
+      `${capitalize(room.monster.name)} fills the last room the way weather fills a sky. There is no going around this one.`,
+    ]);
+  }
+  if (room.type === ROOM_TYPES.MONSTER && room.monster) {
+    return pick([
+      `${capitalize(room.monster.name)} holds the room, and it heard the party coming since the entrance hall.`,
+      `The room is not empty: ${room.monster.name}, between the party and the way down.`,
+      `${capitalize(room.monster.name)} rises out of the dark. The smell of it arrives first.`,
+    ]);
+  }
   const pool = PREDICAMENTS[room.type] || PREDICAMENTS.corridor;
   return pick(pool);
 }

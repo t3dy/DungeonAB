@@ -9,7 +9,8 @@ import { DungeonRenderer } from './ui/DungeonRenderer.js';
 import { IsoDungeonRenderer } from './ui/IsoDungeonRenderer.js';
 import { Campaign, TOWN_PRICES } from './game/Campaign.js';
 import { composeTownInterlude } from './narrative/Narrator.js';
-import { progression } from './game/Progression.js';
+import { progression, DIFFICULTIES } from './game/Progression.js';
+import { getCondition } from './game/Conditions.js';
 import { ROOM_HELP, CARD_TYPE_HELP, describeTickEvents } from './ui/GameGuide.js';
 
 const HELP_SEEN_KEY = 'dungeonab_help_seen';
@@ -30,6 +31,7 @@ const appState = {
 function init() {
   console.log('⚔️ DungeonAB initializing…');
   setupHelp();
+  setupRecords();
   startNewDraft();
 
   document.getElementById('pause-btn').addEventListener('click', togglePause);
@@ -71,6 +73,57 @@ function setupHelp() {
   let seen = false;
   try { seen = localStorage.getItem(HELP_SEEN_KEY) === '1'; } catch (e) { /* private mode */ }
   if (!seen) open();
+}
+
+/* -------------------------------------------------------------- */
+/* Hall of Records — best scores and past campaigns               */
+/* -------------------------------------------------------------- */
+
+function setupRecords() {
+  const overlay = document.getElementById('records-overlay');
+  const openBtn = document.getElementById('records-btn');
+  const closeBtn = document.getElementById('records-close-btn');
+
+  const render = () => {
+    const body = document.getElementById('records-body');
+    const stats = progression.getStats();
+    const runs = progression.getRecentRuns(10);
+
+    // Best score per difficulty that has one
+    const bestRows = Object.values(DIFFICULTIES)
+      .filter(d => progression.bestScores[d.id])
+      .map(d => `<dt>${d.icon} ${d.name}</dt><dd>${progression.bestScores[d.id]}</dd>`)
+      .join('');
+
+    const career = `<div style="color:#887755;font-size:0.8rem;margin-bottom:0.9rem;">
+      ${stats.totalVictories} retirements across ${stats.totalRuns} campaigns · average score ${stats.avgScore}</div>`;
+
+    const runRows = runs.length
+      ? runs.map(r => {
+          const diff = DIFFICULTIES[(r.difficulty || '').toUpperCase()] || { icon: '•' };
+          const cond = r.condition ? getCondition(r.condition) : null;
+          const outcome = r.victory ? '🏆' : '☠️';
+          const condTag = cond && cond.id !== 'none' ? ` · ${cond.icon}` : '';
+          return `<div class="records-run">
+            <span>${outcome} ${diff.icon} depth ${r.depth || 1} · ${r.roomsCleared} rooms${condTag}</span>
+            <span class="rr-score">${r.score}</span>
+          </div>`;
+        }).join('')
+      : '<div class="records-empty">No campaigns yet. The Hall awaits its first name.</div>';
+
+    body.innerHTML =
+      (bestRows ? `<dl class="records-best">${bestRows}</dl>` : '') +
+      career +
+      `<div style="color:#d8a53f;font-size:0.8rem;margin-bottom:0.4rem;">Recent campaigns</div>` +
+      runRows;
+  };
+
+  const open = () => { render(); overlay.classList.add('active'); };
+  const close = () => overlay.classList.remove('active');
+
+  openBtn.addEventListener('click', open);
+  closeBtn.addEventListener('click', close);
+  overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
 }
 
 /* -------------------------------------------------------------- */
@@ -435,6 +488,8 @@ function showFinal(state) {
       victory: retired,
       survivors: summary.survivors,
       partySize: summary.partySize,
+      depth: summary.depth,
+      condition: appState.campaign.condition !== 'none' ? appState.campaign.condition : null,
     });
   }
   const best = progression.bestScores[appState.difficulty] || 0;

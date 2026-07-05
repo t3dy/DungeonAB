@@ -32,6 +32,8 @@ export class ProgressionManager {
       victory: result.victory,
       survivors: result.survivors,
       partySize: result.partySize,
+      depth: result.depth || 1,
+      condition: result.condition || null,
     });
     if (this.runHistory.length > 50) this.runHistory = this.runHistory.slice(0, 50);
 

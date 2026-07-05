@@ -184,6 +184,15 @@ describe('The full crawl', () => {
     }
   });
 
+  test('the predicament names the foe when there is one', () => {
+    const monsterText = composePredicament({ type: ROOM_TYPES.MONSTER, monster: { name: 'a cold-eyed wraith' } });
+    assert.ok(monsterText.includes('cold-eyed wraith'), 'the monster is named');
+    const bossText = composePredicament({ type: ROOM_TYPES.BOSS, monster: { name: 'the Shrouded King' } });
+    assert.ok(bossText.includes('Shrouded King'), 'the boss is named');
+    // Still safe with no monster attached (falls back to the generic pool)
+    assert.ok(composePredicament({ type: ROOM_TYPES.MONSTER }).length > 30);
+  });
+
   test('deliberation names the roads not taken', () => {
     const party = new Party([fighter, rogue, PERSONALITY_CARDS[1]]); // cunning
     const options = [
