@@ -146,12 +146,14 @@ export class IsoDungeonRenderer {
 
     this.resize(rooms);
 
-    // Discovery changes the map: found secret rooms surface.
-    // The theme colors the stone.
+    // Discovery changes the map: found secret rooms surface, and an
+    // opened iron door comes off its hinges. The theme colors the stone.
     const themeId = state.dungeon.theme?.id || 'delve';
-    const key = themeId + '|' + rooms.map(r => `${r.type}${r.secret && !r.discovered ? '?' : ''}`).join(',');
+    const branches = state.dungeon.branches || [];
+    const openedLocks = branches.filter(b => b.locked && b.consumed).length;
+    const key = themeId + '|' + openedLocks + '|' + rooms.map(r => `${r.type}${r.secret && !r.discovered ? '?' : ''}`).join(',');
     if (this.builtKey !== key) {
-      this.buildDungeon(rooms, state.dungeon.edges, themeId);
+      this.buildDungeon(rooms, state.dungeon.edges, themeId, branches);
       this.builtKey = key;
     }
 
@@ -298,7 +300,7 @@ export class IsoDungeonRenderer {
     this.camera.lookAt(cx, 0, cz);
   }
 
-  buildDungeon(rooms, edges = null, themeId = 'delve') {
+  buildDungeon(rooms, edges = null, themeId = 'delve', branches = []) {
     this.staticGroup.clear();
     this.roomPositions = rooms.map(r => this.roomWorldPos(r));
 
@@ -357,14 +359,28 @@ export class IsoDungeonRenderer {
       const bridge = new THREE.Mesh(
         new THREE.BoxGeometry(len, 0.18, 0.8),
         new THREE.MeshStandardMaterial({
-          // A revealed secret passage keeps a furtive, darker look
-          color: edge.secret ? 0x2a2620 : 0x3d3a33, roughness: 1,
+          // A revealed secret passage keeps a furtive, darker look;
+          // a locked walkway carries an iron-and-brass cast
+          color: edge.secret ? 0x2a2620 : edge.locked ? 0x4a4030 : 0x3d3a33, roughness: 1,
         })
       );
       bridge.position.set(pa.x + dx / 2, -0.02, pa.z + dz / 2);
       bridge.rotation.y = -Math.atan2(dz, dx);
       bridge.receiveShadow = true;
       this.staticGroup.add(bridge);
+
+      // The iron door itself stands mid-walkway until it opens
+      const doorOpened = branches.some(b => b.locked && b.consumed && b.rooms[0] === edge.b);
+      if (edge.locked && !doorOpened) {
+        const door = new THREE.Mesh(
+          new THREE.BoxGeometry(0.25, 1.1, 1.0),
+          new THREE.MeshStandardMaterial({ color: 0x8a7a45, metalness: 0.5, roughness: 0.6 })
+        );
+        door.position.set(pa.x + dx / 2, 0.55, pa.z + dz / 2);
+        door.rotation.y = -Math.atan2(dz, dx);
+        door.castShadow = true;
+        this.staticGroup.add(door);
+      }
     }
   }
 

@@ -156,7 +156,10 @@ export function generateDungeon(seed, difficulty = 'medium', opts = {}) {
 
   // Branches: optional side rooms off the spine. Roughly half are
   // secret — a hidden door the rogue or the scholar might notice,
-  // with a vault (NetHack-style riches) at the end.
+  // with a vault (NetHack-style riches) at the end. Half the open
+  // ones are locked instead (the PCG book's lock-and-key pattern):
+  // an iron door guarding a vault, its key stashed earlier on the
+  // spine for whoever clears that room.
   const branchCount = 1 + Math.floor(rng.next() * 2);   // 1-2 branches
   const BRANCH_TYPES = [
     ROOM_TYPES.TREASURE, ROOM_TYPES.MATERIALS, ROOM_TYPES.MONSTER, ROOM_TYPES.LIBRARY,
@@ -174,6 +177,8 @@ export function generateDungeon(seed, difficulty = 'medium', opts = {}) {
     if (!dir) continue; // boxed in; the dungeon keeps its secret
 
     const secret = rng.next() < 0.5;
+    // A locked door needs spine ahead of it to hide the key in
+    const locked = !secret && junction >= 2 && rng.next() < 0.5;
     const chainLen = 1 + Math.floor(rng.next() * 2);    // 1-2 rooms deep
     const branchRooms = [];
     let px = jRoom.x;
@@ -185,9 +190,9 @@ export function generateDungeon(seed, difficulty = 'medium', opts = {}) {
       const ny = py + dir[1];
       if (occupied.has(`${nx},${ny}`)) break;
 
-      // The last room of a secret branch is the vault
+      // The last room of a secret or locked branch is the vault
       const isLast = i === chainLen - 1;
-      const type = secret && isLast
+      const type = (secret || locked) && isLast
         ? ROOM_TYPES.VAULT
         : BRANCH_TYPES[Math.floor(rng.next() * BRANCH_TYPES.length)];
 
@@ -195,11 +200,11 @@ export function generateDungeon(seed, difficulty = 'medium', opts = {}) {
       room.x = nx;
       room.y = ny;
       room.secret = secret;
-      room.discovered = !secret;   // secret rooms start unknown
+      room.discovered = !secret;   // secret rooms start unknown; locked doors are visible
       rooms.push(room);
       occupied.add(`${nx},${ny}`);
 
-      edges.push({ a: prevIdx, b: room.index, secret: secret && i === 0 });
+      edges.push({ a: prevIdx, b: room.index, secret: secret && i === 0, locked: locked && i === 0 });
       branchRooms.push(room.index);
       prevIdx = room.index;
       px = nx;
@@ -207,7 +212,15 @@ export function generateDungeon(seed, difficulty = 'medium', opts = {}) {
     }
 
     if (branchRooms.length > 0) {
-      branches.push({ junction, rooms: branchRooms, secret, consumed: false });
+      const branch = { junction, rooms: branchRooms, secret, locked, consumed: false };
+      if (locked) {
+        // The key waits somewhere on the spine before the door
+        // (a count — two doors may stash keys in the same room)
+        const keyRoom = 1 + Math.floor(rng.next() * (junction - 1));
+        rooms[keyRoom].hasKey = (rooms[keyRoom].hasKey || 0) + 1;
+        branch.keyRoom = keyRoom;
+      }
+      branches.push(branch);
     }
   }
 
@@ -482,6 +495,7 @@ export function serializeDungeon(dungeon) {
       ...(r.mimicChance !== undefined ? { mimicChance: r.mimicChance } : {}),
       ...(r.trapDamage !== undefined ? { trapDamage: r.trapDamage } : {}),
       ...(r.materials !== undefined ? { materials: r.materials } : {}),
+      ...(r.hasKey ? { hasKey: r.hasKey } : {}),
     })),
     spine: [...dungeon.spine],
     edges: dungeon.edges.map(e => ({ ...e })),

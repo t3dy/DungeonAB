@@ -66,8 +66,8 @@ export function drawMinimap(canvas, layout) {
     const b = byIdx.get(e.b);
     if (!a || !b) continue;
     ctx.beginPath();
-    ctx.setLineDash(e.secret ? [3, 3] : []);
-    ctx.strokeStyle = e.secret ? '#d8a53f' : '#4a443a';
+    ctx.setLineDash(e.secret ? [3, 3] : e.locked ? [5, 2] : []);
+    ctx.strokeStyle = e.secret ? '#d8a53f' : e.locked ? '#b89a3e' : '#4a443a';
     ctx.lineWidth = 1.5;
     ctx.moveTo(px(a), py(a));
     ctx.lineTo(px(b), py(b));
@@ -109,7 +109,7 @@ export function setupArchive({ onDelve }) {
           <div style="color:#d8a53f;font-weight:bold;">${entry.custom ? '✏️ ' : ''}${esc(entry.name || 'Unnamed delve')}</div>
           <div style="color:#887755;font-size:0.72rem;">
             ${oc.victory === true ? '🏆' : oc.victory === false ? '☠️' : '📐'}
-            ${entry.layout.rooms.length} rooms · ${entry.layout.branches.filter(b => b.secret).length} secret ·
+            ${entry.layout.rooms.length} rooms · ${entry.layout.branches.filter(b => b.secret).length} secret · ${entry.layout.branches.filter(b => b.locked).length} locked ·
             ${new Date(entry.date).toLocaleDateString()}
           </div>
           <div style="display:flex;gap:0.35rem;margin-top:0.4rem;flex-wrap:wrap;">

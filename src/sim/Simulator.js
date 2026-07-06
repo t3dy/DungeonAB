@@ -12,12 +12,12 @@ import { Party } from '../agents/Party.js';
 import { CLASSES } from '../game/Cards.js';
 import {
   getRoomOptions, decideRoomAction, resolveRoomAction,
-  detectSecretDoor, decideDetour,
+  detectSecretDoor, decideDetour, pickLock,
 } from '../encounters/RoomEncounters.js';
 import {
   composePredicament, composeDeliberation, composeResolution,
   composeWipe, composeVictory, composeFall,
-  composeSecretFound, composeDetour,
+  composeSecretFound, composeDetour, composeKeyFound, composeLockedDoor,
 } from '../narrative/Narrator.js';
 
 export class Simulator {
@@ -41,6 +41,10 @@ export class Simulator {
           condition: opts.condition,
         });
     this.condition = this.dungeon.condition;
+
+    // The run's phial truth (item identification) is fixed by the
+    // first dungeon a party enters and kept for the whole campaign
+    this.party.ensureElixirMap(seed);
 
     // The march order: the spine to start with. Detours into side
     // branches splice their rooms in as the party discovers and
@@ -131,8 +135,17 @@ export class Simulator {
         : null,
     };
 
-    // A side passage? Secret doors must be noticed first; open ones
-    // are a party vote. Taking one splices its rooms into the march.
+    // A cleared room gives up any key hidden in it (lock-and-key)
+    if (room.hasKey && room.cleared && !room.keyTaken && this.party.isAlive()) {
+      room.keyTaken = true;
+      this.party.keys += room.hasKey;
+      this.lastNarration.aside = [this.lastNarration.aside, composeKeyFound()].filter(Boolean).join(' ');
+      this.addLog('🗝️ A heavy iron key!');
+    }
+
+    // A side passage? Secret doors must be noticed first; locked ones
+    // want the key (or the rogue); open ones are a party vote. Taking
+    // one splices its rooms into the march.
     const branch = this.party.isAlive() ? this.dungeon.branchAt(roomIdx) : null;
     if (branch) {
       if (branch.secret) {
@@ -144,6 +157,21 @@ export class Simulator {
           this.addLog('🕳️ A hidden door!');
         }
         // Unnoticed secrets stay secret — the branch may be found on a retreat pass
+      } else if (branch.locked) {
+        let opened = null;
+        if (this.party.keys > 0) {
+          this.party.keys--;
+          opened = 'key';
+        } else if (pickLock(this.party)) {
+          opened = 'picked';
+        }
+        if (opened) {
+          branch.consumed = true;
+          this.path.splice(this.roomIndex + 1, 0, ...branch.rooms);
+          this.addLog('🗝️ The iron door opens!');
+        }
+        // A shut door stays in play — a retreat pass may bring the key
+        this.lastNarration.aside = [this.lastNarration.aside, composeLockedDoor(opened || 'shut')].filter(Boolean).join(' ');
       } else {
         branch.consumed = true;
         const going = decideDetour(this.party);
@@ -215,6 +243,9 @@ export class Simulator {
         poisonLinger: this.party.poisonLinger || 0,
         alarmed: !!this.party.alarmed,
         potions: this.party.potions.length,
+        keys: this.party.keys || 0,
+        phials: this.party.phials.length,
+        elixirLore: Object.keys(this.party.elixirLore || {}).length,
         grimoire: this.party.grimoire.map(s => s.name),
         spellsLearned: this.party.spellsLearned,
         personalities: this.party.personalities,

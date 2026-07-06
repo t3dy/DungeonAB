@@ -25,7 +25,7 @@ export const ROOM_HELP = {
   [ROOM_TYPES.MATERIALS]: 'Herbs and salts — raw materials for alchemy, if you gather them.',
   [ROOM_TYPES.DISASTER]: 'The dungeon itself turns hostile. Brace together, or scatter and pray.',
   [ROOM_TYPES.BOSS]: 'The boss chamber. Everything you drafted, tested at once.',
-  [ROOM_TYPES.VAULT]: 'A vault — riches hidden behind a secret door. Rogues and scholars find these.',
+  [ROOM_TYPES.VAULT]: 'A vault — riches behind a secret or locked door. Rogues find the hidden ones and pick the locks; iron keys wait in earlier rooms.',
 };
 
 /**
@@ -90,6 +90,16 @@ export function describeTickEvents(prev, curr) {
     if (gained >= 25) {
       events.push({ icon: '💰', kind: 'gold', text: `A windfall: +${gained} gold.` });
     }
+  }
+
+  // An iron key changes hands (lock-and-key)
+  if (prevParty && currParty && (currParty.keys || 0) > (prevParty.keys || 0)) {
+    events.push({ icon: '🗝️', kind: 'key', text: 'An iron key — somewhere ahead, a door is waiting for it.' });
+  }
+
+  // Phial lore is earned (item identification)
+  if (prevParty && currParty && (currParty.elixirLore || 0) > (prevParty.elixirLore || 0)) {
+    events.push({ icon: '🧪', kind: 'lore', text: 'A phial identified — every future one of its color is known on sight.' });
   }
 
   return events;

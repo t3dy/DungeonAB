@@ -335,6 +335,8 @@ function updateUI(state) {
   document.getElementById('score-count').textContent = state.party.score;
   document.getElementById('materials-count').textContent = state.party.materials;
   document.getElementById('potions-count').textContent = state.party.potions;
+  document.getElementById('phials-count').textContent = state.party.phials || 0;
+  document.getElementById('keys-count').textContent = state.party.keys || 0;
 
   // Afflictions the party carries between rooms
   const badges = [];

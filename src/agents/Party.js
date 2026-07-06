@@ -8,6 +8,7 @@
 
 import { CARD_TYPES, CLASSES } from '../game/Cards.js';
 import { Adventurer, makeTavernVolunteer } from './Adventurer.js';
+import { appearanceMapFor, elixirDef, PHIAL_APPEARANCES } from '../game/Elixirs.js';
 
 export class Party {
   constructor(pool) {
@@ -50,6 +51,14 @@ export class Party {
     // Alchemy satchel: materials gathered in the dungeon
     this.materials = 0;
     this.potions = [];
+
+    // Unidentified phials (roguelike item identification). The map is
+    // the run's secret — set once from the first dungeon's seed, kept
+    // for the party's whole campaign so learned lore stays true.
+    this.phials = [];
+    this.elixirLore = {};      // appearance → kind, as learned
+    this.elixirMap = null;     // appearance → kind, the truth
+    this.keys = 0;             // iron keys for locked branch doors
 
     // Run state
     this.gold = 0;
@@ -294,16 +303,86 @@ export class Party {
     }
   }
 
+  /* -------------------------------------------------------------- */
+  /* Unidentified phials — item identification                       */
+  /* -------------------------------------------------------------- */
+
   /**
-   * Quaff stored potions when badly hurt (auto-battler instinct)
+   * The appearance→kind truth is fixed the first time the party
+   * descends, and kept for the whole campaign — lore learned in one
+   * dungeon stays true in the next.
+   */
+  ensureElixirMap(seed = 'default') {
+    if (!this.elixirMap) this.elixirMap = appearanceMapFor(seed);
+    return this.elixirMap;
+  }
+
+  /** Roll an unlabeled phial from the run's secret map. */
+  makePhial(rollValue = Math.random()) {
+    this.ensureElixirMap();
+    const appearance = PHIAL_APPEARANCES[Math.floor(rollValue * 983) % PHIAL_APPEARANCES.length];
+    return { appearance, kind: this.elixirMap[appearance] };
+  }
+
+  /** What the party has learned this phial to be, or null. */
+  knowsPhial(phial) {
+    return this.elixirLore[phial.appearance] || null;
+  }
+
+  /** Learn an appearance without drinking (alchemist's nose, treatise). */
+  learnPhial(phial) {
+    this.elixirLore[phial.appearance] = phial.kind;
+    return elixirDef(phial.kind);
+  }
+
+  /**
+   * Someone drinks it. The effect lands on the taster (the sturdiest
+   * volunteer, unless a taster is named), and the lesson lands on the
+   * whole party's lore. Returns { def, taster }.
+   */
+  drinkPhial(phial, taster = null) {
+    const def = elixirDef(phial.kind);
+    this.elixirLore[phial.appearance] = phial.kind;
+    const who = taster
+      || this.living().reduce((a, b) => a.health >= b.health ? a : b);
+    if (def.heal) who.heal(def.heal);
+    if (def.damage) who.takeDamage(def.damage);
+    // Stat elixirs move the base stat (effective stats are derived)
+    if (def.attack) who.baseAttack = Math.max(1, who.baseAttack + def.attack);
+    if (def.defense) who.baseDefense += def.defense;
+    if (def.mind) who.baseMind += def.mind;
+    return { def, taster: who };
+  }
+
+  /**
+   * Quaff stored potions when badly hurt (auto-battler instinct).
+   * With the honest draughts gone, a phial known to be Mending serves;
+   * a reckless party at death's door will even chug an unknown one.
    */
   quaffIfNeeded() {
-    if (this.potions.length === 0) return false;
     const hurt = this.living().find(m => m.health / m.maxHealth <= 0.4);
     if (!hurt) return false;
-    const potion = this.potions.shift();
-    hurt.heal(potion.heal);
-    return true;
+    if (this.potions.length > 0) {
+      const potion = this.potions.shift();
+      hurt.heal(potion.heal);
+      return true;
+    }
+    const knownIdx = this.phials.findIndex(p => this.knowsPhial(p) === 'healing');
+    if (knownIdx !== -1) {
+      const [phial] = this.phials.splice(knownIdx, 1);
+      this.drinkPhial(phial, hurt);
+      return true;
+    }
+    // Desperation: the Reckless drink the mystery rather than die polite
+    if (this.hasPersonality('reckless') && hurt.health / hurt.maxHealth <= 0.25 && this.phials.length > 0) {
+      const unknown = this.phials.findIndex(p => !this.knowsPhial(p));
+      if (unknown !== -1) {
+        const [phial] = this.phials.splice(unknown, 1);
+        this.drinkPhial(phial, hurt);
+        return true;
+      }
+    }
+    return false;
   }
 
   recordEncounter(key, success) {

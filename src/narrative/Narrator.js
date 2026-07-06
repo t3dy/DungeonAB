@@ -167,6 +167,39 @@ export function composeDetour(taken) {
   return pick(taken ? DETOUR_TAKEN : DETOUR_SKIPPED);
 }
 
+/* Lock-and-key: the iron door and what opens it */
+
+const KEY_FOUND = [
+  '🗝️ Under the debris, an iron key on a rotted cord — heavy, deliberate, and clearly missing its door.',
+  '🗝️ Someone hid a key here and never came back for it. The party comes back for it on their behalf.',
+];
+
+const LOCKED_OPENED_KEY = [
+  '🗝️ An iron door bars the side passage — and the heavy key from earlier turns in it like it never left home. The lock had one job, and someone else had the key.',
+  '🗝️ The iron door asks its one question, and the key from up the corridor answers it. The hinges complain; the party does not.',
+];
+
+const LOCKED_PICKED = [
+  '🗝️ An iron door, no key — but the rogue kneels, listens, and talks the lock out of its convictions one pin at a time.',
+  '🗝️ Whoever locked this door did not budget for the rogue\'s fingers. Click. Clack. Open.',
+];
+
+const LOCKED_SHUT = [
+  '🚪 An iron door bars the side passage, and no key, no fingers, no argument moves it. Whatever it guards keeps.',
+  '🚪 A locked iron door, smug as a banker. The party leaves it its secret and marches on, composing insults.',
+];
+
+export function composeKeyFound() {
+  return pick(KEY_FOUND);
+}
+
+/** how: 'key' | 'picked' | 'shut' */
+export function composeLockedDoor(how) {
+  if (how === 'key') return pick(LOCKED_OPENED_KEY);
+  if (how === 'picked') return pick(LOCKED_PICKED);
+  return pick(LOCKED_SHUT);
+}
+
 /* ------------------------------------------------------------------ */
 /* Deliberation — the party argues in character                        */
 /* ------------------------------------------------------------------ */

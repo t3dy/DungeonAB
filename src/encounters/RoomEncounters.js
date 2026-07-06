@@ -9,6 +9,7 @@
 import { CLASSES, SPELL_CARDS } from '../game/Cards.js';
 import { ROOM_TYPES } from '../world/DungeonGen.js';
 import { elementMult } from '../game/Bestiary.js';
+import { elixirDef } from '../game/Elixirs.js';
 
 function roll() {
   return Math.random() * 10;
@@ -314,13 +315,13 @@ const TRINKETS = [
 ];
 
 /**
- * Roll a bonus find: a potion, materials, a spell scroll, or a
- * trinket. Vaults and boss hoards always hold one. Returns a prep
- * entry (source + chronicle text) or null.
+ * Roll a bonus find: a potion, materials, a spell scroll, a trinket,
+ * or an unlabeled phial. Vaults and boss hoards always hold one.
+ * Returns a prep entry (source + chronicle text) or null.
  */
 export function rollFind(party, always = false, rollValue = Math.random()) {
   if (!always && rollValue > 0.35) return null;
-  const kind = Math.floor((always ? rollValue : rollValue / 0.35) * 4) % 4;
+  const kind = Math.floor((always ? rollValue : rollValue / 0.35) * 5) % 5;
 
   if (kind === 0) {
     party.potions.push({ kind: 'healing-draught', heal: 6 });
@@ -335,9 +336,70 @@ export function rollFind(party, always = false, rollValue = Math.random()) {
     party.grimoire.push({ ...scroll, id: `found-${scroll.id}-${party.grimoire.length}` });
     return { source: scroll.name, find: 'scroll', text: `📜 A scroll of ${scroll.name}, sealed with someone's ring. The grimoire grows.` };
   }
-  const trinket = TRINKETS[Math.floor(rollValue * 991) % TRINKETS.length];
-  party.assignEquipment({ ...trinket, id: `${trinket.id}-${Date.now().toString(36)}` });
-  return { source: trinket.name, find: 'trinket', text: `🍀 Among the coins, ${trinket.name} — claimed, worn, already working.` };
+  if (kind === 3) {
+    const trinket = TRINKETS[Math.floor(rollValue * 991) % TRINKETS.length];
+    party.assignEquipment({ ...trinket, id: `${trinket.id}-${Date.now().toString(36)}` });
+    return { source: trinket.name, find: 'trinket', text: `🍀 Among the coins, ${trinket.name} — claimed, worn, already working.` };
+  }
+  // An unlabeled phial — someone's experiment, still corked
+  const phial = party.makePhial(rollValue);
+  return resolvePhialFind(party, phial, (rollValue * 977) % 1);
+}
+
+/**
+ * The identification beat (NetHack quaff-test tradition). An unknown
+ * phial gets named by whoever can name it: the party's lore, the
+ * alchemist's nose, a scholar's memory — or a reckless volunteer's
+ * stomach. Whatever isn't identified is pocketed unknown. Mutates the
+ * party; returns a prep entry for the chronicle. Pass rollValue to
+ * make it deterministic.
+ */
+export function resolvePhialFind(party, phial, rollValue = Math.random()) {
+  const known = party.knowsPhial(phial);
+  if (known) {
+    const def = elixirDef(known);
+    party.phials.push(phial);
+    return {
+      source: def.name, find: 'phial',
+      text: `${def.icon} A ${phial.appearance} phial — known stock by now: ${def.name}. Into the satchel it goes.`,
+    };
+  }
+
+  const alchemist = party.living().find(m => m.class === CLASSES.ALCHEMIST);
+  if (alchemist) {
+    const def = party.learnPhial(phial);
+    party.phials.push(phial);
+    return {
+      source: alchemist.name, find: 'phial',
+      text: `⚗️ ${alchemist.name} uncorks the ${phial.appearance} phial, wafts once, and names it without drinking: ${def.name}.`,
+    };
+  }
+
+  if (party.hasPersonality('scholarly') && rollValue < 0.5) {
+    const def = party.learnPhial(phial);
+    party.phials.push(phial);
+    return {
+      source: 'the Scholarly', find: 'phial',
+      text: `📖 The Scholarly memory produces a treatise page, word for word: ${phial.appearance} means ${def.name}.`,
+    };
+  }
+
+  if (party.hasPersonality('reckless') || party.hasPersonality('brave')) {
+    const { def, taster } = party.drinkPhial(phial);
+    const verdict = def.good
+      ? `and the news is good: ${def.name} works from the inside out.`
+      : `and regrets it at once — ${def.name}, learned the hard way.`;
+    return {
+      source: taster.name, find: 'phial',
+      text: `${def.icon} Nobody can name the ${phial.appearance} phial, so ${taster.name} quaff-tests it, ${verdict}`,
+    };
+  }
+
+  party.phials.push(phial);
+  return {
+    source: 'the hoard', find: 'phial',
+    text: `🧪 A ${phial.appearance} phial, unlabeled. The party pockets the mystery for someone braver to solve.`,
+  };
 }
 
 /* ------------------------------------------------------------------ */
@@ -359,6 +421,18 @@ export function detectSecretDoor(party, rollValue = roll()) {
   if (party.hasPersonality('craven')) bonus += 1;   // counts the exits, finds the extra one
   bonus += getPreparationBonuses(party).secretDoor; // the lantern throws the seam's shadow
   return eyes + bonus + rollValue > 11;
+}
+
+/**
+ * Can the party pick a locked branch door? Rogues' work (with a real
+ * bonus from Masterwork Lockpicks); everyone else is just rattling
+ * the handle. Pure — pass the roll.
+ */
+export function pickLock(party, rollValue = roll()) {
+  const rogues = party.living().filter(m => m.class === CLASSES.ROGUE);
+  if (rogues.length === 0) return false;
+  const fingers = Math.max(...rogues.map(m => m.mind));
+  return fingers + getPreparationBonuses(party).disarm + rollValue > 9;
 }
 
 /**

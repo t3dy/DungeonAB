@@ -45,8 +45,8 @@ From the game design library (`E:\pdf\Game Design`):
 | Meta-progression / archives | modern roguelites | 🔨 **Dungeon Archive (this phase)** |
 | Shops / town | Spelunky, roguelites | ✅ town between delves |
 | Risk wagers | DCSS Zig, Pact-likes | ✅ conditions + hex exchange |
-| Item identification | NetHack, DCSS | 🕐 Phase 5 (unidentified potions/scrolls) |
-| Lock & key | Zelda-likes, BSP partitions | 🕐 Phase 5 |
+| Item identification | NetHack, DCSS | ✅ unlabeled phials, seeded appearance map, quaff-testing |
+| Lock & key | Zelda-likes, BSP partitions | ✅ locked branch vaults, spine-placed keys, rogue lockpicking |
 | Multi-floor stairs | all | 🕐 Phase 5 (campaign depth is the current analogue) |
 | Character classes/party | ADOM, ToME | ✅ five classes, personalities |
 
@@ -88,11 +88,20 @@ From the game design library (`E:\pdf\Game Design`):
   and era magic packs (Renaissance natural magic, goetia, cunning-folk
   charms) — each a self-contained pack file with its own sprites.
 
-### Phase 5 — Deeper roguelike systems
-- Item identification (quaff-test the unlabeled potion), lock-and-key
-  over BSP-style partitions, in-dungeon shops, altars, multi-floor
-  dungeons with stairs, agent-dug cave layouts for the Cinder
-  Galleries, cellular-automata grottos.
+### Phase 5 — Deeper roguelike systems (in progress)
+- ✅ **Item identification** — hoards deal unlabeled phials whose
+  appearance→effect map is a seeded per-run secret (fixed by the
+  party's first dungeon, kept for the campaign). Knowledge is earned:
+  the alchemist's nose, a scholar's treatise memory, or a reckless
+  quaff-test; learned lore recognizes every later phial on sight, and
+  a known Elixir of Mending serves as a potion when the party bleeds.
+- ✅ **Lock-and-key** — roughly half the open branches now hang an
+  iron door guarding a vault, its key stashed earlier on the spine
+  (cleared rooms give it up); rogues can pick the lock as a fallback,
+  and a shut door is optional riches lost, never a softlock.
+- Still to come: in-dungeon shops, altars, multi-floor dungeons with
+  stairs, agent-dug cave layouts for the Cinder Galleries,
+  cellular-automata grottos.
 
 ## Architecture notes
 - Generation stays **seed-deterministic** end to end — that's what
