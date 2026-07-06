@@ -94,6 +94,15 @@ export const FX_TILES = {
   'potion-blue': { col: 8, row: 9 },
 };
 
+/**
+ * Content packs register tiles for their own monster kinds (DLC).
+ */
+export function registerMonsterTiles(map) {
+  for (const [kind, tile] of Object.entries(map)) {
+    MONSTER_TILES[kind] = tile;
+  }
+}
+
 export function getClassTile(cls) {
   return CLASS_TILES[cls] || CLASS_TILES.fighter;
 }

@@ -29,11 +29,12 @@ export function hireCost(card, depth = 1) {
 }
 
 export class Campaign {
-  constructor(draftPool, { seed = 'campaign', difficulty = 'medium', condition = 'none' } = {}) {
+  constructor(draftPool, { seed = 'campaign', difficulty = 'medium', condition = 'none', layout = null } = {}) {
     this.party = draftPool instanceof Party ? draftPool : new Party(draftPool);
     this.seed = seed;
     this.difficulty = difficulty;
     this.condition = condition;   // the wager, applied to every delve
+    this.layout = layout;         // an archived/edited dungeon for depth 1
 
     this.depth = 0;          // Incremented by each delve
     this.roomsCleared = 0;   // Cumulative across dungeons
@@ -53,6 +54,7 @@ export class Campaign {
       depth: this.depth,
       theme,
       condition: this.condition,
+      layout: this.depth === 1 ? this.layout : null,   // deeper floors generate fresh
     });
   }
 

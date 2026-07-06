@@ -81,5 +81,9 @@ Consolidated in `DESIGN.md` from:
 - [x] Rival standings — the AI drafters delve their own parties; scores compared at the table
 - [x] Hex exchange — lay a condition on a rival's run; one hexes yours back (Megabase multiplayer variant)
 - [x] Procgen v2 — branching layouts, secret doors, hidden vaults (see `ROGUELIKE_ROADMAP.md`)
+- [x] Dungeon Archive — every design kept, minimapped, re-enterable
+- [x] Dungeon editor — retype rooms, toggle secrets, save and delve your own designs
+- [x] Card Workshop — forge cards under stat budgets, import/export packs
+- [x] DLC: 17th-Century Alchemy Pack — emblem monsters (the Green Lion, the Rebis), the Hermetic Athanor theme
 - [x] Deploy the prototype (Vercel, with a GitHub Pages mirror)
 - [ ] True multiplayer draft

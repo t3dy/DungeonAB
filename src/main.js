@@ -13,6 +13,11 @@ import { progression, DIFFICULTIES } from './game/Progression.js';
 import { getCondition, combineConditions, DUNGEON_CONDITIONS } from './game/Conditions.js';
 import { computeStandings } from './game/Standings.js';
 import { SeededRandom } from './draft/PackDraft.js';
+import { archive } from './game/Archive.js';
+import { serializeDungeon } from './world/DungeonGen.js';
+import { setupArchive } from './ui/ArchiveUI.js';
+import { setupCardEditor, loadPlayerPacks } from './ui/CardEditorUI.js';
+import { installAlchemyPack } from './packs/alchemyPack.js';
 import { ROOM_HELP, CARD_TYPE_HELP, describeTickEvents } from './ui/GameGuide.js';
 
 const HELP_SEEN_KEY = 'dungeonab_help_seen';
@@ -32,8 +37,21 @@ const appState = {
 
 function init() {
   console.log('⚔️ DungeonAB initializing…');
+
+  // Content packs first — the draft pool is built from them
+  const prefs = loadPlayerPacks();
+  installAlchemyPack({ enabled: prefs['alchemy-17c'] !== false });
+
   setupHelp();
   setupRecords();
+  setupCardEditor();
+  setupArchive({
+    onDelve: (entry) => {
+      appState.pendingReplay = entry;
+      showToast('🗺️', `Design loaded: "${entry.name}". Draft a party, then delve it.`, 'room');
+      startNewDraft();
+    },
+  });
   startNewDraft();
 
   document.getElementById('pause-btn').addEventListener('click', togglePause);
@@ -197,7 +215,15 @@ function startDelve({ pool, difficulty, seed, condition, hexTarget, hexCondition
 
   const playerCondition = combineConditions(getCondition(condition), hexOnPlayer);
 
-  appState.campaign = new Campaign(pool, { seed, difficulty, condition: playerCondition });
+  // An archived/edited design replays as depth 1 of this campaign
+  const replay = appState.pendingReplay || null;
+  appState.pendingReplay = null;
+  if (replay) showToast('🗺️', `Delving the archived design: "${replay.name}"`, 'room');
+
+  appState.campaign = new Campaign(pool, {
+    seed, difficulty, condition: playerCondition,
+    layout: replay ? replay.layout : null,
+  });
   appState.difficulty = difficulty;
   appState.runRecorded = false;
   appState.standings = null;            // recomputed when this campaign ends
@@ -384,6 +410,14 @@ function endGame(state) {
   document.getElementById('step-btn').disabled = true;
 
   appState.campaign.recordDelve(appState.simulator);
+
+  // Every finished dungeon's design joins the archive
+  archive.save({
+    name: `${state.theme.name} — depth ${state.depth}`,
+    layout: serializeDungeon(appState.simulator.dungeon),
+    seed: appState.simulator.seed,
+    outcome: { victory: state.victory, score: state.party.score, depth: state.depth },
+  });
 
   if (state.victory && !appState.campaign.over) {
     showTown(state);

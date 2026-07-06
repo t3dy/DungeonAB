@@ -7,10 +7,8 @@
  * coverage (every pack has characters) so no draft is ever dead.
  */
 
-import {
-  CARD_TYPES, CLASSES,
-  CHARACTER_CARDS, EQUIPMENT_CARDS, SPELL_CARDS, PERSONALITY_CARDS,
-} from '../game/Cards.js';
+import { CARD_TYPES, CLASSES } from '../game/Cards.js';
+import { pooledCards } from '../game/CardPacks.js';
 
 /**
  * Seeded RNG (LCG — same approach as SnakeAB's ProcGen)
@@ -104,10 +102,11 @@ export function buildPack(rng) {
     }
   };
 
-  take(CHARACTER_CARDS, 3);
-  take(EQUIPMENT_CARDS, 2);
-  take(SPELL_CARDS, 2);
-  take(PERSONALITY_CARDS, 1);
+  // The pool = base cards + every enabled content pack's
+  take(pooledCards(CARD_TYPES.CHARACTER), 3);
+  take(pooledCards(CARD_TYPES.EQUIPMENT), 2);
+  take(pooledCards(CARD_TYPES.SPELL), 2);
+  take(pooledCards(CARD_TYPES.PERSONALITY), 1);
 
   return rng.shuffle(pack);
 }

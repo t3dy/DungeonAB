@@ -7,7 +7,7 @@
  * when the dungeon provides.
  */
 
-import { generateDungeon, ROOM_TYPES } from '../world/DungeonGen.js';
+import { generateDungeon, dungeonFromLayout, ROOM_TYPES } from '../world/DungeonGen.js';
 import { Party } from '../agents/Party.js';
 import { CLASSES } from '../game/Cards.js';
 import {
@@ -31,12 +31,15 @@ export class Simulator {
     this.depth = Math.max(1, opts.depth || 1);
 
     this.party = draftPool instanceof Party ? draftPool : new Party(draftPool);
-    this.dungeon = generateDungeon(seed, difficulty, {
-      wantLab: this.party.hasClass(CLASSES.ALCHEMIST),
-      theme: opts.theme,
-      depth: this.depth,
-      condition: opts.condition,
-    });
+    // An archived/edited layout replays exactly; otherwise the seed builds one
+    this.dungeon = opts.layout
+      ? dungeonFromLayout(opts.layout)
+      : generateDungeon(seed, difficulty, {
+          wantLab: this.party.hasClass(CLASSES.ALCHEMIST),
+          theme: opts.theme,
+          depth: this.depth,
+          condition: opts.condition,
+        });
     this.condition = this.dungeon.condition;
 
     // The march order: the spine to start with. Detours into side

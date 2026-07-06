@@ -380,6 +380,80 @@ export const STAT_SCALE = {
   nightmare: 1.7,
 };
 
+/* ------------------------------------------------------------------ */
+/* Layouts — dungeons as data (the archive & editor foundation)        */
+/* ------------------------------------------------------------------ */
+
+/**
+ * A dungeon flattened to plain JSON: everything needed to rebuild it
+ * exactly — rooms with payloads, edges, spine, branches. This is what
+ * the archive stores and the editor edits.
+ */
+export function serializeDungeon(dungeon) {
+  return {
+    themeId: dungeon.theme.id,
+    conditionId: dungeon.condition?.id || 'none',
+    rooms: dungeon.rooms.map(r => ({
+      index: r.index, type: r.type, x: r.x, y: r.y,
+      secret: !!r.secret,
+      ...(r.monster ? { monster: { ...r.monster } } : {}),
+      ...(r.gold !== undefined ? { gold: r.gold } : {}),
+      ...(r.mimicChance !== undefined ? { mimicChance: r.mimicChance } : {}),
+      ...(r.trapDamage !== undefined ? { trapDamage: r.trapDamage } : {}),
+      ...(r.materials !== undefined ? { materials: r.materials } : {}),
+    })),
+    spine: [...dungeon.spine],
+    edges: dungeon.edges.map(e => ({ ...e })),
+    branches: dungeon.branches.map(b => ({ ...b, rooms: [...b.rooms], consumed: false })),
+  };
+}
+
+/**
+ * Rebuild a live Dungeon from a serialized layout. Run state resets:
+ * rooms uncleared, secrets sealed, monsters back at full health.
+ */
+export function dungeonFromLayout(layout) {
+  const theme = DUNGEON_THEMES[layout.themeId] || DUNGEON_THEMES.delve;
+  const condition = getCondition(layout.conditionId);
+  const rooms = layout.rooms.map(r => ({
+    ...r,
+    icon: ROOM_ICONS[r.type] || '⬛',
+    cleared: false,
+    discovered: !r.secret,
+    ...(r.monster ? { monster: { ...r.monster } } : {}),
+  }));
+  return new Dungeon(rooms, theme, condition, {
+    spine: [...layout.spine],
+    edges: layout.edges.map(e => ({ ...e })),
+    branches: layout.branches.map(b => ({ ...b, rooms: [...b.rooms], consumed: false })),
+  });
+}
+
+/**
+ * The default payload when the editor retypes a room — deterministic,
+ * theme-appropriate, no RNG needed.
+ */
+export function defaultPayloadFor(type, theme, isBoss = false) {
+  if (type === ROOM_TYPES.MONSTER) return { monster: { ...theme.monsters[0] } };
+  if (type === ROOM_TYPES.BOSS) return { monster: { ...theme.bosses[0], isBoss: true } };
+  if (type === ROOM_TYPES.TREASURE) return { gold: 35, mimicChance: 0.18 };
+  if (type === ROOM_TYPES.VAULT) return { gold: 100, mimicChance: 0.28 };
+  if (type === ROOM_TYPES.TRAP) return { trapDamage: 5 };
+  if (type === ROOM_TYPES.MATERIALS) return { materials: 2 };
+  return {};
+}
+
+/**
+ * Content packs may register whole new dungeon themes (DLC).
+ */
+export function registerTheme(theme) {
+  if (!theme?.id || !theme.monsters?.length || !theme.bosses?.length) {
+    throw new Error('a theme needs an id, monsters, and at least one boss');
+  }
+  DUNGEON_THEMES[theme.id] = theme;
+  return theme;
+}
+
 function rollMonster(rng, isBoss, theme, depth = 1, statScale = 1, condition = {}) {
   const pool = isBoss ? theme.bosses : theme.monsters;
   const monster = { ...rng.pick(pool) };
