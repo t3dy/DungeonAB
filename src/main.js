@@ -398,6 +398,8 @@ function appendStory(narration, roomIndex) {
           : ev.kind === 'cantrip' ? `✨${ev.amount}`
           : ev.kind === 'vial' ? `⚗${ev.amount}`
           : ev.kind === 'monster-hit' ? `<span class="hit-back">-${ev.amount}</span>`
+          : ev.kind === 'monster-move' ? `<span class="hit-back">💥${escapeHtml(ev.name || '')} -${ev.amount}</span>`
+          : ev.kind === 'drain' ? `<span class="hit-back">🩸+${ev.amount}</span>`
           : ev.kind === 'triage' ? `<span class="hit-heal">+${ev.amount}</span>`
           : ev.kind === 'phase' ? '💢'
           : ev.kind === 'rout' ? '💨flees!'

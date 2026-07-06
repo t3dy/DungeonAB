@@ -135,8 +135,21 @@ From the game design library (`E:\pdf\Game Design`):
   wall torches that flicker, the portcullis on locked branch doors,
   boss-chamber banners, the peddler's counter and barrel, the
   offering basin, the ladder down.
-- Still to come: agent-dug cave layouts for the Cinder Galleries,
-  cellular-automata grottos.
+- ✅ **Monster signature moves** — the Bestiary's answer to the class
+  moves: every few rounds, ~18 kinds fight with more than teeth.
+  Breath washes (+damage, element-colored), drains feed the thing
+  half its hit back, hexes weigh every party swing down, crushes come
+  through the shields. First fire gets a chronicle beat; every fire
+  lands on the exchange log, the ticker, and the FX playback.
+- ✅ **Cave layouts (PCG ch.3 agent diggers)** — the Cinder Galleries
+  and the Bog Cellar are now dug, not built: a persistent tunneling
+  agent walks their spines (long stubborn lava tubes, root-runs); the
+  Ice Caverns use a turn-happy grotto walker that curls back on
+  itself. Built dungeons keep the classic winding descent. All modes
+  respect floor strata, never re-dig a cell, and stay seed-exact.
+
+**Phase 5 complete.** Future phases live in the "Future Expansions"
+list and whatever the next playtest demands.
 
 ## Architecture notes
 - Generation stays **seed-deterministic** end to end — that's what

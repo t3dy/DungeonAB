@@ -713,6 +713,13 @@ export class IsoDungeonRenderer {
           } else if (ev.kind === 'monster-hit') {
             this.spawnNumber(px, 1.35, pz, `-${ev.amount}`, '#ff6a5e', 0.95);
             this.shakeAmp = Math.max(this.shakeAmp, 0.1 + Math.min(0.12, ev.amount * 0.015));
+          } else if (ev.kind === 'monster-move') {
+            // A signature move washes over the party in its own color
+            this.spawnGlow(px, 1.0, pz, ELEMENT_FX_COLORS[ev.element] || '#ff5540', 1.5);
+            this.spawnNumber(px, 1.45, pz, `-${ev.amount}`, '#ff6a5e', 1.2);
+            this.shakeAmp = Math.max(this.shakeAmp, 0.24);
+          } else if (ev.kind === 'drain') {
+            this.spawnNumber(x, 1.25 + mScale * 0.5, z, `+${ev.amount}`, '#c05a78', 0.85);
           } else if (ev.kind === 'triage') {
             this.spawnNumber(px - 0.3, 1.3, pz, `+${ev.amount}`, '#7ee787', 0.85);
           } else if (ev.kind === 'phase') {

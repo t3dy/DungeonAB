@@ -168,25 +168,31 @@ export function generateDungeon(seed, difficulty = 'medium', opts = {}) {
 
   rooms.push(makeRoom(rooms.length, ROOM_TYPES.BOSS, rng, theme, depth, statScale, condition, floorCount - 1));
 
-  /* ---- Spatial layout (procgen v2) ---------------------------------- */
+  /* ---- Spatial layout (procgen v2 + cave modes) ---------------------- */
 
-  // The spine winds down the grid (the guaranteed critical path).
-  // Each floor lays out in its own horizontal band, so floors never
-  // collide on the grid and the minimap reads them as strata.
+  // The spine walks the grid (the guaranteed critical path). Built
+  // dungeons wind neatly down and right; caves are walked by an agent
+  // digger (PCG ch.3): the Cinder Galleries tunnel long and stubborn,
+  // grottos curl back on themselves. Each floor lays out in its own
+  // horizontal band, so floors never collide and the minimap reads
+  // them as strata.
+  const layoutMode = theme.layoutMode || 'winding';
   const occupied = new Set();
   let x = 0;
   let y = 0;
+  let dir = [1, 0];
   let laidFloor = 0;
   for (const room of rooms) {
     if ((room.floor || 0) !== laidFloor) {
       laidFloor = room.floor || 0;
       x = 0;
       y = laidFloor * 12;
+      dir = [1, 0];
     }
     room.x = x;
     room.y = y;
     occupied.add(`${x},${y}`);
-    if (rng.next() < 0.5) x += 1; else y += 1;
+    [x, y, dir] = nextCell(layoutMode, x, y, dir, laidFloor, occupied, rng);
   }
 
   const spine = rooms.map((_, i) => i);
@@ -228,10 +234,13 @@ export function generateDungeon(seed, difficulty = 'medium', opts = {}) {
     let py = jRoom.y;
     let prevIdx = junction;
 
+    const jBand = (jRoom.floor || 0) * 12;
     for (let i = 0; i < chainLen; i++) {
       const nx = px + dir[0];
       const ny = py + dir[1];
       if (occupied.has(`${nx},${ny}`)) break;
+      // A detour may lean one cell past its stratum, never two
+      if (ny < jBand - 1 || ny > jBand + 11) break;
 
       // The last room of a secret or locked branch is the vault
       const isLast = i === chainLen - 1;
@@ -268,6 +277,42 @@ export function generateDungeon(seed, difficulty = 'medium', opts = {}) {
   }
 
   return new Dungeon(rooms, theme, condition, { spine, edges, branches });
+}
+
+/**
+ * The next cell for the spine walker. 'winding' is the classic
+ * built-dungeon descent (right or down, never back). Cave modes run
+ * an agent digger: it prefers its heading ('digger' tunnels long,
+ * 'grotto' turns constantly), never reverses, stays in its floor's
+ * band, and never re-digs a cell. Boxed in, it tunnels east until
+ * daylight — the grid is infinite that way.
+ */
+function nextCell(mode, x, y, dir, floor, occupied, rng) {
+  if (mode !== 'digger' && mode !== 'grotto') {
+    return rng.next() < 0.5 ? [x + 1, y, [1, 0]] : [x, y + 1, [0, 1]];
+  }
+  const persist = mode === 'digger' ? 4 : 1;
+  const yMin = floor * 12;
+  const yMax = floor * 12 + 10;
+  const candidates = [
+    { d: dir, w: persist },
+    { d: [dir[1], dir[0]], w: 2 },
+    { d: [-dir[1], -dir[0]], w: 2 },
+  ].filter(({ d }) => {
+    const ny = y + d[1];
+    return ny >= yMin && ny <= yMax && !occupied.has(`${x + d[0]},${ny}`);
+  });
+  if (candidates.length > 0) {
+    const total = candidates.reduce((s, c) => s + c.w, 0);
+    let pick = rng.next() * total;
+    for (const c of candidates) {
+      pick -= c.w;
+      if (pick <= 0) return [x + c.d[0], y + c.d[1], c.d];
+    }
+  }
+  let nx = x + 1;
+  while (occupied.has(`${nx},${y}`)) nx++;
+  return [nx, y, [1, 0]];
 }
 
 /**
@@ -412,6 +457,7 @@ export const DUNGEON_THEMES = {
     id: 'volcanic', name: 'the Cinder Galleries', icon: '🌋',
     tagline: 'The mountain is not dormant. The mountain is patient.',
     weightTweaks: { disaster: 1, trap: 0.5, shrine: -0.3 },
+    layoutMode: 'digger',   // lava tubes: long stubborn tunnels
     trapBonus: 2, // fire traps bite harder
     trapTypes: ['fire', 'spike'],
     monsters: [
@@ -488,6 +534,7 @@ export const DUNGEON_THEMES = {
     // Features: her stillroom always works, the shelves drip with
     // reagents, and the rot in the timbers bites like a trap.
     weightTweaks: { materials: 1.5, lab: 1, trap: 0.5, treasure: -0.5, corridor: -0.3 },
+    layoutMode: 'digger',     // root-runs: the cellar was dug, not built
     alwaysLab: true,          // the witch's stillroom
     trapBonus: 1,             // rot, roots, and jars best left corked
     trapTypes: ['poison', 'spike'],
@@ -510,6 +557,7 @@ export const DUNGEON_THEMES = {
     // and the caverns themselves keep failing — steam bursts, ceiling
     // thaw, cave-ins. Shrines froze over long ago.
     weightTweaks: { disaster: 1.5, trap: 1, shrine: -0.5, library: -0.3 },
+    layoutMode: 'grotto',     // melt-chambers curl back on themselves
     trapBonus: 2,             // flash-melted floors refreeze with edges
     trapTypes: ['fire', 'spike'],
     monsters: [

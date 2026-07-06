@@ -353,6 +353,19 @@ function bossPhaseLine(monster) {
   return BOSS_PHASE_LINES[monster.kind] || BOSS_PHASE_GENERIC[monster.health % BOSS_PHASE_GENERIC.length];
 }
 
+/* Signature moves get their beat the first time they fire */
+const MOVE_LINES = {
+  breath: m => `🔥 ${m.move.name}: the thing draws breath and the corridor becomes weather. Shields help less than the party hoped.`,
+  drain: m => `🩸 ${m.move.name} — the blow doesn't just hurt, it *feeds*. The party watches its own warmth close the thing's wounds.`,
+  hex: m => `🧿 ${m.move.name}: it mutters something backwards, and every sword in the party grows a little heavier.`,
+  crush: m => `💢 ${m.move.name} — it stops swiping and starts slamming. That one came through the shields.`,
+};
+
+function monsterMoveLine(monster, move) {
+  const line = MOVE_LINES[move.kind];
+  return line ? line({ move }) : `💢 ${move.name} — the thing has more than teeth, and now the party knows it.`;
+}
+
 /* ------------------------------------------------------------------ */
 /* Finds — treasure is more than coin                                  */
 /* ------------------------------------------------------------------ */
@@ -627,13 +640,15 @@ export function resolveRoomAction(room, party, optionId) {
       let phased = false;
       let routed = false;
       let crits = 0;
+      let hexPenalty = 0;   // a muttered working makes every sword heavier
+      let moveSeen = false;
       while (monsterHealth > 0 && party.isAlive() && rounds < 12) {
         rounds++;
         const events = [];
 
         // The party's aggregate swing, attributed blade by blade so
         // the chronicle knows whose hit was whose
-        let swing = Math.max(1, Math.round((party.combatAttack() + summon + coating.bonus + Math.floor(roll() / 3)) * etherealMult) - armorShave);
+        let swing = Math.max(1, Math.round((party.combatAttack() + summon + coating.bonus + Math.floor(roll() / 3)) * etherealMult) - armorShave - hexPenalty);
         const baseSwing = swing;   // shares split the base; crits stack on top
         const front = party.living().slice().sort((a, b) => b.attack - a.attack).slice(0, 5);
         const attackSum = front.reduce((s, m) => s + m.attack, 0) || 1;
@@ -696,10 +711,33 @@ export function resolveRoomAction(room, party, optionId) {
           combatLog.push({ round: rounds, events, monsterHp: Math.max(0, monsterHealth) });
           continue;
         }
-        const incoming = Math.max(1, monsterAtk - Math.floor(party.totalDefense() / 3) - ward);
-        party.takeDamage(incoming);
-        partyDamageTaken += incoming;
-        events.push({ kind: 'monster-hit', amount: incoming });
+        // Signature moves (Bestiary): every N rounds the thing fights
+        // with more than teeth — breath washes, drains feed, hexes
+        // weigh down the party's swords, crushes come through shields
+        const move = monster.move;
+        if (move && rounds % move.every === 0) {
+          const dmg = Math.max(1, monsterAtk + (move.bonus || 0) - Math.floor(party.totalDefense() / 3) - ward);
+          party.takeDamage(dmg);
+          partyDamageTaken += dmg;
+          events.push({ kind: 'monster-move', move: move.kind, name: move.name, amount: dmg, element: move.element || null });
+          if (move.kind === 'drain') {
+            const fed = Math.ceil(dmg / 2);
+            monsterHealth = Math.min(maxHealth, monsterHealth + fed);
+            events.push({ kind: 'drain', amount: fed });
+          }
+          if (move.kind === 'hex') {
+            hexPenalty = Math.min(2, hexPenalty + 1);
+          }
+          if (!moveSeen) {
+            moveSeen = true;
+            preps.push({ source: monster.name, text: monsterMoveLine(monster, move) });
+          }
+        } else {
+          const incoming = Math.max(1, monsterAtk - Math.floor(party.totalDefense() / 3) - ward);
+          party.takeDamage(incoming);
+          partyDamageTaken += incoming;
+          events.push({ kind: 'monster-hit', amount: incoming });
+        }
         // The cleric works the line mid-fight, every third exchange
         if (rounds % 3 === 0 && party.isAlive() && party.hasClass(CLASSES.CLERIC)) {
           party.healParty(2);
