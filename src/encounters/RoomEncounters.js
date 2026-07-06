@@ -6,8 +6,9 @@
  * weighted by personality archetypes, outcomes are gradient.
  */
 
-import { CLASSES } from '../game/Cards.js';
+import { CLASSES, SPELL_CARDS } from '../game/Cards.js';
 import { ROOM_TYPES } from '../world/DungeonGen.js';
+import { elementMult } from '../game/Bestiary.js';
 
 function roll() {
   return Math.random() * 10;
@@ -239,6 +240,43 @@ export function decideRoomAction(room, party) {
 }
 
 /* ------------------------------------------------------------------ */
+/* Finds — treasure is more than coin                                  */
+/* ------------------------------------------------------------------ */
+
+const TRINKETS = [
+  { id: 'found-charm', type: 'equipment', name: 'a tarnished luck-charm', icon: '🍀', slot: 'trinket', bonus: { mind: 1 }, bestFor: null, text: 'Somebody\'s luck ran out holding it. Perhaps it recharges.' },
+  { id: 'found-buckle', type: 'equipment', name: 'a dead adventurer\'s belt buckle', icon: '🔩', slot: 'trinket', bonus: { defense: 1 }, bestFor: null, text: 'Sturdy. Its last owner was not.' },
+  { id: 'found-whetstone', type: 'equipment', name: 'a whetstone of surprising opinion', icon: '🪨', slot: 'trinket', bonus: { attack: 1 }, bestFor: null, text: 'It hums when it works. Nobody asks what the tune is.' },
+];
+
+/**
+ * Roll a bonus find: a potion, materials, a spell scroll, or a
+ * trinket. Vaults and boss hoards always hold one. Returns a prep
+ * entry (source + chronicle text) or null.
+ */
+export function rollFind(party, always = false, rollValue = Math.random()) {
+  if (!always && rollValue > 0.35) return null;
+  const kind = Math.floor((always ? rollValue : rollValue / 0.35) * 4) % 4;
+
+  if (kind === 0) {
+    party.potions.push({ kind: 'healing-draught', heal: 6 });
+    return { source: 'the hoard', find: 'potion', text: '🧪 Tucked behind the coin: a healing draught, still corked, still honest.' };
+  }
+  if (kind === 1) {
+    party.materials += 2;
+    return { source: 'the hoard', find: 'materials', text: '🌿 Two bundles of rare simples, wrapped in oilcloth by careful, vanished hands.' };
+  }
+  if (kind === 2) {
+    const scroll = SPELL_CARDS[Math.floor(rollValue * 997) % SPELL_CARDS.length];
+    party.grimoire.push({ ...scroll, id: `found-${scroll.id}-${party.grimoire.length}` });
+    return { source: scroll.name, find: 'scroll', text: `📜 A scroll of ${scroll.name}, sealed with someone's ring. The grimoire grows.` };
+  }
+  const trinket = TRINKETS[Math.floor(rollValue * 991) % TRINKETS.length];
+  party.assignEquipment({ ...trinket, id: `${trinket.id}-${Date.now().toString(36)}` });
+  return { source: trinket.name, find: 'trinket', text: `🍀 Among the coins, ${trinket.name} — claimed, worn, already working.` };
+}
+
+/* ------------------------------------------------------------------ */
 /* Side passages and secret doors (procgen v2)                         */
 /* ------------------------------------------------------------------ */
 
@@ -302,26 +340,60 @@ export function resolveRoomAction(room, party, optionId) {
       }
       monsterHealth -= opening;
 
+      // Natures shape the fight (see Bestiary): the armored shave
+      // blows; the ethereal ignore steel unless faith gives the
+      // blades conviction; the forewarned (a tripped alarm) hit harder
+      const preps = [];
+      const armorShave = monster.trait === 'armored' ? 2 : 0;
+      const etherealMult = monster.trait === 'ethereal' && !party.hasClass(CLASSES.CLERIC) ? 0.6 : 1;
+      if (monster.trait === 'ethereal') {
+        preps.push(party.hasClass(CLASSES.CLERIC)
+          ? { source: 'the cleric', text: '✨ Steel alone would pass through it — but the cleric\'s murmured litany gives every blade conviction.' }
+          : { source: monster.name, text: '👻 Half the party\'s blows pass through it like an opinion through a committee.' });
+      }
+      let monsterAtk = monster.attack;
+      if (party.alarmed) {
+        monsterAtk += 2;
+        party.alarmed = false;
+        preps.push({ source: 'the alarm', text: '🔔 The tripped alarm did its work: the thing was waiting, braced and delighted.' });
+      }
+
       // Auto-battle: rounds of party attack vs monster attack.
       // Corridor frontage: only ~5 blades work at once, so a mob
       // of drafted heroes helps less than it thinks it does.
       let rounds = 0;
       while (monsterHealth > 0 && party.isAlive() && rounds < 12) {
         rounds++;
-        monsterHealth -= Math.max(1, party.combatAttack() + summon + Math.floor(roll() / 3));
+        const swing = Math.max(1, Math.round((party.combatAttack() + summon + Math.floor(roll() / 3)) * etherealMult) - armorShave);
+        monsterHealth -= swing;
         if (monsterHealth <= 0) break;
-        const incoming = Math.max(1, monster.attack - Math.floor(party.totalDefense() / 3) - ward);
+        // The slow strike last: no incoming damage on the first round
+        if (monster.trait === 'slow' && rounds === 1) continue;
+        const incoming = Math.max(1, monsterAtk - Math.floor(party.totalDefense() / 3) - ward);
         party.takeDamage(incoming);
         partyDamageTaken += incoming;
         party.quaffIfNeeded();
       }
 
       const won = monsterHealth <= 0 && party.isAlive();
-      const preps = [];
       if (won) {
         const bounty = monster.isBoss ? 100 : 25;
         party.addScore(bounty);
         room.cleared = true;
+        // The venomous leave something behind, win or no win
+        if (monster.trait === 'venomous') {
+          if (party.hasClass(CLASSES.CLERIC)) {
+            preps.push({ source: 'the cleric', text: '🐍 Venom in three sets of scratches — drawn, hissing, into the cleric\'s salt bowl before it can work.' });
+          } else {
+            party.poisonLinger = (party.poisonLinger || 0) + 2;
+            preps.push({ source: monster.name, text: '🐍 The thing is dead, but its venom is patient. Someone will feel this a room from now.' });
+          }
+        }
+        // A boss's hoard always holds more than coin
+        if (monster.isBoss) {
+          const find = rollFind(party, true);
+          if (find) preps.push(find);
+        }
         // The Reckless make it look good, and the chroniclers pay for it
         if (party.hasPersonality('reckless')) {
           party.addScore(5);
@@ -350,14 +422,31 @@ export function resolveRoomAction(room, party, optionId) {
     }
 
     case 'spell-strike': {
-      const spell = party.castSpell('combat');
       const monster = room.monster;
+      // The caster reads the foe and reaches for the right working:
+      // the spell whose element bites hardest (Bestiary weaknesses;
+      // swarms take spell openings half again as hard)
+      const combatSpells = party.grimoire.filter(s => s.use === 'combat');
+      let best = null;
+      let bestDmg = -1;
+      for (const s of combatSpells) {
+        const dmg = s.power * elementMult(s, monster);
+        if (dmg > bestDmg) { bestDmg = dmg; best = s; }
+      }
+      const spell = best ? party.castSpell('combat', best.id) : null;
+      let spellEdge = null;
       if (spell) {
-        monster.health = Math.max(1, monster.health - spell.effectivePower);
+        const mult = elementMult(spell, monster) * (monster.trait === 'swarm' ? 1.5 : 1);
+        if (elementMult(spell, monster) > 1) spellEdge = 'weak';
+        else if (elementMult(spell, monster) < 1) spellEdge = 'resisted';
+        if (monster.trait === 'swarm') spellEdge = spellEdge || 'swarm';
+        monster.health = Math.max(1, monster.health - Math.round(spell.effectivePower * mult));
       }
       // Then fight the softened monster
       const result = resolveRoomAction(room, party, 'fight');
       result.spell = spell ? spell.name : null;
+      result.spellEdge = spellEdge;
+      result.spellElement = spell?.element || null;
       return result;
     }
 
@@ -431,10 +520,36 @@ export function resolveRoomAction(room, party, optionId) {
       const prep = getPreparationBonuses(party);
       const preps = [];
       if (prep.trapSoak > 0) preps.push({ source: prep.notes.trapSoak, text: '🏮 The Everburning Lantern showed the plates before the boots found them.' });
-      const dmg = Math.max(1, (room.trapDamage || 3) - spotter - prep.trapSoak);
+
+      // The trap's kind decides what pushing through costs (Bestiary
+      // for rooms, as it were): fire burns unless frost answers it,
+      // poison is patient, an alarm mostly just *tells on you*
+      const trapType = room.trapType || 'spike';
+      let dmg = Math.max(1, (room.trapDamage || 3) - spotter - prep.trapSoak);
+      if (trapType === 'fire') {
+        if (hasSpell(party, 'sp-frost')) {
+          dmg = Math.max(1, dmg - 2);
+          preps.push({ source: 'Frost Lance', text: '❄️ Frost Lance meets the jet of flame halfway, and the corridor fills with warm rain instead.' });
+        } else {
+          dmg += 1;
+        }
+      } else if (trapType === 'poison') {
+        dmg = Math.max(1, Math.ceil(dmg / 2));
+        if (party.hasClass(CLASSES.CLERIC)) {
+          preps.push({ source: 'the cleric', text: '🐍 The needles bite, but the cleric draws the venom before it can settle in.' });
+        } else {
+          party.poisonLinger = (party.poisonLinger || 0) + 2;
+          preps.push({ source: 'the trap', text: '🐍 The needles barely sting. That is what worries the ones who know poison.' });
+        }
+      } else if (trapType === 'alarm') {
+        dmg = Math.min(dmg, 2);
+        party.alarmed = true;
+        preps.push({ source: 'the alarm', text: '🔔 Bells. Bells all the way down. Everything ahead now knows the party\'s pace and number.' });
+      }
+
       party.takeDamage(dmg);
       room.cleared = true;
-      return { success: true, damage: dmg, spotted: spotter > 0, preps };
+      return { success: true, damage: dmg, spotted: spotter > 0, trapType, preps };
     }
 
     case 'smoke-bomb': {
@@ -471,7 +586,11 @@ export function resolveRoomAction(room, party, optionId) {
       }
       party.addGold(room.gold || 20);
       room.cleared = true;
-      return { success: true, gold: room.gold || 20 };
+      // Hoards hold more than coin — vaults always do
+      const preps = [];
+      const find = rollFind(party, room.type === ROOM_TYPES.VAULT);
+      if (find) preps.push(find);
+      return { success: true, gold: room.gold || 20, preps };
     }
 
     case 'inspect': {
@@ -486,6 +605,8 @@ export function resolveRoomAction(room, party, optionId) {
       }
       party.addGold(gold);
       room.cleared = true;
+      const find = rollFind(party, room.type === ROOM_TYPES.VAULT);
+      if (find) preps.push(find);
       return { success: true, gold, careful: true, preps };
     }
 

@@ -14,6 +14,7 @@
 import { registerPack } from '../game/CardPacks.js';
 import { registerTheme } from '../world/DungeonGen.js';
 import { registerMonsterTiles } from '../ui/SpriteAtlas.js';
+import { registerNatures } from '../game/Bestiary.js';
 
 export const ALCHEMY_PACK = {
   id: 'alchemy-17c',
@@ -117,4 +118,12 @@ export function installAlchemyPack({ enabled = true } = {}) {
   registerPack(ALCHEMY_PACK, { enabled });
   registerTheme(ATHANOR_THEME);
   registerMonsterTiles(ALCHEMY_TILES);
+  registerNatures({
+    'green-lion': { trait: 'venomous' },                    // vitriol in the bite
+    'ouroboros': { trait: 'armored' },                      // scales all the way around
+    'caput-corvi': { trait: 'swarm' },                      // the nigredo comes in flocks
+    'winged-wingless': { trait: 'swarm' },
+    'rebis': { trait: 'armored' },                          // crowned twice, mailed twice
+    'philosophers-dragon': { resist: ['fire'], weak: ['frost'] },
+  });
 }

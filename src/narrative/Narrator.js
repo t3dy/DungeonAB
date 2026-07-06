@@ -291,12 +291,21 @@ export function composeResolution(room, optionId, result, party) {
       }
       break;
     }
-    case 'spell-strike':
-      bits.push(result.spell
-        ? `🔥 ${result.spell} lights the room before a blade is drawn — the fight that follows is short and one-sided.`
-        : '🔥 The grimoire is bare, so steel must do the whole job.');
+    case 'spell-strike': {
+      if (!result.spell) {
+        bits.push('🔥 The grimoire is bare, so steel must do the whole job.');
+      } else if (result.spellEdge === 'weak') {
+        bits.push(`🔥 The caster reads the thing and reaches for ${result.spell} — chosen precisely, because this one hates ${result.spellElement}. It lands like an argument won in advance.`);
+      } else if (result.spellEdge === 'swarm') {
+        bits.push(`🔥 ${result.spell} tears through the packed bodies — a swarm is mostly targets.`);
+      } else if (result.spellEdge === 'resisted') {
+        bits.push(`🔥 ${result.spell} lands, and the thing shrugs off half of it. The caster files that away for next time.`);
+      } else {
+        bits.push(`🔥 ${result.spell} lights the room before a blade is drawn — the fight that follows is short and one-sided.`);
+      }
       if (result.success) bits.push('The room is won.');
       break;
+    }
     case 'sneak':
       bits.push(result.success
         ? pick([

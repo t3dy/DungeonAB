@@ -67,13 +67,22 @@ describe('Combining conditions (a wager plus a hex)', () => {
   });
 
   test('a combined condition flows through generation (both effects land)', () => {
-    const plain = generateDungeon('combo-seed', 'medium', { theme: 'delve' });
-    const combo = generateDungeon('combo-seed', 'medium', {
-      theme: 'delve', condition: combineConditions('traps', 'darkpact'),
-    });
-    const maxTrap = d => Math.max(0, ...d.rooms.filter(r => r.trapDamage).map(r => r.trapDamage));
-    if (maxTrap(plain) > 0) assert.ok(maxTrap(combo) > maxTrap(plain), 'the hex\'s traps bite');
-    assert.ok(monsterAvg(combo).atk > monsterAvg(plain).atk, 'the wager\'s monsters hit');
+    // Summed over several seeds so single-layout variance can't flake it
+    const combined = combineConditions('traps', 'darkpact');
+    let plainTrap = 0;
+    let comboTrap = 0;
+    let plainAtk = 0;
+    let comboAtk = 0;
+    for (const seed of ['combo-1', 'combo-2', 'combo-3', 'combo-4', 'combo-5']) {
+      const plain = generateDungeon(seed, 'medium', { theme: 'delve' });
+      const combo = generateDungeon(seed, 'medium', { theme: 'delve', condition: combined });
+      plainTrap += Math.max(0, ...plain.rooms.filter(r => r.trapDamage).map(r => r.trapDamage));
+      comboTrap += Math.max(0, ...combo.rooms.filter(r => r.trapDamage).map(r => r.trapDamage));
+      plainAtk += monsterAvg(plain).atk;
+      comboAtk += monsterAvg(combo).atk;
+    }
+    assert.ok(comboTrap > plainTrap, `the hex's traps bite (${comboTrap} > ${plainTrap})`);
+    assert.ok(comboAtk > plainAtk, `the wager's monsters hit (${comboAtk} > ${plainAtk})`);
   });
 
   test('a combined condition pays its combined premium in the run', () => {

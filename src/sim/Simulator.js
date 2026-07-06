@@ -86,11 +86,27 @@ export class Simulator {
     // Between-room recovery
     this.party.restStep();
 
+    // Poison taken last room works now (the venomous are patient)
+    const livingBefore = this.party.living();
+    const linger = this.party.applyLinger();
+    if (linger && !this.party.isAlive()) {
+      // The venom finishes what the fight started
+      this.lastNarration = {
+        room: room.type, icon: room.icon, roomIndex: roomIdx, action: 'linger',
+        predicament: composePredicament(room, this.dungeon.theme),
+        deliberation: 'There was no deliberating with what was already in the blood.',
+        resolution: `🐍 The venom finishes its work a room too late to fight back against. ${linger.damage} health, taken quietly.`,
+        falls: livingBefore.filter(m => !m.isAlive()).map(m => composeFall(m)),
+        aside: null,
+      };
+      this.finish(false);
+      return;
+    }
+
     // The room, decided and resolved
     const predicament = composePredicament(room, this.dungeon.theme);
     const options = getRoomOptions(room, this.party);
     const chosen = decideRoomAction(room, this.party);
-    const livingBefore = this.party.living();
     const result = resolveRoomAction(room, this.party, chosen);
 
     // Anyone who walked in alive and didn't walk out gets their beat
@@ -107,7 +123,11 @@ export class Simulator {
       deliberation: composeDeliberation(chosen, options, this.party),
       resolution: composeResolution(room, chosen, result, this.party),
       falls: fallen.map(m => composeFall(m)),
-      aside: null,
+      aside: linger
+        ? (linger.cured
+            ? '🐍 On the walk, the cleric finds the venom before it finds a vein, and burns it out with a word.'
+            : `🐍 The venom from the last room chooses this moment: ${linger.damage} health, paid on the march.`)
+        : null,
     };
 
     // A side passage? Secret doors must be noticed first; open ones
@@ -119,7 +139,7 @@ export class Simulator {
           branch.consumed = true;
           for (const bi of branch.rooms) this.dungeon.rooms[bi].discovered = true;
           this.path.splice(this.roomIndex + 1, 0, ...branch.rooms);
-          this.lastNarration.aside = composeSecretFound(this.party);
+          this.lastNarration.aside = [this.lastNarration.aside, composeSecretFound(this.party)].filter(Boolean).join(' ');
           this.addLog('🕳️ A hidden door!');
         }
         // Unnoticed secrets stay secret — the branch may be found on a retreat pass
@@ -127,7 +147,7 @@ export class Simulator {
         branch.consumed = true;
         const going = decideDetour(this.party);
         if (going) this.path.splice(this.roomIndex + 1, 0, ...branch.rooms);
-        this.lastNarration.aside = composeDetour(going);
+        this.lastNarration.aside = [this.lastNarration.aside, composeDetour(going)].filter(Boolean).join(' ');
       }
     }
 

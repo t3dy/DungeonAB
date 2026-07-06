@@ -210,6 +210,19 @@ export class Party {
   }
 
   /**
+   * Poison is patient: venom taken last room works now. A living
+   * cleric draws it in time. Returns { damage } | { cured } | null.
+   */
+  applyLinger() {
+    if (!this.poisonLinger) return null;
+    const dmg = this.poisonLinger;
+    this.poisonLinger = 0;
+    if (this.hasClass(CLASSES.CLERIC)) return { cured: true };
+    this.takeDamage(dmg);
+    return { damage: dmg };
+  }
+
+  /**
    * Cast a spell from the grimoire — by use, or a specific spell by
    * id. Scroll-casting consumes the card; a living wizard makes the
    * grimoire reusable (and stronger).

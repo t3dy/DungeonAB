@@ -10,6 +10,7 @@
 
 import { SeededRandom } from '../draft/PackDraft.js';
 import { getCondition } from '../game/Conditions.js';
+import { applyNature } from '../game/Bestiary.js';
 
 export const ROOM_TYPES = {
   ENTRANCE: 'entrance',
@@ -126,12 +127,12 @@ export function generateDungeon(seed, difficulty = 'medium', opts = {}) {
 
   // Guarantees: at least one library and one shrine; a lab if wanted.
   // Themes add their own identity guarantees on top.
-  ensureRoomType(rooms, ROOM_TYPES.LIBRARY, rng, theme, depth, statScale, condition, theme.minLibraries || 1);
-  ensureRoomType(rooms, ROOM_TYPES.SHRINE, rng, theme, depth, statScale, condition);
+  ensureRoomType(rooms, ROOM_TYPES.LIBRARY, rng, theme, depth, statScale, condition, weights, theme.minLibraries || 1);
+  ensureRoomType(rooms, ROOM_TYPES.SHRINE, rng, theme, depth, statScale, condition, weights);
   if (opts.wantLab || theme.alwaysLab) {
-    ensureRoomType(rooms, ROOM_TYPES.LAB, rng, theme, depth, statScale, condition);
+    ensureRoomType(rooms, ROOM_TYPES.LAB, rng, theme, depth, statScale, condition, weights);
     // A lab without materials is glassware and regret
-    ensureRoomType(rooms, ROOM_TYPES.MATERIALS, rng, theme, depth, statScale, condition, 1);
+    ensureRoomType(rooms, ROOM_TYPES.MATERIALS, rng, theme, depth, statScale, condition, weights, 1);
   }
 
   rooms.push(makeRoom(rooms.length, ROOM_TYPES.BOSS, rng, theme, depth, statScale, condition));
@@ -223,13 +224,23 @@ const PROTECTED_TYPES = new Set([
   ROOM_TYPES.LIBRARY, ROOM_TYPES.SHRINE, ROOM_TYPES.LAB, ROOM_TYPES.MATERIALS,
 ]);
 
-function ensureRoomType(rooms, type, rng, theme, depth, statScale, condition, minCount = 1) {
+function ensureRoomType(rooms, type, rng, theme, depth, statScale, condition, weights, minCount = 1) {
   const have = rooms.filter(r => r.type === type).length;
   let need = minCount - have;
 
   while (need > 0) {
-    const convertible = rooms.filter(r => !PROTECTED_TYPES.has(r.type));
-    if (convertible.length === 0) break;
+    // Convert the type most over-represented against the theme's own
+    // intent — a guarantee should never eat a theme's identity rooms
+    // (the castle keeps its hoard; the caverns keep their disasters)
+    const candidates = rooms.filter(r => !PROTECTED_TYPES.has(r.type));
+    if (candidates.length === 0) break;
+    let worstType = null;
+    let worstScore = -1;
+    for (const t of new Set(candidates.map(r => r.type))) {
+      const score = candidates.filter(r => r.type === t).length / Math.max(0.1, weights?.[t] || 0.1);
+      if (score > worstScore) { worstScore = score; worstType = t; }
+    }
+    const convertible = candidates.filter(r => r.type === worstType);
     const target = rng.pick(convertible);
     const replacement = makeRoom(target.index, type, rng, theme, depth, statScale, condition);
     replacement.x = target.x;
@@ -270,6 +281,9 @@ function makeRoom(index, type, rng, theme, depth = 1, statScale = 1, condition =
   }
   if (type === ROOM_TYPES.TRAP) {
     room.trapDamage = 4 + Math.floor(rng.next() * 4) + (theme.trapBonus || 0) + (depth - 1) + (condition.trapBonus || 0);
+    // Each theme sets its own kind of snares
+    const types = theme.trapTypes || ['spike'];
+    room.trapType = types[Math.floor(rng.next() * types.length)];
   }
   if (type === ROOM_TYPES.MATERIALS) {
     room.materials = 1 + Math.floor(rng.next() * 2);
@@ -288,6 +302,7 @@ export const DUNGEON_THEMES = {
     id: 'delve', name: 'the Old Delve', icon: '⛏️',
     tagline: 'A classic hole in the ground, wronged by generations of management.',
     weightTweaks: {},
+    trapTypes: ['spike', 'alarm'],
     monsters: [
       { kind: 'rat-swarm', name: 'a chittering rat swarm', icon: '🐀', attack: 4, health: 10, undead: false },
       { kind: 'skeleton', name: 'a rattling skeleton patrol', icon: '💀', attack: 6, health: 14, undead: true },
@@ -305,6 +320,7 @@ export const DUNGEON_THEMES = {
     id: 'crypt', name: 'the Ancient Crypt', icon: '⚰️',
     tagline: 'The dead were buried with their grudges. Both kept.',
     weightTweaks: { monster: 1, shrine: 0.5, treasure: -0.5 },
+    trapTypes: ['spike', 'poison'],
     monsters: [
       { kind: 'bone-warden', name: 'a bone warden on its rounds', icon: '💀', attack: 6, health: 15, undead: true },
       { kind: 'grave-mites', name: 'a boil of grave mites', icon: '🪲', attack: 4, health: 9, undead: false },
@@ -322,6 +338,7 @@ export const DUNGEON_THEMES = {
     tagline: 'The mountain is not dormant. The mountain is patient.',
     weightTweaks: { disaster: 1, trap: 0.5, shrine: -0.3 },
     trapBonus: 2, // fire traps bite harder
+    trapTypes: ['fire', 'spike'],
     monsters: [
       { kind: 'salamander', name: 'a salamander the size of a mistake', icon: '🦎', attack: 7, health: 14, undead: false },
       { kind: 'cinder-bats', name: 'a shriek of cinder bats', icon: '🦇', attack: 5, health: 9, undead: false },
@@ -339,6 +356,7 @@ export const DUNGEON_THEMES = {
     tagline: 'Knowledge wants to be free. It has been waiting a long time.',
     weightTweaks: { library: 2, monster: -0.5, materials: -0.5 },
     minLibraries: 2,
+    trapTypes: ['alarm', 'spike'],
     monsters: [
       { kind: 'flying-tomes', name: 'a wheeling flock of flying tomes', icon: '📖', attack: 5, health: 10, undead: false },
       { kind: 'ink-elemental', name: 'an ink elemental, still wet', icon: '🫧', attack: 6, health: 13, undead: false },
@@ -356,6 +374,7 @@ export const DUNGEON_THEMES = {
     tagline: 'The experiments continued after the funding stopped. And after the alchemist did.',
     weightTweaks: { lab: 1.5, materials: 1, disaster: 0.5, shrine: -0.5 },
     alwaysLab: true, // the theme's identity: labs regardless of party
+    trapTypes: ['poison', 'fire'],
     monsters: [
       { kind: 'sludge-elemental', name: 'a sludge elemental, recently fed', icon: '🟢', attack: 6, health: 15, undead: false },
       { kind: 'potion-rats', name: 'a scurry of potion-glowing rats', icon: '🐀', attack: 5, health: 10, undead: false },
@@ -373,8 +392,9 @@ export const DUNGEON_THEMES = {
     tagline: 'The invitation was in your dreams. The exit clause was not.',
     // Features: the Lord's treasury runs deep, his study is real, but
     // the chapels were desecrated centuries ago — heal elsewhere.
-    weightTweaks: { treasure: 1, library: 0.5, monster: 0.5, shrine: -0.7, materials: -0.5 },
+    weightTweaks: { treasure: 1.5, library: 0.5, monster: 0.5, shrine: -0.7, materials: -0.5, corridor: -0.3 },
     minLibraries: 1,
+    trapTypes: ['alarm', 'spike'],
     monsters: [
       { kind: 'castle-thrall', name: 'a thrall footman, polite and bloodless', icon: '🧟', attack: 6, health: 13, undead: true, bribable: true },
       { kind: 'bat-cloud', name: 'a chittering cloud of castle bats', icon: '🦇', attack: 4, health: 9, undead: false },
@@ -395,6 +415,7 @@ export const DUNGEON_THEMES = {
     weightTweaks: { materials: 1.5, lab: 1, trap: 0.5, treasure: -0.5, corridor: -0.3 },
     alwaysLab: true,          // the witch's stillroom
     trapBonus: 1,             // rot, roots, and jars best left corked
+    trapTypes: ['poison', 'spike'],
     monsters: [
       { kind: 'jar-imp', name: 'an imp still angry about the jar', icon: '🫙', attack: 5, health: 10, undead: false, bribable: true },
       { kind: 'pickled-thing', name: 'a pickled thing that finished pickling', icon: '🥒', attack: 6, health: 14, undead: true },
@@ -415,6 +436,7 @@ export const DUNGEON_THEMES = {
     // thaw, cave-ins. Shrines froze over long ago.
     weightTweaks: { disaster: 1.5, trap: 1, shrine: -0.5, library: -0.3 },
     trapBonus: 2,             // flash-melted floors refreeze with edges
+    trapTypes: ['fire', 'spike'],
     monsters: [
       { kind: 'frost-wisp', name: 'a frost wisp singed around the edges', icon: '❄️', attack: 5, health: 9, undead: false },
       { kind: 'ice-crawler', name: 'an ice crawler with too many pick-shaped legs', icon: '🕷️', attack: 6, health: 13, undead: false },
@@ -493,11 +515,11 @@ export function dungeonFromLayout(layout) {
  * theme-appropriate, no RNG needed.
  */
 export function defaultPayloadFor(type, theme, isBoss = false) {
-  if (type === ROOM_TYPES.MONSTER) return { monster: { ...theme.monsters[0] } };
-  if (type === ROOM_TYPES.BOSS) return { monster: { ...theme.bosses[0], isBoss: true } };
+  if (type === ROOM_TYPES.MONSTER) return { monster: applyNature({ ...theme.monsters[0] }) };
+  if (type === ROOM_TYPES.BOSS) return { monster: applyNature({ ...theme.bosses[0], isBoss: true }) };
   if (type === ROOM_TYPES.TREASURE) return { gold: 35, mimicChance: 0.18 };
   if (type === ROOM_TYPES.VAULT) return { gold: 100, mimicChance: 0.28 };
-  if (type === ROOM_TYPES.TRAP) return { trapDamage: 5 };
+  if (type === ROOM_TYPES.TRAP) return { trapDamage: 5, trapType: (theme.trapTypes || ['spike'])[0] };
   if (type === ROOM_TYPES.MATERIALS) return { materials: 2 };
   return {};
 }
@@ -515,7 +537,7 @@ export function registerTheme(theme) {
 
 function rollMonster(rng, isBoss, theme, depth = 1, statScale = 1, condition = {}) {
   const pool = isBoss ? theme.bosses : theme.monsters;
-  const monster = { ...rng.pick(pool) };
+  const monster = applyNature({ ...rng.pick(pool) });
 
   // The player's wager reshapes the foe: bosses and rank-and-file
   // scale separately (Monster Swarms thins the many; the Long Throne

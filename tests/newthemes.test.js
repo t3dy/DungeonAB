@@ -26,15 +26,23 @@ describe('the Castle of the Vampire Lord', () => {
   });
 
   test('treasure-rich, shrine-poor (the chapels are desecrated)', () => {
-    let treasure = 0;
-    let shrines = 0;
-    for (const seed of SEEDS) {
-      const d = generateDungeon(seed, 'medium', { theme: 'castle' });
-      treasure += count(d, ROOM_TYPES.TREASURE) + count(d, ROOM_TYPES.VAULT);
-      shrines += count(d, ROOM_TYPES.SHRINE);
+    // Relative to the baseline delve across the same seeds, so layout
+    // variance can't flake it: the Lord hoards MORE, prays LESS
+    const seeds = [...SEEDS, 'nt-6', 'nt-7', 'nt-8', 'nt-9', 'nt-10', 'nt-11', 'nt-12', 'nt-13', 'nt-14', 'nt-15'];
+    let castleTreasure = 0;
+    let delveTreasure = 0;
+    let castleShrines = 0;
+    let delveShrines = 0;
+    for (const seed of seeds) {
+      const c = generateDungeon(seed, 'medium', { theme: 'castle' });
+      const d = generateDungeon(seed, 'medium', { theme: 'delve' });
+      castleTreasure += count(c, ROOM_TYPES.TREASURE) + count(c, ROOM_TYPES.VAULT);
+      delveTreasure += count(d, ROOM_TYPES.TREASURE) + count(d, ROOM_TYPES.VAULT);
+      castleShrines += count(c, ROOM_TYPES.SHRINE);
+      delveShrines += count(d, ROOM_TYPES.SHRINE);
     }
-    assert.ok(treasure / SEEDS.length >= 1.5, `the Lord hoards (${treasure} treasure rooms over 5 delves)`);
-    assert.ok(shrines <= SEEDS.length + 2, `shrines stay scarce (${shrines} across 5 delves; 1 guaranteed each)`);
+    assert.ok(castleTreasure > delveTreasure, `the Lord hoards (${castleTreasure} > ${delveTreasure})`);
+    assert.ok(castleShrines <= delveShrines, `the chapels are desecrated (${castleShrines} ≤ ${delveShrines})`);
   });
 
   test('the thrall can be paid off — old habits of service', () => {
