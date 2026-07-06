@@ -270,6 +270,8 @@ function processTickResult() {
   if (state.narration) {
     appendStory(state.narration, state.roomIndex);
     announceEvents(appState.prevState, state);
+    // Spell bursts, sword slashes, gold glints — over the room it happened in
+    appState.renderer.playEffect?.(state.narration.action, state.narration.roomIndex);
   }
   appState.prevState = state;
 

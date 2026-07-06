@@ -12,6 +12,7 @@
  */
 
 import * as THREE from 'three';
+import { ATLAS, FX_TILES, getClassTile, getMonsterTile, getRoomProp } from './SpriteAtlas.js';
 
 const SPACING = 3.2;   // World units between room centers
 const CLASS_COLORS = {
@@ -20,6 +21,23 @@ const CLASS_COLORS = {
   wizard: 0x7a5ae8,
   rogue: 0x4a8a5c,
   alchemist: 0x3cb8a8,
+};
+
+/* Spell/action effects: tinted glow bursts, plus the sheet's slash */
+const EFFECT_STYLES = {
+  'fight': { kind: 'slash' },
+  'spell-strike': { kind: 'glow', color: '#ff8a3c' },   // fire
+  'turn-undead': { kind: 'glow', color: '#ffe9a0' },    // holy
+  'deep-study': { kind: 'glow', color: '#b07ae8' },     // arcane
+  'spell-bypass': { kind: 'glow', color: '#b07ae8' },
+  'rest': { kind: 'glow', color: '#ffe9a0' },
+  'alchemy': { kind: 'glow', color: '#3cb8a8' },        // alkahest green
+  'disarm': { kind: 'glow', color: '#8fb8dd' },
+  'push-through': { kind: 'glow', color: '#e05555' },   // it hurt
+  'brace': { kind: 'glow', color: '#e05555' },
+  'scatter': { kind: 'glow', color: '#e05555' },
+  'loot': { kind: 'glow', color: '#ffd75e' },           // gold
+  'desecrate': { kind: 'glow', color: '#ffd75e' },
 };
 
 export class IsoDungeonRenderer {
@@ -54,20 +72,41 @@ export class IsoDungeonRenderer {
     this.torch.position.set(0, 2.2, 0);
     this.scene.add(this.torch);
 
-    this.staticGroup = new THREE.Group();  // Platforms, walkways — built once per dungeon
-    this.iconGroup = new THREE.Group();    // Room icon sprites — updated per tick
-    this.partyGroup = new THREE.Group();   // Meeples — updated per tick
-    this.scene.add(this.staticGroup, this.iconGroup, this.partyGroup);
+    this.staticGroup = new THREE.Group();   // Platforms, walkways — built once per dungeon
+    this.iconGroup = new THREE.Group();     // Room icon sprites — updated per tick
+    this.occupantGroup = new THREE.Group(); // Monster/prop sprites — updated per tick
+    this.partyGroup = new THREE.Group();    // Party sprites — updated per tick
+    this.fxGroup = new THREE.Group();       // Transient effect sprites
+    this.scene.add(this.staticGroup, this.iconGroup, this.occupantGroup, this.partyGroup, this.fxGroup);
 
     this.spriteMaterials = new Map();
     this.builtKey = null;
     this.roomPositions = [];
     this.clock = new THREE.Clock();
+    this.effects = [];
 
+    // The Tiny Dungeon sheet (Kenney, CC0): pixel-crisp, re-render on arrival
+    this.tileMats = new Map();
+    this.atlasReady = false;
+    this.atlasTex = new THREE.TextureLoader().load(ATLAS.url, () => {
+      this.atlasReady = true;
+      if (this.lastState) this.render(this.lastState);
+    });
+    this.atlasTex.magFilter = THREE.NearestFilter;
+    this.atlasTex.minFilter = THREE.NearestFilter;
+    this.atlasTex.colorSpace = THREE.SRGBColorSpace;
+
+    // Meeple fallback for the beat before the sheet loads
     this.meepleGeo = new THREE.CapsuleGeometry(0.16, 0.26, 4, 10);
     this.meepleMats = {};
     for (const [cls, color] of Object.entries(CLASS_COLORS)) {
       this.meepleMats[cls] = new THREE.MeshStandardMaterial({ color, roughness: 0.6 });
+    }
+    // Class-colored base discs so a sprite's class reads at a glance
+    this.baseGeo = new THREE.CylinderGeometry(0.24, 0.28, 0.07, 16);
+    this.baseMats = {};
+    for (const [cls, color] of Object.entries(CLASS_COLORS)) {
+      this.baseMats[cls] = new THREE.MeshStandardMaterial({ color, roughness: 0.7 });
     }
 
     this.disposed = false;
@@ -95,8 +134,68 @@ export class IsoDungeonRenderer {
     }
 
     this.updateIcons(rooms, state.roomIndex);
+    this.updateOccupants(rooms, state.roomIndex);
     this.updateParty(state);
     this.animateFrame();
+  }
+
+  /**
+   * A sprite material showing one 16px tile of the Tiny Dungeon sheet
+   */
+  tileMaterial(tile) {
+    const key = `${tile.col},${tile.row}`;
+    if (!this.tileMats.has(key)) {
+      const tex = this.atlasTex.clone();
+      tex.needsUpdate = true;
+      tex.repeat.set(1 / ATLAS.cols, 1 / ATLAS.rows);
+      tex.offset.set(tile.col / ATLAS.cols, 1 - (tile.row + 1) / ATLAS.rows);
+      this.tileMats.set(key, new THREE.SpriteMaterial({ map: tex, transparent: true }));
+    }
+    return this.tileMats.get(key);
+  }
+
+  tileSprite(tile, scale = 1) {
+    const sprite = new THREE.Sprite(this.tileMaterial(tile));
+    sprite.scale.set(scale, scale, 1);
+    return sprite;
+  }
+
+  /**
+   * The rooms' inhabitants: monsters brood on their platforms until
+   * dealt with; chests, traps, shrines and benches dress the rest.
+   */
+  updateOccupants(rooms, roomIndex) {
+    this.occupantGroup.clear();
+    if (!this.atlasReady) return;
+
+    rooms.forEach((room, i) => {
+      const { x, z } = this.roomPositions[i];
+      const known = i <= roomIndex + 1 || room.type === 'boss';
+      if (!known) return;
+
+      let sprite = null;
+      if ((room.type === 'monster' || room.type === 'boss') && room.monster && !room.cleared) {
+        const scale = room.type === 'boss' ? 1.7 : 1.05;
+        sprite = this.tileSprite(getMonsterTile(room.monster.kind), scale);
+        sprite.position.set(x, 0.2 + scale / 2, z);
+        sprite.userData.sway = true;
+      } else {
+        const prop = getRoomProp(room);
+        if (prop) {
+          sprite = this.tileSprite(prop, 0.95);
+          sprite.position.set(x, 0.66, z);
+          if (room.cleared) {
+            sprite.material = sprite.material.clone();
+            sprite.material.opacity = 0.55;
+          }
+        }
+      }
+      if (sprite) {
+        sprite.userData.baseY = sprite.position.y;
+        sprite.userData.phase = i * 2.3;
+        this.occupantGroup.add(sprite);
+      }
+    });
   }
 
   roomWorldPos(room) {
@@ -212,6 +311,12 @@ export class IsoDungeonRenderer {
       const known = i <= roomIndex + 1 || room.type === 'boss';
       const icon = known ? room.icon : '❓';
 
+      // Rooms with a sprite standing on them don't need the emoji too
+      if (known && this.atlasReady) {
+        const hasMonsterSprite = (room.type === 'monster' || room.type === 'boss') && room.monster && !room.cleared;
+        if (hasMonsterSprite || getRoomProp(room)) return;
+      }
+
       const sprite = new THREE.Sprite(this.getSpriteMaterial(icon));
       const scale = room.type === 'boss' ? 1.5 : 1.0;
       sprite.scale.set(scale, scale, 1);
@@ -232,31 +337,96 @@ export class IsoDungeonRenderer {
     // Torch travels with the party
     this.torch.position.set(x, 2.2, z);
 
+    // A monster in an uncleared room holds the platform's center; the
+    // party crowds the near edge, squaring up to it
+    const room = state.dungeon.rooms[idx];
+    const facingMonster = room && room.monster && !room.cleared &&
+      (room.type === 'monster' || room.type === 'boss');
+    const cx = facingMonster ? x - 0.75 : x;
+    const cz = facingMonster ? z + 0.75 : z;
+
     const living = state.party.members.filter(m => m.alive);
     const n = living.length;
     living.forEach((m, i) => {
-      // Ring formation on the platform
+      // Ring formation (tighter when squaring up)
       const angle = (i / Math.max(1, n)) * Math.PI * 2;
-      const r = n > 1 ? Math.min(0.75, 0.3 + n * 0.05) : 0;
-      const mx = x + Math.cos(angle) * r;
-      const mz = z + Math.sin(angle) * r;
+      const r = n > 1 ? Math.min(facingMonster ? 0.5 : 0.75, 0.28 + n * 0.05) : 0;
+      const mx = cx + Math.cos(angle) * r;
+      const mz = cz + Math.sin(angle) * r;
+      const wounded = m.health / m.maxHealth <= 0.35;
 
-      const meeple = new THREE.Mesh(
-        this.meepleGeo,
-        this.meepleMats[m.class] || this.meepleMats.fighter
-      );
-      meeple.position.set(mx, 0.55, mz);
-      meeple.castShadow = true;
-      meeple.userData.baseY = 0.55;
-      meeple.userData.phase = i * 1.7;
-      // Wounded meeples slump
-      if (m.health / m.maxHealth <= 0.35) {
-        meeple.scale.y = 0.75;
-        meeple.material = meeple.material.clone();
-        meeple.material.color.offsetHSL(0, -0.2, -0.1);
+      if (this.atlasReady) {
+        // The adventurer, in the flesh (well, in 16 pixels of it)
+        const sprite = this.tileSprite(getClassTile(m.class), 0.82);
+        sprite.position.set(mx, 0.72, mz);
+        sprite.userData.baseY = 0.72;
+        sprite.userData.phase = i * 1.7;
+        if (wounded) {
+          sprite.material = sprite.material.clone();
+          sprite.material.color.set(0xb98080);
+          sprite.scale.y = 0.68;
+        }
+        this.partyGroup.add(sprite);
+
+        // Class-colored base disc under their feet
+        const base = new THREE.Mesh(this.baseGeo, this.baseMats[m.class] || this.baseMats.fighter);
+        base.position.set(mx, 0.24, mz);
+        base.castShadow = true;
+        this.partyGroup.add(base);
+      } else {
+        // Fallback meeple for the beat before the sheet loads
+        const meeple = new THREE.Mesh(this.meepleGeo, this.meepleMats[m.class] || this.meepleMats.fighter);
+        meeple.position.set(mx, 0.55, mz);
+        meeple.castShadow = true;
+        meeple.userData.baseY = 0.55;
+        meeple.userData.phase = i * 1.7;
+        this.partyGroup.add(meeple);
       }
-      this.partyGroup.add(meeple);
     });
+  }
+
+  /**
+   * Play a transient effect over the party's room: the sheet's slash
+   * for steel, tinted glow bursts for magic, gold, and misfortune.
+   */
+  playEffect(action, roomIndex) {
+    const style = EFFECT_STYLES[action];
+    if (!style || !this.roomPositions[roomIndex]) return;
+    const { x, z } = this.roomPositions[roomIndex];
+
+    let sprite;
+    if (style.kind === 'slash' && this.atlasReady) {
+      sprite = this.tileSprite(FX_TILES.slash, 1.1);
+      sprite.material = sprite.material.clone();
+    } else {
+      sprite = new THREE.Sprite(this.glowMaterial(style.color || '#ffffff').clone());
+      sprite.scale.set(1.1, 1.1, 1);
+    }
+    sprite.position.set(x, 1.0, z);
+    this.fxGroup.add(sprite);
+    this.effects.push({ sprite, born: this.clock.getElapsedTime(), life: 0.7 });
+  }
+
+  glowMaterial(color) {
+    const key = `glow:${color}`;
+    if (!this.spriteMaterials.has(key)) {
+      const c = document.createElement('canvas');
+      c.width = 128;
+      c.height = 128;
+      const ctx = c.getContext('2d');
+      const grad = ctx.createRadialGradient(64, 64, 6, 64, 64, 62);
+      grad.addColorStop(0, color);
+      grad.addColorStop(0.45, color + 'aa');
+      grad.addColorStop(1, color + '00');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 128, 128);
+      const tex = new THREE.CanvasTexture(c);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      this.spriteMaterials.set(key, new THREE.SpriteMaterial({
+        map: tex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false,
+      }));
+    }
+    return this.spriteMaterials.get(key);
   }
 
   animateFrame() {
@@ -270,9 +440,30 @@ export class IsoDungeonRenderer {
     for (const s of this.iconGroup.children) {
       s.position.y = s.userData.baseY + Math.sin(t * 1.6 + s.userData.phase) * 0.06;
     }
-    // Meeple bob (they shift their feet, waiting)
+    // Party bob (they shift their feet, waiting)
     for (const m of this.partyGroup.children) {
-      m.position.y = m.userData.baseY + Math.abs(Math.sin(t * 2.2 + m.userData.phase)) * 0.05;
+      if (m.userData.baseY !== undefined) {
+        m.position.y = m.userData.baseY + Math.abs(Math.sin(t * 2.2 + m.userData.phase)) * 0.05;
+      }
+    }
+    // Monsters sway; props hold still
+    for (const o of this.occupantGroup.children) {
+      if (o.userData.sway) {
+        o.position.y = o.userData.baseY + Math.sin(t * 2.8 + o.userData.phase) * 0.07;
+      }
+    }
+    // Effects bloom and die
+    for (let i = this.effects.length - 1; i >= 0; i--) {
+      const fx = this.effects[i];
+      const age = (t - fx.born) / fx.life;
+      if (age >= 1) {
+        this.fxGroup.remove(fx.sprite);
+        this.effects.splice(i, 1);
+        continue;
+      }
+      const s = 0.9 + age * 1.6;
+      fx.sprite.scale.set(s, s, 1);
+      fx.sprite.material.opacity = 1 - age * age;
     }
 
     this.renderer.render(this.scene, this.camera);

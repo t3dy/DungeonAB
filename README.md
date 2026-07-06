@@ -52,6 +52,12 @@ The prototype is hosted on **Vercel** ([dungeon-ab.vercel.app](https://dungeon-a
 Every push to `main` also runs the tests and publishes a mirror to GitHub Pages
 (see [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml)).
 
+## Art Credits
+
+Sprites from [**Tiny Dungeon** by Kenney](https://kenney.nl/assets/tiny-dungeon) (Creative Commons Zero).
+Party classes, monsters, chests, traps, and props all come from this one lovely 16px sheet
+(license bundled at `src/assets/tiny-dungeon-LICENSE.txt`). Support Kenney at [kenney.nl](https://kenney.nl).
+
 ## Design Lineage
 
 Consolidated in `DESIGN.md` from:

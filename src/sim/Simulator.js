@@ -91,6 +91,8 @@ export class Simulator {
     this.lastNarration = {
       room: room.type,
       icon: room.icon,
+      roomIndex: this.roomIndex,   // where it happened (pre-retreat)
+      action: chosen,              // for the renderer's effects
       predicament,
       deliberation: composeDeliberation(chosen, options, this.party),
       resolution: composeResolution(room, chosen, result, this.party),
