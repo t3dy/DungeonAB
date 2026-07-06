@@ -73,18 +73,30 @@ export class DraftUI {
     const el = document.createElement('div');
     el.className = 'draft-card';
 
+    const ELEMENT_CHIPS = {
+      fire: '<span style="color:#ff8a3c;">🔥 fire</span>',
+      frost: '<span style="color:#7ec8ff;">❄️ frost</span>',
+      shock: '<span style="color:#ffe95e;">⚡ shock</span>',
+      holy: '<span style="color:#ffe9a0;">🌟 holy</span>',
+    };
+
     let stats = '';
     if (card.type === CARD_TYPES.CHARACTER) {
       stats = `<div class="card-stats">❤️${card.stats.health} ⚔️${card.stats.attack} 🛡️${card.stats.defense} 🧠${card.stats.mind}</div>`;
     } else if (card.type === CARD_TYPES.EQUIPMENT) {
-      const bits = Object.entries(card.bonus).map(([k, v]) => `+${v} ${k}`).join(', ');
-      stats = `<div class="card-stats">${bits}${card.bestFor ? ` · best: ${card.bestFor}` : ''}</div>`;
+      const bits = Object.entries(card.bonus).map(([k, v]) => `${v > 0 ? '+' : ''}${v} ${k}`).join(', ');
+      const keyed = card.classActions
+        ? ` · <span style="color:#d8a53f;" title="${Object.entries(card.classActions).map(([c, a]) => `${c}: ${a.name}`).join(' · ')}">✦ different in every hand</span>`
+        : '';
+      stats = `<div class="card-stats">${bits}${card.bestFor ? ` · best: ${card.bestFor}` : ''}${keyed}</div>`;
     } else if (card.type === CARD_TYPES.SPELL) {
-      stats = `<div class="card-stats">power ${card.power} · ${card.school}</div>`;
+      const chip = ELEMENT_CHIPS[card.element] ? ` · ${ELEMENT_CHIPS[card.element]}` : '';
+      stats = `<div class="card-stats">power ${card.power} · ${card.use}${chip}</div>`;
     }
 
+    const cursedTag = card.cursed ? ' <span style="color:#e05555;">· CURSED</span>' : '';
     el.innerHTML = `
-      <div class="card-type type-${card.type}">${card.type}${card.class ? ' · ' + card.class : ''}</div>
+      <div class="card-type type-${card.type}">${card.type}${card.class ? ' · ' + card.class : ''}${cursedTag}</div>
       <div class="card-name">${card.icon} ${card.name}</div>
       <div class="card-text">${card.trait || card.text || ''}</div>
       ${stats}

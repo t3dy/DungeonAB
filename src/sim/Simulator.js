@@ -119,6 +119,7 @@ export class Simulator {
       icon: room.icon,
       roomIndex: roomIdx,          // array index, for the renderer's effects
       action: chosen,
+      spellElement: result.spellElement || null,   // colors the strike FX
       predicament,
       deliberation: composeDeliberation(chosen, options, this.party),
       resolution: composeResolution(room, chosen, result, this.party),
@@ -211,6 +212,8 @@ export class Simulator {
         gold: this.party.gold,
         score: this.party.score,
         materials: this.party.materials,
+        poisonLinger: this.party.poisonLinger || 0,
+        alarmed: !!this.party.alarmed,
         potions: this.party.potions.length,
         grimoire: this.party.grimoire.map(s => s.name),
         spellsLearned: this.party.spellsLearned,

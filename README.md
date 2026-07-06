@@ -1,15 +1,16 @@
 # ⚔️ DungeonAB — Dungeon-Crawling Autobattler
 
-**▶️ Play v2.0: https://dungeon-ab.vercel.app** &nbsp;·&nbsp; [play v1.0](https://dungeon-ab.vercel.app/v1/) &nbsp;·&nbsp; [mirror](https://t3dy.github.io/DungeonAB/)
+**▶️ Play v3.0: https://dungeon-ab.vercel.app** &nbsp;·&nbsp; [v2.0](https://dungeon-ab.vercel.app/v2/) &nbsp;·&nbsp; [v1.0](https://dungeon-ab.vercel.app/v1/) &nbsp;·&nbsp; [mirror](https://t3dy.github.io/DungeonAB/)
 
 ## Versions
 
 | Version | Play | What it is |
 |---|---|---|
-| **v2.0** (current) | [dungeon-ab.vercel.app](https://dungeon-ab.vercel.app) | Branching dungeons with secret vaults, eight themes, the Bestiary (traits + elemental casting), trap types, treasure finds, preparation effects, the Dungeon Archive & editor, the Card Workshop, content packs incl. the 17th-Century Alchemy Pack, hex exchange, rival standings, sprite visuals |
-| **v1.0** | [dungeon-ab.vercel.app/v1/](https://dungeon-ab.vercel.app/v1/) | The first public release: the original draft → delve → town campaign loop with onscreen help — before branching dungeons, the archive, and the workshop |
+| **v3.0** (current) | [dungeon-ab.vercel.app](https://dungeon-ab.vercel.app) | The integration release: theme-tinted worlds, readable enemies (nature badges + prose tells), nature-aware party planning, element chips on draft cards, element-colored spell FX, affliction badges, the deeper-systems guide |
+| **v2.0** | [dungeon-ab.vercel.app/v2/](https://dungeon-ab.vercel.app/v2/) | The systems release: branching dungeons with secret vaults, eight themes, the Bestiary, trap types, treasure finds, preparation effects, the Archive & editor, the Card Workshop, the Alchemy Pack |
+| **v1.0** | [dungeon-ab.vercel.app/v1/](https://dungeon-ab.vercel.app/v1/) | The first public release: the original draft → delve → town campaign loop with onscreen help |
 
-Git tags `v1.0` and `v2.0` mark the exact sources.
+Git tags `v1.0`, `v2.0`, and `v3.0` mark the exact sources.
 
 Draft a party MTG-style — packs passed around a table of AI rivals, one pick per pack — then watch your Fighters, Clerics, Wizards, Rogues, and Alchemists auto-crawl a procedurally generated dungeon: fighting, looting, learning spells, and brewing potions at abandoned lab benches. Survive, spend your gold in town, and delve deeper.
 

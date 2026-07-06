@@ -200,11 +200,50 @@ const PREP_OPTION_WEIGHTS = {
   'smoke-bomb': { base: 1.5, cunning: 2 },
 };
 
+/**
+ * The party reads the monster's nature and weighs its options like
+ * people who intend to live: steel is a bad plan against the
+ * ethereal (without faith), spells shine against the armored and
+ * the swarming, and nobody rushes the venomous without a cleric.
+ * Pure — returns weight deltas keyed by option id.
+ */
+export function natureAdjustments(party, room) {
+  const m = room?.monster;
+  if (!m) return {};
+  const adj = {};
+  const add = (id, v) => { adj[id] = (adj[id] || 0) + v; };
+
+  if (m.trait === 'ethereal' && !party.hasClass(CLASSES.CLERIC)) {
+    add('fight', -2);
+    add('sneak', 2);
+    add('spell-strike', 2);
+  }
+  if (m.trait === 'armored') {
+    add('spell-strike', 1.5);
+    add('fight', -0.5);
+  }
+  if (m.trait === 'venomous' && !party.hasClass(CLASSES.CLERIC)) {
+    add('sneak', 1.5);
+    add('cause-fear', 1.5);
+    add('fight', -1);
+  }
+  if (m.trait === 'swarm') {
+    add('spell-strike', 2);
+  }
+  // A caster holding the foe's weakness knows it — and wants to use it
+  const combatSpells = party.grimoire.filter(s => s.use === 'combat');
+  if (combatSpells.some(s => elementMult(s, m) > 1)) {
+    add('spell-strike', 2);
+  }
+  return adj;
+}
+
 export function decideRoomAction(room, party) {
   const options = getRoomOptions(room, party);
   if (options.length === 0) return null;
   if (options.length === 1) return options[0].id;
 
+  const nature = natureAdjustments(party, room);
   const weights = options.map(opt => {
     let w = 1.0;
     for (const archetype of party.personalities) {
@@ -222,6 +261,8 @@ export function decideRoomAction(room, party) {
         if (prep[archetype]) w += prep[archetype];
       }
     }
+    // The monster's nature argues for and against certain plans
+    if (nature[opt.id]) w += nature[opt.id];
     if (opt.id === 'rest' && party.totalHealth() / party.totalMaxHealth() < 0.6) w += 3;
     if (opt.id === 'fight' && party.totalHealth() / party.totalMaxHealth() < 0.3) w -= 2;
     if (opt.id === 'flee' && party.totalHealth() / party.totalMaxHealth() < 0.3) w += 2;

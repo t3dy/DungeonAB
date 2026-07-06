@@ -23,6 +23,25 @@ const CLASS_COLORS = {
   alchemist: 0x3cb8a8,
 };
 
+/* Every theme colors its own stone (v3: the castle is not the bog) */
+const THEME_PALETTES = {
+  delve: { plat: 0x615b52, wall: 0x35322c, bg: 0x0a0805, boss: 0x5a2626 },
+  crypt: { plat: 0x4e4a56, wall: 0x2c2a33, bg: 0x070609, boss: 0x4a2a4a },
+  volcanic: { plat: 0x5c4038, wall: 0x33211c, bg: 0x0d0503, boss: 0x7a2a1a },
+  library: { plat: 0x3f4a58, wall: 0x232c38, bg: 0x04070b, boss: 0x2a3a5a },
+  madlab: { plat: 0x44584a, wall: 0x24352a, bg: 0x040804, boss: 0x2a5a3a },
+  castle: { plat: 0x3e3a4e, wall: 0x201d2c, bg: 0x050409, boss: 0x5a1a2a },
+  bogcellar: { plat: 0x4a4a34, wall: 0x2a2a1c, bg: 0x060703, boss: 0x4a5a1a },
+  icecaverns: { plat: 0x4a5a66, wall: 0x2a3640, bg: 0x040709, boss: 0x3a5a6a },
+  athanor: { plat: 0x5a4a38, wall: 0x33291c, bg: 0x0a0703, boss: 0x6a4a1a },
+};
+const DEFAULT_PALETTE = THEME_PALETTES.delve;
+
+/* A monster's nature shows over its head (FTL: readable enemies) */
+const TRAIT_BADGES = { armored: '🛡️', ethereal: '👻', venomous: '🐍', swarm: '🐝', slow: '🐌' };
+const ELEMENT_BADGES = { fire: '🔥', frost: '❄️', shock: '⚡', holy: '🌟' };
+export const ELEMENT_FX_COLORS = { fire: '#ff8a3c', frost: '#7ec8ff', shock: '#ffe95e', holy: '#ffe9a0' };
+
 /* Spell/action effects: tinted glow bursts, plus the sheet's slash */
 const EFFECT_STYLES = {
   'fight': { kind: 'slash' },
@@ -127,10 +146,12 @@ export class IsoDungeonRenderer {
 
     this.resize(rooms);
 
-    // Discovery changes the map: found secret rooms surface
-    const key = rooms.map(r => `${r.type}${r.secret && !r.discovered ? '?' : ''}`).join(',');
+    // Discovery changes the map: found secret rooms surface.
+    // The theme colors the stone.
+    const themeId = state.dungeon.theme?.id || 'delve';
+    const key = themeId + '|' + rooms.map(r => `${r.type}${r.secret && !r.discovered ? '?' : ''}`).join(',');
     if (this.builtKey !== key) {
-      this.buildDungeon(rooms, state.dungeon.edges);
+      this.buildDungeon(rooms, state.dungeon.edges, themeId);
       this.builtKey = key;
     }
 
@@ -183,6 +204,21 @@ export class IsoDungeonRenderer {
         sprite = this.tileSprite(getMonsterTile(room.monster.kind), scale);
         sprite.position.set(x, 0.2 + scale / 2, z);
         sprite.userData.sway = true;
+
+        // Its nature shows over its head — a readable enemy is a plan
+        const badges = [];
+        if (TRAIT_BADGES[room.monster.trait]) badges.push(TRAIT_BADGES[room.monster.trait]);
+        const weakness = room.monster.undead ? 'holy' : (room.monster.weak || [])[0];
+        if (ELEMENT_BADGES[weakness]) badges.push(ELEMENT_BADGES[weakness]);
+        badges.forEach((emoji, bi) => {
+          const badge = new THREE.Sprite(this.getSpriteMaterial(emoji));
+          badge.scale.set(0.42, 0.42, 1);
+          badge.position.set(x - 0.25 + bi * 0.5, 0.35 + scale, z);
+          badge.userData.baseY = 0.35 + scale;
+          badge.userData.phase = i * 1.3 + bi;
+          badge.userData.sway = true;
+          this.occupantGroup.add(badge);
+        });
       } else {
         const prop = getRoomProp(room);
         if (prop) {
@@ -237,9 +273,13 @@ export class IsoDungeonRenderer {
     this.camera.lookAt(cx, 0, cz);
   }
 
-  buildDungeon(rooms, edges = null) {
+  buildDungeon(rooms, edges = null, themeId = 'delve') {
     this.staticGroup.clear();
     this.roomPositions = rooms.map(r => this.roomWorldPos(r));
+
+    const palette = THEME_PALETTES[themeId] || DEFAULT_PALETTE;
+    this.scene.background = new THREE.Color(palette.bg);
+    this.scene.fog = new THREE.Fog(palette.bg, 44, 110);
 
     const platGeo = new THREE.BoxGeometry(2.4, 0.35, 2.4);
     const bossGeo = new THREE.BoxGeometry(3.1, 0.5, 3.1);
@@ -250,11 +290,11 @@ export class IsoDungeonRenderer {
       if (hidden(room)) return;
       const { x, z } = this.roomPositions[i];
 
-      // Stone platform with hand-laid shade variance; vaults gleam
+      // Theme-tinted stone with hand-laid shade variance; vaults gleam
       const shade = ((room.index * 7) % 5 - 2) * 0.02;
-      const base = room.type === 'boss' ? 0x5a2626
+      const base = room.type === 'boss' ? palette.boss
         : room.type === 'vault' ? 0x6a5a30
-        : 0x615b52;
+        : palette.plat;
       const c = new THREE.Color(base);
       c.offsetHSL(0, 0, shade);
 
@@ -267,7 +307,7 @@ export class IsoDungeonRenderer {
       this.staticGroup.add(plat);
 
       // Low walls on two sides give chambers depth
-      const wallMat = new THREE.MeshStandardMaterial({ color: 0x35322c, roughness: 1 });
+      const wallMat = new THREE.MeshStandardMaterial({ color: palette.wall, roughness: 1 });
       const wall1 = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.7, 0.2), wallMat);
       wall1.position.set(x, 0.5, z - 1.15);
       wall1.castShadow = true;
@@ -416,17 +456,22 @@ export class IsoDungeonRenderer {
    * Play a transient effect over the party's room: the sheet's slash
    * for steel, tinted glow bursts for magic, gold, and misfortune.
    */
-  playEffect(action, roomIndex) {
+  playEffect(action, roomIndex, element = null) {
     const style = EFFECT_STYLES[action];
     if (!style || !this.roomPositions[roomIndex]) return;
     const { x, z } = this.roomPositions[roomIndex];
+
+    // A cast spell glows in its element's color
+    const color = (action === 'spell-strike' && ELEMENT_FX_COLORS[element])
+      ? ELEMENT_FX_COLORS[element]
+      : style.color;
 
     let sprite;
     if (style.kind === 'slash' && this.atlasReady) {
       sprite = this.tileSprite(FX_TILES.slash, 1.1);
       sprite.material = sprite.material.clone();
     } else {
-      sprite = new THREE.Sprite(this.glowMaterial(style.color || '#ffffff').clone());
+      sprite = new THREE.Sprite(this.glowMaterial(color || '#ffffff').clone());
       sprite.scale.set(1.1, 1.1, 1);
     }
     sprite.position.set(x, 1.0, z);

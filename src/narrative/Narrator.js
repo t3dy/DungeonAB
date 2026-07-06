@@ -547,18 +547,52 @@ export function composePredicament(room, theme = null) {
       `The final chamber. ${capitalize(room.monster.name)} waits at its heart, and it has been expecting visitors far better armed than you.`,
       `Every dungeon keeps its worst for last. The door swings wide on ${room.monster.name}.`,
       `${capitalize(room.monster.name)} fills the last room the way weather fills a sky. There is no going around this one.`,
-    ]);
+    ]) + monsterTells(room.monster);
   }
   if (room.type === ROOM_TYPES.MONSTER && room.monster) {
     return pick([
       `${capitalize(room.monster.name)} holds the room, and it heard the party coming since the entrance hall.`,
       `The room is not empty: ${room.monster.name}, between the party and the way down.`,
       `${capitalize(room.monster.name)} rises out of the dark. The smell of it arrives first.`,
-    ]);
+    ]) + monsterTells(room.monster);
+  }
+  if (room.type === ROOM_TYPES.TRAP && room.trapType && TRAP_TELLS[room.trapType]) {
+    return `${pick(PREDICAMENTS.trap)} ${TRAP_TELLS[room.trapType]}`;
   }
   const pool = PREDICAMENTS[room.type] || PREDICAMENTS.corridor;
   return pick(pool);
 }
+
+/* The room gives away a monster's nature, to those who read rooms */
+const TRAIT_TELLS = {
+  armored: 'Plate, chitin, or worse — blows here will have to mean it.',
+  ethereal: 'The torchlight passes through it in places light shouldn\'t go.',
+  venomous: 'Something drips from it, and the moss dies where the drips land.',
+  swarm: 'It is not one thing. It was never one thing.',
+  slow: 'It is slow, and entirely unbothered about it.',
+};
+
+const WEAK_TELLS = {
+  fire: 'It keeps well clear of the torches.',
+  frost: 'It flinches from the cold draft off the deeper halls.',
+  shock: 'Every hair and fiber of it stands on end near the wizard.',
+  holy: 'It will not look at the cleric.',
+};
+
+function monsterTells(monster) {
+  const tells = [];
+  if (monster.trait && TRAIT_TELLS[monster.trait]) tells.push(TRAIT_TELLS[monster.trait]);
+  const weakness = monster.undead ? 'holy' : (monster.weak || [])[0];
+  if (weakness && WEAK_TELLS[weakness]) tells.push(WEAK_TELLS[weakness]);
+  return tells.length ? ' ' + tells.join(' ') : '';
+}
+
+/* And a trap's kind shows, to those who look down */
+const TRAP_TELLS = {
+  fire: 'Scorch marks fan out from a seam in the floor like a dark flower.',
+  poison: 'A ring of dead beetles surrounds one tile, arranged like a warning diagram.',
+  alarm: 'A tripwire runs up the wall to something that looks, disappointingly, like a bell.',
+};
 
 export function composeWipe(party, roomsCleared, theme = null) {
   const fallen = party.members.map(m => m.name).join(', ');

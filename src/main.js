@@ -297,7 +297,7 @@ function processTickResult() {
     appendStory(state.narration, state.roomIndex);
     announceEvents(appState.prevState, state);
     // Spell bursts, sword slashes, gold glints — over the room it happened in
-    appState.renderer.playEffect?.(state.narration.action, state.narration.roomIndex);
+    appState.renderer.playEffect?.(state.narration.action, state.narration.roomIndex, state.narration.spellElement);
     // Secret doors and side passages get an onscreen flag too
     if (state.narration.aside) {
       const icon = state.narration.aside.startsWith('🕳️') ? '🕳️' : '🧭';
@@ -335,6 +335,12 @@ function updateUI(state) {
   document.getElementById('score-count').textContent = state.party.score;
   document.getElementById('materials-count').textContent = state.party.materials;
   document.getElementById('potions-count').textContent = state.party.potions;
+
+  // Afflictions the party carries between rooms
+  const badges = [];
+  if (state.party.poisonLinger > 0) badges.push('🐍 venom working');
+  if (state.party.alarmed) badges.push('🔔 alarm raised');
+  document.getElementById('status-badges').textContent = badges.join(' · ');
 
   // Roster
   const roster = document.getElementById('party-roster');

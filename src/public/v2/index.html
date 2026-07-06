@@ -282,6 +282,7 @@
       #gameover-display { left: 50%; }
     }
   </style>
+  <script type="module" crossorigin src="./assets/index-DMLT-DC1.js"></script>
 </head>
 <body>
   <div id="app">
@@ -289,11 +290,9 @@
       <h1>⚔️ DungeonAB</h1>
       <p>Draft the party. Delve the dungeon. Watch the story.
         <span style="color:#665;">·</span>
-        <span style="color:#8a7a55;">v3.0</span>
+        <span style="color:#8a7a55;">v2.0</span>
         <span style="color:#665;">·</span>
-        <a href="v1/" style="color:#665;text-decoration:underline;" title="The first release: the original campaign loop">play v1.0</a>
-        <span style="color:#665;">·</span>
-        <a href="v2/" style="color:#665;text-decoration:underline;" title="The systems release: branching dungeons, the archive, the workshop, the Bestiary">play v2.0</a>
+        <a href="../v1/" style="color:#665;text-decoration:underline;" title="The first release: the original campaign loop, before branching dungeons, the archive, and the workshop">play v1.0</a>
       </p>
       <div class="header-btns">
         <button id="archive-btn">🗺️ Archive</button>
@@ -312,7 +311,6 @@
           <span>Score: <strong id="score-count" style="color:#d8a53f;">0</strong></span>
           <span>Materials: <strong id="materials-count" style="color:#7a9;">0</strong></span>
           <span>Potions: <strong id="potions-count" style="color:#b07ae8;">0</strong></span>
-          <span id="status-badges" style="color:#e08080;"></span>
         </div>
       </div>
       <div id="ui-container" style="display: none;">
@@ -379,11 +377,6 @@
       </div>
 
       <div class="help-step">
-        <h3>The Deeper Systems</h3>
-        <p>Monsters have <strong>natures</strong> — armored 🛡️, ethereal 👻, venomous 🐍, swarming 🐝, slow 🐌 — shown over their heads and hinted in the prose, and the party plans around them. Spells carry <strong>elements</strong> (🔥❄️⚡🌟); a caster picks the working the foe hates. Traps come in kinds — fire burns, poison lingers, alarms tell the dungeon you're coming. Hoards hide <strong>finds</strong>: scrolls, trinkets, draughts. Your kit is read by every encounter.</p>
-      </div>
-
-      <div class="help-step">
         <h3>Watching the Delve</h3>
         <p><strong>The Chronicle</strong> narrates every room in three beats. Toasts flag big moments — a hero falling, the boss chamber, a spell learned. Use the controls to pause, step, or change speed.</p>
       </div>
@@ -421,7 +414,6 @@
       <button id="cards-close-btn">Close</button>
     </div>
   </div>
-
-  <script type="module" src="./main.js"></script>
+
 </body>
 </html>
