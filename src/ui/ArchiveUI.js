@@ -14,9 +14,10 @@ const TYPE_COLORS = {
   entrance: '#8fb8dd', corridor: '#555', monster: '#c84c3c', trap: '#e8724a',
   treasure: '#d8a53f', library: '#b07ae8', shrine: '#e8d48a', lab: '#3cb8a8',
   materials: '#4a8a5c', disaster: '#e05555', boss: '#ff4444', vault: '#ffd75e',
+  shop: '#c9973e', altar: '#9a8ad0',
 };
 
-const PAYLOAD_KEYS = ['monster', 'gold', 'mimicChance', 'trapDamage', 'materials'];
+const PAYLOAD_KEYS = ['monster', 'gold', 'mimicChance', 'trapDamage', 'trapType', 'materials', 'stock', 'demand'];
 
 /** Retype a room in a layout, swapping in a sane default payload. */
 export function retypeRoom(layout, roomIndex, newType) {

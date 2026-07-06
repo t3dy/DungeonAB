@@ -242,6 +242,7 @@ export class Simulator {
         materials: this.party.materials,
         poisonLinger: this.party.poisonLinger || 0,
         alarmed: !!this.party.alarmed,
+        blessedWard: this.party.blessedWard || 0,
         potions: this.party.potions.length,
         keys: this.party.keys || 0,
         phials: this.party.phials.length,

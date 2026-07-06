@@ -25,12 +25,15 @@ export const ROOM_TYPES = {
   DISASTER: 'disaster',
   BOSS: 'boss',
   VAULT: 'vault',   // the rich room behind the secret door
+  SHOP: 'shop',     // a peddler's stall in the dark (Spelunky tradition)
+  ALTAR: 'altar',   // a god that trades in offerings (DCSS tradition)
 };
 
 const ROOM_ICONS = {
   entrance: '🚪', corridor: '⬛', monster: '👹', trap: '⚠️',
   treasure: '💰', library: '📚', shrine: '🕯️', lab: '⚗️',
   materials: '🌿', disaster: '🌋', boss: '🐉', vault: '💎',
+  shop: '🪙', altar: '⚖️',
 };
 
 /**
@@ -38,10 +41,10 @@ const ROOM_ICONS = {
  * entrance/boss). Weights, not counts.
  */
 const TYPE_WEIGHTS = {
-  easy: { monster: 2, trap: 1, treasure: 2, library: 1, shrine: 1.5, lab: 1, materials: 2, disaster: 0.5, corridor: 1 },
-  medium: { monster: 3, trap: 1.5, treasure: 2, library: 1, shrine: 1, lab: 1, materials: 1.5, disaster: 1, corridor: 1 },
-  hard: { monster: 4, trap: 2.5, treasure: 1.5, library: 1, shrine: 0.7, lab: 1, materials: 1, disaster: 2, corridor: 0.5 },
-  nightmare: { monster: 5, trap: 3, treasure: 1.5, library: 0.8, shrine: 0.5, lab: 1, materials: 1, disaster: 3, corridor: 0.3 },
+  easy: { monster: 2, trap: 1, treasure: 2, library: 1, shrine: 1.5, lab: 1, materials: 2, disaster: 0.5, corridor: 1, shop: 0.7, altar: 0.6 },
+  medium: { monster: 3, trap: 1.5, treasure: 2, library: 1, shrine: 1, lab: 1, materials: 1.5, disaster: 1, corridor: 1, shop: 0.7, altar: 0.7 },
+  hard: { monster: 4, trap: 2.5, treasure: 1.5, library: 1, shrine: 0.7, lab: 1, materials: 1, disaster: 2, corridor: 0.5, shop: 0.5, altar: 0.8 },
+  nightmare: { monster: 5, trap: 3, treasure: 1.5, library: 0.8, shrine: 0.5, lab: 1, materials: 1, disaster: 3, corridor: 0.3, shop: 0.4, altar: 0.9 },
 };
 
 function weightedPick(rng, weights) {
@@ -301,6 +304,19 @@ function makeRoom(index, type, rng, theme, depth = 1, statScale = 1, condition =
   if (type === ROOM_TYPES.MATERIALS) {
     room.materials = 1 + Math.floor(rng.next() * 2);
   }
+  if (type === ROOM_TYPES.SHOP) {
+    // The peddler's stall: prices jitter per stall and climb with depth
+    const depthTax = (depth - 1) * 2;
+    room.stock = [
+      { id: 'draught', name: 'a healing draught', icon: '🧪', price: 10 + Math.floor(rng.next() * 5) + depthTax },
+      { id: 'materials', name: 'a bundle of materials', icon: '🌿', price: 7 + Math.floor(rng.next() * 4) + depthTax },
+      { id: 'key', name: 'a heavy iron key', icon: '🗝️', price: 18 + Math.floor(rng.next() * 8) + depthTax },
+    ];
+  }
+  if (type === ROOM_TYPES.ALTAR) {
+    // What the god considers a respectful offering
+    room.demand = 15 + Math.floor(rng.next() * 15) + 5 * (depth - 1);
+  }
 
   return room;
 }
@@ -332,7 +348,7 @@ export const DUNGEON_THEMES = {
   crypt: {
     id: 'crypt', name: 'the Ancient Crypt', icon: '⚰️',
     tagline: 'The dead were buried with their grudges. Both kept.',
-    weightTweaks: { monster: 1, shrine: 0.5, treasure: -0.5 },
+    weightTweaks: { monster: 1, shrine: 0.5, treasure: -0.5, altar: 0.5, shop: -0.3 },
     trapTypes: ['spike', 'poison'],
     monsters: [
       { kind: 'bone-warden', name: 'a bone warden on its rounds', icon: '💀', attack: 6, health: 15, undead: true },
@@ -385,7 +401,7 @@ export const DUNGEON_THEMES = {
   madlab: {
     id: 'madlab', name: 'the Mad Alchemist\'s Dungeon', icon: '⚗️',
     tagline: 'The experiments continued after the funding stopped. And after the alchemist did.',
-    weightTweaks: { lab: 1.5, materials: 1, disaster: 0.5, shrine: -0.5 },
+    weightTweaks: { lab: 1.5, materials: 1, disaster: 0.5, shrine: -0.5, shop: 0.4 },
     alwaysLab: true, // the theme's identity: labs regardless of party
     trapTypes: ['poison', 'fire'],
     monsters: [
@@ -496,6 +512,9 @@ export function serializeDungeon(dungeon) {
       ...(r.trapDamage !== undefined ? { trapDamage: r.trapDamage } : {}),
       ...(r.materials !== undefined ? { materials: r.materials } : {}),
       ...(r.hasKey ? { hasKey: r.hasKey } : {}),
+      // Stock re-shelves for a re-delve: the sold flags stay behind
+      ...(r.stock ? { stock: r.stock.map(({ sold, ...good }) => ({ ...good })) } : {}),
+      ...(r.demand !== undefined ? { demand: r.demand } : {}),
     })),
     spine: [...dungeon.spine],
     edges: dungeon.edges.map(e => ({ ...e })),
@@ -516,6 +535,7 @@ export function dungeonFromLayout(layout) {
     cleared: false,
     discovered: !r.secret,
     ...(r.monster ? { monster: { ...r.monster } } : {}),
+    ...(r.stock ? { stock: r.stock.map(({ sold, ...good }) => ({ ...good })) } : {}),
   }));
   return new Dungeon(rooms, theme, condition, {
     spine: [...layout.spine],
@@ -535,6 +555,16 @@ export function defaultPayloadFor(type, theme, isBoss = false) {
   if (type === ROOM_TYPES.VAULT) return { gold: 100, mimicChance: 0.28 };
   if (type === ROOM_TYPES.TRAP) return { trapDamage: 5, trapType: (theme.trapTypes || ['spike'])[0] };
   if (type === ROOM_TYPES.MATERIALS) return { materials: 2 };
+  if (type === ROOM_TYPES.SHOP) {
+    return {
+      stock: [
+        { id: 'draught', name: 'a healing draught', icon: '🧪', price: 12 },
+        { id: 'materials', name: 'a bundle of materials', icon: '🌿', price: 9 },
+        { id: 'key', name: 'a heavy iron key', icon: '🗝️', price: 22 },
+      ],
+    };
+  }
+  if (type === ROOM_TYPES.ALTAR) return { demand: 25 };
   return {};
 }
 

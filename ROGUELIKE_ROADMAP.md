@@ -43,7 +43,8 @@ From the game design library (`E:\pdf\Game Design`):
 | Vaults (rich hidden rooms) | NetHack, DCSS | 🔨 **v2 (this phase)** |
 | Branches / optional areas | DCSS, Spelunky off-path | 🔨 **v2 (this phase)** |
 | Meta-progression / archives | modern roguelites | 🔨 **Dungeon Archive (this phase)** |
-| Shops / town | Spelunky, roguelites | ✅ town between delves |
+| Shops / town | Spelunky, roguelites | ✅ town between delves + in-dungeon peddler stalls |
+| Altars / offerings | NetHack, DCSS | ✅ gold and blood offerings, boons, desecrator refusal |
 | Risk wagers | DCSS Zig, Pact-likes | ✅ conditions + hex exchange |
 | Item identification | NetHack, DCSS | ✅ unlabeled phials, seeded appearance map, quaff-testing |
 | Lock & key | Zelda-likes, BSP partitions | ✅ locked branch vaults, spine-placed keys, rogue lockpicking |
@@ -99,9 +100,18 @@ From the game design library (`E:\pdf\Game Design`):
   iron door guarding a vault, its key stashed earlier on the spine
   (cleared rooms give it up); rogues can pick the lock as a fallback,
   and a shut door is optional riches lost, never a softlock.
-- Still to come: in-dungeon shops, altars, multi-floor dungeons with
-  stairs, agent-dug cave layouts for the Cinder Galleries,
-  cellular-automata grottos.
+- ✅ **In-dungeon shops** — a peddler's stall as a room type (Spelunky
+  tradition): seeded stock (draughts, materials, iron keys) with
+  depth-taxed prices, need-driven buying, haggling for rogues and the
+  Cunning, and robbery for the brave-or-foolish — the peddler is
+  armed, and a failed heist raises the alarm.
+- ✅ **Altars** — offerings for boons (DCSS tradition): gold on the
+  stone buys mending, a run-long warding, or a permanently keener
+  edge (light purses get small mercies); blood buys +2 attack from
+  the sturdiest volunteer; quiet prayer is free, cleanses venom, and
+  the Devout are heard more clearly. Gods refuse a desecrator's coin.
+- Still to come: multi-floor dungeons with stairs, agent-dug cave
+  layouts for the Cinder Galleries, cellular-automata grottos.
 
 ## Architecture notes
 - Generation stays **seed-deterministic** end to end — that's what

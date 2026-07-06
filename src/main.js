@@ -342,6 +342,7 @@ function updateUI(state) {
   const badges = [];
   if (state.party.poisonLinger > 0) badges.push('🐍 venom working');
   if (state.party.alarmed) badges.push('🔔 alarm raised');
+  if (state.party.blessedWard > 0) badges.push('⚖️ warded');
   document.getElementById('status-badges').textContent = badges.join(' · ');
 
   // Roster

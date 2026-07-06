@@ -135,6 +135,16 @@ const PREDICAMENTS = {
     'The hidden room is small, dry, and stacked to the beams. Whoever hoarded this never came back for it. The dungeon knows why.',
     'Coin-shine in the dark — a vault, untouched since its owner\'s luck ran out somewhere between here and daylight.',
   ],
+  shop: [
+    'Lamplight around the next bend — a peddler\'s stall, set up snug between two ominous doorways. The goods are priced for people who might not live to comparison-shop.',
+    'A stall in the dark: oilcloth awning, wares in neat rows, and a peddler who nods as if parties come through on the hour. Down here, perhaps they do.',
+    'Somebody sells things in this dungeon. The peddler doesn\'t explain the supply route, and the prices suggest you shouldn\'t ask.',
+  ],
+  altar: [
+    'A black altar squats in a dry hollow, its offering-bowl polished by ten thousand desperate palms. Whatever listens here is old, patient, and strictly transactional.',
+    'The corridor widens around an altar that predates the dungeon. The stone is warm. The silence is the attentive kind.',
+    'An offering-stone, stained and swept clean and stained again. The gods down here don\'t ask for faith — just payment.',
+  ],
 };
 
 /* ------------------------------------------------------------------ */
@@ -231,6 +241,12 @@ const OPTION_PHRASES = {
   'knock-open': 'open it from across the room, loudly',
   'cause-fear': 'break the thing\'s nerve before it can use its teeth',
   'smoke-bomb': 'let the alchemist spring it from a safe distance',
+  'buy-goods': 'pay the peddler like honest customers',
+  'haggle-hard': 'talk the prices down to something civilized',
+  'rob-peddler': 'rob the peddler and outrun the consequences',
+  'offer-gold': 'lay gold on the stone and see what answers',
+  'offer-blood': 'pay the altar in blood for a keener edge',
+  'pray-quietly': 'kneel a moment and ask for nothing expensive',
 };
 
 const ARCHETYPE_VOICES = {
@@ -254,6 +270,8 @@ const CLASS_ADVOCATES = {
   'spell-bypass': CLASSES.WIZARD,
   alchemy: CLASSES.ALCHEMIST,
   gather: CLASSES.ALCHEMIST,
+  'haggle-hard': CLASSES.ROGUE,
+  'pray-quietly': CLASSES.CLERIC,
 };
 
 export function composeDeliberation(chosenId, options, party) {
@@ -462,6 +480,58 @@ export function composeResolution(room, optionId, result, party) {
       bits.push(`🌿 ${result.materials} bundle${result.materials > 1 ? 's' : ''} of herbs and salts go into the satchel. ${coda}`);
       break;
     }
+    case 'buy-goods': {
+      if (!result.bought?.length) {
+        bits.push('🪙 The party counts its coin, the peddler names the prices, and both parties conclude the visit was educational.');
+      } else {
+        const list = result.bought.map(g => `${g.icon} ${g.name} (${g.paid}g)`).join(', ');
+        bits.push(pick([
+          `🪙 Coin changes hands the boring, legal way: ${list}. The peddler bites each piece out of habit.`,
+          `🪙 The party shops like people who plan to keep living: ${list}. The peddler wishes them luck with professional neutrality.`,
+        ]));
+      }
+      break;
+    }
+    case 'haggle-hard': {
+      const list = result.bought?.map(g => `${g.icon} ${g.name} (${g.paid}g)`).join(', ');
+      if (!result.bought?.length) {
+        bits.push('🪙 The haggling is spirited, lengthy, and concludes with nobody buying anything and both sides claiming victory.');
+      } else if (result.haggled) {
+        bits.push(`🪙 Ten minutes of theatrical outrage later, the prices come down: ${list}. The peddler looks genuinely impressed, which costs extra elsewhere.`);
+      } else {
+        bits.push(`🪙 The peddler hears the opening offer, smiles like a patient landslide, and doesn't move a copper: ${list}, full price. Some stones don't squeeze.`);
+      }
+      break;
+    }
+    case 'rob-peddler':
+      bits.push(result.success
+        ? `🏴 It's quick and it's shameful: ${result.stolen?.map(g => g.name).join(' and ') || 'the stall'} and ${result.gold} gold from the till, gone before the peddler finishes shouting. The chronicle records it under "logistics."`
+        : '🏴 The peddler was armed. The peddler is always armed. A crossbow bolt and a very fast pack-up later, the party retreats with a hole in its dignity — and everything below has heard about it.');
+      break;
+    case 'offer-gold': {
+      if (result.refused) {
+        bits.push('⚖️ The coins go on the stone and the stone goes cold. The god remembers the pried-off gold leaf, and does not do business with those hands.');
+      } else if (result.boon === 'mending') {
+        bits.push(`⚖️ ${result.paid} gold on the stone. The bowl is empty when the party blinks, and their wounds are lighter by exactly the weight of the offering.`);
+      } else if (result.boon === 'warding') {
+        bits.push(`⚖️ ${result.paid} gold, weighed and accepted. Something settles over the party like a held shield — the next blows will land softer, all the way down.`);
+      } else if (result.boon === 'keen-edge') {
+        bits.push(`⚖️ ${result.paid} gold, and the god pays in kind: the front rank's weapons come off the stone humming, permanently keener.`);
+      } else if (result.boon === 'small-mercy') {
+        bits.push(`⚖️ ${result.paid} gold — short of what the god considers respectful, but small mercies are still mercies. One set of wounds closes partway.`);
+      } else {
+        bits.push(`⚖️ ${result.paid} gold on the stone. The god weighs it, finds it insulting, and keeps it anyway. Gods are like that down here.`);
+      }
+      break;
+    }
+    case 'offer-blood':
+      bits.push(`🩸 ${result.volunteer} lays a palm on the stone and pays the five the altar asks. The cut closes wrong — harder, like an edge — and the weapon-hand remembers it forever.`);
+      break;
+    case 'pray-quietly':
+      bits.push(result.cleansed
+        ? `🙏 A quiet word to whatever keeps this stone, and the venom in the party's blood simply — leaves. ${result.healed} health besides. Small gods do honest work.`
+        : `🙏 No offering, no demands — just a knee on old stone and a minute of quiet. ${result.healed} health returned${result.pious ? ', and the Devout rise looking freshly armored' : ''}.`);
+      break;
     case 'brace':
       bits.push(`🌋 Shields up, heads down — the dungeon does its worst (${result.damage} damage's worth) and the party is still there when the dust settles.`);
       break;

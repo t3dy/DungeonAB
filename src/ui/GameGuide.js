@@ -26,6 +26,8 @@ export const ROOM_HELP = {
   [ROOM_TYPES.DISASTER]: 'The dungeon itself turns hostile. Brace together, or scatter and pray.',
   [ROOM_TYPES.BOSS]: 'The boss chamber. Everything you drafted, tested at once.',
   [ROOM_TYPES.VAULT]: 'A vault — riches behind a secret or locked door. Rogues find the hidden ones and pick the locks; iron keys wait in earlier rooms.',
+  [ROOM_TYPES.SHOP]: 'A peddler\'s stall. Buy draughts, materials, or an iron key — haggle with a quick tongue, or rob at your peril: the peddler is armed.',
+  [ROOM_TYPES.ALTAR]: 'An old altar. Offer gold for a lasting boon, blood for a keener edge, or pray free for small mercies. Desecrators get nothing.',
 };
 
 /**

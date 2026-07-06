@@ -175,6 +175,36 @@ export function getRoomOptions(room, party) {
       ];
     }
 
+    case ROOM_TYPES.SHOP: {
+      const cheapest = Math.min(...(room.stock || []).filter(g => !g.sold).map(g => g.price), Infinity);
+      const opts = [
+        { id: 'rob-peddler', name: 'Rob the Peddler', desc: 'The peddler is armed. They always are.' },
+        { id: 'pass-by', name: 'Window-Shop and Walk', desc: 'The satchel stays light, the coin stays heavy' },
+      ];
+      if (party.gold >= cheapest) {
+        opts.unshift({ id: 'buy-goods', name: 'Buy What\'s Needed', desc: 'Honest coin for honest goods' });
+        if (party.hasClass(CLASSES.ROGUE) || party.hasPersonality('cunning')) {
+          opts.splice(1, 0, { id: 'haggle-hard', name: 'Haggle Hard', desc: 'The same goods for less, if the tongue is quick' });
+        }
+      }
+      return opts;
+    }
+
+    case ROOM_TYPES.ALTAR: {
+      const opts = [
+        { id: 'pray-quietly', name: 'Pray Quietly', desc: 'Costs nothing; small gods hear small prayers' },
+        { id: 'pass-by', name: 'Keep Marching', desc: 'Gods keep their own hours' },
+      ];
+      if (party.gold > 0) {
+        opts.unshift({ id: 'offer-gold', name: 'Make an Offering', desc: 'Gold on the stone; the god weighs it' });
+      }
+      // Blood is only offered by someone sturdy enough to spare it
+      if (party.living().some(m => m.health > 8)) {
+        opts.splice(opts.length - 1, 0, { id: 'offer-blood', name: 'Offer Blood', desc: 'Five health for a keener edge, forever' });
+      }
+      return opts;
+    }
+
     default:
       return [{ id: 'proceed', name: 'Proceed', desc: 'Onward and downward' }];
   }
@@ -185,13 +215,13 @@ export function getRoomOptions(room, party) {
 /* ------------------------------------------------------------------ */
 
 const PERSONALITY_WEIGHTS = {
-  brave: { fight: 3, 'push-through': 2, brace: 2, flee: -2, 'leave-it': -1 },
-  cunning: { sneak: 3, disarm: 3, bribe: 2, inspect: 2, 'spell-bypass': 2, fight: -1 },
-  greedy: { loot: 4, desecrate: 2, gather: 2, 'leave-it': -3, bribe: -2 },
+  brave: { fight: 3, 'push-through': 2, brace: 2, flee: -2, 'leave-it': -1, 'offer-blood': 2 },
+  cunning: { sneak: 3, disarm: 3, bribe: 2, inspect: 2, 'spell-bypass': 2, fight: -1, 'haggle-hard': 3, 'offer-gold': -1 },
+  greedy: { loot: 4, desecrate: 2, gather: 2, 'leave-it': -3, bribe: -2, 'rob-peddler': 3, 'offer-gold': -3 },
   scholarly: { study: 3, 'deep-study': 3, 'spell-strike': 2, 'spell-bypass': 2 },
-  pious: { rest: 3, 'turn-undead': 3, desecrate: -5 },
-  reckless: { fight: 2, 'push-through': 3, loot: 2, inspect: -2, 'search-around': -2 },
-  craven: { flee: 3, sneak: 2, disarm: 2, 'search-around': 2, inspect: 1, scatter: 2, fight: -2, 'push-through': -2, brace: -1, 'cause-fear': 3, 'smoke-bomb': 2, 'knock-open': 1 },
+  pious: { rest: 3, 'turn-undead': 3, desecrate: -5, 'offer-gold': 2, 'pray-quietly': 3, 'rob-peddler': -5, 'offer-blood': -1 },
+  reckless: { fight: 2, 'push-through': 3, loot: 2, inspect: -2, 'search-around': -2, 'rob-peddler': 2, 'offer-blood': 3 },
+  craven: { flee: 3, sneak: 2, disarm: 2, 'search-around': 2, inspect: 1, scatter: 2, fight: -2, 'push-through': -2, brace: -1, 'cause-fear': 3, 'smoke-bomb': 2, 'knock-open': 1, 'rob-peddler': -3, 'offer-blood': -2, 'buy-goods': 1 },
 };
 
 /* Preparation-gated options are attractive to those who'd use them */
@@ -255,6 +285,16 @@ export function decideRoomAction(room, party) {
     // Instincts independent of personality
     if (opt.id === 'alchemy') w += 3;                       // Benches get used
     if (opt.id === 'gather') w += 2;                        // Satchels get filled
+    // A stall is most tempting to the hurt and the under-supplied
+    if (opt.id === 'buy-goods' || opt.id === 'haggle-hard') {
+      w += 2;
+      if (party.totalHealth() / party.totalMaxHealth() < 0.6) w += 2;
+      if (party.hasClass(CLASSES.ALCHEMIST) && party.materials === 0) w += 1;
+    }
+    if (opt.id === 'rob-peddler') w -= 1;                   // Most people aren't bandits
+    // Rich parties tithe more easily; the poisoned pray harder
+    if (opt.id === 'offer-gold' && party.gold >= (room.demand || 20)) w += 2;
+    if (opt.id === 'pray-quietly' && (party.poisonLinger || 0) > 0) w += 2;
     const prep = PREP_OPTION_WEIGHTS[opt.id];
     if (prep) {
       w += prep.base;
@@ -451,6 +491,59 @@ export function decideDetour(party, rollValue = roll()) {
 }
 
 /* ------------------------------------------------------------------ */
+/* The peddler and the altar (Phase 5: shops and offerings)            */
+/* ------------------------------------------------------------------ */
+
+/**
+ * The party shops by need: mending first if anyone bleeds, the bench
+ * fed if an alchemist marches, an iron key for whatever door is
+ * sulking ahead. At most two purchases — the peddler doesn't stock
+ * for armies. Mutates the party and marks stock sold; returns the
+ * bought goods with the prices actually paid.
+ */
+export function buyFromStock(party, room, discountMult = 1) {
+  const stock = room.stock || [];
+  const price = g => Math.max(1, Math.round(g.price * discountMult));
+
+  const wants = [];
+  if (party.totalHealth() / party.totalMaxHealth() < 0.85) wants.push('draught');
+  if (party.hasClass(CLASSES.ALCHEMIST)) wants.push('materials');
+  wants.push('key', 'draught', 'materials');
+
+  const bought = [];
+  for (const id of wants) {
+    if (bought.length >= 2) break;
+    const good = stock.find(g => g.id === id && !g.sold);
+    if (!good || party.gold < price(good)) continue;
+    party.gold -= price(good);
+    good.sold = true;
+    if (id === 'draught') party.potions.push({ kind: 'healing-draught', heal: 6 });
+    if (id === 'materials') party.materials += 2;
+    if (id === 'key') party.keys = (party.keys || 0) + 1;
+    bought.push({ ...good, paid: price(good) });
+  }
+  return bought;
+}
+
+/**
+ * Does the haggling land? Quick tongues (cunning) and quick fingers
+ * (a rogue's mind) knock the prices down. Pure — pass the roll.
+ */
+export function haggleCheck(party, rollValue = roll()) {
+  const edge = party.hasPersonality('cunning') ? 1.5 : 0;
+  return party.bestMind() + edge + rollValue > 9;
+}
+
+/**
+ * Robbing the peddler. The peddler is armed. They always are.
+ * Pure — pass the roll.
+ */
+export function robCheck(party, rollValue = roll()) {
+  const rogueEdge = party.hasClass(CLASSES.ROGUE) ? 2 : 0;
+  return party.bestMind() + rogueEdge + rollValue > 11;
+}
+
+/* ------------------------------------------------------------------ */
 /* Resolution — gradient outcomes                                      */
 /* ------------------------------------------------------------------ */
 
@@ -476,6 +569,8 @@ export function resolveRoomAction(room, party, optionId) {
         ward += a.ward || 0;
         summon += a.summonAttack || 0;
       }
+      // An altar's warding blessing blunts every round, like a shield
+      ward += party.blessedWard || 0;
       monsterHealth -= opening;
 
       // Natures shape the fight (see Bestiary): the armored shave
@@ -853,10 +948,111 @@ export function resolveRoomAction(room, party, optionId) {
       return { success: true, materials: room.materials || 1 };
     }
 
+    /* Shop */
+    case 'buy-goods': {
+      const bought = buyFromStock(party, room, 1);
+      room.cleared = true;
+      party.recordEncounter('buy-goods', bought.length > 0);
+      return { success: bought.length > 0, bought, goldLeft: party.gold };
+    }
+
+    case 'haggle-hard': {
+      const haggled = haggleCheck(party);
+      // A failed haggle stings the pride, not the purse: full price
+      const bought = buyFromStock(party, room, haggled ? 0.7 : 1);
+      if (haggled && bought.length > 0) party.addScore(10);
+      room.cleared = true;
+      party.recordEncounter('haggle-hard', haggled);
+      return { success: bought.length > 0, haggled, bought, goldLeft: party.gold };
+    }
+
+    case 'rob-peddler': {
+      const ok = robCheck(party);
+      room.cleared = true;
+      if (ok) {
+        // Grab what isn't nailed down: two goods and the till
+        const stolen = [];
+        for (const good of (room.stock || []).filter(g => !g.sold).slice(0, 2)) {
+          good.sold = true;
+          if (good.id === 'draught') party.potions.push({ kind: 'healing-draught', heal: 6 });
+          if (good.id === 'materials') party.materials += 2;
+          if (good.id === 'key') party.keys = (party.keys || 0) + 1;
+          stolen.push({ ...good });
+        }
+        const till = 15;
+        party.addGold(till);
+        party.recordEncounter('rob-peddler', true);
+        return { success: true, stolen, gold: till };
+      }
+      // The crossbow under the counter, and word travels fast down here
+      party.takeDamage(6);
+      party.alarmed = true;
+      for (const good of room.stock || []) good.sold = true; // the stall packs up
+      party.recordEncounter('rob-peddler', false);
+      return { success: false, damage: 6, alarmed: true };
+    }
+
+    /* Altar */
+    case 'offer-gold': {
+      const demand = room.demand || 20;
+      room.cleared = true;
+      // A desecrating party's coin is refused — the god remembers the
+      // pried-off leaf, and won't touch what those hands held
+      if (party.desecrated) {
+        party.recordEncounter('offer-gold', false);
+        return { success: false, refused: true, demand };
+      }
+      const paid = Math.min(party.gold, demand);
+      party.gold -= paid;
+      let boon = null;
+      if (paid >= demand) {
+        // The god weighs the coin and pays in kind
+        const boons = ['mending', 'warding', 'keen-edge'];
+        boon = boons[(room.index + paid) % boons.length];
+        if (boon === 'mending') {
+          for (const m of party.living()) m.heal(5);
+        } else if (boon === 'warding') {
+          party.blessedWard = (party.blessedWard || 0) + 1;
+        } else {
+          const strikers = party.living().sort((a, b) => b.attack - a.attack).slice(0, 2);
+          for (const m of strikers) m.baseAttack += 1;
+        }
+        party.addScore(15);
+      } else if (paid >= demand / 2) {
+        // A light purse gets a light blessing
+        party.healParty(4);
+        boon = 'small-mercy';
+      }
+      party.recordEncounter('offer-gold', !!boon);
+      return { success: !!boon, paid, demand, boon };
+    }
+
+    case 'offer-blood': {
+      const volunteer = party.living()
+        .filter(m => m.health > 8)
+        .reduce((a, b) => a.health >= b.health ? a : b);
+      volunteer.takeDamage(5);
+      volunteer.baseAttack += 2;
+      party.addScore(10);
+      room.cleared = true;
+      party.recordEncounter('offer-blood', true);
+      return { success: true, volunteer: volunteer.name, damage: 5 };
+    }
+
+    case 'pray-quietly': {
+      const pious = party.hasPersonality('pious');
+      const cleansed = (party.poisonLinger || 0) > 0;
+      party.poisonLinger = 0;   // small gods draw venom for free
+      const healed = pious ? 4 : 2;
+      party.healParty(healed);
+      room.cleared = true;
+      return { success: true, healed, cleansed, pious };
+    }
+
     /* Disaster */
     case 'brace': {
       const dmg = (party.desecrated ? 8 : 5);
-      party.takeDamage(Math.max(1, dmg - Math.floor(party.totalDefense() / 4)));
+      party.takeDamage(Math.max(1, dmg - Math.floor(party.totalDefense() / 4) - (party.blessedWard || 0)));
       room.cleared = true;
       // A healing working steadies the line as the dust settles
       const preps = [];
