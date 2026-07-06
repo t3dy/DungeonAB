@@ -27,13 +27,14 @@ export const ROOM_TYPES = {
   VAULT: 'vault',   // the rich room behind the secret door
   SHOP: 'shop',     // a peddler's stall in the dark (Spelunky tradition)
   ALTAR: 'altar',   // a god that trades in offerings (DCSS tradition)
+  STAIRS: 'stairs', // the way down to the next floor (multi-floor, Phase 5)
 };
 
 const ROOM_ICONS = {
   entrance: '🚪', corridor: '⬛', monster: '👹', trap: '⚠️',
   treasure: '💰', library: '📚', shrine: '🕯️', lab: '⚗️',
   materials: '🌿', disaster: '🌋', boss: '🐉', vault: '💎',
-  shop: '🪙', altar: '⚖️',
+  shop: '🪙', altar: '⚖️', stairs: '🪜',
 };
 
 /**
@@ -76,6 +77,10 @@ export class Dungeon {
   get length() {
     return this.rooms.length;
   }
+  /** How many floors this dungeon stacks (single-floor legacy = 1). */
+  get floorCount() {
+    return 1 + Math.max(0, ...this.rooms.map(r => r.floor || 0));
+  }
   /** The unconsumed branch hanging off this room, if any. */
   branchAt(roomIndex) {
     return this.branches.find(b => b.junction === roomIndex && !b.consumed) || null;
@@ -90,8 +95,11 @@ export class Dungeon {
  *                                         party drafted an alchemist
  *                      theme: string,   — force a theme id; otherwise
  *                                         the seed decides
- *                      depth: number }  — campaign depth (1 = first
+ *                      depth: number,   — campaign depth (1 = first
  *                                         dungeon); deeper is meaner
+ *                      floors: number } — pin the floor count; omit to
+ *                                         let difficulty dig (easy 1,
+ *                                         hard 2, nightmare 2-3)
  */
 export function generateDungeon(seed, difficulty = 'medium', opts = {}) {
   const rng = new SeededRandom(seed);
@@ -118,14 +126,34 @@ export function generateDungeon(seed, difficulty = 'medium', opts = {}) {
   // Difficulty sharpens the monsters themselves, not just the map
   const statScale = STAT_SCALE[difficulty] || 1;
 
-  const spineLength = 8 + Math.floor(rng.next() * 4); // 8-11 rooms between entrance and boss
+  // Floors: meaner dungeons dig deeper (multi-floor, Phase 5). Every
+  // floor down, the foes and the payouts both climb. No rng is spent
+  // when the caller pins the count — pinned generations stay
+  // sequence-identical for comparisons and replays.
+  const floors = opts.floors || {
+    easy: 1,
+    medium: () => (rng.next() < 0.4 ? 2 : 1),
+    hard: 2,
+    nightmare: () => (rng.next() < 0.5 ? 3 : 2),
+  }[difficulty] || 1;
+  const floorCount = typeof floors === 'function' ? floors() : floors;
+
   const rooms = [];
+  rooms.push(makeRoom(0, ROOM_TYPES.ENTRANCE, rng, theme, depth, statScale, condition, 0));
 
-  rooms.push(makeRoom(0, ROOM_TYPES.ENTRANCE, rng, theme, depth, statScale, condition));
-
-  for (let i = 1; i <= spineLength; i++) {
-    const type = weightedPick(rng, weights);
-    rooms.push(makeRoom(i, type, rng, theme, depth, statScale, condition));
+  for (let f = 0; f < floorCount; f++) {
+    // A single-floor dungeon keeps the classic 8-11 room spine;
+    // stacked floors run shorter segments so the whole delve stays sane
+    const segLength = floorCount === 1
+      ? 8 + Math.floor(rng.next() * 4)
+      : 5 + Math.floor(rng.next() * 3);
+    for (let i = 0; i < segLength; i++) {
+      const type = weightedPick(rng, weights);
+      rooms.push(makeRoom(rooms.length, type, rng, theme, depth, statScale, condition, f));
+    }
+    if (f < floorCount - 1) {
+      rooms.push(makeRoom(rooms.length, ROOM_TYPES.STAIRS, rng, theme, depth, statScale, condition, f));
+    }
   }
 
   // Guarantees: at least one library and one shrine; a lab if wanted.
@@ -138,15 +166,23 @@ export function generateDungeon(seed, difficulty = 'medium', opts = {}) {
     ensureRoomType(rooms, ROOM_TYPES.MATERIALS, rng, theme, depth, statScale, condition, weights, 1);
   }
 
-  rooms.push(makeRoom(rooms.length, ROOM_TYPES.BOSS, rng, theme, depth, statScale, condition));
+  rooms.push(makeRoom(rooms.length, ROOM_TYPES.BOSS, rng, theme, depth, statScale, condition, floorCount - 1));
 
   /* ---- Spatial layout (procgen v2) ---------------------------------- */
 
-  // The spine winds down the grid (the guaranteed critical path)
+  // The spine winds down the grid (the guaranteed critical path).
+  // Each floor lays out in its own horizontal band, so floors never
+  // collide on the grid and the minimap reads them as strata.
   const occupied = new Set();
   let x = 0;
   let y = 0;
+  let laidFloor = 0;
   for (const room of rooms) {
+    if ((room.floor || 0) !== laidFloor) {
+      laidFloor = room.floor || 0;
+      x = 0;
+      y = laidFloor * 12;
+    }
     room.x = x;
     room.y = y;
     occupied.add(`${x},${y}`);
@@ -169,9 +205,13 @@ export function generateDungeon(seed, difficulty = 'medium', opts = {}) {
   ];
   const DIRS = [[1, 0], [-1, 0], [0, 1], [0, -1]];
 
+  // Junctions sit mid-spine — never the entrance, the boss, or a
+  // staircase (nobody hides a door in a stairwell)
+  const junctionPool = spine.slice(1, -1).filter(i => rooms[i].type !== ROOM_TYPES.STAIRS);
+
   for (let b = 0; b < branchCount; b++) {
-    // A junction mid-spine (never the entrance or the boss)
-    const junction = 1 + Math.floor(rng.next() * (spine.length - 2));
+    if (junctionPool.length === 0) break;
+    const junction = rng.pick(junctionPool);
     const jRoom = rooms[junction];
 
     // Find a free cell next to the junction
@@ -199,7 +239,7 @@ export function generateDungeon(seed, difficulty = 'medium', opts = {}) {
         ? ROOM_TYPES.VAULT
         : BRANCH_TYPES[Math.floor(rng.next() * BRANCH_TYPES.length)];
 
-      const room = makeRoom(rooms.length, type, rng, theme, depth, statScale, condition);
+      const room = makeRoom(rooms.length, type, rng, theme, depth, statScale, condition, jRoom.floor || 0);
       room.x = nx;
       room.y = ny;
       room.secret = secret;
@@ -236,7 +276,7 @@ export function generateDungeon(seed, difficulty = 'medium', opts = {}) {
  * of other guaranteed types)
  */
 const PROTECTED_TYPES = new Set([
-  ROOM_TYPES.ENTRANCE, ROOM_TYPES.BOSS,
+  ROOM_TYPES.ENTRANCE, ROOM_TYPES.BOSS, ROOM_TYPES.STAIRS,
   ROOM_TYPES.LIBRARY, ROOM_TYPES.SHRINE, ROOM_TYPES.LAB, ROOM_TYPES.MATERIALS,
 ]);
 
@@ -258,7 +298,7 @@ function ensureRoomType(rooms, type, rng, theme, depth, statScale, condition, we
     }
     const convertible = candidates.filter(r => r.type === worstType);
     const target = rng.pick(convertible);
-    const replacement = makeRoom(target.index, type, rng, theme, depth, statScale, condition);
+    const replacement = makeRoom(target.index, type, rng, theme, depth, statScale, condition, target.floor || 0);
     replacement.x = target.x;
     replacement.y = target.y;
     rooms[rooms.indexOf(target)] = replacement;
@@ -266,37 +306,43 @@ function ensureRoomType(rooms, type, rng, theme, depth, statScale, condition, we
   }
 }
 
-function makeRoom(index, type, rng, theme, depth = 1, statScale = 1, condition = {}) {
+function makeRoom(index, type, rng, theme, depth = 1, statScale = 1, condition = {}, floor = 0) {
   const room = {
     index,
     type,
+    floor,
     icon: ROOM_ICONS[type] || '⬛',
     cleared: false,
   };
+
+  // Every floor down, the dungeon means it a little more: foes hit
+  // harder and hoards run richer on the lower strata
+  const floorMult = 1 + 0.12 * floor;
+  const floorGold = 1 + 0.15 * floor;
 
   // Per-type payloads. Depth is the campaign's whetstone: deeper
   // dungeons hit harder and pay better. The condition is the player's
   // wager on top — meaner monsters, deeper traps, richer hoards.
   if (type === ROOM_TYPES.MONSTER) {
-    room.monster = rollMonster(rng, false, theme, depth, statScale, condition);
+    room.monster = rollMonster(rng, false, theme, depth, statScale * floorMult, condition);
   }
   if (type === ROOM_TYPES.BOSS) {
-    room.monster = rollMonster(rng, true, theme, depth, statScale, condition);
+    room.monster = rollMonster(rng, true, theme, depth, statScale * floorMult, condition);
   }
   if (type === ROOM_TYPES.TREASURE) {
-    const base = (20 + Math.floor(rng.next() * 40)) * (1 + 0.2 * (depth - 1));
+    const base = (20 + Math.floor(rng.next() * 40)) * (1 + 0.2 * (depth - 1)) * floorGold;
     room.gold = Math.round(base * (condition.goldMult || 1));
     room.mimicChance = 0.18;
   }
   if (type === ROOM_TYPES.VAULT) {
     // Whoever hid this room meant it: 3× a treasure room's haul,
     // and mimics love a vault
-    const base = (60 + Math.floor(rng.next() * 120)) * (1 + 0.2 * (depth - 1));
+    const base = (60 + Math.floor(rng.next() * 120)) * (1 + 0.2 * (depth - 1)) * floorGold;
     room.gold = Math.round(base * (condition.goldMult || 1));
     room.mimicChance = 0.28;
   }
   if (type === ROOM_TYPES.TRAP) {
-    room.trapDamage = 4 + Math.floor(rng.next() * 4) + (theme.trapBonus || 0) + (depth - 1) + (condition.trapBonus || 0);
+    room.trapDamage = 4 + Math.floor(rng.next() * 4) + (theme.trapBonus || 0) + (depth - 1) + Math.floor(floor / 2) + (condition.trapBonus || 0);
     // Each theme sets its own kind of snares
     const types = theme.trapTypes || ['spike'];
     room.trapType = types[Math.floor(rng.next() * types.length)];
@@ -505,6 +551,7 @@ export function serializeDungeon(dungeon) {
     conditionId: dungeon.condition?.id || 'none',
     rooms: dungeon.rooms.map(r => ({
       index: r.index, type: r.type, x: r.x, y: r.y,
+      floor: r.floor || 0,
       secret: !!r.secret,
       ...(r.monster ? { monster: { ...r.monster } } : {}),
       ...(r.gold !== undefined ? { gold: r.gold } : {}),

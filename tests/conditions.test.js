@@ -74,8 +74,10 @@ describe('Combining conditions (a wager plus a hex)', () => {
     let plainAtk = 0;
     let comboAtk = 0;
     for (const seed of ['combo-1', 'combo-2', 'combo-3', 'combo-4', 'combo-5']) {
-      const plain = generateDungeon(seed, 'medium', { theme: 'delve' });
-      const combo = generateDungeon(seed, 'medium', { theme: 'delve', condition: combined });
+      // floors pinned to 1: multi-floor scaling would confound the
+      // condition-vs-plain comparison this test is isolating
+      const plain = generateDungeon(seed, 'medium', { theme: 'delve', floors: 1 });
+      const combo = generateDungeon(seed, 'medium', { theme: 'delve', condition: combined, floors: 1 });
       plainTrap += Math.max(0, ...plain.rooms.filter(r => r.trapDamage).map(r => r.trapDamage));
       comboTrap += Math.max(0, ...combo.rooms.filter(r => r.trapDamage).map(r => r.trapDamage));
       plainAtk += monsterAvg(plain).atk;

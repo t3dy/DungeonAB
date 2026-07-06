@@ -14,7 +14,7 @@ const TYPE_COLORS = {
   entrance: '#8fb8dd', corridor: '#555', monster: '#c84c3c', trap: '#e8724a',
   treasure: '#d8a53f', library: '#b07ae8', shrine: '#e8d48a', lab: '#3cb8a8',
   materials: '#4a8a5c', disaster: '#e05555', boss: '#ff4444', vault: '#ffd75e',
-  shop: '#c9973e', altar: '#9a8ad0',
+  shop: '#c9973e', altar: '#9a8ad0', stairs: '#8899aa',
 };
 
 const PAYLOAD_KEYS = ['monster', 'gold', 'mimicChance', 'trapDamage', 'trapType', 'materials', 'stock', 'demand'];
@@ -22,8 +22,10 @@ const PAYLOAD_KEYS = ['monster', 'gold', 'mimicChance', 'trapDamage', 'trapType'
 /** Retype a room in a layout, swapping in a sane default payload. */
 export function retypeRoom(layout, roomIndex, newType) {
   const room = layout.rooms.find(r => r.index === roomIndex);
-  if (!room || room.type === ROOM_TYPES.ENTRANCE || room.type === ROOM_TYPES.BOSS) return false;
-  if (newType === ROOM_TYPES.ENTRANCE || newType === ROOM_TYPES.BOSS) return false;
+  // Entrance, boss, and stairs are structure, not furniture
+  const STRUCTURAL = [ROOM_TYPES.ENTRANCE, ROOM_TYPES.BOSS, ROOM_TYPES.STAIRS];
+  if (!room || STRUCTURAL.includes(room.type)) return false;
+  if (STRUCTURAL.includes(newType)) return false;
   for (const k of PAYLOAD_KEYS) delete room[k];
   room.type = newType;
   Object.assign(room, defaultPayloadFor(newType, DUNGEON_THEMES[layout.themeId] || DUNGEON_THEMES.delve));
@@ -134,7 +136,7 @@ export function setupArchive({ onDelve }) {
   const renderEditor = (entry) => {
     // Deep copy: the editor works on a draft until saved
     const layout = JSON.parse(JSON.stringify(entry.layout));
-    const editableTypes = Object.values(ROOM_TYPES).filter(t => t !== 'entrance' && t !== 'boss');
+    const editableTypes = Object.values(ROOM_TYPES).filter(t => t !== 'entrance' && t !== 'boss' && t !== 'stairs');
 
     body.innerHTML = `
       <div style="display:flex;gap:0.6rem;align-items:center;margin-bottom:0.6rem;">

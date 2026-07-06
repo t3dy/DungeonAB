@@ -330,7 +330,8 @@ function togglePause() {
 }
 
 function updateUI(state) {
-  document.getElementById('room-count').textContent = `${state.roomIndex} / ${(state.pathLength || state.dungeon.length) - 1}`;
+  const floorTag = (state.floors || 1) > 1 ? ` · Floor ${(state.currentFloor || 0) + 1}/${state.floors}` : '';
+  document.getElementById('room-count').textContent = `${state.roomIndex} / ${(state.pathLength || state.dungeon.length) - 1}${floorTag}`;
   document.getElementById('gold-count').textContent = state.party.gold;
   document.getElementById('score-count').textContent = state.party.score;
   document.getElementById('materials-count').textContent = state.party.materials;

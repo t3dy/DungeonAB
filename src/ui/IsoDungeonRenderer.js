@@ -144,14 +144,18 @@ export class IsoDungeonRenderer {
     this.lastState = state;
     const rooms = state.dungeon.rooms;
 
-    this.resize(rooms);
+    // The camera frames the floor the party is on, not the whole stack
+    this.currentFloor = state.currentFloor || 0;
+    const floorRooms = rooms.filter(r => (r.floor || 0) === this.currentFloor);
+    this.resize(floorRooms.length ? floorRooms : rooms);
 
-    // Discovery changes the map: found secret rooms surface, and an
-    // opened iron door comes off its hinges. The theme colors the stone.
+    // Discovery changes the map: found secret rooms surface, an
+    // opened iron door comes off its hinges, and descending a stair
+    // swaps the whole visible stratum. The theme colors the stone.
     const themeId = state.dungeon.theme?.id || 'delve';
     const branches = state.dungeon.branches || [];
     const openedLocks = branches.filter(b => b.locked && b.consumed).length;
-    const key = themeId + '|' + openedLocks + '|' + rooms.map(r => `${r.type}${r.secret && !r.discovered ? '?' : ''}`).join(',');
+    const key = themeId + '|' + openedLocks + '|f' + this.currentFloor + '|' + rooms.map(r => `${r.type}${r.secret && !r.discovered ? '?' : ''}`).join(',');
     if (this.builtKey !== key) {
       this.buildDungeon(rooms, state.dungeon.edges, themeId, branches);
       this.builtKey = key;
@@ -221,6 +225,7 @@ export class IsoDungeonRenderer {
 
     rooms.forEach((room, i) => {
       if (room.secret && !room.discovered) return;
+      if ((room.floor || 0) !== (this.currentFloor || 0)) return;
       const { x, z } = this.roomPositions[i];
       const known = knownRooms.has(i) || room.type === 'boss';
       if (!known) return;
@@ -272,9 +277,10 @@ export class IsoDungeonRenderer {
   resize(rooms) {
     const w = this.canvas.clientWidth || 500;
     const h = this.canvas.clientHeight || 420;
-    if (this.lastW === w && this.lastH === h && this.camera && this.builtKey) return;
+    if (this.lastW === w && this.lastH === h && this.camera && this.builtKey && this.lastFloor === this.currentFloor) return;
     this.lastW = w;
     this.lastH = h;
+    this.lastFloor = this.currentFloor;
     this.renderer.setSize(w, h, false);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 
@@ -310,7 +316,9 @@ export class IsoDungeonRenderer {
 
     const platGeo = new THREE.BoxGeometry(2.4, 0.35, 2.4);
     const bossGeo = new THREE.BoxGeometry(3.1, 0.5, 3.1);
-    const hidden = room => room.secret && !room.discovered;
+    // Off-floor rooms are behind the world, not just behind a wall
+    const hidden = room => (room.secret && !room.discovered)
+      || (room.floor || 0) !== (this.currentFloor || 0);
 
     rooms.forEach((room, i) => {
       // Undiscovered secret rooms simply aren't there — that's the point
@@ -415,6 +423,7 @@ export class IsoDungeonRenderer {
 
     rooms.forEach((room, i) => {
       if (room.secret && !room.discovered) return;   // still behind the wall
+      if ((room.floor || 0) !== (this.currentFloor || 0)) return;   // another stratum
       const { x, z } = this.roomPositions[i];
       const isKnown = known.has(i) || room.type === 'boss';
       const icon = isKnown ? room.icon : '❓';

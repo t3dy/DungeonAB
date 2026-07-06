@@ -190,6 +190,13 @@ export function getRoomOptions(room, party) {
       return opts;
     }
 
+    case ROOM_TYPES.STAIRS: {
+      return [
+        { id: 'descend', name: 'Descend', desc: 'Down the worn steps, torches first' },
+        { id: 'rest-landing', name: 'Rest on the Landing', desc: 'Catch breath at the threshold, then down' },
+      ];
+    }
+
     case ROOM_TYPES.ALTAR: {
       const opts = [
         { id: 'pray-quietly', name: 'Pray Quietly', desc: 'Costs nothing; small gods hear small prayers' },
@@ -215,13 +222,13 @@ export function getRoomOptions(room, party) {
 /* ------------------------------------------------------------------ */
 
 const PERSONALITY_WEIGHTS = {
-  brave: { fight: 3, 'push-through': 2, brace: 2, flee: -2, 'leave-it': -1, 'offer-blood': 2 },
+  brave: { fight: 3, 'push-through': 2, brace: 2, flee: -2, 'leave-it': -1, 'offer-blood': 2, descend: 1 },
   cunning: { sneak: 3, disarm: 3, bribe: 2, inspect: 2, 'spell-bypass': 2, fight: -1, 'haggle-hard': 3, 'offer-gold': -1 },
   greedy: { loot: 4, desecrate: 2, gather: 2, 'leave-it': -3, bribe: -2, 'rob-peddler': 3, 'offer-gold': -3 },
   scholarly: { study: 3, 'deep-study': 3, 'spell-strike': 2, 'spell-bypass': 2 },
   pious: { rest: 3, 'turn-undead': 3, desecrate: -5, 'offer-gold': 2, 'pray-quietly': 3, 'rob-peddler': -5, 'offer-blood': -1 },
-  reckless: { fight: 2, 'push-through': 3, loot: 2, inspect: -2, 'search-around': -2, 'rob-peddler': 2, 'offer-blood': 3 },
-  craven: { flee: 3, sneak: 2, disarm: 2, 'search-around': 2, inspect: 1, scatter: 2, fight: -2, 'push-through': -2, brace: -1, 'cause-fear': 3, 'smoke-bomb': 2, 'knock-open': 1, 'rob-peddler': -3, 'offer-blood': -2, 'buy-goods': 1 },
+  reckless: { fight: 2, 'push-through': 3, loot: 2, inspect: -2, 'search-around': -2, 'rob-peddler': 2, 'offer-blood': 3, descend: 2 },
+  craven: { flee: 3, sneak: 2, disarm: 2, 'search-around': 2, inspect: 1, scatter: 2, fight: -2, 'push-through': -2, brace: -1, 'cause-fear': 3, 'smoke-bomb': 2, 'knock-open': 1, 'rob-peddler': -3, 'offer-blood': -2, 'buy-goods': 1, 'rest-landing': 2 },
 };
 
 /* Preparation-gated options are attractive to those who'd use them */
@@ -295,6 +302,8 @@ export function decideRoomAction(room, party) {
     // Rich parties tithe more easily; the poisoned pray harder
     if (opt.id === 'offer-gold' && party.gold >= (room.demand || 20)) w += 2;
     if (opt.id === 'pray-quietly' && (party.poisonLinger || 0) > 0) w += 2;
+    // A battered party lingers on the landing before going deeper
+    if (opt.id === 'rest-landing' && party.totalHealth() / party.totalMaxHealth() < 0.5) w += 3;
     const prep = PREP_OPTION_WEIGHTS[opt.id];
     if (prep) {
       w += prep.base;
@@ -1047,6 +1056,21 @@ export function resolveRoomAction(room, party, optionId) {
       party.healParty(healed);
       room.cleared = true;
       return { success: true, healed, cleansed, pious };
+    }
+
+    /* Stairs — the way down to the next floor */
+    case 'descend': {
+      party.addScore(10);   // going deeper is progress, and progress pays
+      room.cleared = true;
+      return { success: true, floor: (room.floor || 0) + 2 };   // human-numbered: floor 2, 3...
+    }
+
+    case 'rest-landing': {
+      // A breather at the threshold: the whole party steadies itself
+      for (const m of party.living()) m.heal(2);
+      party.addScore(10);
+      room.cleared = true;
+      return { success: true, healed: 2, floor: (room.floor || 0) + 2 };
     }
 
     /* Disaster */

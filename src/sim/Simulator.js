@@ -39,6 +39,7 @@ export class Simulator {
           theme: opts.theme,
           depth: this.depth,
           condition: opts.condition,
+          floors: opts.floors,
         });
     this.condition = this.dungeon.condition;
 
@@ -219,6 +220,8 @@ export class Simulator {
       knownIdxs: [...this.path.slice(0, this.roomIndex + 2), this.dungeon.spine[this.dungeon.spine.length - 1]],
       dungeon: this.dungeon,
       depth: this.depth,
+      floors: this.dungeon.floorCount,
+      currentFloor: this.dungeon.getRoom(this.path[clampedPos])?.floor || 0,
       theme: {
         id: this.dungeon.theme.id,
         name: this.dungeon.theme.name,

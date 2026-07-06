@@ -145,6 +145,11 @@ const PREDICAMENTS = {
     'The corridor widens around an altar that predates the dungeon. The stone is warm. The silence is the attentive kind.',
     'An offering-stone, stained and swept clean and stained again. The gods down here don\'t ask for faith — just payment.',
   ],
+  stairs: [
+    'A stairwell, cut crooked and worn smooth, spiraling down past the reach of any torch. The air that rises from it is older than the air behind them.',
+    'The floor ends at a descending stair. Whatever is down there has had one more century than whatever was up here.',
+    'Steps, going down. The handrail was carried off long ago — or ran.',
+  ],
 };
 
 /* ------------------------------------------------------------------ */
@@ -247,6 +252,8 @@ const OPTION_PHRASES = {
   'offer-gold': 'lay gold on the stone and see what answers',
   'offer-blood': 'pay the altar in blood for a keener edge',
   'pray-quietly': 'kneel a moment and ask for nothing expensive',
+  descend: 'take the stairs at a soldier\'s pace',
+  'rest-landing': 'catch a breath on the landing before the plunge',
 };
 
 const ARCHETYPE_VOICES = {
@@ -531,6 +538,18 @@ export function composeResolution(room, optionId, result, party) {
       bits.push(result.cleansed
         ? `🙏 A quiet word to whatever keeps this stone, and the venom in the party's blood simply — leaves. ${result.healed} health besides. Small gods do honest work.`
         : `🙏 No offering, no demands — just a knee on old stone and a minute of quiet. ${result.healed} health returned${result.pious ? ', and the Devout rise looking freshly armored' : ''}.`);
+      break;
+    case 'descend':
+      bits.push(pick([
+        `🪜 Down, single file, counting steps out of habit. The count stops mattering around forty. Floor ${result.floor}, and the dark here is better fed.`,
+        `🪜 The stairs give out onto floor ${result.floor}. The temperature drops, the ceilings rise, and everything about the architecture suggests the builders were braver than their descendants.`,
+      ]));
+      break;
+    case 'rest-landing':
+      bits.push(pick([
+        `🪜 The landing is defensible and the party knows it — packs down, backs to stone, ${result.healed} health apiece recovered in watchful silence. Then down, to floor ${result.floor}.`,
+        `🪜 A breather at the threshold: water passed around, straps recinched, ${result.healed} health apiece steadied back into place. Floor ${result.floor} can wait ten minutes. It has waited centuries.`,
+      ]));
       break;
     case 'brace':
       bits.push(`🌋 Shields up, heads down — the dungeon does its worst (${result.damage} damage's worth) and the party is still there when the dust settles.`);

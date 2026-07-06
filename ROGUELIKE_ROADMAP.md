@@ -48,7 +48,7 @@ From the game design library (`E:\pdf\Game Design`):
 | Risk wagers | DCSS Zig, Pact-likes | ✅ conditions + hex exchange |
 | Item identification | NetHack, DCSS | ✅ unlabeled phials, seeded appearance map, quaff-testing |
 | Lock & key | Zelda-likes, BSP partitions | ✅ locked branch vaults, spine-placed keys, rogue lockpicking |
-| Multi-floor stairs | all | 🕐 Phase 5 (campaign depth is the current analogue) |
+| Multi-floor stairs | all | ✅ stacked floors, stairwell beats, per-floor scaling |
 | Character classes/party | ADOM, ToME | ✅ five classes, personalities |
 
 ## Phases
@@ -110,8 +110,17 @@ From the game design library (`E:\pdf\Game Design`):
   edge (light purses get small mercies); blood buys +2 attack from
   the sturdiest volunteer; quiet prayer is free, cleanses venom, and
   the Devout are heard more clearly. Gods refuse a desecrator's coin.
-- Still to come: multi-floor dungeons with stairs, agent-dug cave
-  layouts for the Cinder Galleries, cellular-automata grottos.
+- ✅ **Multi-floor dungeons** — meaner difficulties dig deeper (easy 1
+  floor, hard 2, nightmare 2-3; `opts.floors` pins it). Floors are
+  spine segments joined by stairwell rooms — a beat of their own,
+  with a march-or-rest choice on the landing — and every stratum
+  down, monsters hit ~12% harder and hoards pay ~15% richer. Each
+  floor lays out in its own grid band (the minimap reads them as
+  strata), the iso view frames only the floor the party walks, and
+  branches never leave their stratum. Stairs are structural in the
+  editor, like the entrance and the boss.
+- Still to come: agent-dug cave layouts for the Cinder Galleries,
+  cellular-automata grottos.
 
 ## Architecture notes
 - Generation stays **seed-deterministic** end to end — that's what

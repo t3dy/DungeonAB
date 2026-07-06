@@ -28,6 +28,7 @@ export const ROOM_HELP = {
   [ROOM_TYPES.VAULT]: 'A vault — riches behind a secret or locked door. Rogues find the hidden ones and pick the locks; iron keys wait in earlier rooms.',
   [ROOM_TYPES.SHOP]: 'A peddler\'s stall. Buy draughts, materials, or an iron key — haggle with a quick tongue, or rob at your peril: the peddler is armed.',
   [ROOM_TYPES.ALTAR]: 'An old altar. Offer gold for a lasting boon, blood for a keener edge, or pray free for small mercies. Desecrators get nothing.',
+  [ROOM_TYPES.STAIRS]: 'A stairwell down. The next floor hits harder and pays better; a worn party may rest on the landing first.',
 };
 
 /**
@@ -92,6 +93,11 @@ export function describeTickEvents(prev, curr) {
     if (gained >= 25) {
       events.push({ icon: '💰', kind: 'gold', text: `A windfall: +${gained} gold.` });
     }
+  }
+
+  // The party goes down a floor (multi-floor dungeons)
+  if (prev && (curr.currentFloor || 0) > (prev.currentFloor || 0)) {
+    events.push({ icon: '🪜', kind: 'depth', text: `Floor ${curr.currentFloor + 1} — deeper, meaner, richer.` });
   }
 
   // An iron key changes hands (lock-and-key)
