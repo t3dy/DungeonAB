@@ -210,11 +210,14 @@ export class Party {
   }
 
   /**
-   * Cast a spell from the grimoire. Scroll-casting consumes the card;
-   * a living wizard makes the grimoire reusable (and stronger).
+   * Cast a spell from the grimoire — by use, or a specific spell by
+   * id. Scroll-casting consumes the card; a living wizard makes the
+   * grimoire reusable (and stronger).
    */
-  castSpell(use) {
-    const idx = this.grimoire.findIndex(s => s.use === use);
+  castSpell(use, spellId = null) {
+    const idx = spellId
+      ? this.grimoire.findIndex(s => s.id === spellId)
+      : this.grimoire.findIndex(s => s.use === use);
     if (idx === -1) return null;
     const spell = this.grimoire[idx];
     const hasWizard = this.hasClass(CLASSES.WIZARD);

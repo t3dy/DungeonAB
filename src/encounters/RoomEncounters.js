@@ -14,6 +14,60 @@ function roll() {
 }
 
 /* ------------------------------------------------------------------ */
+/* Preparation — what the drafted kit unlocks and improves             */
+/* (FTL's lesson: the encounter should notice how you came equipped)   */
+/* ------------------------------------------------------------------ */
+
+export function hasItem(party, itemId) {
+  return party.living().some(m => m.equipment.some(e => e.id === itemId));
+}
+
+export function hasSpell(party, spellId) {
+  return party.grimoire.some(s => s.id === spellId);
+}
+
+/**
+ * Every kit-driven modifier in one inspectable place, so effects and
+ * their narration can never drift apart.
+ */
+export function getPreparationBonuses(party) {
+  const b = {
+    sneak: 0, disarm: 0, deepStudy: 0, secretDoor: 0, trapSoak: 0,
+    cleanInspect: false,
+    notes: {},   // bonus key → the card that earned it (for the writing)
+  };
+  if (hasItem(party, 'eq-boots')) {
+    b.sneak += 1.5;
+    b.notes.sneak = 'Boots of the Quiet Step';
+  }
+  if (hasSpell(party, 'sp-light')) {
+    b.sneak += 1;
+    b.notes.sneakLight = 'Dancing Light';
+  }
+  if (hasItem(party, 'eq-lockpicks')) {
+    b.disarm += 1.5;
+    b.cleanInspect = true;
+    b.notes.disarm = 'Masterwork Lockpicks';
+    b.notes.cleanInspect = 'Masterwork Lockpicks';
+  }
+  if (party.hasPersonality('cunning')) {
+    b.cleanInspect = true;
+    b.notes.cleanInspect = b.notes.cleanInspect || 'the Cunning';
+  }
+  if (hasItem(party, 'eq-grimoire')) {
+    b.deepStudy += 1.5;
+    b.notes.deepStudy = 'the Grimoire of Low Whispers';
+  }
+  if (hasItem(party, 'eq-lantern')) {
+    b.secretDoor += 2;
+    b.trapSoak += 1;
+    b.notes.secretDoor = 'the Everburning Lantern';
+    b.notes.trapSoak = 'the Everburning Lantern';
+  }
+  return b;
+}
+
+/* ------------------------------------------------------------------ */
 /* Option definitions per room type                                    */
 /* ------------------------------------------------------------------ */
 
@@ -37,6 +91,10 @@ export function getRoomOptions(room, party) {
       if (party.grimoire.some(s => s.use === 'combat')) {
         opts.push({ id: 'spell-strike', name: 'Open with Magic', desc: 'Lead with a combat spell' });
       }
+      // Cause Fear routs the weak-hearted — worthless against bosses
+      if (hasSpell(party, 'sp-fear') && !room.monster?.isBoss && (room.monster?.health || 99) <= 14) {
+        opts.push({ id: 'cause-fear', name: 'Cause Fear', desc: 'Send the weak thing running' });
+      }
       return opts;
     }
 
@@ -51,16 +109,27 @@ export function getRoomOptions(room, party) {
       if (party.grimoire.some(s => s.use === 'utility')) {
         opts.push({ id: 'spell-bypass', name: 'Magic It Open', desc: 'A utility spell solves this' });
       }
+      // The alchemist can spend a material on a smoke concoction that
+      // springs the trap from a safe distance
+      if (party.hasClass(CLASSES.ALCHEMIST) && party.materials >= 1) {
+        opts.push({ id: 'smoke-bomb', name: 'Alchemist\'s Smoke', desc: 'Spend a material; spring it from afar' });
+      }
       return opts;
     }
 
     case ROOM_TYPES.TREASURE:
     case ROOM_TYPES.VAULT: {
-      return [
+      const opts = [
         { id: 'loot', name: 'Loot It All', desc: 'Everything shiny goes in the bags' },
         { id: 'inspect', name: 'Inspect First', desc: 'Check for mimics and curses' },
         { id: 'leave-it', name: 'Leave It', desc: 'Some gold is bait' },
       ];
+      // Knock opens any lock. Loudly. No mimic gets the drop on you
+      // from across the room — but everything below hears it.
+      if (hasSpell(party, 'sp-knock')) {
+        opts.unshift({ id: 'knock-open', name: 'Cast Knock', desc: 'Open it from across the room. Loudly.' });
+      }
+      return opts;
     }
 
     case ROOM_TYPES.LIBRARY: {
@@ -120,7 +189,14 @@ const PERSONALITY_WEIGHTS = {
   scholarly: { study: 3, 'deep-study': 3, 'spell-strike': 2, 'spell-bypass': 2 },
   pious: { rest: 3, 'turn-undead': 3, desecrate: -5 },
   reckless: { fight: 2, 'push-through': 3, loot: 2, inspect: -2, 'search-around': -2 },
-  craven: { flee: 3, sneak: 2, disarm: 2, 'search-around': 2, inspect: 1, scatter: 2, fight: -2, 'push-through': -2, brace: -1 },
+  craven: { flee: 3, sneak: 2, disarm: 2, 'search-around': 2, inspect: 1, scatter: 2, fight: -2, 'push-through': -2, brace: -1, 'cause-fear': 3, 'smoke-bomb': 2, 'knock-open': 1 },
+};
+
+/* Preparation-gated options are attractive to those who'd use them */
+const PREP_OPTION_WEIGHTS = {
+  'knock-open': { base: 1.5, cunning: 2, scholarly: 1 },
+  'cause-fear': { base: 1.5, cunning: 1 },
+  'smoke-bomb': { base: 1.5, cunning: 2 },
 };
 
 export function decideRoomAction(room, party) {
@@ -138,6 +214,13 @@ export function decideRoomAction(room, party) {
     // Instincts independent of personality
     if (opt.id === 'alchemy') w += 3;                       // Benches get used
     if (opt.id === 'gather') w += 2;                        // Satchels get filled
+    const prep = PREP_OPTION_WEIGHTS[opt.id];
+    if (prep) {
+      w += prep.base;
+      for (const archetype of party.personalities) {
+        if (prep[archetype]) w += prep[archetype];
+      }
+    }
     if (opt.id === 'rest' && party.totalHealth() / party.totalMaxHealth() < 0.6) w += 3;
     if (opt.id === 'fight' && party.totalHealth() / party.totalMaxHealth() < 0.3) w -= 2;
     if (opt.id === 'flee' && party.totalHealth() / party.totalMaxHealth() < 0.3) w += 2;
@@ -172,6 +255,7 @@ export function detectSecretDoor(party, rollValue = roll()) {
   let bonus = 0;
   if (party.hasPersonality('scholarly')) bonus += 1;
   if (party.hasPersonality('craven')) bonus += 1;   // counts the exits, finds the extra one
+  bonus += getPreparationBonuses(party).secretDoor; // the lantern throws the seam's shadow
   return eyes + bonus + rollValue > 11;
 }
 
@@ -233,13 +317,36 @@ export function resolveRoomAction(room, party, optionId) {
       }
 
       const won = monsterHealth <= 0 && party.isAlive();
+      const preps = [];
       if (won) {
         const bounty = monster.isBoss ? 100 : 25;
         party.addScore(bounty);
         room.cleared = true;
+        // The Reckless make it look good, and the chroniclers pay for it
+        if (party.hasPersonality('reckless')) {
+          party.addScore(5);
+          preps.push({ source: 'the Reckless', text: '💥 The Reckless insisted on doing it with style. The chronicle pays extra for style.' });
+        }
+      }
+      // A drafted healing spell finally earns its keep after a bloody fight
+      if (party.isAlive() && partyDamageTaken >= 6) {
+        const heal = party.castSpell('heal');
+        if (heal) {
+          party.healParty(heal.effectivePower);
+          preps.push({ source: heal.name, text: `💚 ${heal.name} closes the worst of the wounds before they set (${heal.effectivePower} healed${heal.consumed ? '; the scroll burns' : ''}).` });
+        }
       }
       party.recordEncounter('fight', won);
-      return { success: won, rounds, damage: partyDamageTaken, monster: monster.name, itemActions };
+      return { success: won, rounds, damage: partyDamageTaken, monster: monster.name, itemActions, preps };
+    }
+
+    case 'cause-fear': {
+      // Weak hearts break at range: the fear spell routs the room
+      const spell = party.castSpell('combat', 'sp-fear');
+      party.addScore(20);
+      room.cleared = true;
+      party.recordEncounter('cause-fear', true);
+      return { success: true, monster: room.monster.name, spell: spell ? spell.name : 'Cause Fear' };
     }
 
     case 'spell-strike': {
@@ -258,7 +365,11 @@ export function resolveRoomAction(room, party, optionId) {
       const rogueMind = Math.max(...party.living().filter(m => m.class === CLASSES.ROGUE).map(m => m.mind));
       // A craven party has already memorized the quiet ways out
       const cravenEdge = party.hasPersonality('craven') ? 1 : 0;
-      const ok = rogueMind + cravenEdge + roll() > 9;
+      const prep = getPreparationBonuses(party);
+      const preps = [];
+      if (prep.notes.sneak) preps.push({ source: prep.notes.sneak, text: `👢 The ${prep.notes.sneak} never let the floorboards learn a name.` });
+      if (prep.notes.sneakLight) preps.push({ source: prep.notes.sneakLight, text: '💡 Dancing Light had already shown where the watcher watched.' });
+      const ok = rogueMind + cravenEdge + prep.sneak + roll() > 9;
       if (ok) {
         party.addScore(15);
         room.cleared = true;
@@ -266,7 +377,7 @@ export function resolveRoomAction(room, party, optionId) {
         party.takeDamage(Math.ceil(room.monster.attack / 2));
       }
       party.recordEncounter('sneak', ok);
-      return { success: ok, monster: room.monster.name };
+      return { success: ok, monster: room.monster.name, preps: ok ? preps : [] };
     }
 
     case 'turn-undead': {
@@ -298,7 +409,10 @@ export function resolveRoomAction(room, party, optionId) {
     /* Traps */
     case 'disarm': {
       const rogueMind = Math.max(...party.living().filter(m => m.class === CLASSES.ROGUE).map(m => m.mind));
-      const ok = rogueMind + roll() > 8;
+      const prep = getPreparationBonuses(party);
+      const preps = [];
+      if (prep.notes.disarm) preps.push({ source: prep.notes.disarm, text: '🗝️ The Masterwork Lockpicks treated the mechanism as a lock, and every door is a suggestion.' });
+      const ok = rogueMind + prep.disarm + roll() > 8;
       if (ok) {
         party.addScore(20);
         room.cleared = true;
@@ -307,17 +421,29 @@ export function resolveRoomAction(room, party, optionId) {
         room.cleared = true; // Sprung either way
       }
       party.recordEncounter('disarm', ok);
-      return { success: ok };
+      return { success: ok, preps: ok ? preps : [] };
     }
 
     case 'push-through': {
       // The Craven's hidden upside: cowards notice tripwires, and
       // the party steps a little truer for the warning
       const spotter = party.hasPersonality('craven') ? 1 : 0;
-      const dmg = Math.max(1, (room.trapDamage || 3) - spotter);
+      const prep = getPreparationBonuses(party);
+      const preps = [];
+      if (prep.trapSoak > 0) preps.push({ source: prep.notes.trapSoak, text: '🏮 The Everburning Lantern showed the plates before the boots found them.' });
+      const dmg = Math.max(1, (room.trapDamage || 3) - spotter - prep.trapSoak);
       party.takeDamage(dmg);
       room.cleared = true;
-      return { success: true, damage: dmg, spotted: spotter > 0 };
+      return { success: true, damage: dmg, spotted: spotter > 0, preps };
+    }
+
+    case 'smoke-bomb': {
+      // A material spent from a safe distance beats bravery every time
+      party.materials -= 1;
+      party.addScore(15);
+      room.cleared = true;
+      party.recordEncounter('smoke-bomb', true);
+      return { success: true, materialsLeft: party.materials };
     }
 
     case 'search-around': {
@@ -350,10 +476,32 @@ export function resolveRoomAction(room, party, optionId) {
 
     case 'inspect': {
       // Safe but slower: slightly less gold (someone else's leavings)
-      const gold = Math.floor((room.gold || 20) * 0.8);
+      // — unless practiced fingers or a cunning eye lose nothing
+      const prep = getPreparationBonuses(party);
+      const preps = [];
+      let gold = Math.floor((room.gold || 20) * 0.8);
+      if (prep.cleanInspect) {
+        gold = room.gold || 20;
+        preps.push({ source: prep.notes.cleanInspect, text: `🔍 ${prep.notes.cleanInspect === 'the Cunning' ? 'The Cunning eye misses nothing, and nothing is left behind' : 'The Masterwork Lockpicks open the false bottom too'} — the full hoard, safely.` });
+      }
       party.addGold(gold);
       room.cleared = true;
-      return { success: true, gold, careful: true };
+      return { success: true, gold, careful: true, preps };
+    }
+
+    case 'knock-open': {
+      // Knock opens any lock. Loudly. The mimic springs at range,
+      // the coin is honest, and everything below now knows you're here.
+      const spell = party.castSpell('utility', 'sp-knock');
+      const gold = room.gold || 20;
+      party.addGold(gold);
+      room.cleared = true;
+      party.recordEncounter('knock-open', true);
+      return {
+        success: true, gold, spell: spell ? spell.name : 'Knock',
+        consumed: spell ? spell.consumed : false,
+        wasMimic: Math.random() < (room.mimicChance || 0),
+      };
     }
 
     case 'leave-it': {
@@ -380,7 +528,11 @@ export function resolveRoomAction(room, party, optionId) {
 
     case 'deep-study': {
       const wizardMind = Math.max(...party.living().filter(m => m.class === CLASSES.WIZARD).map(m => m.mind));
-      const ok = wizardMind + roll() > 9;
+      const prep = getPreparationBonuses(party);
+      const preps = prep.deepStudy > 0
+        ? [{ source: prep.notes.deepStudy, text: '📖 The Grimoire of Low Whispers argued with the sealed text in its own language, and won.' }]
+        : [];
+      const ok = wizardMind + prep.deepStudy + roll() > 9;
       if (ok) {
         party.spellsLearned += 2;
         party.addScore(50);
@@ -393,7 +545,7 @@ export function resolveRoomAction(room, party, optionId) {
       }
       room.cleared = true;
       party.recordEncounter('deep-study', ok);
-      return { success: ok };
+      return { success: ok, preps: ok ? preps : [] };
     }
 
     /* Shrine */
@@ -433,7 +585,14 @@ export function resolveRoomAction(room, party, optionId) {
       const dmg = (party.desecrated ? 8 : 5);
       party.takeDamage(Math.max(1, dmg - Math.floor(party.totalDefense() / 4)));
       room.cleared = true;
-      return { success: true, damage: dmg };
+      // A healing working steadies the line as the dust settles
+      const preps = [];
+      const heal = party.castSpell('heal');
+      if (heal) {
+        party.healParty(heal.effectivePower);
+        preps.push({ source: heal.name, text: `💚 ${heal.name} knits the party back together while the dungeon finishes its tantrum.` });
+      }
+      return { success: true, damage: dmg, preps };
     }
 
     case 'scatter': {

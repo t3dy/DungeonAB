@@ -195,6 +195,9 @@ const OPTION_PHRASES = {
   gather: 'fill the satchel',
   brace: 'lock shields and endure',
   scatter: 'scatter and pray',
+  'knock-open': 'open it from across the room, loudly',
+  'cause-fear': 'break the thing\'s nerve before it can use its teeth',
+  'smoke-bomb': 'let the alchemist spring it from a safe distance',
 };
 
 const ARCHETYPE_VOICES = {
@@ -313,6 +316,23 @@ export function composeResolution(room, optionId, result, party) {
     case 'bribe':
       bits.push(`💰 Fifteen gold changes hands. ${capitalize(result.monster)} counts it twice and waves the party through with something like professional respect.`);
       break;
+    case 'cause-fear':
+      bits.push(pick([
+        `😱 ${result.spell || 'Cause Fear'} lands like a cold hand on the neck. ${capitalize(result.monster)} remembers an appointment elsewhere, urgently.`,
+        `😱 One syllable of dread, and ${result.monster} discovers it was never paid enough for this. The room empties at speed.`,
+      ]));
+      break;
+    case 'smoke-bomb':
+      bits.push(pick([
+        '⚗️ The alchemist lobs a smoking vial from thirty feet, and the trap spends its violence on fog. A material well spent.',
+        '⚗️ One concoction, one long arc, one very dead trap. The alchemist accepts the applause with a small bow.',
+      ]));
+      break;
+    case 'knock-open':
+      bits.push(result.wasMimic
+        ? `🚪 ${result.spell} slams the lid open from across the room — and TEETH snap shut on empty air. The mimic sulks; the party collects ${result.gold} gold at arm's length.${result.consumed ? ' The scroll burns.' : ''}`
+        : `🚪 ${result.spell} booms through the chamber and the lock surrenders at range. ${result.gold} gold, no surprises${result.consumed ? '; the scroll burns' : ''} — though everything below now knows precisely where you are.`);
+      break;
     case 'flee':
       bits.push(pick([
         '💨 The party falls back in good order — mostly. The dungeon keeps the room, for now.',
@@ -410,6 +430,12 @@ export function composeResolution(room, optionId, result, party) {
       break;
     default:
       bits.push('The party presses on, deeper and down.');
+  }
+
+  // Preparation pays, and the chronicle says so by name (the FTL
+  // lesson: the encounter must notice how you came equipped)
+  for (const prep of result.preps || []) {
+    bits.push(prep.text);
   }
 
   return bits.join(' ');
