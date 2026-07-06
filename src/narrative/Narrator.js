@@ -198,8 +198,13 @@ export function composeResolution(room, optionId, result, party) {
           ? pick([
               `⚔️ ${capitalize(result.monster)} falls after ${roundsWord}. The party stands, breathing hard, in possession of the field.`,
               `⚔️ It takes ${roundsWord} and costs ${result.damage} health in bruises and worse, but ${result.monster} will trouble no one again.`,
+              `⚔️ ${roundsWord[0].toUpperCase() + roundsWord.slice(1)}, and then a silence with ${result.monster} at the bottom of it. The party wins the argument.`,
+              `⚔️ Steel does what diplomacy couldn't. ${capitalize(result.monster)} is down, and the room changes ownership.`,
             ])
-          : `☠️ ${capitalize(result.monster)} was too much. The line broke, and the dungeon collected its due.`);
+          : pick([
+              `☠️ ${capitalize(result.monster)} was too much. The line broke, and the dungeon collected its due.`,
+              `☠️ The party gave everything it had, and ${result.monster} took the rest. The dungeon is very good at arithmetic.`,
+            ]));
       }
       break;
     }
@@ -211,8 +216,14 @@ export function composeResolution(room, optionId, result, party) {
       break;
     case 'sneak':
       bits.push(result.success
-        ? `🗡️ Single file, breath held, past ${result.monster} — it never knew its luck.`
-        : `🗡️ A loose stone turns underfoot. ${capitalize(result.monster)} gets one good swipe in before the party scrambles clear.`);
+        ? pick([
+            `🗡️ Single file, breath held, past ${result.monster} — it never knew its luck.`,
+            `🗡️ The rogue's route works: over the fallen lintel, behind ${result.monster}, gone. Nobody exhales until the next room.`,
+          ])
+        : pick([
+            `🗡️ A loose stone turns underfoot. ${capitalize(result.monster)} gets one good swipe in before the party scrambles clear.`,
+            `🗡️ Halfway past, someone's buckle sings against stone. ${capitalize(result.monster)} charges; the party pays the toll in bruises.`,
+          ]));
       break;
     case 'turn-undead':
       bits.push(result.success
@@ -223,29 +234,58 @@ export function composeResolution(room, optionId, result, party) {
       bits.push(`💰 Fifteen gold changes hands. ${capitalize(result.monster)} counts it twice and waves the party through with something like professional respect.`);
       break;
     case 'flee':
-      bits.push('💨 The party falls back in good order — mostly. The dungeon keeps the room, for now.');
+      bits.push(pick([
+        '💨 The party falls back in good order — mostly. The dungeon keeps the room, for now.',
+        '💨 Retreat, regroup, pretend it was tactics. The room stays hostile behind them.',
+      ]));
       break;
     case 'disarm':
       bits.push(result.success
-        ? '🗝️ A click, a held breath, a slack wire. The rogue pockets the trigger pin as a souvenir.'
-        : '🗝️ Almost. The mechanism spends itself with a crack, and someone limps for the next few rooms.');
+        ? pick([
+            '🗝️ A click, a held breath, a slack wire. The rogue pockets the trigger pin as a souvenir.',
+            '🗝️ Three pins, one prayer, no explosion. The rogue takes a bow nobody asked for.',
+            '🗝️ The mechanism surrenders quietly, the way good work makes things do.',
+          ])
+        : pick([
+            '🗝️ Almost. The mechanism spends itself with a crack, and someone limps for the next few rooms.',
+            '🗝️ The wire was a decoy; the real trigger was the floor. The rogue apologizes from the far wall.',
+          ]));
       break;
     case 'push-through':
-      bits.push(`💥 Straight through — it costs ${result.damage} health and nobody\'s pride survives, but the corridor is behind them.`);
+      bits.push(pick([
+        `💥 Straight through — it costs ${result.damage} health and nobody's pride survives, but the corridor is behind them.`,
+        `💥 Heads down, teeth gritted: ${result.damage} health buys the far side of the room.${result.spotted ? ' The Craven called the tripwire, which is why it was only that much.' : ''}`,
+      ]));
       break;
     case 'loot':
       bits.push(result.mimic
-        ? `🦷 The chest has TEETH. After a horrible interval it is persuaded to be furniture again — ${result.gold} gold richer, several nerves poorer.`
-        : `💰 ${result.gold} gold, honest and heavy. The bags sing on the walk out.`);
+        ? pick([
+            `🦷 The chest has TEETH. After a horrible interval it is persuaded to be furniture again — ${result.gold} gold richer, several nerves poorer.`,
+            `🦷 The lid comes up and so does the tongue. When it's over there are ${result.gold} gold and a new shared silence about chests.`,
+          ])
+        : pick([
+            `💰 ${result.gold} gold, honest and heavy. The bags sing on the walk out.`,
+            `💰 ${result.gold} gold counted twice, because counting it once felt too good to trust.`,
+            `💰 The hoard is real: ${result.gold} gold, no teeth, no curse anyone's noticed yet.`,
+          ]));
       break;
     case 'inspect':
-      bits.push(`🔍 Poked, prodded, pronounced safe. ${result.gold} gold, collected with dignity intact.`);
+      bits.push(pick([
+        `🔍 Poked, prodded, pronounced safe. ${result.gold} gold, collected with dignity intact.`,
+        `🔍 Ten careful minutes and a stick sacrificed to science: ${result.gold} gold, no surprises.`,
+      ]));
       break;
     case 'leave-it':
-      bits.push('🚶 The party walks away from free gold. Somewhere, a mimic sighs.');
+      bits.push(pick([
+        '🚶 The party walks away from free gold. Somewhere, a mimic sighs.',
+        '🚶 Gold left gleaming in the dark. Restraint, or superstition — the ledger doesn\'t care which.',
+      ]));
       break;
     case 'study':
-      bits.push(`📚 ${result.learned} new working${result.learned > 1 ? 's' : ''} copied into the grimoire by candle stub. The stacks keep their silence.`);
+      bits.push(pick([
+        `📚 ${result.learned} new working${result.learned > 1 ? 's' : ''} copied into the grimoire by candle stub. The stacks keep their silence.`,
+        `📚 Dust, patience, and ${result.learned} working${result.learned > 1 ? 's' : ''} the dungeon's last owners won't be needing.`,
+      ]));
       break;
     case 'deep-study':
       bits.push(result.success
@@ -253,7 +293,11 @@ export function composeResolution(room, optionId, result, party) {
         : '🔏 The book bites back. The wizard is thrown across the room trailing smoke and vindication.');
       break;
     case 'rest':
-      bits.push(`🕯️ Candles, quiet, and ${result.healed} health apiece. The god of small mercies does steady work.`);
+      bits.push(pick([
+        `🕯️ Candles, quiet, and ${result.healed} health apiece. The god of small mercies does steady work.`,
+        `🕯️ The party kneels badly and means it anyway. ${result.healed} health apiece, no questions asked.`,
+        `🕯️ Warm stone, old wax, ${result.healed} health returned. Whoever keeps this shrine keeps it well.`,
+      ]));
       break;
     case 'desecrate':
       bits.push('⛏️ Thirty gold in scraped-off leaf. The silence afterward has a texture to it. The dungeon takes notes.');
@@ -292,17 +336,69 @@ export function composeResolution(room, optionId, result, party) {
 }
 
 /* ------------------------------------------------------------------ */
+/* Falls — a hero's death is a beat, not a footnote                    */
+/* ------------------------------------------------------------------ */
+
+const DEATH_LINES = {
+  [CLASSES.FIGHTER]: [
+    '— shield still up, the door held one last time.',
+    '— facing the thing, which was always the plan.',
+    '— and the back rank learns, all at once, what the front rank was for.',
+  ],
+  [CLASSES.CLERIC]: [
+    '— mid-blessing, the lantern light going out last of all.',
+    '— hands still warm from a mending that wasn\'t their own.',
+    '— and whatever was listening to their prayers hears the silence.',
+  ],
+  [CLASSES.WIZARD]: [
+    '— the unfinished syllable hanging in the air like smoke.',
+    '— annotating the fatal error to the very end.',
+    '— and the grimoire is suddenly just a book.',
+  ],
+  [CLASSES.ROGUE]: [
+    '— two steps short of a shadow that would have held them.',
+    '— and everyone\'s spare coin, it is later discovered, goes with them.',
+    '— having checked everything in the room for traps except the obvious.',
+  ],
+  [CLASSES.ALCHEMIST]: [
+    '— the satchel breaking open in a small, private rainbow.',
+    '— mid-measurement. The reaction, at least, completes.',
+    '— leaving notes that end, as their master\'s always did, mid-sentence.',
+  ],
+};
+
+const DEATH_CODAS = [
+  'The party does not stop. Stopping is for the surface.',
+  'Someone closes their eyes for them. There is no time for more.',
+  'The delve grows quieter by exactly one voice.',
+  'What can be carried of theirs is carried on. The rest is mourned at marching pace.',
+];
+
+/**
+ * A fallen hero's line in the chronicle: their class writes the
+ * death, the party writes the grief.
+ */
+export function composeFall(member) {
+  const lines = DEATH_LINES[member.class] || DEATH_LINES[CLASSES.FIGHTER];
+  return `☠️ ${member.name} falls ${pick(lines)} ${pick(DEATH_CODAS)}`;
+}
+
+/* ------------------------------------------------------------------ */
 /* Endings                                                             */
 /* ------------------------------------------------------------------ */
 
 const WIPE_EPITAPHS = [
   'The dungeon goes quiet again, the way it always does. The next party will find good gear, lightly used, and a warning nobody will heed.',
   'They were brave, or greedy, or both — the dungeon does not distinguish and does not care. The torches burn down. The dark files its claim.',
+  'Above ground, the tavern keeps their tab open a decent interval, then wipes the slate. The dungeon keeps better records.',
+  'No one sees them fall who lives to say so. The story ends the way the honest ones do: mid-sentence, underground.',
 ];
 
 const VICTORY_CODAS = [
   'Up the long stair and out into weather — sunlight, absurd and wonderful, on faces that have earned it. The tavern will not believe a word, and every word is true.',
   'The boss\'s hoard divides beautifully. Someone proposes retirement. Everyone laughs. They will all be back within the month.',
+  'They come up singing something unprintable and out of tune, and the town forgives it instantly, because look what they\'re carrying.',
+  'The last door closes behind them and becomes, in the telling, three times as heavy and guarded by twice as much. Every victory improves with altitude.',
 ];
 
 /* ------------------------------------------------------------------ */

@@ -8,7 +8,7 @@ import { generateDungeon, ROOM_TYPES } from '../src/world/DungeonGen.js';
 import { getRoomOptions, resolveRoomAction } from '../src/encounters/RoomEncounters.js';
 import { Simulator } from '../src/sim/Simulator.js';
 import { CHARACTER_CARDS, EQUIPMENT_CARDS, SPELL_CARDS, PERSONALITY_CARDS } from '../src/game/Cards.js';
-import { composePredicament, composeDeliberation } from '../src/narrative/Narrator.js';
+import { composePredicament, composeDeliberation, composeFall } from '../src/narrative/Narrator.js';
 
 const fighter = CHARACTER_CARDS.find(c => c.class === 'fighter');
 const cleric = CHARACTER_CARDS.find(c => c.class === 'cleric');
@@ -191,6 +191,38 @@ describe('The full crawl', () => {
     assert.ok(bossText.includes('Shrouded King'), 'the boss is named');
     // Still safe with no monster attached (falls back to the generic pool)
     assert.ok(composePredicament({ type: ROOM_TYPES.MONSTER }).length > 30);
+  });
+
+  test('every class dies in its own voice', () => {
+    for (const cls of ['fighter', 'cleric', 'wizard', 'rogue', 'alchemist']) {
+      const lines = new Set();
+      for (let i = 0; i < 24; i++) {
+        const text = composeFall({ name: 'Testa the Doomed', class: cls });
+        assert.ok(text.includes('Testa the Doomed falls'), `${cls}: the fallen are named`);
+        assert.ok(text.length > 60, `${cls}: a death is a real sentence`);
+        lines.add(text);
+      }
+      assert.ok(lines.size >= 2, `${cls}: more than one way to go`);
+    }
+  });
+
+  test('a wipe writes the fallen into the chronicle', () => {
+    // A lone wizard on nightmare does not come home. Find the tick
+    // where they fall and check the beat was written.
+    let sawFall = false;
+    for (const seed of ['doom-1', 'doom-2', 'doom-3', 'doom-4', 'doom-5']) {
+      const sim = new Simulator([wizard], seed, 'nightmare');
+      let guard = 0;
+      while (!sim.gameOver && guard++ < 60) {
+        sim.tick();
+        if (sim.lastNarration?.falls?.length > 0) {
+          assert.ok(sim.lastNarration.falls[0].includes(sim.party.members[0].name));
+          sawFall = true;
+        }
+      }
+      if (sawFall) break;
+    }
+    assert.ok(sawFall, 'somewhere in five doomed delves, a wizard fell on the record');
   });
 
   test('deliberation names the roads not taken', () => {

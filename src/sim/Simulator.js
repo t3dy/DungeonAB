@@ -15,7 +15,7 @@ import {
 } from '../encounters/RoomEncounters.js';
 import {
   composePredicament, composeDeliberation, composeResolution,
-  composeWipe, composeVictory,
+  composeWipe, composeVictory, composeFall,
 } from '../narrative/Narrator.js';
 
 export class Simulator {
@@ -80,7 +80,11 @@ export class Simulator {
     const predicament = composePredicament(room, this.dungeon.theme);
     const options = getRoomOptions(room, this.party);
     const chosen = decideRoomAction(room, this.party);
+    const livingBefore = this.party.living();
     const result = resolveRoomAction(room, this.party, chosen);
+
+    // Anyone who walked in alive and didn't walk out gets their beat
+    const fallen = livingBefore.filter(m => !m.isAlive());
 
     if (result.success !== false || room.cleared) this.roomsCleared++;
 
@@ -90,6 +94,7 @@ export class Simulator {
       predicament,
       deliberation: composeDeliberation(chosen, options, this.party),
       resolution: composeResolution(room, chosen, result, this.party),
+      falls: fallen.map(m => composeFall(m)),
     };
 
     this.addLog(`${room.icon} Room ${this.roomIndex}: ${room.type} — ${chosen}`);

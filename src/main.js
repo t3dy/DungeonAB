@@ -333,6 +333,10 @@ function appendStory(narration, roomIndex) {
   const empty = panel.querySelector('.story-empty');
   if (empty) empty.remove();
 
+  const fallLines = (narration.falls || [])
+    .map(f => `<div class="story-fall">${escapeHtml(f)}</div>`)
+    .join('');
+
   const entry = document.createElement('div');
   entry.className = 'story-entry';
   entry.innerHTML = `
@@ -340,6 +344,7 @@ function appendStory(narration, roomIndex) {
     <div class="story-predicament">${escapeHtml(narration.predicament)}</div>
     <div class="story-deliberation">${escapeHtml(narration.deliberation)}</div>
     <div class="story-resolution">${escapeHtml(narration.resolution)}</div>
+    ${fallLines}
   `;
   panel.appendChild(entry);
   while (panel.children.length > 14) panel.removeChild(panel.firstChild);
