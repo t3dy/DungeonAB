@@ -41,6 +41,51 @@ const THEME_ENTRANCES = {
     'The Mad Alchemist\'s Dungeon. The welcome mat is a chalk circle, half-scrubbed. The smell is sulfur, roses, and a third thing nobody names aloud.',
     'Glassware glints in the dark below — miles of it, still bubbling. The experiments did not stop when the alchemist did.',
   ],
+  castle: [
+    'The Castle of the Vampire Lord. The doors open themselves, the candles are already lit, and somewhere above, someone is very glad you\'ve come.',
+    'The portcullis rises without a hand on the winch. Every window is curtained against a sun that set hours ago. The party is expected.',
+  ],
+  bogcellar: [
+    'The Root Cellar of the Bog Witch. The stairs are slick, the shelves go down farther than cellars should, and every jar turns to watch.',
+    'Down past the hanging herbs and into the earth-smell. Something on the third shelf is knocking, politely, from the inside.',
+  ],
+  icecaverns: [
+    'The Ice Caverns of the Mad Pyromancer. The walls are glass-smooth where they melted and refroze, and warm air breathes up from below like the mountain has a fever.',
+    'Ice underfoot, scorch marks overhead. The physics of this place gave notice long ago and were not replaced.',
+  ],
+};
+
+/* Themed hazards — each dungeon's disasters are its own (procgen v2:
+   the DISASTER room reads by theme) */
+const THEME_DISASTERS = {
+  castle: [
+    'The candles gutter all at once, and the darkness that follows has weight and direction. The castle is feeding.',
+    'Every mirror in the corridor turns to face the party. There are more mirrors than there were.',
+  ],
+  bogcellar: [
+    'A shelf lets go — a hundred jars at once, and not everything that spills stays spilled. The cellar floor begins to digest.',
+    'The roots in the walls flex, and the ceiling of packed earth sags like a held breath about to end.',
+  ],
+  icecaverns: [
+    'A vein of old fire meets a wall of older ice. The steam blast is instant, scalding, and very impressed with itself.',
+    'The ceiling thaws in one groaning sheet. What refreezes will refreeze sharp; what falls, falls now.',
+  ],
+  volcanic: [
+    'The mountain clears its throat. Lava finds a new opinion about which passages should exist.',
+    'A cinder squall rolls up the gallery, and the party breathes through wet cloth and profanity.',
+  ],
+  crypt: [
+    'Every lid in the corridor shifts at once — one knuckle\'s width. The dead are politely making room for more.',
+    'The barrow-damp thickens until the torches burn blue. Something below is exhaling.',
+  ],
+  library: [
+    'The stacks lean in. A shelf-quake rains folios, and some of them land arguing.',
+    'The flood rises a hand\'s width in a minute, and the books scream quietly the way wet paper does.',
+  ],
+  madlab: [
+    'Something upstream of the drains achieves criticality. The color of the light has no name and wants one.',
+    'A retort the size of a wardrobe cracks, and the room\'s weather becomes chemical.',
+  ],
 };
 
 const PREDICAMENTS = {
@@ -455,6 +500,10 @@ export function composeTownInterlude(party, depth) {
 export function composePredicament(room, theme = null) {
   if (room.type === ROOM_TYPES.ENTRANCE && theme && THEME_ENTRANCES[theme.id]) {
     return pick(THEME_ENTRANCES[theme.id]);
+  }
+  // Each theme's disasters are its own brand of trouble
+  if (room.type === ROOM_TYPES.DISASTER && theme && THEME_DISASTERS[theme.id]) {
+    return pick(THEME_DISASTERS[theme.id]);
   }
   // Name the foe when we have one — a boss earns a dramatic entrance,
   // a monster a specific one. (The generic pools remain the fallback.)

@@ -85,5 +85,6 @@ Consolidated in `DESIGN.md` from:
 - [x] Dungeon editor — retype rooms, toggle secrets, save and delve your own designs
 - [x] Card Workshop — forge cards under stat budgets, import/export packs
 - [x] DLC: 17th-Century Alchemy Pack — emblem monsters (the Green Lion, the Rebis), the Hermetic Athanor theme
+- [x] Eight themed dungeons — incl. the Vampire Lord's Castle, the Bog Witch's Root Cellar, the Mad Pyromancer's Ice Caverns (`THEME_DESIGNS.md`)
 - [x] Deploy the prototype (Vercel, with a GitHub Pages mirror)
 - [ ] True multiplayer draft

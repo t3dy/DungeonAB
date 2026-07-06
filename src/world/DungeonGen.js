@@ -367,6 +367,65 @@ export const DUNGEON_THEMES = {
       { kind: 'the-precipitate', name: 'the Precipitate, everything the drains refused', icon: '🫠', attack: 13, health: 37, undead: false },
     ],
   },
+
+  castle: {
+    id: 'castle', name: 'the Castle of the Vampire Lord', icon: '🦇',
+    tagline: 'The invitation was in your dreams. The exit clause was not.',
+    // Features: the Lord's treasury runs deep, his study is real, but
+    // the chapels were desecrated centuries ago — heal elsewhere.
+    weightTweaks: { treasure: 1, library: 0.5, monster: 0.5, shrine: -0.7, materials: -0.5 },
+    minLibraries: 1,
+    monsters: [
+      { kind: 'castle-thrall', name: 'a thrall footman, polite and bloodless', icon: '🧟', attack: 6, health: 13, undead: true, bribable: true },
+      { kind: 'bat-cloud', name: 'a chittering cloud of castle bats', icon: '🦇', attack: 4, health: 9, undead: false },
+      { kind: 'pale-hound', name: 'a pale hound with a red velvet collar', icon: '🐺', attack: 7, health: 12, undead: true },
+      { kind: 'crimson-mist', name: 'a crimson mist that pours under the door', icon: '🌫️', attack: 8, health: 11, undead: true },
+    ],
+    bosses: [
+      { kind: 'vampire-lord', name: 'the Vampire Lord, apologizing for the hour', icon: '🧛', attack: 13, health: 35, undead: true },
+      { kind: 'the-bride', name: 'the Bride, who was here long before the Lord', icon: '👰', attack: 12, health: 33, undead: true },
+    ],
+  },
+
+  bogcellar: {
+    id: 'bogcellar', name: 'the Root Cellar of the Bog Witch', icon: '🧹',
+    tagline: 'Everything down here is pickled, potted, or patient. Some of it is all three.',
+    // Features: her stillroom always works, the shelves drip with
+    // reagents, and the rot in the timbers bites like a trap.
+    weightTweaks: { materials: 1.5, lab: 1, trap: 0.5, treasure: -0.5, corridor: -0.3 },
+    alwaysLab: true,          // the witch's stillroom
+    trapBonus: 1,             // rot, roots, and jars best left corked
+    monsters: [
+      { kind: 'jar-imp', name: 'an imp still angry about the jar', icon: '🫙', attack: 5, health: 10, undead: false, bribable: true },
+      { kind: 'pickled-thing', name: 'a pickled thing that finished pickling', icon: '🥒', attack: 6, health: 14, undead: true },
+      { kind: 'root-golem', name: 'a golem of taproots and bad intentions', icon: '🌳', attack: 7, health: 18, undead: false, slow: true },
+      { kind: 'bog-toad', name: 'a bog toad the size of a smokehouse', icon: '🐸', attack: 6, health: 16, undead: false, slow: true },
+    ],
+    bosses: [
+      { kind: 'bog-witch', name: 'the Bog Witch, delighted to have company for dinner', icon: '🧙‍♀️', attack: 12, health: 34, undead: false, bribable: true },
+      { kind: 'the-cauldron', name: 'the Cauldron, which learned to want', icon: '🍲', attack: 13, health: 36, undead: false },
+    ],
+  },
+
+  icecaverns: {
+    id: 'icecaverns', name: 'the Ice Caverns of the Mad Pyromancer', icon: '🧊',
+    tagline: 'He moved here so the fires couldn\'t spread. The fires found other ambitions.',
+    // Features: fire-and-ice makes the worst traps (flash-melt, refreeze)
+    // and the caverns themselves keep failing — steam bursts, ceiling
+    // thaw, cave-ins. Shrines froze over long ago.
+    weightTweaks: { disaster: 1.5, trap: 1, shrine: -0.5, library: -0.3 },
+    trapBonus: 2,             // flash-melted floors refreeze with edges
+    monsters: [
+      { kind: 'frost-wisp', name: 'a frost wisp singed around the edges', icon: '❄️', attack: 5, health: 9, undead: false },
+      { kind: 'ice-crawler', name: 'an ice crawler with too many pick-shaped legs', icon: '🕷️', attack: 6, health: 13, undead: false },
+      { kind: 'thawed-dead', name: 'one of the thawed dead, steaming gently', icon: '🧟', attack: 7, health: 14, undead: true },
+      { kind: 'cinder-imp', name: 'a cinder imp wearing a snowball like armor', icon: '🔥', attack: 6, health: 11, undead: false },
+    ],
+    bosses: [
+      { kind: 'mad-pyromancer', name: 'the Mad Pyromancer, delighted someone flammable came', icon: '🧙', attack: 14, health: 32, undead: false },
+      { kind: 'glacier-heart', name: 'the Glacier\'s Heart, half-melted and wholly furious', icon: '💠', attack: 12, health: 38, undead: false, slow: true },
+    ],
+  },
 };
 
 /**

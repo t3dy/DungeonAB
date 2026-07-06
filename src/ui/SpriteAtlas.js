@@ -69,6 +69,30 @@ const MONSTER_TILES = {
   'failed-homunculus': { col: 1, row: 9 },
   'mad-alchemist': { col: 3, row: 9 },
   'the-precipitate': { col: 0, row: 9 },
+
+  // the Castle of the Vampire Lord
+  'castle-thrall': { col: 1, row: 7 },      // the bloodless footman
+  'bat-cloud': { col: 0, row: 10 },
+  'pale-hound': { col: 4, row: 10 },        // the grey beast
+  'crimson-mist': { col: 1, row: 10 },      // the ghost-shape
+  'vampire-lord': { col: 3, row: 9 },       // hooded, red-eyed
+  'the-bride': { col: 3, row: 8 },          // the pale lady
+
+  // the Root Cellar of the Bog Witch
+  'jar-imp': { col: 2, row: 9 },            // the small red fury
+  'pickled-thing': { col: 0, row: 9 },      // green and glistening
+  'root-golem': { col: 4, row: 10 },
+  'bog-toad': { col: 0, row: 9 },
+  'bog-witch': { col: 4, row: 8 },          // the grey-haired elder
+  'the-cauldron': { col: 1, row: 9 },       // the round hungry thing
+
+  // the Ice Caverns of the Mad Pyromancer
+  'frost-wisp': { col: 1, row: 10 },        // pale and drifting
+  'ice-crawler': { col: 2, row: 10 },       // too many legs
+  'thawed-dead': { col: 1, row: 7 },        // walking wrong
+  'cinder-imp': { col: 2, row: 9 },         // the red crawler
+  'mad-pyromancer': { col: 0, row: 7 },     // the wizard gone wrong
+  'glacier-heart': { col: 4, row: 10 },     // the grey mass
 };
 const MONSTER_FALLBACK = { col: 1, row: 9 }; // when in doubt, cyclops
 
