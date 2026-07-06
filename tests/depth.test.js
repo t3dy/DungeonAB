@@ -146,6 +146,57 @@ describe('Trap types', () => {
   });
 });
 
+describe('Boss phases and coatings', () => {
+  test('a boss turns the fight at half health, and the chronicle marks it', () => {
+    // A big, weak-hitting boss against a strong party: the fight runs
+    // long enough to cross the phase line, and the party still wins
+    const party = new Party([fighters[0], fighters[1], fighters[2]]);
+    const room = { type: ROOM_TYPES.BOSS, monster: { name: 'the Test King', kind: 'test-king', attack: 2, health: 60, isBoss: true } };
+    const result = resolveRoomAction(room, party, 'fight');
+    assert.equal(result.bossPhased, true, 'the phase line was crossed');
+    assert.ok(result.preps.some(p => p.text.includes('💢') || p.text.includes('👑')), 'the turn is narrated');
+  });
+
+  test('rank-and-file monsters never phase', () => {
+    const party = new Party([fighters[0], fighters[1], fighters[2]]);
+    const room = { type: ROOM_TYPES.MONSTER, monster: { name: 'a big rat', attack: 2, health: 60 } };
+    const result = resolveRoomAction(room, party, 'fight');
+    assert.equal(result.bossPhased, false);
+  });
+
+  test('a fire coating bites deeper into what hates fire', () => {
+    const arm = () => {
+      const p = new Party([fighters[0], fighters[1]]);
+      p.members[0].addWeaponMod({ name: 'fire coating', attack: 2, element: 'fire' });
+      return p;
+    };
+    const vsWeak = arm().coatingBonusVs({ weak: ['fire'] });
+    assert.equal(vsWeak.bonus, 2);
+    assert.deepEqual(vsWeak.notes, ['fire coating']);
+    const vsResist = arm().coatingBonusVs({ resist: ['fire'] });
+    assert.equal(vsResist.bonus, 0, 'no edge against the fireproof');
+  });
+
+  test('venom sickens the living but not the dead; holy coatings burn the undead', () => {
+    const party = new Party([fighters[0]]);
+    party.members[0].addWeaponMod({ name: 'venom coating', attack: 3, venom: true });
+    assert.equal(party.coatingBonusVs({}).bonus, 1, 'the living bleed');
+    assert.equal(party.coatingBonusVs({ undead: true }).bonus, 0, 'the dead have no blood');
+
+    const blessed = new Party([fighters[0]]);
+    blessed.members[0].addWeaponMod({ name: 'blessed oil', attack: 1, element: 'holy' });
+    assert.equal(blessed.coatingBonusVs({ undead: true }).bonus, 2, 'holy burns the dead');
+  });
+
+  test('the coating is credited in the fight', () => {
+    const party = new Party([fighters[0], fighters[1]]);
+    party.members[0].addWeaponMod({ name: 'fire coating', attack: 2, element: 'fire' });
+    const room = { type: ROOM_TYPES.MONSTER, monster: { name: 'a vine', attack: 1, health: 10, weak: ['fire'] } };
+    const result = resolveRoomAction(room, party, 'fight');
+    assert.ok(result.preps.some(p => p.source.includes('fire coating')), 'the bench gets the credit');
+  });
+});
+
 describe('Finds — treasure beyond coin', () => {
   test('a vault always yields a find; the kind spans the table', () => {
     const kinds = new Set();

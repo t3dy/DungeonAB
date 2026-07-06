@@ -120,6 +120,8 @@ export const FX_TILES = {
 
 /**
  * Content packs register tiles for their own monster kinds (DLC).
+ * A tile is either { col, row } on the Tiny Dungeon sheet, or
+ * { img: url } for standalone art (e.g. engraving extractions).
  */
 export function registerMonsterTiles(map) {
   for (const [kind, tile] of Object.entries(map)) {

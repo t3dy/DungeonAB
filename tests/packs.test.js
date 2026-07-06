@@ -96,11 +96,11 @@ describe('The 17th-Century Alchemy Pack', () => {
     assert.ok(sim.gameOver, 'the Work concludes');
   });
 
-  test('every emblem monster has a sprite on the sheet', () => {
+  test('every emblem monster wears an actual engraving', () => {
     installAlchemyPack();
     for (const m of [...ATHANOR_THEME.monsters, ...ATHANOR_THEME.bosses]) {
       const t = getMonsterTile(m.kind);
-      assert.ok(t.col >= 0 && t.col < ATLAS.cols && t.row >= 0 && t.row < ATLAS.rows, `${m.kind} wears a face`);
+      assert.ok(t.img && t.img.includes('emblems/'), `${m.kind} wears the Atalanta Fugiens plate`);
     }
   });
 });

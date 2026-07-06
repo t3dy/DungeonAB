@@ -281,6 +281,29 @@ export function decideRoomAction(room, party) {
 }
 
 /* ------------------------------------------------------------------ */
+/* Boss phases — at half health, the fight changes                     */
+/* ------------------------------------------------------------------ */
+
+const BOSS_PHASE_LINES = {
+  'vampire-lord': '🩸 Half-spent, the Lord stops apologizing. The temperature of the room drops with his manners.',
+  'the-bride': '🩸 The Bride lets the Lord\'s name fall from her like a shawl, and what remains is far older.',
+  'bog-witch': '🍲 The Witch stops smiling like a hostess and starts smiling like a cook.',
+  'mad-pyromancer': '🔥 Bleeding, the Pyromancer remembers why he was exiled, and shares the memory generously.',
+  'mad-alchemist': '⚗️ The Alchemist drinks something from his own belt that no committee ever approved.',
+  'rebis': '👑 The Rebis turns its second face forward. That one has been resting.',
+  'shrouded-king': '👑 The Shroud comes off. It was never a shroud.',
+  'glacier-heart': '💠 The Heart cracks down its center, and both halves are angrier.',
+};
+const BOSS_PHASE_GENERIC = [
+  '💢 Half-dead, the thing stops playing with its food.',
+  '💢 Wounded past its patience, it becomes what the warnings were about.',
+];
+
+function bossPhaseLine(monster) {
+  return BOSS_PHASE_LINES[monster.kind] || BOSS_PHASE_GENERIC[monster.health % BOSS_PHASE_GENERIC.length];
+}
+
+/* ------------------------------------------------------------------ */
 /* Finds — treasure is more than coin                                  */
 /* ------------------------------------------------------------------ */
 
@@ -399,15 +422,29 @@ export function resolveRoomAction(room, party, optionId) {
         preps.push({ source: 'the alarm', text: '🔔 The tripped alarm did its work: the thing was waiting, braced and delighted.' });
       }
 
+      // An elemental coating on someone's blade bites deeper into
+      // flesh that hates its element (the alchemist's bench pays off)
+      const coating = party.coatingBonusVs(monster);
+      if (coating.bonus > 0) {
+        preps.push({ source: coating.notes.join(' + '), text: `⚗️ The ${coating.notes.join(' and ')} meets flesh that hates it — every stroke bites deeper.` });
+      }
+
       // Auto-battle: rounds of party attack vs monster attack.
       // Corridor frontage: only ~5 blades work at once, so a mob
       // of drafted heroes helps less than it thinks it does.
+      // Bosses turn the fight at half health.
       let rounds = 0;
+      let phased = false;
       while (monsterHealth > 0 && party.isAlive() && rounds < 12) {
         rounds++;
-        const swing = Math.max(1, Math.round((party.combatAttack() + summon + Math.floor(roll() / 3)) * etherealMult) - armorShave);
+        const swing = Math.max(1, Math.round((party.combatAttack() + summon + coating.bonus + Math.floor(roll() / 3)) * etherealMult) - armorShave);
         monsterHealth -= swing;
         if (monsterHealth <= 0) break;
+        if (monster.isBoss && !phased && monsterHealth <= monster.health / 2) {
+          phased = true;
+          monsterAtk += 2;
+          preps.push({ source: monster.name, text: bossPhaseLine(monster) });
+        }
         // The slow strike last: no incoming damage on the first round
         if (monster.trait === 'slow' && rounds === 1) continue;
         const incoming = Math.max(1, monsterAtk - Math.floor(party.totalDefense() / 3) - ward);
@@ -450,7 +487,7 @@ export function resolveRoomAction(room, party, optionId) {
         }
       }
       party.recordEncounter('fight', won);
-      return { success: won, rounds, damage: partyDamageTaken, monster: monster.name, itemActions, preps };
+      return { success: won, rounds, damage: partyDamageTaken, monster: monster.name, itemActions, preps, bossPhased: phased };
     }
 
     case 'cause-fear': {

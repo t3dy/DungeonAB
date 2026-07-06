@@ -99,14 +99,16 @@ export const ATHANOR_THEME = {
   ],
 };
 
-/* Emblem monsters wear the closest Tiny Dungeon faces */
+/* Emblem monsters wear the actual engravings — extractions from the
+   Atalanta Fugiens plates (1617, public domain; processed in the
+   EmblemRoguelike project) */
 const ALCHEMY_TILES = {
-  'green-lion': { col: 0, row: 9 },          // the green slime — verdant and hungry
-  'ouroboros': { col: 2, row: 10 },          // coiled many-legged thing
-  'caput-corvi': { col: 0, row: 10 },        // the black bat-bird
-  'winged-wingless': { col: 0, row: 10 },
-  'rebis': { col: 3, row: 9 },               // the crowned hooded figure
-  'philosophers-dragon': { col: 2, row: 9 }, // the red crawler
+  'green-lion': { img: new URL('../assets/emblems/green-lion.png', import.meta.url).href },
+  'ouroboros': { img: new URL('../assets/emblems/ouroboros.png', import.meta.url).href },
+  'caput-corvi': { img: new URL('../assets/emblems/caput-corvi.png', import.meta.url).href },
+  'winged-wingless': { img: new URL('../assets/emblems/winged-wingless.png', import.meta.url).href },
+  'rebis': { img: new URL('../assets/emblems/rebis.png', import.meta.url).href },
+  'philosophers-dragon': { img: new URL('../assets/emblems/philosophers-dragon.png', import.meta.url).href },
 };
 
 let installed = false;

@@ -176,7 +176,32 @@ export class IsoDungeonRenderer {
     return this.tileMats.get(key);
   }
 
+  /**
+   * Standalone image art (engraving extractions, pack art): smooth
+   * filtering, aspect preserved, cached per URL.
+   */
+  imageMaterial(url) {
+    const key = `img:${url}`;
+    if (!this.tileMats.has(key)) {
+      const tex = new THREE.TextureLoader().load(url, () => {
+        if (this.lastState) this.render(this.lastState);
+      });
+      tex.colorSpace = THREE.SRGBColorSpace;
+      this.tileMats.set(key, new THREE.SpriteMaterial({ map: tex, transparent: true }));
+    }
+    return this.tileMats.get(key);
+  }
+
   tileSprite(tile, scale = 1) {
+    if (tile.img) {
+      const mat = this.imageMaterial(tile.img);
+      const sprite = new THREE.Sprite(mat);
+      // Preserve the plate's aspect once the image is known
+      const img = mat.map?.image;
+      const aspect = img && img.width ? img.width / img.height : 1;
+      sprite.scale.set(scale * Math.min(aspect, 1.4), scale, 1);
+      return sprite;
+    }
     const sprite = new THREE.Sprite(this.tileMaterial(tile));
     sprite.scale.set(scale, scale, 1);
     return sprite;

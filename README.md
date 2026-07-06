@@ -68,6 +68,10 @@ Sprites from [**Tiny Dungeon** by Kenney](https://kenney.nl/assets/tiny-dungeon)
 Party classes, monsters, chests, traps, and props all come from this one lovely 16px sheet
 (license bundled at `src/assets/tiny-dungeon-LICENSE.txt`). Support Kenney at [kenney.nl](https://kenney.nl).
 
+The Alchemy Pack's emblem monsters wear **actual engravings from Michael Maier's
+*Atalanta Fugiens* (1617)** — public-domain plates, extracted and processed in the
+EmblemRoguelike project (`src/assets/emblems/`). The Green Lion is really the Green Lion.
+
 ## Design Lineage
 
 Consolidated in `DESIGN.md` from:

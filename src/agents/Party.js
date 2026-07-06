@@ -154,6 +154,31 @@ export class Party {
   }
 
   /**
+   * Elemental weapon coatings bite deeper into flesh that hates
+   * their element (+2 per matching coating); venom coatings sicken
+   * anything that still has blood (+1). Returns { bonus, notes }.
+   */
+  coatingBonusVs(monster) {
+    let bonus = 0;
+    const notes = new Set();
+    for (const member of this.living()) {
+      for (const mod of member.weaponMods) {
+        if (mod.element && (
+          (monster.weak || []).includes(mod.element) ||
+          (mod.element === 'holy' && monster.undead)
+        )) {
+          bonus += 2;
+          notes.add(mod.name);
+        } else if (mod.venom && !monster.undead) {
+          bonus += 1;
+          notes.add(mod.name);
+        }
+      }
+    }
+    return { bonus, notes: [...notes] };
+  }
+
+  /**
    * Class-keyed item actions: the same item does different work in
    * different hands. Each living member contributes the action their
    * class unlocks on each classActions item they carry.
@@ -258,11 +283,12 @@ export class Party {
       if (doubler) this.potions.push({ ...potion });
       return { type: 'potion', potion, doubled: doubler };
     } else {
-      // Weapon mod goes to the hardest hitter
+      // Weapon mod goes to the hardest hitter. Coatings carry their
+      // element — worth double against flesh that hates it.
       const striker = this.living().reduce((a, b) => a.attack >= b.attack ? a : b);
       const mod = rngValue < 0.75
-        ? { name: 'fire coating', attack: 2 }
-        : { name: 'venom coating', attack: 3 };
+        ? { name: 'fire coating', attack: 2, element: 'fire' }
+        : { name: 'venom coating', attack: 3, venom: true };
       striker.addWeaponMod(mod);
       return { type: 'weapon-mod', mod, target: striker.name };
     }
