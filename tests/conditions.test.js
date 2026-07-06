@@ -15,7 +15,9 @@ const fighter = CHARACTER_CARDS.find(c => c.class === CLASSES.FIGHTER);
 
 // Average non-boss monster attack/health across a dungeon
 function monsterAvg(d) {
-  const ms = d.rooms.filter(r => r.monster && !r.monster.isBoss).map(r => r.monster);
+  // Elites carry their own multiplier — excluded so condition effects
+  // are measured clean
+  const ms = d.rooms.filter(r => r.monster && !r.monster.isBoss && !r.monster.elite).map(r => r.monster);
   if (!ms.length) return { atk: 0, hp: 0 };
   return {
     atk: ms.reduce((s, m) => s + m.attack, 0) / ms.length,

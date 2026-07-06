@@ -125,6 +125,18 @@ export class Simulator {
       roomIndex: roomIdx,          // array index, for the renderer's effects
       action: chosen,
       spellElement: result.spellElement || null,   // colors the strike FX
+      // Everything the renderer needs to stage the outcome: the blow-
+      // by-blow combat log, or the numbers a quieter room produced
+      fx: {
+        combatLog: result.combatLog || null,
+        monsterKind: result.monsterKind || room.monster?.kind || null,
+        monsterMaxHealth: result.monsterMaxHealth || 0,
+        routed: !!result.routed,
+        crits: result.crits || 0,
+        damage: result.damage || 0,
+        gold: result.gold || 0,
+        healed: result.healed || 0,
+      },
       predicament,
       deliberation: composeDeliberation(chosen, options, this.party),
       resolution: composeResolution(room, chosen, result, this.party),

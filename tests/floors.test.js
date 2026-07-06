@@ -70,6 +70,7 @@ describe('Floors in generation', () => {
       for (const r of d.rooms) {
         if (r.floor !== 1) continue;
         if (r.type === ROOM_TYPES.MONSTER) {
+          if (r.monster.elite) continue; // veterans carry their own multiplier
           const base = DUNGEON_THEMES.delve.monsters.find(m => m.kind === r.monster.kind);
           if (!base) continue; // a nature reshaped the name, not the kind — still fine
           assert.equal(r.monster.attack, Math.max(1, Math.round(base.attack * STAT_SCALE.easy * 1.12)),

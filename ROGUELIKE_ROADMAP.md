@@ -119,6 +119,22 @@ From the game design library (`E:\pdf\Game Design`):
   strata), the iso view frames only the floor the party walks, and
   branches never leave their stratum. Stairs are structural in the
   editor, like the entrance and the boss.
+- ✅ **Combat engine v2 + combat theater** — fights resolve as a
+  blow-by-blow exchange log: per-hero attributed hits, rogue backstab
+  crits, wizard cantrip chips, alchemist vial openers, cleric
+  mid-fight triage, morale routs (the beaten and the bribable flee
+  for half bounty; bosses and the undead never), and elite veterans
+  (~1-in-8, ⭐-badged, +30/40% stats, richer bounty, index-hashed so
+  layouts stay deterministic). The renderer replays the log as
+  theater: a monster ghost that flinches and falls, floating damage
+  numbers (crits in gold), a draining health bar, camera shake, rout
+  dust — and the story panel carries a muted round-by-round ticker.
+- ✅ **Dungeon fabric (all Kenney Tiny Dungeon CC0)** — the previously
+  unused corners of the vendored sheet now dress the world: tiled
+  stone/sand/paver floors and brick walls per theme, flame-colored
+  wall torches that flicker, the portcullis on locked branch doors,
+  boss-chamber banners, the peddler's counter and barrel, the
+  offering basin, the ladder down.
 - Still to come: agent-dug cave layouts for the Cinder Galleries,
   cellular-automata grottos.
 

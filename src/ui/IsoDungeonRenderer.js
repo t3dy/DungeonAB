@@ -12,7 +12,10 @@
  */
 
 import * as THREE from 'three';
-import { ATLAS, FX_TILES, getClassTile, getMonsterTile, getRoomProp } from './SpriteAtlas.js';
+import {
+  ATLAS, FX_TILES, ARCH_TILES,
+  getClassTile, getMonsterTile, getRoomProp, getFloorTile, getTorchTile,
+} from './SpriteAtlas.js';
 
 const SPACING = 3.2;   // World units between room centers
 const CLASS_COLORS = {
@@ -103,6 +106,9 @@ export class IsoDungeonRenderer {
     this.roomPositions = [];
     this.clock = new THREE.Clock();
     this.effects = [];
+    this.timeline = [];    // scheduled combat-theater beats
+    this.shakeAmp = 0;     // camera shake, decaying
+    this.lastT = 0;
 
     // The Tiny Dungeon sheet (Kenney, CC0): pixel-crisp, re-render on arrival
     this.tileMats = new Map();
@@ -155,7 +161,7 @@ export class IsoDungeonRenderer {
     const themeId = state.dungeon.theme?.id || 'delve';
     const branches = state.dungeon.branches || [];
     const openedLocks = branches.filter(b => b.locked && b.consumed).length;
-    const key = themeId + '|' + openedLocks + '|f' + this.currentFloor + '|' + rooms.map(r => `${r.type}${r.secret && !r.discovered ? '?' : ''}`).join(',');
+    const key = (this.atlasReady ? 'A|' : 'a|') + themeId + '|' + openedLocks + '|f' + this.currentFloor + '|' + rooms.map(r => `${r.type}${r.secret && !r.discovered ? '?' : ''}`).join(',');
     if (this.builtKey !== key) {
       this.buildDungeon(rooms, state.dungeon.edges, themeId, branches);
       this.builtKey = key;
@@ -165,6 +171,34 @@ export class IsoDungeonRenderer {
     this.updateOccupants(state);
     this.updateParty(state);
     this.animateFrame();
+  }
+
+  /**
+   * A standalone, repeatable texture of one sheet tile — extracted to
+   * its own canvas so walls and floors can tile it freely (an atlas
+   * sub-region can't wrap without bleeding into its neighbors).
+   */
+  tileTexture(tile, repeatX = 1, repeatY = 1) {
+    const key = `tt:${tile.col},${tile.row}:${repeatX},${repeatY}`;
+    if (!this.spriteMaterials.has(key)) {
+      const c = document.createElement('canvas');
+      c.width = ATLAS.tile;
+      c.height = ATLAS.tile;
+      c.getContext('2d').drawImage(
+        this.atlasTex.image,
+        tile.col * ATLAS.tile, tile.row * ATLAS.tile, ATLAS.tile, ATLAS.tile,
+        0, 0, ATLAS.tile, ATLAS.tile,
+      );
+      const tex = new THREE.CanvasTexture(c);
+      tex.magFilter = THREE.NearestFilter;
+      tex.minFilter = THREE.NearestFilter;
+      tex.colorSpace = THREE.SRGBColorSpace;
+      tex.wrapS = THREE.RepeatWrapping;
+      tex.wrapT = THREE.RepeatWrapping;
+      tex.repeat.set(repeatX, repeatY);
+      this.spriteMaterials.set(key, tex);
+    }
+    return this.spriteMaterials.get(key);
   }
 
   /**
@@ -239,6 +273,7 @@ export class IsoDungeonRenderer {
 
         // Its nature shows over its head — a readable enemy is a plan
         const badges = [];
+        if (room.monster.elite) badges.push('⭐');   // a veteran, and proud of it
         if (TRAIT_BADGES[room.monster.trait]) badges.push(TRAIT_BADGES[room.monster.trait]);
         const weakness = room.monster.undead ? 'holy' : (room.monster.weak || [])[0];
         if (ELEMENT_BADGES[weakness]) badges.push(ELEMENT_BADGES[weakness]);
@@ -260,6 +295,13 @@ export class IsoDungeonRenderer {
             sprite.material = sprite.material.clone();
             sprite.material.opacity = 0.55;
           }
+        }
+        // The peddler stocks the stall: a barrel beside the counter
+        if (room.type === 'shop' && !room.cleared) {
+          const barrel = this.tileSprite(getRoomProp({ type: 'shop-barrel' }) || { col: 7, row: 5 }, 0.6);
+          barrel.position.set(x + 0.62, 0.5, z + 0.3);
+          barrel.userData.baseY = 0.5;
+          this.occupantGroup.add(barrel);
         }
       }
       if (sprite) {
@@ -304,6 +346,7 @@ export class IsoDungeonRenderer {
     );
     this.camera.position.set(cx + 20, 24, cz + 20);
     this.camera.lookAt(cx, 0, cz);
+    this.camBase = this.camera.position.clone();   // shake pivots off this
   }
 
   buildDungeon(rooms, edges = null, themeId = 'delve', branches = []) {
@@ -319,6 +362,16 @@ export class IsoDungeonRenderer {
     // Off-floor rooms are behind the world, not just behind a wall
     const hidden = room => (room.secret && !room.discovered)
       || (room.floor || 0) !== (this.currentFloor || 0);
+
+    // With the sheet loaded, the dungeon gets real fabric: tiled stone
+    // floors, brick walls, torches on the sconces. Before it loads (or
+    // if it never does), the flat-color boxes still stand.
+    const dressed = this.atlasReady;
+    const floorTex = dressed ? this.tileTexture(getFloorTile(themeId), 2, 2) : null;
+    const wallTexA = dressed ? this.tileTexture(ARCH_TILES.wallBrick, 2, 0.62) : null;
+    const wallTexB = dressed ? this.tileTexture(ARCH_TILES.wallBrickB, 2, 0.62) : null;
+    const floorGeo = new THREE.PlaneGeometry(2.36, 2.36);
+    const torchTile = getTorchTile(themeId);
 
     rooms.forEach((room, i) => {
       // Undiscovered secret rooms simply aren't there — that's the point
@@ -341,8 +394,26 @@ export class IsoDungeonRenderer {
       plat.receiveShadow = true;
       this.staticGroup.add(plat);
 
-      // Low walls on two sides give chambers depth
-      const wallMat = new THREE.MeshStandardMaterial({ color: palette.wall, roughness: 1 });
+      // The tiled floor lies on the platform top, tinted by the theme
+      if (dressed) {
+        const tint = new THREE.Color(base).lerp(new THREE.Color(0xffffff), 0.72);
+        const floor = new THREE.Mesh(floorGeo, new THREE.MeshStandardMaterial({
+          map: floorTex, color: tint, roughness: 0.95,
+        }));
+        floor.rotation.x = -Math.PI / 2;
+        floor.position.set(x, 0.181, z);
+        if (room.type === 'boss') floor.scale.set(1.28, 1.28, 1);
+        floor.receiveShadow = true;
+        this.staticGroup.add(floor);
+      }
+
+      // Low walls on two sides give chambers depth — brickwork when
+      // the sheet is in, flat stone until then
+      const wallTint = dressed ? new THREE.Color(palette.wall).lerp(new THREE.Color(0xffffff), 0.55) : palette.wall;
+      const wallMat = new THREE.MeshStandardMaterial({
+        color: wallTint, roughness: 1,
+        ...(dressed ? { map: (room.index % 2 ? wallTexA : wallTexB) } : {}),
+      });
       const wall1 = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.7, 0.2), wallMat);
       wall1.position.set(x, 0.5, z - 1.15);
       wall1.castShadow = true;
@@ -351,6 +422,25 @@ export class IsoDungeonRenderer {
       wall2.position.set(x - 1.15, 0.5, z);
       wall2.castShadow = true;
       this.staticGroup.add(wall2);
+
+      if (dressed) {
+        // The boss chamber hangs its colors
+        if (room.type === 'boss') {
+          const banner = this.tileSprite(ARCH_TILES.banner, 0.85);
+          banner.position.set(x, 1.05, z - 1.0);
+          this.staticGroup.add(banner);
+        }
+        // Torches on the sconces: gathering rooms always, corridors
+        // every third room, flames in the theme's color
+        const lit = ['shrine', 'altar', 'shop', 'stairs', 'boss', 'entrance'].includes(room.type)
+          || room.index % 3 === 0;
+        if (lit) {
+          const torch = this.tileSprite(torchTile, 0.55);
+          torch.position.set(x - 0.85, 1.05, z - 1.0);
+          torch.userData.flicker = (room.index * 1.7) % 6;
+          this.staticGroup.add(torch);
+        }
+      }
     });
 
     // Walkways along the dungeon's edges (spine + discovered branches)
@@ -377,17 +467,24 @@ export class IsoDungeonRenderer {
       bridge.receiveShadow = true;
       this.staticGroup.add(bridge);
 
-      // The iron door itself stands mid-walkway until it opens
+      // The iron gate itself stands mid-walkway until it opens: the
+      // sheet's portcullis when the art is in, a plain bar until then
       const doorOpened = branches.some(b => b.locked && b.consumed && b.rooms[0] === edge.b);
       if (edge.locked && !doorOpened) {
-        const door = new THREE.Mesh(
-          new THREE.BoxGeometry(0.25, 1.1, 1.0),
-          new THREE.MeshStandardMaterial({ color: 0x8a7a45, metalness: 0.5, roughness: 0.6 })
-        );
-        door.position.set(pa.x + dx / 2, 0.55, pa.z + dz / 2);
-        door.rotation.y = -Math.atan2(dz, dx);
-        door.castShadow = true;
-        this.staticGroup.add(door);
+        if (this.atlasReady) {
+          const gate = this.tileSprite(ARCH_TILES.portcullis, 1.0);
+          gate.position.set(pa.x + dx / 2, 0.62, pa.z + dz / 2);
+          this.staticGroup.add(gate);
+        } else {
+          const door = new THREE.Mesh(
+            new THREE.BoxGeometry(0.25, 1.1, 1.0),
+            new THREE.MeshStandardMaterial({ color: 0x8a7a45, metalness: 0.5, roughness: 0.6 })
+          );
+          door.position.set(pa.x + dx / 2, 0.55, pa.z + dz / 2);
+          door.rotation.y = -Math.atan2(dz, dx);
+          door.castShadow = true;
+          this.staticGroup.add(door);
+        }
       }
     }
   }
@@ -503,13 +600,29 @@ export class IsoDungeonRenderer {
   }
 
   /**
-   * Play a transient effect over the party's room: the sheet's slash
-   * for steel, tinted glow bursts for magic, gold, and misfortune.
+   * Play a transient effect over the party's room: a full blow-by-blow
+   * combat playback when a fight happened, otherwise the sheet's slash
+   * for steel, tinted glow bursts for magic — and the numbers, always
+   * the numbers: gold in gold, blood in red, mending in green.
    */
-  playEffect(action, roomIndex, element = null) {
-    const style = EFFECT_STYLES[action];
-    if (!style || !this.roomPositions[roomIndex]) return;
+  playEffect(action, roomIndex, element = null, fx = null) {
+    if (!this.roomPositions[roomIndex]) return;
     const { x, z } = this.roomPositions[roomIndex];
+
+    if (fx?.combatLog?.length) {
+      this.playCombat(fx, roomIndex);
+      return;
+    }
+
+    // Quieter rooms still show their arithmetic
+    if (fx) {
+      if (fx.gold > 0) this.spawnNumber(x, 1.35, z, `+${fx.gold}g`, '#ffd75e', 1.05);
+      if (fx.damage > 0) this.spawnNumber(x - 0.6, 1.1, z + 0.6, `-${fx.damage}`, '#ff6a5e', 0.95);
+      if (fx.healed > 0) this.spawnNumber(x - 0.4, 1.1, z + 0.4, `+${fx.healed}`, '#7ee787', 0.95);
+    }
+
+    const style = EFFECT_STYLES[action];
+    if (!style) return;
 
     // A cast spell glows in its element's color
     const color = (action === 'spell-strike' && ELEMENT_FX_COLORS[element])
@@ -527,6 +640,147 @@ export class IsoDungeonRenderer {
     sprite.position.set(x, 1.0, z);
     this.fxGroup.add(sprite);
     this.effects.push({ sprite, born: this.clock.getElapsedTime(), life: 0.7 });
+  }
+
+  /**
+   * The fight, staged: a ghost of the monster stands its ground while
+   * the log replays — attributed hits, backstab crits, cantrip chips,
+   * the counter-blows shaking the camera, a health bar draining to
+   * the verdict. Compressed to fit inside one game tick.
+   */
+  playCombat(fx, roomIndex) {
+    const { x, z } = this.roomPositions[roomIndex];
+    const now = this.clock.getElapsedTime();
+    const log = fx.combatLog;
+    const isBoss = !!log.length && fx.monsterMaxHealth >= 30;   // heuristic scale
+    const mScale = isBoss ? 1.6 : 1.05;
+
+    // The ghost: the monster as it stood, plus its health bar
+    let ghost = null;
+    let barFg = null;
+    if (this.atlasReady && fx.monsterKind) {
+      ghost = this.tileSprite(getMonsterTile(fx.monsterKind), mScale);
+      ghost.material = ghost.material.clone();   // its fate is its own
+      ghost.position.set(x, 0.2 + mScale / 2, z);
+      ghost.userData.combatGhost = true;
+      ghost.userData.baseScale = mScale;
+      this.fxGroup.add(ghost);
+
+      const barBg = new THREE.Sprite(this.glowMaterial('#000000').clone());
+      barBg.material.blending = THREE.NormalBlending;
+      barBg.material.opacity = 0.55;
+      barBg.scale.set(1.15, 0.14, 1);
+      barBg.position.set(x, 0.55 + mScale, z);
+      this.fxGroup.add(barBg);
+
+      barFg = new THREE.Sprite(this.glowMaterial('#e05555').clone());
+      barFg.material.blending = THREE.NormalBlending;
+      barFg.scale.set(1.05, 0.09, 1);
+      barFg.position.set(x, 0.55 + mScale, z);
+      this.fxGroup.add(barFg);
+      ghost.userData.barSprites = [barBg, barFg];
+    }
+
+    // Compress the rounds so the theater fits the tick
+    const dt = Math.min(0.5, 1.9 / log.length);
+    const px = x - 0.75;   // where the party squares up
+    const pz = z + 0.75;
+
+    log.forEach((entry, r) => {
+      const base = now + 0.15 + r * dt;
+      entry.events.forEach((ev, e) => {
+        const at = base + e * Math.min(0.11, dt / Math.max(2, entry.events.length));
+        const jx = ((r * 7 + e * 3) % 5 - 2) * 0.14;   // scatter, deterministic
+        this.timeline.push({ at, fn: () => {
+          if (ev.kind === 'hero-hit' || ev.kind === 'opening') {
+            if (this.atlasReady) {
+              const slash = this.tileSprite(FX_TILES.slash, ev.crit ? 1.25 : 0.9);
+              slash.material = slash.material.clone();
+              slash.position.set(x + jx, 0.95, z);
+              this.fxGroup.add(slash);
+              this.effects.push({ sprite: slash, born: this.clock.getElapsedTime(), life: 0.4 });
+            }
+            this.spawnNumber(x + jx, 1.5 + mScale * 0.5, z,
+              ev.crit ? `✦${ev.amount}` : `${ev.amount}`,
+              ev.crit ? '#ffe95e' : '#ffffff', ev.crit ? 1.25 : 0.85);
+            if (ghost) ghost.userData.flinchUntil = this.clock.getElapsedTime() + 0.14;
+          } else if (ev.kind === 'cantrip') {
+            this.spawnGlow(x + jx, 1.0, z, '#b07ae8', 0.8);
+            this.spawnNumber(x + jx, 1.5 + mScale * 0.5, z, `${ev.amount}`, '#b07ae8', 0.8);
+          } else if (ev.kind === 'vial') {
+            this.spawnGlow(x + jx, 1.0, z, '#3cb8a8', 0.8);
+            this.spawnNumber(x + jx, 1.5 + mScale * 0.5, z, `${ev.amount}`, '#3cb8a8', 0.8);
+          } else if (ev.kind === 'monster-hit') {
+            this.spawnNumber(px, 1.35, pz, `-${ev.amount}`, '#ff6a5e', 0.95);
+            this.shakeAmp = Math.max(this.shakeAmp, 0.1 + Math.min(0.12, ev.amount * 0.015));
+          } else if (ev.kind === 'triage') {
+            this.spawnNumber(px - 0.3, 1.3, pz, `+${ev.amount}`, '#7ee787', 0.85);
+          } else if (ev.kind === 'phase') {
+            this.spawnGlow(x, 1.1, z, '#ff5540', 1.6);
+            this.shakeAmp = Math.max(this.shakeAmp, 0.3);
+          } else if (ev.kind === 'rout') {
+            this.spawnNumber(x, 1.2 + mScale * 0.5, z, '💨', '#cccccc', 1.1);
+            if (ghost) ghost.userData.fleeing = true;
+          }
+          // The bar drains to where the round left it
+          if (barFg && fx.monsterMaxHealth > 0) {
+            const frac = Math.max(0, entry.monsterHp) / fx.monsterMaxHealth;
+            barFg.scale.x = 1.05 * frac;
+            barFg.position.x = x - (1.05 * (1 - frac)) / 2;
+          }
+        } });
+      });
+    });
+
+    // Curtain: the ghost falls (or flees), the bar goes with it
+    const endAt = now + 0.3 + log.length * dt;
+    this.timeline.push({ at: endAt, fn: () => {
+      if (!ghost) return;
+      ghost.userData.dying = this.clock.getElapsedTime();
+      for (const b of ghost.userData.barSprites || []) this.fxGroup.remove(b);
+      const won = log[log.length - 1].monsterHp <= 0 || fx.routed;
+      if (won && !fx.routed) this.spawnGlow(x, 0.8, z, '#ffd75e', 1.3);
+    } });
+  }
+
+  /** A floating combat number: rises, fades, never lies. */
+  spawnNumber(x, y, z, text, color, scale = 1) {
+    const sprite = new THREE.Sprite(this.textMaterial(text, color));
+    sprite.scale.set(scale * 0.62 * Math.max(1.6, text.length * 0.62), scale * 0.62, 1);
+    sprite.position.set(x, y, z);
+    this.fxGroup.add(sprite);
+    this.effects.push({ sprite, born: this.clock.getElapsedTime(), life: 0.9, rise: 0.75, isText: true, baseY: y });
+  }
+
+  spawnGlow(x, y, z, color, scale = 1) {
+    const sprite = new THREE.Sprite(this.glowMaterial(color).clone());
+    sprite.scale.set(scale, scale, 1);
+    sprite.position.set(x, y, z);
+    this.fxGroup.add(sprite);
+    this.effects.push({ sprite, born: this.clock.getElapsedTime(), life: 0.6 });
+  }
+
+  /** Crisp outlined number/text material (canvas-drawn, cached). */
+  textMaterial(text, color) {
+    const key = `txt:${color}:${text}`;
+    if (!this.spriteMaterials.has(key)) {
+      const c = document.createElement('canvas');
+      c.width = 160;
+      c.height = 64;
+      const ctx = c.getContext('2d');
+      ctx.font = 'bold 42px "Trebuchet MS", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.lineWidth = 8;
+      ctx.strokeStyle = 'rgba(10,8,5,0.9)';
+      ctx.strokeText(text, 80, 34);
+      ctx.fillStyle = color;
+      ctx.fillText(text, 80, 34);
+      const tex = new THREE.CanvasTexture(c);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      this.spriteMaterials.set(key, new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false }));
+    }
+    return this.spriteMaterials.get(key).clone();
   }
 
   glowMaterial(color) {
@@ -554,9 +808,65 @@ export class IsoDungeonRenderer {
   animateFrame() {
     if (!this.camera) return;
     const t = this.clock.getElapsedTime();
+    const delta = Math.min(0.1, t - this.lastT);
+    this.lastT = t;
 
-    // Torch flicker
+    // Torch flicker (the traveling one, and every sconce on the walls)
     this.torch.intensity = 26 + Math.sin(t * 9) * 3 + Math.sin(t * 23) * 2;
+    for (const s of this.staticGroup.children) {
+      if (s.userData.flicker !== undefined) {
+        const ph = s.userData.flicker;
+        s.scale.y = 0.55 * (1 + 0.10 * Math.sin(t * 11 + ph));
+        s.scale.x = 0.55 * (1 + 0.06 * Math.sin(t * 13 + ph * 1.7));
+      }
+    }
+
+    // The combat theater runs its script
+    while (this.timeline.length && this.timeline[0].at <= t) {
+      this.timeline.shift().fn();
+    }
+    // Sort-on-insert isn't guaranteed; sweep any stragglers due now
+    if (this.timeline.length && this.timeline.some(e => e.at <= t)) {
+      const due = this.timeline.filter(e => e.at <= t);
+      this.timeline = this.timeline.filter(e => e.at > t);
+      due.forEach(e => e.fn());
+    }
+
+    // Combat ghosts flinch, flee, and fall
+    for (let i = this.fxGroup.children.length - 1; i >= 0; i--) {
+      const o = this.fxGroup.children[i];
+      const u = o.userData;
+      if (!u.combatGhost) continue;
+      if (u.fleeing) {
+        o.position.x += 2.4 * delta;
+        o.position.z += 1.2 * delta;
+        o.material.opacity = Math.max(0, o.material.opacity - 1.6 * delta);
+        if (o.material.opacity <= 0) this.fxGroup.remove(o);
+      } else if (u.dying !== undefined) {
+        const a = (t - u.dying) / 0.5;
+        o.material.opacity = Math.max(0, 1 - a);
+        o.scale.y = Math.max(0.05, u.baseScale * (1 - a * 0.8));
+        if (a >= 1) this.fxGroup.remove(o);
+      } else if (u.flinchUntil) {
+        const flinching = t < u.flinchUntil;
+        o.scale.x = u.baseScale * (flinching ? 0.82 : 1);
+        o.position.x += flinching ? 0.001 : 0; // imperceptible, keeps it "live"
+      }
+    }
+
+    // Camera shake: the blows land on the viewer too
+    if (this.camBase) {
+      if (this.shakeAmp > 0.004) {
+        this.camera.position.set(
+          this.camBase.x + (Math.random() - 0.5) * this.shakeAmp * 2,
+          this.camBase.y + (Math.random() - 0.5) * this.shakeAmp,
+          this.camBase.z + (Math.random() - 0.5) * this.shakeAmp * 2,
+        );
+        this.shakeAmp *= 0.88;
+      } else if (!this.camera.position.equals(this.camBase)) {
+        this.camera.position.copy(this.camBase);
+      }
+    }
 
     // Icon bob
     for (const s of this.iconGroup.children) {
@@ -574,7 +884,7 @@ export class IsoDungeonRenderer {
         o.position.y = o.userData.baseY + Math.sin(t * 2.8 + o.userData.phase) * 0.07;
       }
     }
-    // Effects bloom and die
+    // Effects bloom and die; numbers rise and fade instead
     for (let i = this.effects.length - 1; i >= 0; i--) {
       const fx = this.effects[i];
       const age = (t - fx.born) / fx.life;
@@ -583,9 +893,14 @@ export class IsoDungeonRenderer {
         this.effects.splice(i, 1);
         continue;
       }
-      const s = 0.9 + age * 1.6;
-      fx.sprite.scale.set(s, s, 1);
-      fx.sprite.material.opacity = 1 - age * age;
+      if (fx.isText) {
+        fx.sprite.position.y = fx.baseY + fx.rise * age;
+        fx.sprite.material.opacity = age < 0.15 ? age / 0.15 : 1 - ((age - 0.15) / 0.85) ** 2;
+      } else {
+        const s = 0.9 + age * 1.6;
+        fx.sprite.scale.set(s, s, 1);
+        fx.sprite.material.opacity = 1 - age * age;
+      }
     }
 
     this.renderer.render(this.scene, this.camera);

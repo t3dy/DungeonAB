@@ -324,10 +324,10 @@ function makeRoom(index, type, rng, theme, depth = 1, statScale = 1, condition =
   // dungeons hit harder and pay better. The condition is the player's
   // wager on top — meaner monsters, deeper traps, richer hoards.
   if (type === ROOM_TYPES.MONSTER) {
-    room.monster = rollMonster(rng, false, theme, depth, statScale * floorMult, condition);
+    room.monster = rollMonster(rng, false, theme, depth, statScale * floorMult, condition, index);
   }
   if (type === ROOM_TYPES.BOSS) {
-    room.monster = rollMonster(rng, true, theme, depth, statScale * floorMult, condition);
+    room.monster = rollMonster(rng, true, theme, depth, statScale * floorMult, condition, index);
   }
   if (type === ROOM_TYPES.TREASURE) {
     const base = (20 + Math.floor(rng.next() * 40)) * (1 + 0.2 * (depth - 1)) * floorGold;
@@ -626,7 +626,7 @@ export function registerTheme(theme) {
   return theme;
 }
 
-function rollMonster(rng, isBoss, theme, depth = 1, statScale = 1, condition = {}) {
+function rollMonster(rng, isBoss, theme, depth = 1, statScale = 1, condition = {}, roomIndex = 0) {
   const pool = isBoss ? theme.bosses : theme.monsters;
   const monster = applyNature({ ...rng.pick(pool) });
 
@@ -641,6 +641,16 @@ function rollMonster(rng, isBoss, theme, depth = 1, statScale = 1, condition = {
   monster.attack = Math.max(1, Math.round(monster.attack * depthFactor * statScale * condAtk));
   monster.health = Math.max(1, Math.round(monster.health * (1 + 0.2 * (depth - 1)) * statScale * condHp));
   if (isBoss) monster.isBoss = true;
+
+  // Elite veterans: roughly one rank-and-file monster in eight has
+  // survived other parties, and it shows. Hashed off the room index —
+  // no rng spent, so layouts stay sequence-identical.
+  if (!isBoss && (roomIndex * 7 + depth * 3) % 8 === 0) {
+    monster.elite = true;
+    monster.name = `a veteran ${monster.name.replace(/^(a|an|the)\s+/i, '')}`;
+    monster.attack = Math.round(monster.attack * 1.3);
+    monster.health = Math.round(monster.health * 1.4);
+  }
 
   return monster;
 }

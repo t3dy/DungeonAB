@@ -108,7 +108,49 @@ const PROP_TILES = {
   lab: { col: 8, row: 3 },             // green reagent vat
   materials: { col: 6, row: 5 },       // gatherer's sack
   entrance: { col: 10, row: 3 },       // the door down
+  shop: { col: 0, row: 6 },            // the peddler's counter
+  'shop-barrel': { col: 7, row: 5 },   // stock beside the stall
+  altar: { col: 8, row: 2 },           // the offering basin, green and patient
+  stairs: { col: 3, row: 6 },          // the ladder down
 };
+
+/* Architecture — the dungeon fabric itself (walls, floors, dressing) */
+export const ARCH_TILES = {
+  wallBrick: { col: 9, row: 4 },       // grey brickwork
+  wallBrickB: { col: 10, row: 4 },     // brickwork, weathered
+  floorStone: { col: 0, row: 3 },      // stone plank floor
+  floorStoneB: { col: 1, row: 3 },     // stone planks, worn
+  floorSand: { col: 0, row: 4 },       // packed tan earth
+  floorPaver: { col: 6, row: 3 },      // earth with stone pavers
+  banner: { col: 5, row: 2 },          // the red wall banner (boss chambers)
+  portcullis: { col: 4, row: 3 },      // the iron gate (locked doors)
+};
+
+/* Torches — each theme burns its own color */
+export const TORCH_TILES = {
+  plain: { col: 5, row: 10 },
+  green: { col: 6, row: 10 },
+  red: { col: 7, row: 10 },
+  blue: { col: 8, row: 10 },
+};
+const THEME_TORCH = {
+  volcanic: 'red', castle: 'red',
+  madlab: 'green', bogcellar: 'green',
+  icecaverns: 'blue', library: 'blue',
+};
+export function getTorchTile(themeId) {
+  return TORCH_TILES[THEME_TORCH[themeId] || 'plain'];
+}
+
+/* Each theme's floor fabric (walls share the brick) */
+const THEME_FLOOR = {
+  delve: 'floorStone', crypt: 'floorStoneB', volcanic: 'floorSand',
+  library: 'floorStoneB', madlab: 'floorPaver', castle: 'floorStone',
+  bogcellar: 'floorPaver', icecaverns: 'floorStoneB', athanor: 'floorPaver',
+};
+export function getFloorTile(themeId) {
+  return ARCH_TILES[THEME_FLOOR[themeId] || 'floorStone'];
+}
 
 /* Effect sprites drawn from the sheet (procedural glows cover the rest) */
 export const FX_TILES = {
@@ -159,6 +201,8 @@ export function getAllMappedTiles() {
     ...Object.values(MONSTER_TILES),
     ...Object.values(PROP_TILES),
     ...Object.values(FX_TILES),
+    ...Object.values(ARCH_TILES),
+    ...Object.values(TORCH_TILES),
     MONSTER_FALLBACK,
   ];
 }

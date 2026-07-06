@@ -297,7 +297,7 @@ function processTickResult() {
     appendStory(state.narration, state.roomIndex);
     announceEvents(appState.prevState, state);
     // Spell bursts, sword slashes, gold glints — over the room it happened in
-    appState.renderer.playEffect?.(state.narration.action, state.narration.roomIndex, state.narration.spellElement);
+    appState.renderer.playEffect?.(state.narration.action, state.narration.roomIndex, state.narration.spellElement, state.narration.fx);
     // Secret doors and side passages get an onscreen flag too
     if (state.narration.aside) {
       const icon = state.narration.aside.startsWith('🕳️') ? '🕳️' : '🧭';
@@ -371,6 +371,11 @@ function updateUI(state) {
   log.scrollTop = log.scrollHeight;
 }
 
+/** First name only — the ticker has no room for epithets. */
+function shortName(name) {
+  return String(name || '').split(/[ ,]/)[0];
+}
+
 function appendStory(narration, roomIndex) {
   const panel = document.getElementById('story-panel');
   const empty = panel.querySelector('.story-empty');
@@ -383,6 +388,24 @@ function appendStory(narration, roomIndex) {
     ? `<div class="story-aside">${escapeHtml(narration.aside)}</div>`
     : '';
 
+  // The blow-by-blow, one muted line: who hit, for how much, who ran
+  const log = narration.fx?.combatLog;
+  const roundsLine = log?.length
+    ? `<div class="story-rounds">⚔ ${log.map(r =>
+        r.events.map(ev =>
+          ev.kind === 'hero-hit' ? `${escapeHtml(shortName(ev.name))} ${ev.crit ? '✦' : ''}${ev.amount}`
+          : ev.kind === 'opening' ? `${escapeHtml(shortName(ev.name || 'item'))}!${ev.amount}`
+          : ev.kind === 'cantrip' ? `✨${ev.amount}`
+          : ev.kind === 'vial' ? `⚗${ev.amount}`
+          : ev.kind === 'monster-hit' ? `<span class="hit-back">-${ev.amount}</span>`
+          : ev.kind === 'triage' ? `<span class="hit-heal">+${ev.amount}</span>`
+          : ev.kind === 'phase' ? '💢'
+          : ev.kind === 'rout' ? '💨flees!'
+          : ''
+        ).filter(Boolean).join(' ')
+      ).join(' · ')}</div>`
+    : '';
+
   const entry = document.createElement('div');
   entry.className = 'story-entry';
   entry.innerHTML = `
@@ -390,6 +413,7 @@ function appendStory(narration, roomIndex) {
     <div class="story-predicament">${escapeHtml(narration.predicament)}</div>
     <div class="story-deliberation">${escapeHtml(narration.deliberation)}</div>
     <div class="story-resolution">${escapeHtml(narration.resolution)}</div>
+    ${roundsLine}
     ${fallLines}
     ${asideLine}
   `;

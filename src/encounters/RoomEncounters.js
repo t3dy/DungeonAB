@@ -610,34 +610,112 @@ export function resolveRoomAction(room, party, optionId) {
       // Auto-battle: rounds of party attack vs monster attack.
       // Corridor frontage: only ~5 blades work at once, so a mob
       // of drafted heroes helps less than it thinks it does.
-      // Bosses turn the fight at half health.
+      // Bosses turn the fight at half health. Every exchange is
+      // logged — the chronicle and the renderer replay it blow by blow.
+      const maxHealth = monster.health;   // pre-opening: the bar starts honest
+      const combatLog = [];
+      if (opening > 0) {
+        const opener = itemActions.find(a => a.opening || a.vsUndead);
+        combatLog.push({
+          round: 0,
+          events: [{ kind: 'opening', name: opener?.member, item: opener?.item, amount: opening }],
+          monsterHp: Math.max(0, monsterHealth),
+        });
+      }
+
       let rounds = 0;
       let phased = false;
+      let routed = false;
+      let crits = 0;
       while (monsterHealth > 0 && party.isAlive() && rounds < 12) {
         rounds++;
-        const swing = Math.max(1, Math.round((party.combatAttack() + summon + coating.bonus + Math.floor(roll() / 3)) * etherealMult) - armorShave);
+        const events = [];
+
+        // The party's aggregate swing, attributed blade by blade so
+        // the chronicle knows whose hit was whose
+        let swing = Math.max(1, Math.round((party.combatAttack() + summon + coating.bonus + Math.floor(roll() / 3)) * etherealMult) - armorShave);
+        const baseSwing = swing;   // shares split the base; crits stack on top
+        const front = party.living().slice().sort((a, b) => b.attack - a.attack).slice(0, 5);
+        const attackSum = front.reduce((s, m) => s + m.attack, 0) || 1;
+        let attributed = 0;
+        front.forEach((m, i) => {
+          let share = i === front.length - 1
+            ? Math.max(0, baseSwing - attributed)
+            : Math.max(0, Math.round(baseSwing * m.attack / attackSum));
+          attributed += share;
+          // A rogue's backstab: the same blade, twice, in the seam
+          if (m.class === CLASSES.ROGUE && share > 0 && roll() > 7.5) {
+            swing += share;
+            crits++;
+            events.push({ kind: 'hero-hit', name: m.name, amount: share * 2, crit: true });
+          } else if (share > 0) {
+            events.push({ kind: 'hero-hit', name: m.name, amount: share });
+          }
+        });
+        // The wizard chips in a cantrip between real workings
+        if (party.grimoire.some(s => s.use === 'combat')) {
+          const wizard = party.living().find(m => m.class === CLASSES.WIZARD);
+          if (wizard) {
+            swing += 2;
+            events.push({ kind: 'cantrip', name: wizard.name, amount: 2 });
+          }
+        }
+        // The alchemist opens with a fizzing vial scraped from the satchel
+        if (rounds === 1 && party.materials >= 1) {
+          const alch = party.living().find(m => m.class === CLASSES.ALCHEMIST);
+          if (alch) {
+            swing += 2;
+            events.push({ kind: 'vial', name: alch.name, amount: 2 });
+          }
+        }
+
         monsterHealth -= swing;
-        if (monsterHealth <= 0) break;
+        if (monsterHealth <= 0) {
+          combatLog.push({ round: rounds, events, monsterHp: 0 });
+          break;
+        }
+
+        // Morale: the badly hurt and the mercenary lose their nerve.
+        // Bosses never run; the dead have nothing left to fear with.
+        const nerve = monster.bribable ? 0.4 : 0.25;
+        if (!monster.isBoss && !monster.undead && monsterHealth <= maxHealth * nerve && roll() > 6) {
+          routed = true;
+          events.push({ kind: 'rout' });
+          combatLog.push({ round: rounds, events, monsterHp: Math.max(0, monsterHealth) });
+          break;
+        }
+
         if (monster.isBoss && !phased && monsterHealth <= monster.health / 2) {
           phased = true;
           monsterAtk += 2;
           preps.push({ source: monster.name, text: bossPhaseLine(monster) });
+          events.push({ kind: 'phase' });
         }
         // The slow strike last: no incoming damage on the first round
-        if (monster.trait === 'slow' && rounds === 1) continue;
+        if (monster.trait === 'slow' && rounds === 1) {
+          combatLog.push({ round: rounds, events, monsterHp: Math.max(0, monsterHealth) });
+          continue;
+        }
         const incoming = Math.max(1, monsterAtk - Math.floor(party.totalDefense() / 3) - ward);
         party.takeDamage(incoming);
         partyDamageTaken += incoming;
+        events.push({ kind: 'monster-hit', amount: incoming });
+        // The cleric works the line mid-fight, every third exchange
+        if (rounds % 3 === 0 && party.isAlive() && party.hasClass(CLASSES.CLERIC)) {
+          party.healParty(2);
+          events.push({ kind: 'triage', amount: 2 });
+        }
         party.quaffIfNeeded();
+        combatLog.push({ round: rounds, events, monsterHp: Math.max(0, monsterHealth) });
       }
 
-      const won = monsterHealth <= 0 && party.isAlive();
+      const won = (monsterHealth <= 0 || routed) && party.isAlive();
       if (won) {
-        const bounty = monster.isBoss ? 100 : 25;
-        party.addScore(bounty);
+        const bounty = monster.isBoss ? 100 : monster.elite ? 40 : 25;
+        party.addScore(routed ? Math.floor(bounty / 2) : bounty);
         room.cleared = true;
-        // The venomous leave something behind, win or no win
-        if (monster.trait === 'venomous') {
+        // The venomous leave something behind — unless they fled with it
+        if (monster.trait === 'venomous' && !routed) {
           if (party.hasClass(CLASSES.CLERIC)) {
             preps.push({ source: 'the cleric', text: '🐍 Venom in three sets of scratches — drawn, hissing, into the cleric\'s salt bowl before it can work.' });
           } else {
@@ -665,7 +743,12 @@ export function resolveRoomAction(room, party, optionId) {
         }
       }
       party.recordEncounter('fight', won);
-      return { success: won, rounds, damage: partyDamageTaken, monster: monster.name, itemActions, preps, bossPhased: phased };
+      return {
+        success: won, rounds, damage: partyDamageTaken, monster: monster.name,
+        itemActions, preps, bossPhased: phased,
+        combatLog, crits, routed,
+        monsterMaxHealth: maxHealth, monsterKind: monster.kind, elite: !!monster.elite,
+      };
     }
 
     case 'cause-fear': {

@@ -331,7 +331,12 @@ export function composeResolution(room, optionId, result, party) {
       if (leadAction) {
         bits.push(`🪄 ${leadAction.member}'s ${leadAction.item} answers first — ${leadAction.name}.`);
       }
-      if (result.success && result.rounds === 0) {
+      if (result.routed) {
+        bits.push(pick([
+          `💨 Three-quarters beaten, ${result.monster} does the arithmetic and runs — dropping everything, apologizing to no one. Half a bounty for half a fight.`,
+          `💨 ${capitalize(result.monster)}'s nerve goes before its legs do. The party watches it vanish down a side passage and decides not to take it personally.`,
+        ]));
+      } else if (result.success && result.rounds === 0) {
         bits.push(`⚔️ ${capitalize(result.monster)} is over before it begins. The party steps around what's left.`);
       } else {
         const roundsWord = `${result.rounds} bloody round${result.rounds === 1 ? '' : 's'}`;
@@ -346,6 +351,11 @@ export function composeResolution(room, optionId, result, party) {
               `☠️ ${capitalize(result.monster)} was too much. The line broke, and the dungeon collected its due.`,
               `☠️ The party gave everything it had, and ${result.monster} took the rest. The dungeon is very good at arithmetic.`,
             ]));
+      }
+      if (result.crits > 0 && result.success) {
+        bits.push(result.crits > 1
+          ? `✦ The rogue's blade found the seam ${result.crits} times — backstabs the chronicle will exaggerate and the survivors won't correct.`
+          : '✦ Once, mid-melee, the rogue\'s blade found the seam — the kind of hit that ends arguments early.');
       }
       break;
     }
