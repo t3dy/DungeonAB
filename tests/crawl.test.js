@@ -82,7 +82,7 @@ describe('Dungeon generation', () => {
   test('dungeon runs entrance → boss', () => {
     const d = generateDungeon('delve-1', 'medium');
     assert.equal(d.rooms[0].type, ROOM_TYPES.ENTRANCE);
-    assert.equal(d.rooms[d.rooms.length - 1].type, ROOM_TYPES.BOSS);
+    assert.equal(d.rooms[d.spine[d.spine.length - 1]].type, ROOM_TYPES.BOSS, 'the spine ends at the boss');
     assert.ok(d.length >= 10);
   });
 

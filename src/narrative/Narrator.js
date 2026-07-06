@@ -85,7 +85,42 @@ const PREDICAMENTS = {
     'The final chamber. The air itself is heavier here, and the thing at its center has been expecting visitors far better armed than you.',
     'Every dungeon keeps its worst for last. The door swings wide on the proof.',
   ],
+  vault: [
+    'A vault. Someone sealed this room and walled over the seal, which raises exactly one question: from which side?',
+    'The hidden room is small, dry, and stacked to the beams. Whoever hoarded this never came back for it. The dungeon knows why.',
+    'Coin-shine in the dark — a vault, untouched since its owner\'s luck ran out somewhere between here and daylight.',
+  ],
 };
+
+/* ------------------------------------------------------------------ */
+/* Asides — side passages and secret doors (procgen v2)                */
+/* ------------------------------------------------------------------ */
+
+const SECRET_FOUND = [
+  '🕳️ {finder} taps the wall and the wall answers wrong — hollow. A seam, a catch, and a door that was never meant to be found swings inward.',
+  '🕳️ {finder} stops mid-stride: the dust on this stretch of floor has been disturbed from the *inside*. A hidden door gives under one shoulder.',
+  '🕳️ A draft where no draft should be. {finder} follows it to a false stone, and the dungeon reluctantly shows its hidden room.',
+];
+
+const DETOUR_TAKEN = [
+  '🧭 A side passage breathes cold air across the party\'s torches, and curiosity wins the vote.',
+  '🧭 There is a way that is forward and a way that is *interesting*. The party takes the interesting one.',
+];
+
+const DETOUR_SKIPPED = [
+  '🚶 A side passage yawns to one side. The party looks at it, looks at each other, and keeps marching.',
+  '🚶 Somewhere down that branching corridor is either treasure or teeth. The party elects not to find out which.',
+];
+
+export function composeSecretFound(party) {
+  const rogue = party.living().find(m => m.class === CLASSES.ROGUE);
+  const finder = rogue ? rogue.name : (party.living()[0]?.name || 'Someone');
+  return pick(SECRET_FOUND).replace('{finder}', finder);
+}
+
+export function composeDetour(taken) {
+  return pick(taken ? DETOUR_TAKEN : DETOUR_SKIPPED);
+}
 
 /* ------------------------------------------------------------------ */
 /* Deliberation — the party argues in character                        */

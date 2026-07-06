@@ -23,12 +23,13 @@ export const ROOM_TYPES = {
   MATERIALS: 'materials',
   DISASTER: 'disaster',
   BOSS: 'boss',
+  VAULT: 'vault',   // the rich room behind the secret door
 };
 
 const ROOM_ICONS = {
   entrance: '🚪', corridor: '⬛', monster: '👹', trap: '⚠️',
   treasure: '💰', library: '📚', shrine: '🕯️', lab: '⚗️',
-  materials: '🌿', disaster: '🌋', boss: '🐉',
+  materials: '🌿', disaster: '🌋', boss: '🐉', vault: '💎',
 };
 
 /**
@@ -54,16 +55,26 @@ function weightedPick(rng, weights) {
 }
 
 export class Dungeon {
-  constructor(rooms, theme, condition = null) {
+  constructor(rooms, theme, condition = null, layout = {}) {
     this.rooms = rooms;         // Array of room objects in order
     this.theme = theme;         // One of DUNGEON_THEMES
     this.condition = condition; // The player's wager, or null
+    // Spatial layout (procgen v2, per the Spelunky critical-path
+    // pattern in Shaker/Togelius/Nelson ch.3):
+    this.spine = layout.spine || rooms.map((_, i) => i);   // the guaranteed path, entrance→boss
+    this.edges = layout.edges                              // [{a, b, secret}] between room indexes
+      || rooms.slice(1).map((_, i) => ({ a: i, b: i + 1, secret: false }));
+    this.branches = layout.branches || [];                 // [{junction, rooms:[idx], secret, consumed}]
   }
   getRoom(index) {
     return this.rooms[index] || null;
   }
   get length() {
     return this.rooms.length;
+  }
+  /** The unconsumed branch hanging off this room, if any. */
+  branchAt(roomIndex) {
+    return this.branches.find(b => b.junction === roomIndex && !b.consumed) || null;
   }
 }
 
@@ -125,16 +136,81 @@ export function generateDungeon(seed, difficulty = 'medium', opts = {}) {
 
   rooms.push(makeRoom(rooms.length, ROOM_TYPES.BOSS, rng, theme, depth, statScale, condition));
 
-  // Depth positions for the renderer (a winding descent)
+  /* ---- Spatial layout (procgen v2) ---------------------------------- */
+
+  // The spine winds down the grid (the guaranteed critical path)
+  const occupied = new Set();
   let x = 0;
   let y = 0;
   for (const room of rooms) {
     room.x = x;
     room.y = y;
+    occupied.add(`${x},${y}`);
     if (rng.next() < 0.5) x += 1; else y += 1;
   }
 
-  return new Dungeon(rooms, theme, condition);
+  const spine = rooms.map((_, i) => i);
+  const edges = rooms.slice(1).map((_, i) => ({ a: i, b: i + 1, secret: false }));
+  const branches = [];
+
+  // Branches: optional side rooms off the spine. Roughly half are
+  // secret — a hidden door the rogue or the scholar might notice,
+  // with a vault (NetHack-style riches) at the end.
+  const branchCount = 1 + Math.floor(rng.next() * 2);   // 1-2 branches
+  const BRANCH_TYPES = [
+    ROOM_TYPES.TREASURE, ROOM_TYPES.MATERIALS, ROOM_TYPES.MONSTER, ROOM_TYPES.LIBRARY,
+  ];
+  const DIRS = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+
+  for (let b = 0; b < branchCount; b++) {
+    // A junction mid-spine (never the entrance or the boss)
+    const junction = 1 + Math.floor(rng.next() * (spine.length - 2));
+    const jRoom = rooms[junction];
+
+    // Find a free cell next to the junction
+    const dirs = rng.shuffle(DIRS);
+    const dir = dirs.find(([dx, dy]) => !occupied.has(`${jRoom.x + dx},${jRoom.y + dy}`));
+    if (!dir) continue; // boxed in; the dungeon keeps its secret
+
+    const secret = rng.next() < 0.5;
+    const chainLen = 1 + Math.floor(rng.next() * 2);    // 1-2 rooms deep
+    const branchRooms = [];
+    let px = jRoom.x;
+    let py = jRoom.y;
+    let prevIdx = junction;
+
+    for (let i = 0; i < chainLen; i++) {
+      const nx = px + dir[0];
+      const ny = py + dir[1];
+      if (occupied.has(`${nx},${ny}`)) break;
+
+      // The last room of a secret branch is the vault
+      const isLast = i === chainLen - 1;
+      const type = secret && isLast
+        ? ROOM_TYPES.VAULT
+        : BRANCH_TYPES[Math.floor(rng.next() * BRANCH_TYPES.length)];
+
+      const room = makeRoom(rooms.length, type, rng, theme, depth, statScale, condition);
+      room.x = nx;
+      room.y = ny;
+      room.secret = secret;
+      room.discovered = !secret;   // secret rooms start unknown
+      rooms.push(room);
+      occupied.add(`${nx},${ny}`);
+
+      edges.push({ a: prevIdx, b: room.index, secret: secret && i === 0 });
+      branchRooms.push(room.index);
+      prevIdx = room.index;
+      px = nx;
+      py = ny;
+    }
+
+    if (branchRooms.length > 0) {
+      branches.push({ junction, rooms: branchRooms, secret, consumed: false });
+    }
+  }
+
+  return new Dungeon(rooms, theme, condition, { spine, edges, branches });
 }
 
 /**
@@ -184,6 +260,13 @@ function makeRoom(index, type, rng, theme, depth = 1, statScale = 1, condition =
     const base = (20 + Math.floor(rng.next() * 40)) * (1 + 0.2 * (depth - 1));
     room.gold = Math.round(base * (condition.goldMult || 1));
     room.mimicChance = 0.18;
+  }
+  if (type === ROOM_TYPES.VAULT) {
+    // Whoever hid this room meant it: 3× a treasure room's haul,
+    // and mimics love a vault
+    const base = (60 + Math.floor(rng.next() * 120)) * (1 + 0.2 * (depth - 1));
+    room.gold = Math.round(base * (condition.goldMult || 1));
+    room.mimicChance = 0.28;
   }
   if (type === ROOM_TYPES.TRAP) {
     room.trapDamage = 4 + Math.floor(rng.next() * 4) + (theme.trapBonus || 0) + (depth - 1) + (condition.trapBonus || 0);

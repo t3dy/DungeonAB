@@ -272,6 +272,11 @@ function processTickResult() {
     announceEvents(appState.prevState, state);
     // Spell bursts, sword slashes, gold glints — over the room it happened in
     appState.renderer.playEffect?.(state.narration.action, state.narration.roomIndex);
+    // Secret doors and side passages get an onscreen flag too
+    if (state.narration.aside) {
+      const icon = state.narration.aside.startsWith('🕳️') ? '🕳️' : '🧭';
+      showToast(icon, state.narration.aside.replace(/^[^ ]+ /, ''), 'room');
+    }
   }
   appState.prevState = state;
 
@@ -299,7 +304,7 @@ function togglePause() {
 }
 
 function updateUI(state) {
-  document.getElementById('room-count').textContent = `${state.roomIndex} / ${state.dungeon.length - 1}`;
+  document.getElementById('room-count').textContent = `${state.roomIndex} / ${(state.pathLength || state.dungeon.length) - 1}`;
   document.getElementById('gold-count').textContent = state.party.gold;
   document.getElementById('score-count').textContent = state.party.score;
   document.getElementById('materials-count').textContent = state.party.materials;
@@ -338,6 +343,9 @@ function appendStory(narration, roomIndex) {
   const fallLines = (narration.falls || [])
     .map(f => `<div class="story-fall">${escapeHtml(f)}</div>`)
     .join('');
+  const asideLine = narration.aside
+    ? `<div class="story-aside">${escapeHtml(narration.aside)}</div>`
+    : '';
 
   const entry = document.createElement('div');
   entry.className = 'story-entry';
@@ -347,6 +355,7 @@ function appendStory(narration, roomIndex) {
     <div class="story-deliberation">${escapeHtml(narration.deliberation)}</div>
     <div class="story-resolution">${escapeHtml(narration.resolution)}</div>
     ${fallLines}
+    ${asideLine}
   `;
   panel.appendChild(entry);
   while (panel.children.length > 14) panel.removeChild(panel.firstChild);

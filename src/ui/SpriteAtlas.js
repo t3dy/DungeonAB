@@ -76,6 +76,7 @@ const MONSTER_FALLBACK = { col: 1, row: 9 }; // when in doubt, cyclops
 const PROP_TILES = {
   treasure: { col: 5, row: 7 },        // gold-trimmed chest
   'treasure-open': { col: 7, row: 7 }, // looted chest
+  vault: { col: 6, row: 7 },           // the silver-bound hoard chest
   mimic: { col: 8, row: 7 },           // the chest with TEETH
   trap: { col: 4, row: 3 },            // spike gate
   library: { col: 5, row: 5 },         // archive cabinet
@@ -108,6 +109,9 @@ export function getMonsterTile(kind) {
 export function getRoomProp(room) {
   if (room.type === 'treasure') {
     return room.cleared ? PROP_TILES['treasure-open'] : PROP_TILES.treasure;
+  }
+  if (room.type === 'vault') {
+    return room.cleared ? PROP_TILES['treasure-open'] : PROP_TILES.vault;
   }
   if (PROP_TILES[room.type]) return PROP_TILES[room.type];
   return null;

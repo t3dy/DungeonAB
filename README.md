@@ -80,5 +80,6 @@ Consolidated in `DESIGN.md` from:
 - [x] Hall of Records — best scores and past campaigns, persisted locally
 - [x] Rival standings — the AI drafters delve their own parties; scores compared at the table
 - [x] Hex exchange — lay a condition on a rival's run; one hexes yours back (Megabase multiplayer variant)
+- [x] Procgen v2 — branching layouts, secret doors, hidden vaults (see `ROGUELIKE_ROADMAP.md`)
 - [x] Deploy the prototype (Vercel, with a GitHub Pages mirror)
 - [ ] True multiplayer draft

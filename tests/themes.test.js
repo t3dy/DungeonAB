@@ -91,7 +91,7 @@ describe('Themed generation', () => {
     for (const themeId of Object.keys(DUNGEON_THEMES)) {
       const d = generateDungeon(`shape-${themeId}`, 'medium', { theme: themeId });
       assert.equal(d.rooms[0].type, ROOM_TYPES.ENTRANCE);
-      assert.equal(d.rooms[d.rooms.length - 1].type, ROOM_TYPES.BOSS);
+      assert.equal(d.rooms[d.spine[d.spine.length - 1]].type, ROOM_TYPES.BOSS);
       const types = d.rooms.map(r => r.type);
       assert.ok(types.includes(ROOM_TYPES.LIBRARY), `${themeId} has a library`);
       assert.ok(types.includes(ROOM_TYPES.SHRINE), `${themeId} has a shrine`);

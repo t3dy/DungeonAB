@@ -12,10 +12,12 @@ import { Party } from '../agents/Party.js';
 import { CLASSES } from '../game/Cards.js';
 import {
   getRoomOptions, decideRoomAction, resolveRoomAction,
+  detectSecretDoor, decideDetour,
 } from '../encounters/RoomEncounters.js';
 import {
   composePredicament, composeDeliberation, composeResolution,
   composeWipe, composeVictory, composeFall,
+  composeSecretFound, composeDetour,
 } from '../narrative/Narrator.js';
 
 export class Simulator {
@@ -37,7 +39,11 @@ export class Simulator {
     });
     this.condition = this.dungeon.condition;
 
-    this.roomIndex = 0;   // Currently at the entrance
+    // The march order: the spine to start with. Detours into side
+    // branches splice their rooms in as the party discovers and
+    // chooses them (procgen v2).
+    this.path = this.dungeon.spine.slice();
+    this.roomIndex = 0;   // Position along the path (entrance = 0)
     this.turn = 0;
     this.roomsCleared = 0;
     this.gameOver = false;
@@ -66,7 +72,8 @@ export class Simulator {
     this.turn++;
     this.roomIndex++;
 
-    const room = this.dungeon.getRoom(this.roomIndex);
+    const roomIdx = this.path[this.roomIndex];
+    const room = roomIdx !== undefined ? this.dungeon.getRoom(roomIdx) : null;
     if (!room) {
       // Walked off the end without a boss?? Treat as victory.
       this.finish(true);
@@ -91,13 +98,35 @@ export class Simulator {
     this.lastNarration = {
       room: room.type,
       icon: room.icon,
-      roomIndex: this.roomIndex,   // where it happened (pre-retreat)
-      action: chosen,              // for the renderer's effects
+      roomIndex: roomIdx,          // array index, for the renderer's effects
+      action: chosen,
       predicament,
       deliberation: composeDeliberation(chosen, options, this.party),
       resolution: composeResolution(room, chosen, result, this.party),
       falls: fallen.map(m => composeFall(m)),
+      aside: null,
     };
+
+    // A side passage? Secret doors must be noticed first; open ones
+    // are a party vote. Taking one splices its rooms into the march.
+    const branch = this.party.isAlive() ? this.dungeon.branchAt(roomIdx) : null;
+    if (branch) {
+      if (branch.secret) {
+        if (detectSecretDoor(this.party)) {
+          branch.consumed = true;
+          for (const bi of branch.rooms) this.dungeon.rooms[bi].discovered = true;
+          this.path.splice(this.roomIndex + 1, 0, ...branch.rooms);
+          this.lastNarration.aside = composeSecretFound(this.party);
+          this.addLog('🕳️ A hidden door!');
+        }
+        // Unnoticed secrets stay secret — the branch may be found on a retreat pass
+      } else {
+        branch.consumed = true;
+        const going = decideDetour(this.party);
+        if (going) this.path.splice(this.roomIndex + 1, 0, ...branch.rooms);
+        this.lastNarration.aside = composeDetour(going);
+      }
+    }
 
     this.addLog(`${room.icon} Room ${this.roomIndex}: ${room.type} — ${chosen}`);
 
@@ -129,9 +158,13 @@ export class Simulator {
   }
 
   getState() {
+    const clampedPos = Math.min(this.roomIndex, this.path.length - 1);
     return {
       turn: this.turn,
       roomIndex: this.roomIndex,
+      currentRoomIndex: this.path[clampedPos],           // array index for the renderer
+      pathLength: this.path.length,
+      knownIdxs: [...this.path.slice(0, this.roomIndex + 2), this.dungeon.spine[this.dungeon.spine.length - 1]],
       dungeon: this.dungeon,
       depth: this.depth,
       theme: {

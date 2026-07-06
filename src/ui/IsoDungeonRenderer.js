@@ -127,14 +127,15 @@ export class IsoDungeonRenderer {
 
     this.resize(rooms);
 
-    const key = rooms.map(r => r.type).join(',');
+    // Discovery changes the map: found secret rooms surface
+    const key = rooms.map(r => `${r.type}${r.secret && !r.discovered ? '?' : ''}`).join(',');
     if (this.builtKey !== key) {
-      this.buildDungeon(rooms);
+      this.buildDungeon(rooms, state.dungeon.edges);
       this.builtKey = key;
     }
 
-    this.updateIcons(rooms, state.roomIndex);
-    this.updateOccupants(rooms, state.roomIndex);
+    this.updateIcons(state);
+    this.updateOccupants(state);
     this.updateParty(state);
     this.animateFrame();
   }
@@ -164,13 +165,16 @@ export class IsoDungeonRenderer {
    * The rooms' inhabitants: monsters brood on their platforms until
    * dealt with; chests, traps, shrines and benches dress the rest.
    */
-  updateOccupants(rooms, roomIndex) {
+  updateOccupants(state) {
     this.occupantGroup.clear();
     if (!this.atlasReady) return;
+    const rooms = state.dungeon.rooms;
+    const knownRooms = this.knownSet(state);
 
     rooms.forEach((room, i) => {
+      if (room.secret && !room.discovered) return;
       const { x, z } = this.roomPositions[i];
-      const known = i <= roomIndex + 1 || room.type === 'boss';
+      const known = knownRooms.has(i) || room.type === 'boss';
       if (!known) return;
 
       let sprite = null;
@@ -233,19 +237,24 @@ export class IsoDungeonRenderer {
     this.camera.lookAt(cx, 0, cz);
   }
 
-  buildDungeon(rooms) {
+  buildDungeon(rooms, edges = null) {
     this.staticGroup.clear();
     this.roomPositions = rooms.map(r => this.roomWorldPos(r));
 
     const platGeo = new THREE.BoxGeometry(2.4, 0.35, 2.4);
     const bossGeo = new THREE.BoxGeometry(3.1, 0.5, 3.1);
+    const hidden = room => room.secret && !room.discovered;
 
     rooms.forEach((room, i) => {
+      // Undiscovered secret rooms simply aren't there — that's the point
+      if (hidden(room)) return;
       const { x, z } = this.roomPositions[i];
 
-      // Stone platform with hand-laid shade variance
+      // Stone platform with hand-laid shade variance; vaults gleam
       const shade = ((room.index * 7) % 5 - 2) * 0.02;
-      const base = room.type === 'boss' ? 0x5a2626 : 0x615b52;
+      const base = room.type === 'boss' ? 0x5a2626
+        : room.type === 'vault' ? 0x6a5a30
+        : 0x615b52;
       const c = new THREE.Color(base);
       c.offsetHSL(0, 0, shade);
 
@@ -267,23 +276,31 @@ export class IsoDungeonRenderer {
       wall2.position.set(x - 1.15, 0.5, z);
       wall2.castShadow = true;
       this.staticGroup.add(wall2);
-
-      // Walkway to the next room
-      if (i < rooms.length - 1) {
-        const next = this.roomWorldPos(rooms[i + 1]);
-        const dx = next.x - x;
-        const dz = next.z - z;
-        const len = Math.sqrt(dx * dx + dz * dz);
-        const bridge = new THREE.Mesh(
-          new THREE.BoxGeometry(len, 0.18, 0.8),
-          new THREE.MeshStandardMaterial({ color: 0x3d3a33, roughness: 1 })
-        );
-        bridge.position.set(x + dx / 2, -0.02, z + dz / 2);
-        bridge.rotation.y = -Math.atan2(dz, dx);
-        bridge.receiveShadow = true;
-        this.staticGroup.add(bridge);
-      }
     });
+
+    // Walkways along the dungeon's edges (spine + discovered branches)
+    const edgeList = edges || rooms.slice(1).map((_, i) => ({ a: i, b: i + 1 }));
+    for (const edge of edgeList) {
+      const ra = rooms[edge.a];
+      const rb = rooms[edge.b];
+      if (!ra || !rb || hidden(ra) || hidden(rb)) continue;
+      const pa = this.roomPositions[edge.a];
+      const pb = this.roomPositions[edge.b];
+      const dx = pb.x - pa.x;
+      const dz = pb.z - pa.z;
+      const len = Math.sqrt(dx * dx + dz * dz);
+      const bridge = new THREE.Mesh(
+        new THREE.BoxGeometry(len, 0.18, 0.8),
+        new THREE.MeshStandardMaterial({
+          // A revealed secret passage keeps a furtive, darker look
+          color: edge.secret ? 0x2a2620 : 0x3d3a33, roughness: 1,
+        })
+      );
+      bridge.position.set(pa.x + dx / 2, -0.02, pa.z + dz / 2);
+      bridge.rotation.y = -Math.atan2(dz, dx);
+      bridge.receiveShadow = true;
+      this.staticGroup.add(bridge);
+    }
   }
 
   getSpriteMaterial(icon) {
@@ -303,16 +320,26 @@ export class IsoDungeonRenderer {
     return this.spriteMaterials.get(icon);
   }
 
-  updateIcons(rooms, roomIndex) {
+  /** Which rooms the party can identify (path so far + one ahead + the boss) */
+  knownSet(state) {
+    return new Set(state.knownIdxs
+      || state.dungeon.rooms.map((_, i) => i).filter(i => i <= state.roomIndex + 1));
+  }
+
+  updateIcons(state) {
     this.iconGroup.clear();
+    const rooms = state.dungeon.rooms;
+    const known = this.knownSet(state);
+    const current = state.currentRoomIndex ?? state.roomIndex;
+
     rooms.forEach((room, i) => {
+      if (room.secret && !room.discovered) return;   // still behind the wall
       const { x, z } = this.roomPositions[i];
-      const visited = i < roomIndex || room.cleared;
-      const known = i <= roomIndex + 1 || room.type === 'boss';
-      const icon = known ? room.icon : '❓';
+      const isKnown = known.has(i) || room.type === 'boss';
+      const icon = isKnown ? room.icon : '❓';
 
       // Rooms with a sprite standing on them don't need the emoji too
-      if (known && this.atlasReady) {
+      if (isKnown && this.atlasReady) {
         const hasMonsterSprite = (room.type === 'monster' || room.type === 'boss') && room.monster && !room.cleared;
         if (hasMonsterSprite || getRoomProp(room)) return;
       }
@@ -322,7 +349,7 @@ export class IsoDungeonRenderer {
       sprite.scale.set(scale, scale, 1);
       sprite.position.set(x, 1.35, z);
       sprite.material = sprite.material.clone();
-      sprite.material.opacity = visited && i !== roomIndex ? 0.28 : 1;
+      sprite.material.opacity = room.cleared && i !== current ? 0.28 : 1;
       sprite.userData.baseY = 1.35;
       sprite.userData.phase = i;
       this.iconGroup.add(sprite);
@@ -331,7 +358,7 @@ export class IsoDungeonRenderer {
 
   updateParty(state) {
     this.partyGroup.clear();
-    const idx = Math.min(state.roomIndex, state.dungeon.rooms.length - 1);
+    const idx = state.currentRoomIndex ?? Math.min(state.roomIndex, state.dungeon.rooms.length - 1);
     const { x, z } = this.roomPositions[idx] || { x: 0, z: 0 };
 
     // Torch travels with the party

@@ -125,7 +125,7 @@ describe('Conditions reshape generation', () => {
     for (const id of Object.keys(DUNGEON_CONDITIONS)) {
       const d = generateDungeon(`trav-${id}`, 'hard', { theme: 'crypt', condition: id });
       assert.equal(d.rooms[0].type, ROOM_TYPES.ENTRANCE);
-      assert.equal(d.rooms[d.rooms.length - 1].type, ROOM_TYPES.BOSS);
+      assert.equal(d.rooms[d.spine[d.spine.length - 1]].type, ROOM_TYPES.BOSS);
       assert.ok(d.rooms.some(r => r.type === ROOM_TYPES.LIBRARY), `${id}: still a library`);
       assert.ok(d.rooms.some(r => r.type === ROOM_TYPES.SHRINE), `${id}: still a shrine`);
     }

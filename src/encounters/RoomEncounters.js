@@ -54,7 +54,8 @@ export function getRoomOptions(room, party) {
       return opts;
     }
 
-    case ROOM_TYPES.TREASURE: {
+    case ROOM_TYPES.TREASURE:
+    case ROOM_TYPES.VAULT: {
       return [
         { id: 'loot', name: 'Loot It All', desc: 'Everything shiny goes in the bags' },
         { id: 'inspect', name: 'Inspect First', desc: 'Check for mimics and curses' },
@@ -152,6 +153,41 @@ export function decideRoomAction(room, party) {
     if (r <= 0) return opt.id;
   }
   return options[0].id;
+}
+
+/* ------------------------------------------------------------------ */
+/* Side passages and secret doors (procgen v2)                         */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Does the party notice the hidden door? Rogues have the eyes for it
+ * (NetHack search tradition); scholars read the architecture; the
+ * Craven has already memorized every wall. Pure — pass the roll.
+ */
+export function detectSecretDoor(party, rollValue = roll()) {
+  const rogues = party.living().filter(m => m.class === CLASSES.ROGUE);
+  const eyes = rogues.length > 0
+    ? Math.max(...rogues.map(m => m.mind))
+    : Math.floor(party.bestMind() / 2);
+  let bonus = 0;
+  if (party.hasPersonality('scholarly')) bonus += 1;
+  if (party.hasPersonality('craven')) bonus += 1;   // counts the exits, finds the extra one
+  return eyes + bonus + rollValue > 11;
+}
+
+/**
+ * Does the party take the side passage? The Covetous smell gold; the
+ * Craven wants no part of optional danger. Pure — pass the roll.
+ */
+export function decideDetour(party, rollValue = roll()) {
+  let w = 4;   // idle curiosity baseline
+  if (party.hasPersonality('greedy')) w += 3;
+  if (party.hasPersonality('scholarly')) w += 2;
+  if (party.hasPersonality('reckless')) w += 2;
+  if (party.hasPersonality('craven')) w -= 3;
+  // Battered parties press for the exit
+  if (party.totalHealth() / party.totalMaxHealth() < 0.35) w -= 3;
+  return rollValue < w;
 }
 
 /* ------------------------------------------------------------------ */

@@ -25,6 +25,7 @@ export const ROOM_HELP = {
   [ROOM_TYPES.MATERIALS]: 'Herbs and salts — raw materials for alchemy, if you gather them.',
   [ROOM_TYPES.DISASTER]: 'The dungeon itself turns hostile. Brace together, or scatter and pray.',
   [ROOM_TYPES.BOSS]: 'The boss chamber. Everything you drafted, tested at once.',
+  [ROOM_TYPES.VAULT]: 'A vault — riches hidden behind a secret door. Rogues and scholars find these.',
 };
 
 /**
