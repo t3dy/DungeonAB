@@ -10,6 +10,7 @@ import { IsoDungeonRenderer } from './ui/IsoDungeonRenderer.js';
 import { Campaign, TOWN_PRICES } from './game/Campaign.js';
 import { composeTownInterlude } from './narrative/Narrator.js';
 import { progression, DIFFICULTIES } from './game/Progression.js';
+import { ACHIEVEMENTS, ACHIEVEMENT_COUNT } from './game/Achievements.js';
 import { getCondition, combineConditions, DUNGEON_CONDITIONS } from './game/Conditions.js';
 import { computeStandings } from './game/Standings.js';
 import { SeededRandom } from './draft/PackDraft.js';
@@ -131,10 +132,25 @@ function setupRecords() {
         }).join('')
       : '<div class="records-empty">No campaigns yet. The Hall awaits its first name.</div>';
 
+    // Achievements gallery — earned lit, locked dimmed
+    const earnedCount = ACHIEVEMENTS.filter(a => progression.hasAchievement(a.id)).length;
+    const TIER_COLORS = { bronze: '#b08d57', silver: '#c8cdd4', gold: '#e8c14a', platinum: '#8fe8e0' };
+    const achRows = ACHIEVEMENTS.map(a => {
+      const got = progression.hasAchievement(a.id);
+      const col = TIER_COLORS[a.tier] || '#b0a080';
+      return `<div class="records-ach" style="opacity:${got ? 1 : 0.34};">
+        <span class="ra-icon" style="color:${got ? col : '#666'};">${got ? a.icon : '🔒'}</span>
+        <span class="ra-body"><strong style="color:${got ? col : '#8a8578'};">${escapeHtml(a.name)}</strong>
+        <span class="ra-desc">${escapeHtml(a.desc)}</span></span>
+      </div>`;
+    }).join('');
+
     body.innerHTML =
       (bestRows ? `<dl class="records-best">${bestRows}</dl>` : '') +
       career +
-      `<div style="color:#d8a53f;font-size:0.8rem;margin-bottom:0.4rem;">Recent campaigns</div>` +
+      `<div style="color:#d8a53f;font-size:0.8rem;margin:0.2rem 0 0.4rem;">🏅 Achievements <span style="color:#776;">${earnedCount} / ${ACHIEVEMENT_COUNT}</span></div>` +
+      `<div class="records-achlist">${achRows}</div>` +
+      `<div style="color:#d8a53f;font-size:0.8rem;margin:0.9rem 0 0.4rem;">Recent campaigns</div>` +
       runRows;
   };
 
@@ -591,10 +607,10 @@ function showFinal(state) {
   const result = appState.simulator.getRunResult();
   const retired = summary.retired;
 
-  // Record the campaign once
+  // Record the campaign once — and celebrate any milestones it earned
   if (!appState.runRecorded) {
     appState.runRecorded = true;
-    progression.recordRun(appState.difficulty, {
+    const earned = progression.recordRun(appState.difficulty, {
       score: summary.score,
       gold: summary.gold,
       roomsCleared: summary.roomsCleared,
@@ -602,8 +618,16 @@ function showFinal(state) {
       survivors: summary.survivors,
       partySize: summary.partySize,
       depth: summary.depth,
+      spellsLearned: summary.spellsLearned,
+      tally: summary.tally,
+      phialsIdentified: summary.phialsIdentified,
       condition: appState.campaign.condition !== 'none' ? appState.campaign.condition : null,
     });
+    // Stagger the achievement toasts so each gets a moment
+    (earned || []).forEach((a, i) => {
+      setTimeout(() => showToast(a.icon, `Achievement — ${a.name}: ${a.desc}`, 'boss'), 700 + i * 900);
+    });
+    appState.earnedThisRun = earned || [];
   }
   const best = progression.bestScores[appState.difficulty] || 0;
   const isNewBest = summary.score >= best && summary.score > 0;
@@ -656,6 +680,14 @@ function showFinal(state) {
       <span style="color:#887755;">Best on ${appState.difficulty}</span><strong style="text-align:right;">${Math.max(best, summary.score)}</strong>
       <span style="color:#887755;">Career</span><strong style="text-align:right;">${stats.totalVictories} retirements / ${stats.totalRuns} campaigns</strong>
     </div>
+    ${(appState.earnedThisRun && appState.earnedThisRun.length) ? `
+    <div style="margin-top:1.1rem;border-top:1px solid #3a2f1e;padding-top:0.8rem;">
+      <div style="color:#e8c14a;font-size:0.85rem;margin-bottom:0.5rem;">🏅 Achievements Unlocked</div>
+      ${appState.earnedThisRun.map(a => `<div style="display:flex;gap:0.5rem;align-items:baseline;padding:0.2rem 0;color:#e8d9a3;">
+        <span style="font-size:1.05rem;">${a.icon}</span>
+        <span><strong style="color:#e8c14a;">${escapeHtml(a.name)}</strong> — ${escapeHtml(a.desc)}</span>
+      </div>`).join('')}
+    </div>` : ''}
     <div style="margin-top:1.25rem;">
       <div style="color:#d8a53f;font-size:0.85rem;margin-bottom:0.4rem;border-top:1px solid #3a2f1e;padding-top:0.8rem;">🎲 At the Table — how the draft played out</div>
       ${standingsRows}

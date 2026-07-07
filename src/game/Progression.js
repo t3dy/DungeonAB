@@ -3,6 +3,8 @@
  * Adapted from SnakeAB's proven progression system.
  */
 
+import { evaluateAchievements } from './Achievements.js';
+
 export const DIFFICULTIES = {
   EASY: { id: 'easy', name: 'Easy', icon: '🌱', scoreMultiplier: 1.0 },
   MEDIUM: { id: 'medium', name: 'Medium', icon: '🌳', scoreMultiplier: 1.5 },
@@ -18,9 +20,16 @@ export class ProgressionManager {
     this.bestScores = {};
     this.totalRuns = 0;
     this.victories = {};
+    this.achievements = [];   // earned achievement ids (persisted)
     this.loadFromStorage();
   }
 
+  /**
+   * Record a finished campaign. `result` carries the run summary
+   * (score, gold, depth, survivors, partySize, spellsLearned, and the
+   * v4 honors: tally + phialsIdentified). Returns the achievements
+   * newly earned this run, so the caller can celebrate them.
+   */
   recordRun(difficulty, result) {
     this.runHistory.unshift({
       id: `run_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
@@ -44,7 +53,31 @@ export class ProgressionManager {
       this.victories[difficulty] = (this.victories[difficulty] || 0) + 1;
     }
     this.totalRuns++;
+
+    // Milestones are checked against this run — with career stats
+    // updated first, so "retire from 10 campaigns" counts this one.
+    const newlyEarned = evaluateAchievements({
+      summary: {
+        depth: result.depth || 1,
+        gold: result.gold || 0,
+        survivors: result.survivors || 0,
+        partySize: result.partySize || 0,
+        spellsLearned: result.spellsLearned || 0,
+        tally: result.tally || {},
+        phialsIdentified: result.phialsIdentified || 0,
+      },
+      difficulty,
+      retired: !!result.victory,
+      stats: this.getStats(),
+    }, this.achievements);
+    for (const a of newlyEarned) this.achievements.push(a.id);
+
     this.saveToStorage();
+    return newlyEarned;
+  }
+
+  hasAchievement(id) {
+    return this.achievements.includes(id);
   }
 
   getStats() {
@@ -70,6 +103,7 @@ export class ProgressionManager {
       bestScores: this.bestScores,
       totalRuns: this.totalRuns,
       victories: this.victories,
+      achievements: this.achievements,
     }));
   }
 
@@ -83,6 +117,7 @@ export class ProgressionManager {
       this.bestScores = data.bestScores || {};
       this.totalRuns = data.totalRuns || 0;
       this.victories = data.victories || {};
+      this.achievements = data.achievements || [];
     } catch (e) {
       console.error('Failed to load progression:', e);
     }
@@ -93,6 +128,7 @@ export class ProgressionManager {
     this.bestScores = {};
     this.totalRuns = 0;
     this.victories = {};
+    this.achievements = [];
     this.saveToStorage();
   }
 }

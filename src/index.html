@@ -206,6 +206,12 @@
     .records-run:last-child { border-bottom: none; }
     .records-run .rr-score { color: #d8a53f; font-weight: bold; margin-left: auto; }
     .records-empty { color: #776; font-style: italic; font-size: 0.85rem; }
+    .records-achlist { display: grid; grid-template-columns: 1fr 1fr; gap: 0.35rem 0.75rem; margin-bottom: 0.5rem; }
+    .records-ach { display: flex; gap: 0.45rem; align-items: flex-start; font-size: 0.74rem; }
+    .records-ach .ra-icon { font-size: 1.05rem; line-height: 1.1; width: 1.3rem; text-align: center; flex-shrink: 0; }
+    .records-ach .ra-body { display: flex; flex-direction: column; gap: 0.05rem; }
+    .records-ach .ra-desc { color: #8a8578; font-size: 0.68rem; line-height: 1.3; }
+    @media (max-width: 620px) { .records-achlist { grid-template-columns: 1fr; } }
     .help-card {
       background: #14110b;
       border: 1px solid #d8a53f;
