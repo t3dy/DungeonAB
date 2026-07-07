@@ -126,6 +126,14 @@ export function generateDungeon(seed, difficulty = 'medium', opts = {}) {
   // Difficulty sharpens the monsters themselves, not just the map
   const statScale = STAT_SCALE[difficulty] || 1;
 
+  // How much meaner each campaign floor is than the one above it.
+  // This is difficulty's second lever: STAT_SCALE sets the opening
+  // punch, DEPTH_SCALE sets how fast the descent escalates. It's
+  // ×(depth-1), so it's zero at depth 1 — the first dungeon (and the
+  // whole card-balance audit) is identical across tiers; only the
+  // pressure to retire-vs-delve-deeper diverges.
+  const depthRates = DEPTH_SCALE[difficulty] || DEPTH_SCALE.medium;
+
   // Floors: meaner dungeons dig deeper (multi-floor, Phase 5). Every
   // floor down, the foes and the payouts both climb. No rng is spent
   // when the caller pins the count — pinned generations stay
@@ -139,7 +147,7 @@ export function generateDungeon(seed, difficulty = 'medium', opts = {}) {
   const floorCount = typeof floors === 'function' ? floors() : floors;
 
   const rooms = [];
-  rooms.push(makeRoom(0, ROOM_TYPES.ENTRANCE, rng, theme, depth, statScale, condition, 0));
+  rooms.push(makeRoom(0, ROOM_TYPES.ENTRANCE, rng, theme, depth, statScale, condition, 0, depthRates));
 
   for (let f = 0; f < floorCount; f++) {
     // A single-floor dungeon keeps the classic 8-11 room spine;
@@ -149,24 +157,24 @@ export function generateDungeon(seed, difficulty = 'medium', opts = {}) {
       : 5 + Math.floor(rng.next() * 3);
     for (let i = 0; i < segLength; i++) {
       const type = weightedPick(rng, weights);
-      rooms.push(makeRoom(rooms.length, type, rng, theme, depth, statScale, condition, f));
+      rooms.push(makeRoom(rooms.length, type, rng, theme, depth, statScale, condition, f, depthRates));
     }
     if (f < floorCount - 1) {
-      rooms.push(makeRoom(rooms.length, ROOM_TYPES.STAIRS, rng, theme, depth, statScale, condition, f));
+      rooms.push(makeRoom(rooms.length, ROOM_TYPES.STAIRS, rng, theme, depth, statScale, condition, f, depthRates));
     }
   }
 
   // Guarantees: at least one library and one shrine; a lab if wanted.
   // Themes add their own identity guarantees on top.
-  ensureRoomType(rooms, ROOM_TYPES.LIBRARY, rng, theme, depth, statScale, condition, weights, theme.minLibraries || 1);
-  ensureRoomType(rooms, ROOM_TYPES.SHRINE, rng, theme, depth, statScale, condition, weights);
+  ensureRoomType(rooms, ROOM_TYPES.LIBRARY, rng, theme, depth, statScale, condition, weights, theme.minLibraries || 1, depthRates);
+  ensureRoomType(rooms, ROOM_TYPES.SHRINE, rng, theme, depth, statScale, condition, weights, 1, depthRates);
   if (opts.wantLab || theme.alwaysLab) {
-    ensureRoomType(rooms, ROOM_TYPES.LAB, rng, theme, depth, statScale, condition, weights);
+    ensureRoomType(rooms, ROOM_TYPES.LAB, rng, theme, depth, statScale, condition, weights, 1, depthRates);
     // A lab without materials is glassware and regret
-    ensureRoomType(rooms, ROOM_TYPES.MATERIALS, rng, theme, depth, statScale, condition, weights, 1);
+    ensureRoomType(rooms, ROOM_TYPES.MATERIALS, rng, theme, depth, statScale, condition, weights, 1, depthRates);
   }
 
-  rooms.push(makeRoom(rooms.length, ROOM_TYPES.BOSS, rng, theme, depth, statScale, condition, floorCount - 1));
+  rooms.push(makeRoom(rooms.length, ROOM_TYPES.BOSS, rng, theme, depth, statScale, condition, floorCount - 1, depthRates));
 
   /* ---- Spatial layout (procgen v2 + cave modes) ---------------------- */
 
@@ -248,7 +256,7 @@ export function generateDungeon(seed, difficulty = 'medium', opts = {}) {
         ? ROOM_TYPES.VAULT
         : BRANCH_TYPES[Math.floor(rng.next() * BRANCH_TYPES.length)];
 
-      const room = makeRoom(rooms.length, type, rng, theme, depth, statScale, condition, jRoom.floor || 0);
+      const room = makeRoom(rooms.length, type, rng, theme, depth, statScale, condition, jRoom.floor || 0, depthRates);
       room.x = nx;
       room.y = ny;
       room.secret = secret;
@@ -325,7 +333,7 @@ const PROTECTED_TYPES = new Set([
   ROOM_TYPES.LIBRARY, ROOM_TYPES.SHRINE, ROOM_TYPES.LAB, ROOM_TYPES.MATERIALS,
 ]);
 
-function ensureRoomType(rooms, type, rng, theme, depth, statScale, condition, weights, minCount = 1) {
+function ensureRoomType(rooms, type, rng, theme, depth, statScale, condition, weights, minCount = 1, depthRates = DEPTH_SCALE.medium) {
   const have = rooms.filter(r => r.type === type).length;
   let need = minCount - have;
 
@@ -343,7 +351,7 @@ function ensureRoomType(rooms, type, rng, theme, depth, statScale, condition, we
     }
     const convertible = candidates.filter(r => r.type === worstType);
     const target = rng.pick(convertible);
-    const replacement = makeRoom(target.index, type, rng, theme, depth, statScale, condition, target.floor || 0);
+    const replacement = makeRoom(target.index, type, rng, theme, depth, statScale, condition, target.floor || 0, depthRates);
     replacement.x = target.x;
     replacement.y = target.y;
     rooms[rooms.indexOf(target)] = replacement;
@@ -351,7 +359,7 @@ function ensureRoomType(rooms, type, rng, theme, depth, statScale, condition, we
   }
 }
 
-function makeRoom(index, type, rng, theme, depth = 1, statScale = 1, condition = {}, floor = 0) {
+function makeRoom(index, type, rng, theme, depth = 1, statScale = 1, condition = {}, floor = 0, depthRates = DEPTH_SCALE.medium) {
   const room = {
     index,
     type,
@@ -369,10 +377,10 @@ function makeRoom(index, type, rng, theme, depth = 1, statScale = 1, condition =
   // dungeons hit harder and pay better. The condition is the player's
   // wager on top — meaner monsters, deeper traps, richer hoards.
   if (type === ROOM_TYPES.MONSTER) {
-    room.monster = rollMonster(rng, false, theme, depth, statScale * floorMult, condition, index);
+    room.monster = rollMonster(rng, false, theme, depth, statScale * floorMult, condition, index, depthRates);
   }
   if (type === ROOM_TYPES.BOSS) {
-    room.monster = rollMonster(rng, true, theme, depth, statScale * floorMult, condition, index);
+    room.monster = rollMonster(rng, true, theme, depth, statScale * floorMult, condition, index, depthRates);
   }
   if (type === ROOM_TYPES.TREASURE) {
     const base = (20 + Math.floor(rng.next() * 40)) * (1 + 0.2 * (depth - 1)) * floorGold;
@@ -584,6 +592,21 @@ export const STAT_SCALE = {
   nightmare: 1.7,
 };
 
+/**
+ * Per-campaign-depth escalation rates ({ atk, hp } added per depth
+ * beyond the first). Difficulty's second lever: easy stays a gentle
+ * teaching slope; medium now bites by depth 3-4 so retire-vs-delve is
+ * a real wager; hard and nightmare climb hard. Zero at depth 1, so
+ * the opening dungeon — and every card measured there — is unchanged.
+ * (Was a flat 0.15/0.20 for all tiers, which left medium tensionless.)
+ */
+export const DEPTH_SCALE = {
+  easy:      { atk: 0.10, hp: 0.14 },
+  medium:    { atk: 0.20, hp: 0.26 },
+  hard:      { atk: 0.26, hp: 0.33 },
+  nightmare: { atk: 0.32, hp: 0.40 },
+};
+
 /* ------------------------------------------------------------------ */
 /* Layouts — dungeons as data (the archive & editor foundation)        */
 /* ------------------------------------------------------------------ */
@@ -674,7 +697,7 @@ export function registerTheme(theme) {
   return theme;
 }
 
-function rollMonster(rng, isBoss, theme, depth = 1, statScale = 1, condition = {}, roomIndex = 0) {
+function rollMonster(rng, isBoss, theme, depth = 1, statScale = 1, condition = {}, roomIndex = 0, depthRates = DEPTH_SCALE.medium) {
   const pool = isBoss ? theme.bosses : theme.monsters;
   const monster = applyNature({ ...rng.pick(pool) });
 
@@ -684,10 +707,11 @@ function rollMonster(rng, isBoss, theme, depth = 1, statScale = 1, condition = {
   const condAtk = (isBoss ? condition.bossAttackMult : condition.monsterAttackMult) || 1;
   const condHp = (isBoss ? condition.bossHealthMult : condition.monsterHealthMult) || 1;
 
-  // Depth: things get meaner the farther from daylight
-  const depthFactor = 1 + 0.15 * (depth - 1);
-  monster.attack = Math.max(1, Math.round(monster.attack * depthFactor * statScale * condAtk));
-  monster.health = Math.max(1, Math.round(monster.health * (1 + 0.2 * (depth - 1)) * statScale * condHp));
+  // Depth: things get meaner the farther from daylight, at the tier's
+  // own rate (DEPTH_SCALE). Zero at depth 1, so the opening dungeon is
+  // difficulty-flat and the card-balance audit holds.
+  monster.attack = Math.max(1, Math.round(monster.attack * (1 + depthRates.atk * (depth - 1)) * statScale * condAtk));
+  monster.health = Math.max(1, Math.round(monster.health * (1 + depthRates.hp * (depth - 1)) * statScale * condHp));
   if (isBoss) monster.isBoss = true;
 
   // Elite veterans: roughly one rank-and-file monster in eight has

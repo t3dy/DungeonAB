@@ -3,7 +3,7 @@
  */
 
 import { strict as assert } from 'assert';
-import { generateDungeon, STAT_SCALE, ROOM_TYPES } from '../src/world/DungeonGen.js';
+import { generateDungeon, STAT_SCALE, DEPTH_SCALE, ROOM_TYPES } from '../src/world/DungeonGen.js';
 import { Party } from '../src/agents/Party.js';
 import { CHARACTER_CARDS } from '../src/game/Cards.js';
 
@@ -35,6 +35,41 @@ describe('Difficulty sharpens the monsters', () => {
     const deep = bossOf(generateDungeon('depth-test', 'medium', { depth: 3 }));
     assert.ok(deep.health > shallow.health);
     assert.ok(deep.attack > shallow.attack);
+  });
+});
+
+describe('Depth escalation is difficulty-aware (the second lever)', () => {
+  test('the per-depth rate rises with difficulty', () => {
+    const order = ['easy', 'medium', 'hard', 'nightmare'];
+    for (let i = 1; i < order.length; i++) {
+      assert.ok(DEPTH_SCALE[order[i]].atk > DEPTH_SCALE[order[i - 1]].atk, `${order[i]} atk steeper`);
+      assert.ok(DEPTH_SCALE[order[i]].hp > DEPTH_SCALE[order[i - 1]].hp, `${order[i]} hp steeper`);
+    }
+  });
+
+  test('at depth 1 the tiers differ ONLY by STAT_SCALE — the card audit is safe', () => {
+    // Same seed → same monster roster and rolls; depth-1 depthRates is
+    // ×0, so a tier's depth-1 stats must equal the base × its STAT_SCALE.
+    // The easy:hard health ratio must therefore be exactly STAT_SCALE.easy:hard.
+    const bossAt = diff => bossOf(generateDungeon('audit-safe', diff, { depth: 1, theme: 'delve', floors: 1 }));
+    const easy = bossAt('easy');
+    const hard = bossAt('hard');
+    // Both scale the same base by their STAT_SCALE only (rounding aside)
+    const expected = STAT_SCALE.hard / STAT_SCALE.easy;
+    const got = hard.health / easy.health;
+    assert.ok(Math.abs(got - expected) < 0.08, `depth-1 ratio is pure STAT_SCALE (${got.toFixed(2)} ≈ ${expected.toFixed(2)})`);
+  });
+
+  test('by campaign depth, a meaner tier outclimbs a gentler one', () => {
+    // Same seed and depth; only the tier's escalation rate differs.
+    const avgStat = (diff, depth) => {
+      const d = generateDungeon('climb', diff, { depth, theme: 'delve', floors: 1 });
+      const ms = d.rooms.filter(r => r.monster).map(r => r.monster);
+      return ms.reduce((s, m) => s + m.attack + m.health, 0) / ms.length;
+    };
+    // Deep, the ordering by difficulty is strict
+    assert.ok(avgStat('medium', 5) > avgStat('easy', 5), 'medium outclimbs easy by depth 5');
+    assert.ok(avgStat('hard', 5) > avgStat('medium', 5), 'hard outclimbs medium by depth 5');
   });
 });
 

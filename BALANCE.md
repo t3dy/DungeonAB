@@ -50,3 +50,53 @@ Rerun anytime: `node tools/balance-audit.mjs`.
 - Party defense dilution (`totalDefense/3`) is the systemic reason
   armor stats underperform; a divisor change would be a rebalance of
   everything and was deliberately out of scope here.
+
+---
+
+# Difficulty Curve Audit (v4.0 follow-up)
+
+`tools/difficulty-audit.mjs` measures the *realistic* curve: the player
+drafts via the balanced (Guildmaster) persona, then plays a full
+campaign, delving deeper until wipe or a rational retire. Two player
+models — a cautious one (retire by depth 4) and an ambitious one (push
+to depth 9) — reveal where the tension lives.
+
+## Finding
+
+Before v4.0, campaign depth escalation was **difficulty-independent**
+(a flat +0.15 atk / +0.20 hp per depth for every tier); only the flat
+`STAT_SCALE` opening punch differed. Result: medium — the default tier
+— was tensionless. A cautious player banked depth 4 at 96% safety, and
+even an ambitious deep-diver was rarely threatened. The tiers only
+diverged in late-campaign attrition, and medium's was negligible.
+
+## Decision: DEPTH_SCALE, difficulty's second lever
+
+Depth escalation is now per-tier ({ atk, hp } added per depth beyond
+the first):
+
+| Tier | atk/depth | hp/depth | was |
+|---|---|---|---|
+| easy | 0.10 | 0.14 | 0.15 / 0.20 |
+| medium | 0.20 | 0.26 | 0.15 / 0.20 |
+| hard | 0.26 | 0.33 | 0.15 / 0.20 |
+| nightmare | 0.32 | 0.40 | 0.15 / 0.20 |
+
+Because escalation is ×(depth−1), it is **zero at depth 1** — the
+opening dungeon is difficulty-flat, so the entire card audit above
+(all measured at depth 1) is provably unaffected. A regression test
+(`balance.test.js`) locks the invariant: depth-1 tiers differ only by
+`STAT_SCALE`.
+
+## Measured curve after the change (ambitious deep-diver, N=300)
+
+| Tier | avg depth | wipe% | how deep dare you go |
+|---|---|---|---|
+| easy | 8.7 | 2% | sandbox — learn freely |
+| medium | 5.8 | 48% | a real retire-vs-delve wager ~depth 5-7 |
+| hard | 3.2 | 61% | pushing past ~depth 3 is a gamble |
+| nightmare | 1.9 | 71% | brutal from the first floor |
+
+The cautious medium player still banks depth 4 at ~4% wipe, so medium
+serves both playstyles: safe banking, or a genuine gamble for score.
+Rerun: `node tools/difficulty-audit.mjs`.
