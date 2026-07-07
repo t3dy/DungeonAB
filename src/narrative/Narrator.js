@@ -411,10 +411,12 @@ export function composeResolution(room, optionId, result, party) {
         : `🚪 ${result.spell} booms through the chamber and the lock surrenders at range. ${result.gold} gold, no surprises${result.consumed ? '; the scroll burns' : ''} — though everything below now knows precisely where you are.`);
       break;
     case 'flee':
-      bits.push(pick([
-        '💨 The party falls back in good order — mostly. The dungeon keeps the room, for now.',
-        '💨 Retreat, regroup, pretend it was tactics. The room stays hostile behind them.',
-      ]));
+      bits.push(result.clean
+        ? '💨 The Craven had the way out memorized before the fight was even offered. The party retreats at half the usual cost in hide, which nobody calls cowardice out loud.'
+        : pick([
+            '💨 The party falls back in good order — mostly. The dungeon keeps the room, for now.',
+            '💨 Retreat, regroup, pretend it was tactics. The room stays hostile behind them.',
+          ]));
       break;
     case 'disarm':
       bits.push(result.success

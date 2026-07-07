@@ -34,7 +34,7 @@ export function hasSpell(party, spellId) {
  */
 export function getPreparationBonuses(party) {
   const b = {
-    sneak: 0, disarm: 0, deepStudy: 0, secretDoor: 0, trapSoak: 0,
+    sneak: 0, disarm: 0, deepStudy: 0, secretDoor: 0, trapSoak: 0, gather: 0,
     cleanInspect: false,
     notes: {},   // bonus key → the card that earned it (for the writing)
   };
@@ -65,6 +65,18 @@ export function getPreparationBonuses(party) {
     b.trapSoak += 1;
     b.notes.secretDoor = 'the Everburning Lantern';
     b.notes.trapSoak = 'the Everburning Lantern';
+  }
+  if (hasItem(party, 'eq-alembic')) {
+    b.gather += 1;
+    b.notes.gather = 'the Portable Alembic';
+  }
+  if (hasSpell(party, 'sp-eyes')) {
+    b.secretDoor += 1;
+    b.notes.secretDoorEyes = 'Eyes of the Mouse';
+  }
+  if (hasSpell(party, 'sp-feather')) {
+    b.trapSoak += 1;
+    b.notes.trapSoak = b.notes.trapSoak || 'Feather Step';
   }
   return b;
 }
@@ -647,8 +659,10 @@ export function resolveRoomAction(room, party, optionId) {
         const events = [];
 
         // The party's aggregate swing, attributed blade by blade so
-        // the chronicle knows whose hit was whose
-        let swing = Math.max(1, Math.round((party.combatAttack() + summon + coating.bonus + Math.floor(roll() / 3)) * etherealMult) - armorShave - hexPenalty);
+        // the chronicle knows whose hit was whose. The Reckless commit
+        // — fury is worth a point a round, which is the whole appeal.
+        const fury = party.hasPersonality('reckless') ? 1 : 0;
+        let swing = Math.max(1, Math.round((party.combatAttack() + summon + coating.bonus + fury + Math.floor(roll() / 3)) * etherealMult) - armorShave - hexPenalty);
         const baseSwing = swing;   // shares split the base; crits stack on top
         const front = party.living().slice().sort((a, b) => b.attack - a.attack).slice(0, 5);
         const attackSum = front.reduce((s, m) => s + m.attack, 0) || 1;
@@ -675,12 +689,14 @@ export function resolveRoomAction(room, party, optionId) {
             events.push({ kind: 'cantrip', name: wizard.name, amount: 2 });
           }
         }
-        // The alchemist opens with a fizzing vial scraped from the satchel
+        // The alchemist opens with a fizzing vial scraped from the
+        // satchel — hotter off the Athanor Charm's miniature furnace
         if (rounds === 1 && party.materials >= 1) {
           const alch = party.living().find(m => m.class === CLASSES.ALCHEMIST);
           if (alch) {
-            swing += 2;
-            events.push({ kind: 'vial', name: alch.name, amount: 2 });
+            const vial = 3 + (hasItem(party, 'eq-athanor-charm') ? 1 : 0);
+            swing += vial;
+            events.push({ kind: 'vial', name: alch.name, amount: vial });
           }
         }
 
@@ -867,9 +883,12 @@ export function resolveRoomAction(room, party, optionId) {
     }
 
     case 'flee': {
-      // Gradient: you escape, but worn — and the room stays hot
-      party.takeDamage(2);
-      return { success: true, retreated: true, monster: room.monster.name };
+      // Gradient: you escape, but worn — and the room stays hot.
+      // The Craven's other upside: they had the exit memorized, so a
+      // craven party's retreat costs half as much hide.
+      const craven = party.hasPersonality('craven');
+      party.takeDamage(craven ? 1 : 2);
+      return { success: true, retreated: true, monster: room.monster.name, clean: craven };
     }
 
     /* Traps */
@@ -1072,10 +1091,15 @@ export function resolveRoomAction(room, party, optionId) {
 
     /* Materials */
     case 'gather': {
-      party.materials += room.materials || 1;
+      const prep = getPreparationBonuses(party);
+      const got = (room.materials || 1) + prep.gather;
+      party.materials += got;
       party.addScore(5);
       room.cleared = true;
-      return { success: true, materials: room.materials || 1 };
+      const preps = prep.gather > 0
+        ? [{ source: prep.notes.gather, text: `⚗️ ${prep.notes.gather} takes a cutting of everything — one bundle more than bare hands would carry.` }]
+        : [];
+      return { success: true, materials: got, preps };
     }
 
     /* Shop */

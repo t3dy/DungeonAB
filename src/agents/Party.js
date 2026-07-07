@@ -184,6 +184,11 @@ export class Party {
         }
       }
     }
+    // The Athanor Charm's heat sets any working coat a notch deeper
+    if (bonus > 0 && this.living().some(m => m.equipment.some(e => e.id === 'eq-athanor-charm'))) {
+      bonus += 1;
+      notes.add('Athanor Charm');
+    }
     return { bonus, notes: [...notes] };
   }
 
@@ -268,7 +273,11 @@ export class Party {
     if (idx === -1) return null;
     const spell = this.grimoire[idx];
     const hasWizard = this.hasClass(CLASSES.WIZARD);
-    const power = spell.power + (hasWizard ? 2 : 0);
+    // Melchior's trait, honored literally: he doubles the working.
+    // Any other living wizard adds a flat +2.
+    const power = this.living().some(m => m.id === 'char-melchior')
+      ? spell.power * 2
+      : spell.power + (hasWizard ? 2 : 0);
     if (!hasWizard) {
       this.grimoire.splice(idx, 1); // Scroll burns
     }

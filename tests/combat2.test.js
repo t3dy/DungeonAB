@@ -98,7 +98,7 @@ describe('Class signature moves', () => {
     stocked.materials = 1;
     const result = resolveRoomAction(monsterRoom(wall()), stocked, 'fight');
     const r1 = result.combatLog.find(e => e.round === 1);
-    assert.ok(r1.events.some(e => e.kind === 'vial' && e.amount === 2));
+    assert.ok(r1.events.some(e => e.kind === 'vial' && e.amount === 3));
     assert.equal(stocked.materials, 1, 'residue, not stock — nothing is consumed');
     assert.ok(!result.combatLog.find(e => e.round === 2)?.events.some(e => e.kind === 'vial'),
       'one vial per fight');
