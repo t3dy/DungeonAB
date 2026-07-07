@@ -32,10 +32,10 @@ describe('Help coverage', () => {
 });
 
 // Minimal state snapshots shaped like Simulator.getState()
-function stateWith({ members, gold = 0, spellsLearned = 0, room = 'corridor' }) {
+function stateWith({ members, gold = 0, spellsLearned = 0, room = 'corridor', fx = null }) {
   return {
     party: { members, gold, spellsLearned },
-    narration: { room },
+    narration: { room, fx },
   };
 }
 const hero = (name, alive = true) => ({ name, alive });
@@ -86,6 +86,37 @@ describe('Event detection', () => {
       stateWith({ members: base, gold: 8 }),
     );
     assert.ok(!trickle.some(e => e.kind === 'gold'), 'small gold stays quiet');
+  });
+
+  test('felling a veteran flags it; a routed veteran does not', () => {
+    const base = [hero('Kestrel')];
+    const felled = describeTickEvents(
+      stateWith({ members: base, room: 'monster' }),
+      stateWith({ members: base, room: 'monster', fx: { elite: true, won: true, monsterName: 'a veteran wraith' } }),
+    );
+    const e = felled.find(x => x.kind === 'elite');
+    assert.ok(e && e.text.includes('veteran wraith'), 'the veteran is named');
+
+    const routed = describeTickEvents(
+      stateWith({ members: base, room: 'monster' }),
+      stateWith({ members: base, room: 'monster', fx: { elite: true, won: false, routed: true } }),
+    );
+    assert.ok(!routed.some(x => x.kind === 'elite'), 'a foe that fled was not felled');
+  });
+
+  test('a boss signature move is a beat; a rank-and-file move stays quiet', () => {
+    const base = [hero('Brand')];
+    const bossMove = describeTickEvents(
+      stateWith({ members: base, room: 'corridor' }),
+      stateWith({ members: base, room: ROOM_TYPES.BOSS, fx: { move: 'The Lord Drinks' } }),
+    );
+    assert.ok(bossMove.some(e => e.kind === 'move' && e.text.includes('The Lord Drinks')));
+
+    const grunt = describeTickEvents(
+      stateWith({ members: base, room: 'monster' }),
+      stateWith({ members: base, room: 'monster', fx: { move: 'Overhead Smash' } }),
+    );
+    assert.ok(!grunt.some(e => e.kind === 'move'), 'grunt moves stay in the ticker');
   });
 
   test('several things can happen in one tick', () => {

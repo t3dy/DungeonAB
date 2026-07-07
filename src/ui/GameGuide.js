@@ -110,5 +110,17 @@ export function describeTickEvents(prev, curr) {
     events.push({ icon: '🧪', kind: 'lore', text: 'A phial identified — every future one of its color is known on sight.' });
   }
 
+  // A veteran is put down (combat v2 elites) — rare, worth a flag
+  const fx = curr.narration?.fx;
+  if (fx?.elite && fx.won) {
+    events.push({ icon: '⭐', kind: 'elite', text: `A veteran falls — ${fx.monsterName || 'a scarred survivor'}, harder-won and worth the extra.` });
+  }
+
+  // A boss reaching for its signature move is a beat; rank-and-file
+  // moves stay in the ticker where they don't spam the toast layer
+  if (fx?.move && currRoom === ROOM_TYPES.BOSS) {
+    events.push({ icon: '💢', kind: 'move', text: `${fx.move} — the boss fights with more than teeth.` });
+  }
+
   return events;
 }

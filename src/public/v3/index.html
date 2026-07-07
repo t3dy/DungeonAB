@@ -125,9 +125,6 @@
     .story-resolution { color: #a8d5b0; }
     .story-fall { color: #e08080; margin-top: 0.4rem; padding-left: 0.5rem; border-left: 2px solid #6a2a2a; font-style: italic; }
     .story-aside { color: #d8c26a; margin-top: 0.4rem; padding-left: 0.5rem; border-left: 2px solid #6a5a2a; font-style: italic; }
-    .story-rounds { color: #776f60; margin-top: 0.35rem; font-size: 0.72rem; letter-spacing: 0.02em; line-height: 1.5; }
-    .story-rounds .hit-back { color: #c96a5e; }
-    .story-rounds .hit-heal { color: #6aa87a; }
 
     .log {
       background: #000;
@@ -285,6 +282,7 @@
       #gameover-display { left: 50%; }
     }
   </style>
+  <script type="module" crossorigin src="./assets/index-NwDQOErZ.js"></script>
 </head>
 <body>
   <div id="app">
@@ -292,13 +290,11 @@
       <h1>⚔️ DungeonAB</h1>
       <p>Draft the party. Delve the dungeon. Watch the story.
         <span style="color:#665;">·</span>
-        <span style="color:#8a7a55;">v4.0</span>
+        <span style="color:#8a7a55;">v3.0</span>
         <span style="color:#665;">·</span>
         <a href="v1/" style="color:#665;text-decoration:underline;" title="The first release: the original campaign loop">play v1.0</a>
         <span style="color:#665;">·</span>
         <a href="v2/" style="color:#665;text-decoration:underline;" title="The systems release: branching dungeons, the archive, the workshop, the Bestiary">play v2.0</a>
-        <span style="color:#665;">·</span>
-        <a href="v3/" style="color:#665;text-decoration:underline;" title="The integration release: readable enemies, theme-tinted worlds, nature-aware planning">play v3.0</a>
       </p>
       <div class="header-btns">
         <button id="archive-btn">🗺️ Archive</button>
@@ -317,8 +313,6 @@
           <span>Score: <strong id="score-count" style="color:#d8a53f;">0</strong></span>
           <span>Materials: <strong id="materials-count" style="color:#7a9;">0</strong></span>
           <span>Potions: <strong id="potions-count" style="color:#b07ae8;">0</strong></span>
-          <span>Phials: <strong id="phials-count" style="color:#7ab0e8;">0</strong></span>
-          <span>Keys: <strong id="keys-count" style="color:#d4b106;">0</strong></span>
           <span id="status-badges" style="color:#e08080;"></span>
         </div>
       </div>
@@ -391,16 +385,6 @@
       </div>
 
       <div class="help-step">
-        <h3>Fights, Blow by Blow (v4)</h3>
-        <p>Combat replays as theater: every hit is attributed, rogues land <strong>backstab crits</strong> ✦, wizards chip cantrips, the alchemist opens with a vial, the cleric triages mid-fight. Monsters answer with <strong>signature moves</strong> — breath, drains, hexes, crushes — and the badly beaten <strong>rout</strong> 💨 for half bounty. One foe in eight is a <strong>veteran</strong> ⭐: harder, and worth more.</p>
-      </div>
-
-      <div class="help-step">
-        <h3>Deeper Dungeons (v4)</h3>
-        <p>Hard delves stack <strong>floors</strong> joined by stairwells — each stratum meaner and richer. Locked doors 🗝️ guard vaults; the key waits in an earlier room, or a rogue picks it. Hoards deal <strong>unlabeled phials</strong> whose colors mean something different every run — an alchemist names them by nose, scholars recall the treatise, the Reckless quaff-test. A <strong>peddler</strong> 🪙 sells draughts, materials, and keys (haggle, or rob at your peril); an <strong>altar</strong> ⚖️ trades boons for gold or blood, and remembers desecrators. Cave themes are dug, not built.</p>
-      </div>
-
-      <div class="help-step">
         <h3>Watching the Delve</h3>
         <p><strong>The Chronicle</strong> narrates every room in three beats. Toasts flag big moments — a hero falling, the boss chamber, a spell learned. Use the controls to pause, step, or change speed.</p>
       </div>
@@ -439,6 +423,5 @@
     </div>
   </div>
 
-  <script type="module" src="./main.js"></script>
 </body>
 </html>

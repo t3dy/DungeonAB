@@ -648,6 +648,11 @@ function showFinal(state) {
       <span style="color:#887755;">Rooms conquered</span><strong style="text-align:right;">${summary.roomsCleared}</strong>
       <span style="color:#887755;">Survivors</span><strong style="text-align:right;">${summary.survivors} / ${summary.partySize}</strong>
       <span style="color:#887755;">Spells learned</span><strong style="text-align:right;">${summary.spellsLearned}</strong>
+      <span style="color:#887755;">Deepest floor</span><strong style="text-align:right;">${(summary.tally?.deepestFloor || 0) + 1}</strong>
+      <span style="color:#887755;">Backstab crits</span><strong style="text-align:right;">✦ ${summary.tally?.crits || 0}</strong>
+      <span style="color:#887755;">Foes routed</span><strong style="text-align:right;">💨 ${summary.tally?.routs || 0}</strong>
+      <span style="color:#887755;">Veterans felled</span><strong style="text-align:right;">⭐ ${summary.tally?.elites || 0}</strong>
+      <span style="color:#887755;">Phials identified</span><strong style="text-align:right;">🧪 ${summary.phialsIdentified || 0}</strong>
       <span style="color:#887755;">Best on ${appState.difficulty}</span><strong style="text-align:right;">${Math.max(best, summary.score)}</strong>
       <span style="color:#887755;">Career</span><strong style="text-align:right;">${stats.totalVictories} retirements / ${stats.totalRuns} campaigns</strong>
     </div>

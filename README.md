@@ -1,16 +1,17 @@
 # ⚔️ DungeonAB — Dungeon-Crawling Autobattler
 
-**▶️ Play v3.0: https://dungeon-ab.vercel.app** &nbsp;·&nbsp; [v2.0](https://dungeon-ab.vercel.app/v2/) &nbsp;·&nbsp; [v1.0](https://dungeon-ab.vercel.app/v1/) &nbsp;·&nbsp; [mirror](https://t3dy.github.io/DungeonAB/)
+**▶️ Play v4.0: https://dungeon-ab.vercel.app** &nbsp;·&nbsp; [v3.0](https://dungeon-ab.vercel.app/v3/) &nbsp;·&nbsp; [v2.0](https://dungeon-ab.vercel.app/v2/) &nbsp;·&nbsp; [v1.0](https://dungeon-ab.vercel.app/v1/) &nbsp;·&nbsp; [mirror](https://t3dy.github.io/DungeonAB/)
 
 ## Versions
 
 | Version | Play | What it is |
 |---|---|---|
-| **v3.0** (current) | [dungeon-ab.vercel.app](https://dungeon-ab.vercel.app) | The integration release: theme-tinted worlds, readable enemies (nature badges + prose tells), nature-aware party planning, element chips on draft cards, element-colored spell FX, affliction badges, the deeper-systems guide |
+| **v4.0** (current) | [dungeon-ab.vercel.app](https://dungeon-ab.vercel.app) | The roguelike release: multi-floor dungeons with stairwells, lock-and-key vaults, unlabeled phials (item identification), in-dungeon peddlers and altars, elite veterans, blow-by-blow combat theater (attributed hits, backstab crits, monster signature moves, morale routs), dug cave layouts, tiled dungeon fabric with torches, and a simulation-audited card balance pass |
+| **v3.0** | [dungeon-ab.vercel.app/v3/](https://dungeon-ab.vercel.app/v3/) | The integration release: theme-tinted worlds, readable enemies (nature badges + prose tells), nature-aware party planning, element chips on draft cards, element-colored spell FX, affliction badges, the deeper-systems guide |
 | **v2.0** | [dungeon-ab.vercel.app/v2/](https://dungeon-ab.vercel.app/v2/) | The systems release: branching dungeons with secret vaults, eight themes, the Bestiary, trap types, treasure finds, preparation effects, the Archive & editor, the Card Workshop, the Alchemy Pack |
 | **v1.0** | [dungeon-ab.vercel.app/v1/](https://dungeon-ab.vercel.app/v1/) | The first public release: the original draft → delve → town campaign loop with onscreen help |
 
-Git tags `v1.0`, `v2.0`, and `v3.0` mark the exact sources.
+Git tags `v1.0` through `v4.0` mark the exact sources.
 
 Draft a party MTG-style — packs passed around a table of AI rivals, one pick per pack — then watch your Fighters, Clerics, Wizards, Rogues, and Alchemists auto-crawl a procedurally generated dungeon: fighting, looting, learning spells, and brewing potions at abandoned lab benches. Survive, spend your gold in town, and delve deeper.
 

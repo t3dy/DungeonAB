@@ -1,6 +1,6 @@
 {
   "name": "dungeonab",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "description": "Dungeon-crawling autobattler — MTG-style pack draft, party of adventurers, emergent dungeon stories",
   "type": "module",
   "main": "src/main.js",

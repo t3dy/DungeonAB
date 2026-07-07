@@ -54,6 +54,8 @@ export class Simulator {
     this.roomIndex = 0;   // Position along the path (entrance = 0)
     this.turn = 0;
     this.roomsCleared = 0;
+    // Battle honors — the run's bragging rights, shown at the end
+    this.tally = { crits: 0, routs: 0, elites: 0, deepestFloor: 0 };
     this.gameOver = false;
     this.victory = false;
     this.paused = false;
@@ -119,6 +121,12 @@ export class Simulator {
 
     if (result.success !== false || room.cleared) this.roomsCleared++;
 
+    // The honors ledger
+    this.tally.crits += result.crits || 0;
+    if (result.routed) this.tally.routs++;
+    if (result.elite && result.success && !result.routed) this.tally.elites++;
+    this.tally.deepestFloor = Math.max(this.tally.deepestFloor, room.floor || 0);
+
     this.lastNarration = {
       room: room.type,
       icon: room.icon,
@@ -130,9 +138,16 @@ export class Simulator {
       fx: {
         combatLog: result.combatLog || null,
         monsterKind: result.monsterKind || room.monster?.kind || null,
+        monsterName: room.monster?.name || null,
         monsterMaxHealth: result.monsterMaxHealth || 0,
         routed: !!result.routed,
+        won: chosen === 'fight' && result.success !== false,
+        elite: !!result.elite,
         crits: result.crits || 0,
+        // The first signature move fired this fight, for the toast layer
+        move: (result.combatLog || [])
+          .flatMap(e => e.events)
+          .find(ev => ev.kind === 'monster-move')?.name || null,
         damage: result.damage || 0,
         gold: result.gold || 0,
         healed: result.healed || 0,
@@ -285,6 +300,7 @@ export class Simulator {
       partySize: this.party.members.length,
       spellsLearned: this.party.spellsLearned,
       epitaph: this.epitaph,
+      tally: { ...this.tally },
     };
   }
 

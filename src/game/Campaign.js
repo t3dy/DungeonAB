@@ -38,6 +38,7 @@ export class Campaign {
 
     this.depth = 0;          // Incremented by each delve
     this.roomsCleared = 0;   // Cumulative across dungeons
+    this.tally = { crits: 0, routs: 0, elites: 0, deepestFloor: 0 };   // battle honors
     this.over = false;
     this.retired = false;
   }
@@ -63,6 +64,11 @@ export class Campaign {
    */
   recordDelve(sim) {
     this.roomsCleared += sim.roomsCleared;
+    const t = sim.tally || {};
+    this.tally.crits += t.crits || 0;
+    this.tally.routs += t.routs || 0;
+    this.tally.elites += t.elites || 0;
+    this.tally.deepestFloor = Math.max(this.tally.deepestFloor, t.deepestFloor || 0);
     if (!sim.victory) this.over = true;
   }
 
@@ -188,6 +194,8 @@ export class Campaign {
       spellsLearned: this.party.spellsLearned,
       retired: this.retired,
       over: this.over,
+      tally: { ...this.tally },
+      phialsIdentified: Object.keys(this.party.elixirLore || {}).length,
     };
   }
 }

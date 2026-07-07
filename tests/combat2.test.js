@@ -218,6 +218,28 @@ describe('Elite veterans', () => {
   });
 });
 
+describe('Battle honors (v4 run tally)', () => {
+  test('a full crawl accumulates crits, routs, elites, and its deepest floor', () => {
+    // Aggregate across many hard runs so the honors are sure to appear
+    const agg = { crits: 0, routs: 0, elites: 0, deepestFloor: 0 };
+    for (let i = 0; i < 30; i++) {
+      const sim = new Simulator(
+        [fighters[0], byClass('rogue'), byClass('cleric'), byClass('wizard')],
+        `honors-${i}`, 'hard',
+      );
+      let g = 0;
+      while (!sim.gameOver && g++ < 200) sim.tick();
+      const t = sim.getRunResult().tally;
+      assert.ok(t && typeof t.crits === 'number', 'the result carries a tally');
+      agg.crits += t.crits; agg.routs += t.routs; agg.elites += t.elites;
+      agg.deepestFloor = Math.max(agg.deepestFloor, t.deepestFloor);
+    }
+    assert.ok(agg.crits > 0, `rogues found seams (${agg.crits})`);
+    assert.ok(agg.elites > 0, `veterans fell (${agg.elites})`);
+    assert.ok(agg.deepestFloor >= 1, 'hard runs reached a second floor');
+  });
+});
+
 function test(name, fn) {
   try {
     fn();
