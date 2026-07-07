@@ -270,6 +270,20 @@
       flex-direction: column;
     }
     .draft-card:hover { border-color: #d8a53f; transform: translateY(-3px); }
+    .draft-card { position: relative; }
+    .draft-card.coveted { border-color: #a8792e; box-shadow: 0 0 0 1px #7a5a1e, 0 0 12px -2px #c8923a55; }
+    .draft-card.coveted:hover { border-color: #e0a860; }
+    .covet-tag {
+      position: absolute; top: -0.6rem; right: 0.4rem;
+      background: #2a1f0c; border: 1px solid #7a5a1e; color: #e0a860;
+      font-size: 0.6rem; padding: 0.05rem 0.35rem; border-radius: 3px; white-space: nowrap;
+    }
+    .table-read .tr-row { display: flex; gap: 0.6rem; align-items: baseline; font-size: 0.76rem; padding: 0.22rem 0; border-bottom: 1px dashed #241d12; }
+    .table-read .tr-row:last-child { border-bottom: none; }
+    .table-read .tr-who { color: #c8b088; font-weight: bold; flex: 0 0 8.5rem; }
+    .table-read .tr-want { color: #998866; font-style: italic; }
+    .table-read .tr-urgent .tr-want { color: #e0a860; }
+    .table-read .tr-next { color: #e0a860; font-style: normal; font-size: 0.68rem; }
     .card-type {
       font-size: 0.62rem;
       text-transform: uppercase;

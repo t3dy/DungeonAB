@@ -235,6 +235,18 @@ export class PackDraft {
   }
 
   /**
+   * The seat the player's pack passes to next. Passing rotates the
+   * pack array by one: dir +1 (unshift(pop)) shifts every index up by
+   * one, so the player's pack (index 0) lands on seat 1; dir -1
+   * (push(shift)) sends it to the last seat. Always an AI seat.
+   */
+  nextRecipientSeat() {
+    if (this.finished) return null;
+    const idx = this.passDirection() === 1 ? 1 : this.seats.length - 1;
+    return this.seats[idx] || null;
+  }
+
+  /**
    * Execute one full table pick: the player takes `cardId` from
    * their pack, every AI picks from theirs, packs pass.
    * Returns { playerCard, aiPicks } or null if finished/invalid.

@@ -9,6 +9,7 @@
 
 import { CARD_TYPES } from '../game/Cards.js';
 import { DUNGEON_CONDITIONS } from '../game/Conditions.js';
+import { describeAppetite, recipientThreats, isCoveted } from '../draft/DraftSignals.js';
 
 export class DraftUI {
   constructor(draft, onComplete) {
@@ -46,13 +47,20 @@ export class DraftUI {
     `;
     container.appendChild(title);
 
+    // Who gets this pack next, and what they'll grab if you pass it —
+    // the "take it or lose it" tension the draft pillar lives on
+    const threats = recipientThreats(this.draft);
+
     // The pack
     const grid = document.createElement('div');
     grid.className = 'pack-grid';
     for (const card of this.draft.getPlayerPack()) {
-      grid.appendChild(this.renderCard(card, () => this.pick(card.id)));
+      grid.appendChild(this.renderCard(card, () => this.pick(card.id), threats));
     }
     container.appendChild(grid);
+
+    // Read the table: each rival's appetite, and who covets your pack
+    this.renderTableRead(container, threats);
 
     // What the table did last pick (signal reading)
     if (this.lastAiPicks.length > 0) {
@@ -69,9 +77,11 @@ export class DraftUI {
     this.renderPool(container);
   }
 
-  renderCard(card, onClick) {
+  renderCard(card, onClick, threats = null) {
     const el = document.createElement('div');
     el.className = 'draft-card';
+    const coveted = isCoveted(threats, card.id);
+    if (coveted) el.classList.add('coveted');
 
     const ELEMENT_CHIPS = {
       fire: '<span style="color:#ff8a3c;">🔥 fire</span>',
@@ -95,7 +105,11 @@ export class DraftUI {
     }
 
     const cursedTag = card.cursed ? ' <span style="color:#e05555;">· CURSED</span>' : '';
+    const covetTag = coveted && threats
+      ? `<div class="covet-tag" title="Pass this pack and ${threats.seat.name} likely takes it">${threats.seat.icon} wants this</div>`
+      : '';
     el.innerHTML = `
+      ${covetTag}
       <div class="card-type type-${card.type}">${card.type}${card.class ? ' · ' + card.class : ''}${cursedTag}</div>
       <div class="card-name">${card.icon} ${card.name}</div>
       <div class="card-text">${card.trait || card.text || ''}</div>
@@ -103,6 +117,34 @@ export class DraftUI {
     `;
     el.addEventListener('click', onClick);
     return el;
+  }
+
+  /**
+   * The table read: what each rival is hungry for, and a heads-up on
+   * who receives this pack next. Turns "one pick of any card" into a
+   * legible tradeoff.
+   */
+  renderTableRead(container, threats) {
+    const rivals = this.draft.seats.filter(s => s.isAI);
+    if (rivals.length === 0) return;
+
+    const rows = rivals.map(seat => {
+      const app = describeAppetite(seat);
+      const receiving = threats && threats.seat.id === seat.id;
+      const tag = receiving ? ` <span class="tr-next">◄ gets this pack next</span>` : '';
+      return `<div class="tr-row${app.urgent ? ' tr-urgent' : ''}">
+        <span class="tr-who">${seat.icon} ${seat.name}</span>
+        <span class="tr-want">${app.text}${tag}</span>
+      </div>`;
+    }).join('');
+
+    const panel = document.createElement('div');
+    panel.className = 'panel table-read';
+    panel.style.cssText = 'margin-top:1rem;';
+    panel.innerHTML = `<h2>👁️ Read the Table</h2>
+      <div style="color:#887755;font-size:0.72rem;margin-bottom:0.5rem;">Cards marked <span style="color:#e0a860;">glowing</span> in the pack are ones the next drafter will grab if you pass.</div>
+      ${rows}`;
+    container.appendChild(panel);
   }
 
   pick(cardId) {
