@@ -12,7 +12,7 @@ import { composeTownInterlude } from './narrative/Narrator.js';
 import { progression, DIFFICULTIES } from './game/Progression.js';
 import { ACHIEVEMENTS, ACHIEVEMENT_COUNT } from './game/Achievements.js';
 import { getCondition, combineConditions, DUNGEON_CONDITIONS } from './game/Conditions.js';
-import { computeStandings } from './game/Standings.js';
+import { computeStandings, rivalHighlight } from './game/Standings.js';
 import { SeededRandom } from './draft/PackDraft.js';
 import { archive } from './game/Archive.js';
 import { serializeDungeon } from './world/DungeonGen.js';
@@ -638,9 +638,18 @@ function showFinal(state) {
   // already baked into their real run.
   if (!appState.standings && appState.draft) {
     const sab = appState.sabotage || {};
+    // The player's own standout, for a highlight line matching the rivals'
+    const pm = campaign.party.members.slice().sort((a, b) =>
+      (b.attack - a.attack) || (b.health - a.health))[0];
+    const playerMvp = pm ? { name: pm.name, class: pm.class, icon: pm.icon } : null;
     appState.standings = computeStandings(
       appState.draft,
-      { score: summary.score, depth: summary.depth, hexIcon: sab.onPlayer?.condition?.icon || null },
+      {
+        score: summary.score, depth: summary.depth,
+        hexIcon: sab.onPlayer?.condition?.icon || null,
+        wiped: !retired, survivors: summary.survivors, partySize: summary.partySize,
+        tally: summary.tally, mvp: playerMvp,
+      },
       {
         seed: campaign.seed,
         difficulty: campaign.difficulty,
@@ -650,10 +659,13 @@ function showFinal(state) {
     );
   }
   const standingsRows = (appState.standings || []).map(r => `
-    <div style="display:flex;gap:0.5rem;align-items:baseline;padding:0.28rem 0;border-bottom:1px dashed #2a2318;${r.isPlayer ? 'color:#d8a53f;font-weight:bold;' : 'color:#b0a080;'}">
-      <span style="width:1.6rem;">${placeLabel(r.place)}</span>
-      <span>${r.icon} ${escapeHtml(r.name)}${r.hexIcon ? ` <span title="hexed">${r.hexIcon}</span>` : ''}</span>
-      <span style="margin-left:auto;">${r.score} <span style="color:#776;font-size:0.82em;">· depth ${r.depthReached}</span></span>
+    <div style="padding:0.3rem 0;border-bottom:1px dashed #2a2318;">
+      <div style="display:flex;gap:0.5rem;align-items:baseline;${r.isPlayer ? 'color:#d8a53f;font-weight:bold;' : 'color:#b0a080;'}">
+        <span style="width:1.6rem;">${placeLabel(r.place)}</span>
+        <span>${r.icon} ${escapeHtml(r.name)}${r.hexIcon ? ` <span title="hexed">${r.hexIcon}</span>` : ''}</span>
+        <span style="margin-left:auto;">${r.score} <span style="color:#776;font-size:0.82em;">· depth ${r.depthReached}</span></span>
+      </div>
+      <div style="font-size:0.7rem;color:#7a7060;padding-left:2.1rem;margin-top:0.05rem;">${escapeHtml(rivalHighlight(r))}</div>
     </div>`).join('');
 
   const display = document.getElementById('gameover-display');

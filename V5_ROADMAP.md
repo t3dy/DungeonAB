@@ -102,8 +102,12 @@ Legend — Effort/Risk/Value each L/M/H.
   (`recipientThreats`, reusing the AI's own `scoreCard` chaos-free).
   The draft screen glows the cards the next drafter will grab and
   reads each rival's hunger. Covered by `draftsignals.test.js`.
-- [ ] P0.2 Watch the table delve ← *next*
-- [ ] P0.3 Rival identity & memory
+- [x] **P0.2 Watch the table delve** — `runRival` now returns how the
+  night went (wiped vs. banked, survivors, MVP, honors tally), and
+  `rivalHighlight` composes an evocative line per seat. The standings
+  read as stories ("banked 1 floor · 8/8 back · ⚔️ Brand shone · 1⭐"),
+  the player row included. Covered by `standings.test.js`.
+- [ ] P0.3 Rival identity & memory ← *next*
 - [ ] P1.1 Daily / Weekly Challenge
 - [ ] P1.2 Shareable run codes
 - [ ] Quality: Melchior cap, defense dilution, code-split

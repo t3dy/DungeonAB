@@ -5,7 +5,7 @@
 
 import { strict as assert } from 'assert';
 import { PackDraft } from '../src/draft/PackDraft.js';
-import { computeStandings } from '../src/game/Standings.js';
+import { computeStandings, rivalHighlight } from '../src/game/Standings.js';
 import { getCondition } from '../src/game/Conditions.js';
 
 const getConditionIcon = id => getCondition(id).icon;
@@ -79,6 +79,46 @@ describe('Rival standings', () => {
     const rivalDeep = Math.max(...deep.filter(r => !r.isPlayer).map(r => r.depthReached));
     const rivalShallow = Math.max(...shallow.filter(r => !r.isPlayer).map(r => r.depthReached));
     assert.ok(rivalDeep >= rivalShallow, 'a higher target lets rivals go further');
+  });
+});
+
+describe('The table delves — rival run highlights (v5 P0.2)', () => {
+  test('every rival row carries how its night went', () => {
+    const draft = draftedTable('hl-1');
+    const rows = computeStandings(draft, { score: 300, depth: 3 }, { seed: 'hl-1', difficulty: 'hard' });
+    for (const r of rows.filter(x => !x.isPlayer)) {
+      assert.equal(typeof r.wiped, 'boolean', 'wiped flag');
+      assert.ok(r.partySize >= 1 && r.survivors <= r.partySize, 'survivors within party');
+      assert.ok(r.tally && typeof r.tally === 'object', 'honors carried');
+      // MVP present unless the pool was somehow empty
+      if (r.partySize > 0) assert.ok(r.mvp && r.mvp.name, 'a standout is named');
+    }
+  });
+
+  test('a wiped run reads as a fall; a survived run as a bank', () => {
+    const wiped = rivalHighlight({ wiped: true, depthReached: 2, survivors: 0, partySize: 4, mvp: { icon: '⚔️', name: 'Brand of the Broken Shield' }, tally: {} });
+    assert.ok(/wiped/i.test(wiped) && wiped.includes('Brand'), wiped);
+
+    const banked = rivalHighlight({ wiped: false, depthReached: 3, survivors: 3, partySize: 4, mvp: { icon: '🔮', name: 'Melchior the Moth-Eaten' }, tally: { elites: 2, crits: 5 } });
+    assert.ok(/banked/i.test(banked) && banked.includes('3/4') && banked.includes('Melchior'), banked);
+    assert.ok(banked.includes('⭐') && banked.includes('✦'), 'honors surface');
+  });
+
+  test('a highlight never throws on a sparse row', () => {
+    assert.doesNotThrow(() => rivalHighlight({ depthReached: 1 }));
+    assert.ok(rivalHighlight({ wiped: false, depthReached: 1 }).length > 0);
+  });
+
+  test('the player row gets the same treatment when fed highlight data', () => {
+    const draft = draftedTable('hl-2');
+    const rows = computeStandings(
+      draft,
+      { score: 400, depth: 2, wiped: false, survivors: 4, partySize: 5, mvp: { icon: '🗡️', name: 'Vex Threefingers' }, tally: { crits: 4 } },
+      { seed: 'hl-2', difficulty: 'medium' },
+    );
+    const me = rows.find(r => r.isPlayer);
+    const hl = rivalHighlight(me);
+    assert.ok(hl.includes('Vex') && hl.includes('4/5'), hl);
   });
 });
 
