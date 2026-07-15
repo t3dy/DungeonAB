@@ -9,6 +9,7 @@
 import { CLASSES, SPELL_CARDS } from '../game/Cards.js';
 import { ROOM_TYPES } from '../world/DungeonGen.js';
 import { elementMult } from '../game/Bestiary.js';
+import { claimDrop } from '../game/Drops.js';
 
 function roll() {
   return Math.random() * 10;
@@ -454,10 +455,15 @@ export function resolveRoomAction(room, party, optionId) {
       }
 
       const won = monsterHealth <= 0 && party.isAlive();
+      let drop = null;
       if (won) {
         const bounty = monster.isBoss ? 100 : 25;
         party.addScore(bounty);
         room.cleared = true;
+        // The dead always leave something interesting behind (Drops)
+        const claimed = claimDrop(party, monster);
+        drop = claimed.drop;
+        preps.push(claimed);
         // The venomous leave something behind, win or no win
         if (monster.trait === 'venomous') {
           if (party.hasClass(CLASSES.CLERIC)) {
@@ -487,7 +493,7 @@ export function resolveRoomAction(room, party, optionId) {
         }
       }
       party.recordEncounter('fight', won);
-      return { success: won, rounds, damage: partyDamageTaken, monster: monster.name, itemActions, preps, bossPhased: phased };
+      return { success: won, rounds, damage: partyDamageTaken, monster: monster.name, itemActions, preps, drop, bossPhased: phased };
     }
 
     case 'cause-fear': {
@@ -550,14 +556,20 @@ export function resolveRoomAction(room, party, optionId) {
     case 'turn-undead': {
       const clericMind = Math.max(...party.living().filter(m => m.class === CLASSES.CLERIC).map(m => m.mind));
       const ok = clericMind + roll() > 8;
+      const preps = [];
+      let drop = null;
       if (ok) {
         party.addScore(30);
         room.cleared = true;
+        // Turned to dust, but the dust settles around its grave-goods
+        const claimed = claimDrop(party, room.monster);
+        drop = claimed.drop;
+        preps.push(claimed);
       } else {
         party.takeDamage(room.monster.attack);
       }
       party.recordEncounter('turn-undead', ok);
-      return { success: ok, monster: room.monster.name };
+      return { success: ok, monster: room.monster.name, preps, drop };
     }
 
     case 'bribe': {

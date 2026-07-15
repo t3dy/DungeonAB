@@ -67,7 +67,7 @@ Each AI seat has a **draft persona** (e.g. "Warlord" prioritizes fighters+weapon
 3. Guarantees: ≥1 lab if any drafter took an alchemist (soft), ≥1 library, ≥1 shrine; boss always terminal.
 
 ### Room Encounters (personality-weighted party decisions, SnakeAB engine adapted)
-- **Monster** — fight / flee / sneak past (rogue) / turn undead (cleric) / parley (mind check).
+- **Monster** — fight / flee / sneak past (rogue) / turn undead (cleric) / parley (mind check). Every *defeated* monster leaves a signature drop (`game/Drops.js`, the Bestiary's companion table): a trinket, weapon coating, potion, materials, scroll, or coin, each with its own chronicle line. Kinds without an entry fall back by trait, then to a generic trophy — nothing drops nothing. Fleeing, sneaking, and bribing claim no corpse and no drop.
 - **Trap** — rogue disarms; brave parties push through; scholarly parties study it.
 - **Treasure** — loot (greedy lingers, risks mimics), inspect first (cunning), leave cursed gold (devout).
 - **Library** — learn a random spell (scholarly learns 2); wizards read the dangerous books.
