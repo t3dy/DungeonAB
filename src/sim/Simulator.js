@@ -108,6 +108,7 @@ export class Simulator {
     const options = getRoomOptions(room, this.party);
     const chosen = decideRoomAction(room, this.party);
     const result = resolveRoomAction(room, this.party, chosen);
+    this.lastResult = result;   // structured outcome, for analytics/mining
 
     // Anyone who walked in alive and didn't walk out gets their beat
     const fallen = livingBefore.filter(m => !m.isAlive());

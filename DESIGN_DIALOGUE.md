@@ -199,3 +199,74 @@ mechanics that don't yet read each other's cards.
 5. **Rebalance is re-narration**: any future mechanic that changes the
    value of existing cards (as drops did) triggers a re-read of every
    archetype and card text it re-priced.
+
+---
+
+## 6. Skill expression — what the mining harness measured
+
+*Added after `tools/mine.js` shipped: AI pilots at five skill tiers
+(the Prodigy .95 → the Novice .15, with identifiable novice quirks:
+shiny-chasing, body-blindness, curse-chasing) drafted 500 full tables;
+every pool ran a nightmare delve. Full data: `MINING_REPORT.md`.*
+
+**TCG:** Skill expression is one number: the win-rate spread between
+the best and worst evaluator. Ours, measured:
+
+| Pilot | Skill | Win % (nightmare) | Avg bodies |
+|---|---|---|---|
+| The Prodigy | .95 | 98% | 8.6 |
+| table personas | .5-.7 | 97-100% | 8.7-9.7 |
+| The Novice | .15 | 81% | 6.0 |
+
+Seventeen points, top to bottom, **at the hardest difficulty in the
+game** — and at medium and hard the spread is zero: the Novice wins
+100% of those. Three causes, all measurable:
+
+1. **Guaranteed coverage force-feeds the answer.** Packs are 3/8
+   characters, so even the body-blind Novice ends with six bodies —
+   and six bodies win. The no-dead-drafts rule, designed to protect
+   floors, currently also protects mistakes. Coverage should guarantee
+   *a legal party*, not *a winning one*.
+2. **Nothing between the door and the boss asks questions.** Ordinary
+   monster fights average 0.6 damage on nightmare; every non-boss kind
+   posts a 0% party-loss rate. Only bosses (23-24 avg damage, up to
+   13% loss) examine the pool at all. A format where only the final
+   exam counts has no room to demonstrate skill before it.
+3. **The trap archetype is real but unintended.** The entire bottom-10
+   by improvement-when-drafted is spells and wizards; wizard presence
+   is **-3.3 win points** (every other class is positive; the cleric's
+   +6.7 makes it the mythic uncommon, exactly as predicted in §1).
+   That's the classic novice mistake — the flashy, finicky package
+   over the reliable one — existing in our data *by accident*. The
+   archmage persona drafts it and still wins 97%, because bodies bail
+   everything out.
+
+**TCG:** So the design brief for skill opportunities, in order:
+
+- **Make the mistake cost something**: the difficulty floor must
+  punish thin and greedy pools somewhere below nightmare, or every
+  evaluation lesson is unlearnable — nothing ever disconfirms the
+  Novice.
+- **Design the traps on purpose.** The wand is a true finicky rare
+  (+22 points on a thin party, worthless on a mob) and the
+  spell-school is an accidental trap. Convert accidents into printed,
+  learnable wagers — finicky rares whose ceiling is real, "mythic
+  uncommons" whose value is quiet and systemic. The gap between a
+  card's *apparent* and *actual* value is exactly where drafting skill
+  lives; today that gap exists but the dungeon never grades it.
+- **Let the dungeon examine more than the boss.** Mid-dungeon skill
+  checks (theme-fit, prep-fit, element-fit) turn draft reads into
+  visible payoffs — and give the historians' correspondence systems
+  (§2a of `RESEARCH_BRIEF.md`) their mechanical seat.
+- **Ship the pilot ladder as a product feature.** The Novice→Prodigy
+  bots are calibration opponents: seat the player against harder
+  tables as they climb, and report their draft percentile against the
+  tiers, 17lands-style. The mining harness is the referee — every
+  balance patch re-runs it and re-measures the spread.
+
+**NARR:** And note what the skill spread does for story: the Novice's
+81% is boring, but the *shape* of their losses isn't — no cleric, five
+trophies short, a grimoire full of resisted elements. When the
+endings learn to read `encounterHistory` (§4), a loss should teach the
+evaluation lesson in prose. Skill expression and storytelling are the
+same feature viewed from two chairs.

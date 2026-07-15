@@ -1,7 +1,7 @@
 {
   "name": "dungeonab",
   "version": "3.0.0",
-  "description": "Dungeon-crawling autobattler — MTG-style pack draft, party of adventurers, emergent dungeon stories",
+  "description": "Dungeon-crawling autobattler \u2014 MTG-style pack draft, party of adventurers, emergent dungeon stories",
   "type": "module",
   "main": "src/main.js",
   "scripts": {
@@ -9,7 +9,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "node --test tests/*.test.js",
-    "test:watch": "node --test --watch tests/*.test.js"
+    "test:watch": "node --test --watch tests/*.test.js",
+    "mine": "node tools/mine.js"
   },
   "dependencies": {
     "three": "^0.170.0"

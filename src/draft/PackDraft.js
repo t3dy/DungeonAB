@@ -50,12 +50,22 @@ export class SeededRandom {
 /* AI drafter personas — each seat wants different things              */
 /* ------------------------------------------------------------------ */
 
+/*
+ * Personas have two independent axes:
+ *   preferences — WHAT they like (weights/classBias/quirks): identity,
+ *                 stable across skill.
+ *   skill (0-1) — HOW WELL they evaluate: high skill blends toward the
+ *                 rational baseline (rationalValue, calibrated by the
+ *                 mining harness) and shrinks the chaos factor. Low
+ *                 skill amplifies preferences into predictable mistakes.
+ */
 export const DRAFT_PERSONAS = [
   {
     id: 'warlord',
     name: 'The Warlord',
     icon: '⚔️',
     desc: 'Drafts muscle first: fighters, weapons, and the will to use them.',
+    skill: 0.55,
     weights: { character: 3, equipment: 2.5, spell: 0.8, personality: 1 },
     classBias: { fighter: 3, rogue: 1.5 },
   },
@@ -64,6 +74,7 @@ export const DRAFT_PERSONAS = [
     name: 'The Archmage',
     icon: '🔮',
     desc: 'Hoards spells and the wizards to wield them.',
+    skill: 0.5,
     weights: { character: 2, equipment: 1, spell: 3, personality: 1 },
     classBias: { wizard: 3, cleric: 1.5 },
   },
@@ -72,10 +83,43 @@ export const DRAFT_PERSONAS = [
     name: 'The Guildmaster',
     icon: '⚖️',
     desc: 'Balances the ledger: a bit of everything, nothing wasted.',
+    skill: 0.7,
     weights: { character: 2, equipment: 2, spell: 2, personality: 2 },
     classBias: { rogue: 2, alchemist: 2 },
   },
 ];
+
+/*
+ * Skill-tier pilots — not seated at the default table (which stays
+ * player + 3), but available for lobbies, benchmarks, and the mining
+ * harness, which uses them to measure the game's skill expression:
+ * if the Prodigy and the Novice post the same win rate, the draft
+ * isn't rewarding evaluation skill.
+ */
+export const PILOT_TIERS = [
+  {
+    id: 'prodigy',
+    name: 'The Prodigy',
+    icon: '🧠',
+    desc: 'Evaluates coldly: bodies to four, the mythic uncommons, no romance.',
+    skill: 0.95,
+    weights: { character: 2, equipment: 2, spell: 2, personality: 2 },
+    classBias: {},
+  },
+  {
+    id: 'novice',
+    name: 'The Novice',
+    icon: '🎈',
+    desc: 'Takes the shiniest rare every time. The glass cannon is SO cool.',
+    skill: 0.15,
+    weights: { character: 1.2, equipment: 2.2, spell: 2.2, personality: 1.5 },
+    classBias: {},
+    quirks: { shiny: 2.5, bodyBlind: true, curseChaser: true },
+  },
+];
+
+/** Every persona that can pilot a seat (table AIs + skill tiers). */
+export const PILOT_PERSONAS = [...DRAFT_PERSONAS, ...PILOT_TIERS];
 
 /* ------------------------------------------------------------------ */
 /* Pack construction — guaranteed coverage                             */
@@ -166,13 +210,100 @@ export function scoreCard(card, persona, pool, rng) {
 }
 
 /**
+ * The rational baseline — what the card is actually worth, calibrated
+ * by the mining harness (tools/mine.js): bodies dominate until four,
+ * the cleric is the format's mythic uncommon, class-keyed items are
+ * the real bombs, the Craven is a measured trap. This is the "pro"
+ * evaluation that skill blends toward.
+ */
+export function rationalValue(card, pool) {
+  const characters = pool.filter(c => c.type === CARD_TYPES.CHARACTER);
+  let v = 1;
+
+  if (card.type === CARD_TYPES.CHARACTER) {
+    // A body is the best card in the format until you have four
+    v = characters.length < 4
+      ? 6.5 - characters.length * 0.4
+      : 4 - (characters.length - 3) * 0.9;
+    // The mythic uncommon: unglamorous, measured at ~+7 win points
+    if (card.class === CLASSES.CLERIC && !characters.some(c => c.class === CLASSES.CLERIC)) v += 1.5;
+  }
+
+  if (card.type === CARD_TYPES.EQUIPMENT) {
+    v = 2;
+    if (card.classActions) v += 2;   // the real bombs (+22 pts on a thin party)
+    if (card.bestFor && characters.some(c => c.class === card.bestFor)) v += 1;
+    if (card.cursed) v -= 0.2;       // the pro prices the printed cost, reads the upside
+  }
+
+  if (card.type === CARD_TYPES.SPELL) {
+    v = 2
+      + (characters.some(c => c.class === CLASSES.WIZARD) ? 1 : 0)
+      + (card.use === 'heal' ? 0.5 : 0);
+  }
+
+  if (card.type === CARD_TYPES.PERSONALITY) {
+    const personalities = pool.filter(c => c.type === CARD_TYPES.PERSONALITY);
+    v = 1 - personalities.length * 1.2;
+    if (card.archetype === 'craven') v -= 1;     // measured: 62% vs 83% baseline
+    if (card.archetype === 'reckless' || card.archetype === 'greedy') v += 0.3;
+  }
+
+  return v;
+}
+
+/**
+ * The preference/bias evaluation — the persona's identity, plus the
+ * predictable mistakes its quirks encode:
+ *   shiny       — overvalues finicky rares (class-keyed items, big spells)
+ *   bodyBlind   — no urgency about drafting characters
+ *   curseChaser — reads a curse's big numbers as pure upside
+ */
+export function biasValue(card, persona, pool) {
+  const characters = pool.filter(c => c.type === CARD_TYPES.CHARACTER);
+  const quirks = persona.quirks || {};
+  let v = persona.weights?.[card.type] ?? 1;
+
+  if (card.type === CARD_TYPES.CHARACTER) {
+    v += persona.classBias?.[card.class] || 0;
+    v -= characters.length * 0.35;
+    if (!quirks.bodyBlind && characters.length === 0) v += 3;
+  }
+  if (card.type === CARD_TYPES.EQUIPMENT && card.cursed) {
+    v += quirks.curseChaser ? 0.8 : -0.8;
+  }
+  if (quirks.shiny && (card.classActions || (card.type === CARD_TYPES.SPELL && card.power >= 5))) {
+    v += quirks.shiny;
+  }
+  if (card.type === CARD_TYPES.PERSONALITY) {
+    const personalities = pool.filter(c => c.type === CARD_TYPES.PERSONALITY);
+    v -= personalities.length * 1.2;
+    if (card.trap && !quirks.curseChaser) v -= 0.6;
+  }
+  return v;
+}
+
+/**
+ * A pilot's actual pick evaluation: skill blends the rational baseline
+ * with the persona's preferences, and pros are consistent (low chaos)
+ * where novices are erratic.
+ */
+export function evaluatePick(card, persona, pool, rng) {
+  const skill = persona.skill ?? 0.5;
+  const chaos = rng.next() * (0.4 + (1 - skill) * 1.6);
+  return skill * rationalValue(card, pool)
+    + (1 - skill) * biasValue(card, persona, pool)
+    + chaos;
+}
+
+/**
  * AI drafter picks the highest-scoring card from a pack
  */
 export function aiPick(pack, persona, pool, rng) {
   let best = null;
   let bestScore = -Infinity;
   for (const card of pack) {
-    const s = scoreCard(card, persona, pool, rng);
+    const s = evaluatePick(card, persona, pool, rng);
     if (s > bestScore) {
       bestScore = s;
       best = card;
