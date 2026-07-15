@@ -9,7 +9,7 @@
 import { CLASSES, SPELL_CARDS } from '../game/Cards.js';
 import { ROOM_TYPES } from '../world/DungeonGen.js';
 import { elementMult } from '../game/Bestiary.js';
-import { claimDrop } from '../game/Drops.js';
+import { claimDrop, bonusText } from '../game/Drops.js';
 
 function roll() {
   return Math.random() * 10;
@@ -287,23 +287,8 @@ export function decideRoomAction(room, party) {
 /* Boss phases — at half health, the fight changes                     */
 /* ------------------------------------------------------------------ */
 
-const BOSS_PHASE_LINES = {
-  'vampire-lord': '🩸 Half-spent, the Lord stops apologizing. The temperature of the room drops with his manners.',
-  'the-bride': '🩸 The Bride lets the Lord\'s name fall from her like a shawl, and what remains is far older.',
-  'bog-witch': '🍲 The Witch stops smiling like a hostess and starts smiling like a cook.',
-  'mad-pyromancer': '🔥 Bleeding, the Pyromancer remembers why he was exiled, and shares the memory generously.',
-  'mad-alchemist': '⚗️ The Alchemist drinks something from his own belt that no committee ever approved.',
-  'rebis': '👑 The Rebis turns its second face forward. That one has been resting.',
-  'shrouded-king': '👑 The Shroud comes off. It was never a shroud.',
-  'glacier-heart': '💠 The Heart cracks down its center, and both halves are angrier.',
-};
-const BOSS_PHASE_GENERIC = [
-  '💢 Half-dead, the thing stops playing with its food.',
-  '💢 Wounded past its patience, it becomes what the warnings were about.',
-];
-
 function bossPhaseLine(monster) {
-  return BOSS_PHASE_LINES[monster.kind] || BOSS_PHASE_GENERIC[monster.health % BOSS_PHASE_GENERIC.length];
+  return `💢 At half health, ${monster.name} turns fierce: attack +2 for the rest of the fight.`;
 }
 
 /* ------------------------------------------------------------------ */
@@ -327,20 +312,20 @@ export function rollFind(party, always = false, rollValue = Math.random()) {
 
   if (kind === 0) {
     party.potions.push({ kind: 'healing-draught', heal: 6 });
-    return { source: 'the hoard', find: 'potion', text: '🧪 Tucked behind the coin: a healing draught, still corked, still honest.' };
+    return { source: 'the hoard', find: 'potion', text: '🧪 Also in the hoard: a healing draught (heals 6), added to the satchel.' };
   }
   if (kind === 1) {
     party.materials += 2;
-    return { source: 'the hoard', find: 'materials', text: '🌿 Two bundles of rare simples, wrapped in oilcloth by careful, vanished hands.' };
+    return { source: 'the hoard', find: 'materials', text: '🌿 Also in the hoard: 2 alchemy materials.' };
   }
   if (kind === 2) {
     const scroll = SPELL_CARDS[Math.floor(rollValue * 997) % SPELL_CARDS.length];
     party.grimoire.push({ ...scroll, id: `found-${scroll.id}-${party.grimoire.length}` });
-    return { source: scroll.name, find: 'scroll', text: `📜 A scroll of ${scroll.name}, sealed with someone's ring. The grimoire grows.` };
+    return { source: scroll.name, find: 'scroll', text: `📜 Also in the hoard: a scroll of ${scroll.name}, added to the grimoire.` };
   }
   const trinket = TRINKETS[Math.floor(rollValue * 991) % TRINKETS.length];
-  party.assignEquipment({ ...trinket, id: `${trinket.id}-${Date.now().toString(36)}` });
-  return { source: trinket.name, find: 'trinket', text: `🍀 Among the coins, ${trinket.name} — claimed, worn, already working.` };
+  const wearer = party.assignEquipment({ ...trinket, id: `${trinket.id}-${Date.now().toString(36)}` });
+  return { source: trinket.name, find: 'trinket', text: `🍀 Also in the hoard: ${trinket.name} (${bonusText(trinket.bonus)}), now worn by ${wearer?.name || 'no one'}.` };
 }
 
 /* ------------------------------------------------------------------ */
@@ -415,21 +400,21 @@ export function resolveRoomAction(room, party, optionId) {
       const etherealMult = monster.trait === 'ethereal' && !party.hasClass(CLASSES.CLERIC) ? 0.6 : 1;
       if (monster.trait === 'ethereal') {
         preps.push(party.hasClass(CLASSES.CLERIC)
-          ? { source: 'the cleric', text: '✨ Steel alone would pass through it — but the cleric\'s murmured litany gives every blade conviction.' }
-          : { source: monster.name, text: '👻 Half the party\'s blows pass through it like an opinion through a committee.' });
+          ? { source: 'the cleric', text: '✨ The cleric blesses the blades: the ethereal monster takes full weapon damage.' }
+          : { source: monster.name, text: '👻 The monster is ethereal and the party\'s blows pass through it: weapon damage ×0.6 (no cleric to bless the blades).' });
       }
       let monsterAtk = monster.attack;
       if (party.alarmed) {
         monsterAtk += 2;
         party.alarmed = false;
-        preps.push({ source: 'the alarm', text: '🔔 The tripped alarm did its work: the thing was waiting, braced and delighted.' });
+        preps.push({ source: 'the alarm', text: '🔔 The alarm tripped earlier warned it: the monster attacks with +2 this fight.' });
       }
 
       // An elemental coating on someone's blade bites deeper into
       // flesh that hates its element (the alchemist's bench pays off)
       const coating = party.coatingBonusVs(monster);
       if (coating.bonus > 0) {
-        preps.push({ source: coating.notes.join(' + '), text: `⚗️ The ${coating.notes.join(' and ')} meets flesh that hates it — every stroke bites deeper.` });
+        preps.push({ source: coating.notes.join(' + '), text: `⚗️ The ${coating.notes.join(' and ')} exploits the monster's weakness: +${coating.bonus} damage per round.` });
       }
 
       // Auto-battle: rounds of party attack vs monster attack.
@@ -469,10 +454,10 @@ export function resolveRoomAction(room, party, optionId) {
         // The venomous leave something behind, win or no win
         if (monster.trait === 'venomous') {
           if (party.hasClass(CLASSES.CLERIC)) {
-            preps.push({ source: 'the cleric', text: '🐍 Venom in three sets of scratches — drawn, hissing, into the cleric\'s salt bowl before it can work.' });
+            preps.push({ source: 'the cleric', text: '🐍 The monster was venomous, but the cleric cures the poison before it can act.' });
           } else {
             party.poisonLinger = (party.poisonLinger || 0) + 2;
-            preps.push({ source: monster.name, text: '🐍 The thing is dead, but its venom is patient. Someone will feel this a room from now.' });
+            preps.push({ source: monster.name, text: '🐍 The monster was venomous: the party will take 2 poison damage next room (no cleric to cure it).' });
           }
         }
         // A boss's hoard always holds more than coin
@@ -480,10 +465,10 @@ export function resolveRoomAction(room, party, optionId) {
           const find = rollFind(party, true);
           if (find) preps.push(find);
         }
-        // The Reckless make it look good, and the chroniclers pay for it
+        // The Reckless make it look good, and the scorers pay for it
         if (party.hasPersonality('reckless')) {
           party.addScore(5);
-          preps.push({ source: 'the Reckless', text: '💥 The Reckless insisted on doing it with style. The chronicle pays extra for style.' });
+          preps.push({ source: 'the Reckless', text: '💥 The Reckless finish the fight with style: +5 score.' });
         }
       }
       // A drafted healing spell finally earns its keep after a bloody fight
@@ -491,7 +476,7 @@ export function resolveRoomAction(room, party, optionId) {
         const heal = party.castSpell('heal');
         if (heal) {
           party.healParty(heal.effectivePower);
-          preps.push({ source: heal.name, text: `💚 ${heal.name} closes the worst of the wounds before they set (${heal.effectivePower} healed${heal.consumed ? '; the scroll burns' : ''}).` });
+          preps.push({ source: heal.name, text: `💚 ${heal.name} heals ${heal.effectivePower} after the fight${heal.consumed ? ' (the scroll is consumed)' : ''}.` });
         }
       }
       party.recordEncounter('fight', won);
@@ -542,8 +527,8 @@ export function resolveRoomAction(room, party, optionId) {
       const cravenEdge = party.hasPersonality('craven') ? 1 : 0;
       const prep = getPreparationBonuses(party);
       const preps = [];
-      if (prep.notes.sneak) preps.push({ source: prep.notes.sneak, text: `👢 The ${prep.notes.sneak} never let the floorboards learn a name.` });
-      if (prep.notes.sneakLight) preps.push({ source: prep.notes.sneakLight, text: '💡 Dancing Light had already shown where the watcher watched.' });
+      if (prep.notes.sneak) preps.push({ source: prep.notes.sneak, text: `👢 The ${prep.notes.sneak} add +1.5 to the sneak roll.` });
+      if (prep.notes.sneakLight) preps.push({ source: prep.notes.sneakLight, text: '💡 Dancing Light revealed the watcher\'s position: +1 to the sneak roll.' });
       const ok = rogueMind + cravenEdge + prep.sneak + roll() > 9;
       if (ok) {
         party.addScore(15);
@@ -592,7 +577,7 @@ export function resolveRoomAction(room, party, optionId) {
       const rogueMind = Math.max(...party.living().filter(m => m.class === CLASSES.ROGUE).map(m => m.mind));
       const prep = getPreparationBonuses(party);
       const preps = [];
-      if (prep.notes.disarm) preps.push({ source: prep.notes.disarm, text: '🗝️ The Masterwork Lockpicks treated the mechanism as a lock, and every door is a suggestion.' });
+      if (prep.notes.disarm) preps.push({ source: prep.notes.disarm, text: '🗝️ The Masterwork Lockpicks add +1.5 to the disarm roll.' });
       const ok = rogueMind + prep.disarm + roll() > 8;
       if (ok) {
         party.addScore(20);
@@ -611,7 +596,7 @@ export function resolveRoomAction(room, party, optionId) {
       const spotter = party.hasPersonality('craven') ? 1 : 0;
       const prep = getPreparationBonuses(party);
       const preps = [];
-      if (prep.trapSoak > 0) preps.push({ source: prep.notes.trapSoak, text: '🏮 The Everburning Lantern showed the plates before the boots found them.' });
+      if (prep.trapSoak > 0) preps.push({ source: prep.notes.trapSoak, text: '🏮 The Everburning Lantern showed the pressure plates: 1 less damage.' });
 
       // The trap's kind decides what pushing through costs (Bestiary
       // for rooms, as it were): fire burns unless frost answers it,
@@ -621,22 +606,22 @@ export function resolveRoomAction(room, party, optionId) {
       if (trapType === 'fire') {
         if (hasSpell(party, 'sp-frost')) {
           dmg = Math.max(1, dmg - 2);
-          preps.push({ source: 'Frost Lance', text: '❄️ Frost Lance meets the jet of flame halfway, and the corridor fills with warm rain instead.' });
+          preps.push({ source: 'Frost Lance', text: '❄️ Frost Lance counters the flame jet: 2 less damage.' });
         } else {
           dmg += 1;
         }
       } else if (trapType === 'poison') {
         dmg = Math.max(1, Math.ceil(dmg / 2));
         if (party.hasClass(CLASSES.CLERIC)) {
-          preps.push({ source: 'the cleric', text: '🐍 The needles bite, but the cleric draws the venom before it can settle in.' });
+          preps.push({ source: 'the cleric', text: '🐍 The needles hit, but the cleric cures the venom on the spot.' });
         } else {
           party.poisonLinger = (party.poisonLinger || 0) + 2;
-          preps.push({ source: 'the trap', text: '🐍 The needles barely sting. That is what worries the ones who know poison.' });
+          preps.push({ source: 'the trap', text: '🐍 Poison needles: the party will take 2 poison damage next room (no cleric to cure it).' });
         }
       } else if (trapType === 'alarm') {
         dmg = Math.min(dmg, 2);
         party.alarmed = true;
-        preps.push({ source: 'the alarm', text: '🔔 Bells. Bells all the way down. Everything ahead now knows the party\'s pace and number.' });
+        preps.push({ source: 'the alarm', text: '🔔 The alarm rings through the dungeon: the next monster will attack with +2.' });
       }
 
       party.takeDamage(dmg);
@@ -693,7 +678,7 @@ export function resolveRoomAction(room, party, optionId) {
       let gold = Math.floor((room.gold || 20) * 0.8);
       if (prep.cleanInspect) {
         gold = room.gold || 20;
-        preps.push({ source: prep.notes.cleanInspect, text: `🔍 ${prep.notes.cleanInspect === 'the Cunning' ? 'The Cunning eye misses nothing, and nothing is left behind' : 'The Masterwork Lockpicks open the false bottom too'} — the full hoard, safely.` });
+        preps.push({ source: prep.notes.cleanInspect, text: `🔍 ${prep.notes.cleanInspect === 'the Cunning' ? 'The Cunning eye' : 'The Masterwork Lockpicks'} found everything: the full gold taken, nothing missed.` });
       }
       party.addGold(gold);
       room.cleared = true;
@@ -743,7 +728,7 @@ export function resolveRoomAction(room, party, optionId) {
       const wizardMind = Math.max(...party.living().filter(m => m.class === CLASSES.WIZARD).map(m => m.mind));
       const prep = getPreparationBonuses(party);
       const preps = prep.deepStudy > 0
-        ? [{ source: prep.notes.deepStudy, text: '📖 The Grimoire of Low Whispers argued with the sealed text in its own language, and won.' }]
+        ? [{ source: prep.notes.deepStudy, text: '📖 The Grimoire of Low Whispers adds +1.5 to the reading roll.' }]
         : [];
       const ok = wizardMind + prep.deepStudy + roll() > 9;
       if (ok) {
@@ -803,7 +788,7 @@ export function resolveRoomAction(room, party, optionId) {
       const heal = party.castSpell('heal');
       if (heal) {
         party.healParty(heal.effectivePower);
-        preps.push({ source: heal.name, text: `💚 ${heal.name} knits the party back together while the dungeon finishes its tantrum.` });
+        preps.push({ source: heal.name, text: `💚 ${heal.name} heals ${heal.effectivePower} as the dust settles.` });
       }
       return { success: true, damage: dmg, preps };
     }

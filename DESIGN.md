@@ -80,7 +80,9 @@ Each AI seat has a **draft persona** (e.g. "Warlord" prioritizes fighters+weapon
 - **Boss** — the run's climax; all drafted synergies fire.
 
 ### Narration
-SnakeAB's three-beat Narrator adapted to a party voice: predicament → the party's deliberation (who argued for what, by class and personality) → resolution. Story panel + narrated endings (party wipes name their killer; victories sing).
+SnakeAB's three-beat Narrator adapted to a party voice: predicament → the party's deliberation (who argued for what, by class and personality) → resolution. Story panel + narrated endings.
+
+**House style (2026-07): descriptive, not literary.** The narration reports what happens — who acts, what it costs, with the numbers stated ("The party kills the goblin toll-gang in 2 rounds, taking 4 damage"). Mechanics facts appear in the text (multipliers, bonuses, damage): the story panel doubles as the combat log. Barks (spoken character dialogue) are the one place voice and flavor live; item card text may carry flavor, but it stays off the story panel.
 
 ---
 

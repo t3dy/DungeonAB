@@ -69,7 +69,7 @@ describe('Drop coverage — the writing rule', () => {
 
     const party = new Party([fighter]);
     const entry = claimDrop(party, { kind: 'dlc-mystery', name: 'a nameless horror' });
-    assert.ok(entry.text.includes('a nameless horror'), 'the generic writing names the monster');
+    assert.ok(entry.text.includes('nameless horror drops'), 'the chronicle names the monster');
     assert.ok(!entry.text.includes('{monster}'), 'no raw placeholder leaks into the chronicle');
   });
 });
@@ -140,13 +140,15 @@ describe('Drops in combat — the dead always pay', () => {
     assert.ok(result.preps.filter(p => p.find).length >= 2, 'the hoard find and the trophy both make the chronicle');
   });
 
-  test('the narrator tells the drop\'s story', () => {
+  test('the narrator reports the drop: what, what it does, who has it', () => {
     const party = new Party([fighter]);
     const room = { type: ROOM_TYPES.MONSTER, monster: { kind: 'wraith', name: 'a cold-eyed wraith', attack: 1, health: 2, undead: true } };
     const result = resolveRoomAction(room, party, 'fight');
     assert.equal(result.success, true);
     const text = composeResolution(room, 'fight', result, party);
-    assert.ok(text.includes('a ribbon cold as the underside of a stone'), 'the drop\'s writing reaches the story panel');
+    assert.ok(text.includes('drops a grave-cold ribbon'), 'the drop is named in the story panel');
+    assert.ok(text.includes('+1 defense'), 'its effect is stated');
+    assert.ok(text.includes(party.members[0].name), 'the wearer is named');
   });
 });
 

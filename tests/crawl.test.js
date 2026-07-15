@@ -193,16 +193,12 @@ describe('The full crawl', () => {
     assert.ok(composePredicament({ type: ROOM_TYPES.MONSTER }).length > 30);
   });
 
-  test('every class dies in its own voice', () => {
+  test('a death is reported plainly: name and class', () => {
     for (const cls of ['fighter', 'cleric', 'wizard', 'rogue', 'alchemist']) {
-      const lines = new Set();
-      for (let i = 0; i < 24; i++) {
-        const text = composeFall({ name: 'Testa the Doomed', class: cls });
-        assert.ok(text.includes('Testa the Doomed falls'), `${cls}: the fallen are named`);
-        assert.ok(text.length > 60, `${cls}: a death is a real sentence`);
-        lines.add(text);
-      }
-      assert.ok(lines.size >= 2, `${cls}: more than one way to go`);
+      const text = composeFall({ name: 'Testa the Doomed', class: cls });
+      assert.ok(text.includes('Testa the Doomed falls'), `${cls}: the fallen are named`);
+      assert.ok(text.includes(cls), `${cls}: the class is stated`);
+      assert.ok(text.length > 40, `${cls}: a death is a full sentence`);
     }
   });
 

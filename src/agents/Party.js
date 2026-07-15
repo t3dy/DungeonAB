@@ -64,11 +64,11 @@ export class Party {
 
   /**
    * Equipment goes to the best-fit living member: class match first,
-   * then whoever has the fewest pieces
+   * then whoever has the fewest pieces. Returns the wearer.
    */
   assignEquipment(eqCard) {
     const living = this.living();
-    if (living.length === 0) return;
+    if (living.length === 0) return null;
 
     let target = null;
     if (eqCard.bestFor) {
@@ -81,6 +81,7 @@ export class Party {
       target = living.reduce((a, b) => a.equipment.length <= b.equipment.length ? a : b);
     }
     target.equip(eqCard);
+    return target;
   }
 
   living() {

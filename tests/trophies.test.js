@@ -58,27 +58,28 @@ describe('The trophy case — simulator surfaces', () => {
 });
 
 describe('The endings tell the spoils', () => {
-  test('a victory carries the finest trophy into the sunlight', () => {
+  test('a victory reports the trophy count and names the latest', () => {
     const party = new Party([fighter]);
     slay(party, 'skeleton', 'a rattling skeleton patrol');
     slay(party, 'ogre-king', 'the Ogre King Under the Stair');
     const text = composeVictory(party, 9);
+    assert.ok(text.includes('Trophies carried out: 2'), 'the count is stated');
     assert.ok(text.includes('the Ogre King\'s smallest crown'), 'the last kill\'s trophy is named');
-    assert.ok(text.includes('1 lesser trophy'), 'the rest are counted');
   });
 
-  test('a wipe returns the spoils to the dark', () => {
+  test('a wipe reports the trophies lost', () => {
     const party = new Party([fighter]);
     slay(party, 'wraith', 'a cold-eyed wraith');
     party.takeDamage(999);
     const text = composeWipe(party, 4);
-    assert.ok(text.includes('a grave-cold ribbon'), 'the dark takes back what it minted');
+    assert.ok(text.includes('Trophies lost with them: 1'), 'the loss is counted');
+    assert.ok(text.includes('a grave-cold ribbon'), 'and named');
   });
 
   test('an empty case stays out of the writing', () => {
     const party = new Party([fighter]);
-    assert.ok(!composeVictory(party, 3).includes('trophy'), 'no spoils, no spoils sentence');
-    assert.ok(!composeWipe(party, 3).includes('spoils'), 'same on a wipe');
+    assert.ok(!composeVictory(party, 3).includes('Trophies'), 'no trophies, no trophy sentence');
+    assert.ok(!composeWipe(party, 3).includes('Trophies'), 'same on a wipe');
   });
 });
 

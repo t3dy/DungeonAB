@@ -94,8 +94,8 @@ export class Simulator {
       this.lastNarration = {
         room: room.type, icon: room.icon, roomIndex: roomIdx, action: 'linger',
         predicament: composePredicament(room, this.dungeon.theme),
-        deliberation: 'There was no deliberating with what was already in the blood.',
-        resolution: `🐍 The venom finishes its work a room too late to fight back against. ${linger.damage} health, taken quietly.`,
+        deliberation: 'The lingering venom acts before anything can be decided.',
+        resolution: `🐍 The venom carried from the last fight deals ${linger.damage} damage, and the last of the party falls.`,
         falls: livingBefore.filter(m => !m.isAlive()).map(m => composeFall(m)),
         aside: null,
       };
@@ -126,8 +126,8 @@ export class Simulator {
       falls: fallen.map(m => composeFall(m)),
       aside: linger
         ? (linger.cured
-            ? '🐍 On the walk, the cleric finds the venom before it finds a vein, and burns it out with a word.'
-            : `🐍 The venom from the last room chooses this moment: ${linger.damage} health, paid on the march.`)
+            ? '🐍 The cleric cures the lingering venom on the march: no damage taken.'
+            : `🐍 The venom carried from the last room acts: ${linger.damage} damage taken on the march.`)
         : null,
     };
 

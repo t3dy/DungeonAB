@@ -117,44 +117,59 @@ export function dropFor(monster) {
 
 let dropCounter = 0;
 
+/** '+1 attack, +1 mind' from a trinket bonus object. */
+export function bonusText(bonus) {
+  return Object.entries(bonus || {}).map(([stat, v]) => `+${v} ${stat}`).join(', ');
+}
+
 /**
  * Apply a defeated monster's drop to the party and return a
  * chronicle entry ({ source, find, drop, text }) for the narration.
- * Mutates the party the same way the loot tables do.
+ * Mutates the party the same way the loot tables do. The chronicle
+ * line states the effect plainly: what dropped, what it does, who
+ * has it now. (drop.text stays on the item as its card description.)
  */
 export function claimDrop(party, monster) {
   const drop = dropFor(monster);
   dropCounter++;
 
+  let outcome = '';
   switch (drop.effect) {
-    case 'trinket':
-      party.assignEquipment({
+    case 'trinket': {
+      const wearer = party.assignEquipment({
         id: `drop-${monster?.kind || 'unknown'}-${dropCounter}`, type: 'equipment',
         name: drop.name, icon: drop.icon, slot: 'trinket', bonus: { ...drop.bonus }, bestFor: null,
-        text: drop.text,
+        text: drop.text.replace('{monster}', monster?.name || 'the fallen thing'),
       });
+      outcome = `a trinket (${bonusText(drop.bonus)}), now worn by ${wearer?.name || 'no one'}`;
       break;
+    }
     case 'coating': {
       // Onto the hardest hitter's blade, like the alchemist's bench
       const striker = party.living().reduce((a, b) => a.attack >= b.attack ? a : b);
       striker.addWeaponMod({ ...drop.mod });
+      const kind = drop.mod.element ? `, ${drop.mod.element}` : drop.mod.venom ? ', venom' : '';
+      outcome = `a weapon coating (+${drop.mod.attack} attack${kind}), applied to ${striker.name}'s weapon`;
       break;
     }
     case 'potion':
       party.potions.push({ ...drop.potion });
+      outcome = `a potion (heals ${drop.potion.heal}), added to the satchel`;
       break;
     case 'materials':
       party.materials += drop.count;
+      outcome = `${drop.count} alchemy material${drop.count === 1 ? '' : 's'}`;
       break;
     case 'scroll':
       party.grimoire.push({ ...drop.spell, id: `drop-${monster?.kind || 'unknown'}-${dropCounter}` });
+      outcome = `a scroll of ${drop.spell.name} (${drop.spell.use}, power ${drop.spell.power}), added to the grimoire`;
       break;
     case 'gold':
       party.addGold(drop.gold);
+      outcome = `${drop.gold} gold`;
       break;
   }
 
-  const text = drop.text.replace('{monster}', monster?.name || 'the fallen thing');
   const claimed = { name: drop.name, icon: drop.icon, effect: drop.effect, from: monster?.name || 'unknown' };
   // The trophy case remembers every claim (endings, town, standings read it)
   (party.trophies ||= []).push(claimed);
@@ -162,8 +177,12 @@ export function claimDrop(party, monster) {
     source: drop.name,
     find: 'drop',
     drop: claimed,
-    text: `${drop.icon} ${text}`,
+    text: `${drop.icon} ${capitalize(monster?.name || 'the monster')} drops ${drop.name}: ${outcome}.`,
   };
+}
+
+function capitalize(s) {
+  return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
 }
 
 /** For tests and the writing: the effect vocabulary. */
