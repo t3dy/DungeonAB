@@ -155,10 +155,13 @@ export function claimDrop(party, monster) {
   }
 
   const text = drop.text.replace('{monster}', monster?.name || 'the fallen thing');
+  const claimed = { name: drop.name, icon: drop.icon, effect: drop.effect, from: monster?.name || 'unknown' };
+  // The trophy case remembers every claim (endings, town, standings read it)
+  (party.trophies ||= []).push(claimed);
   return {
     source: drop.name,
     find: 'drop',
-    drop: { name: drop.name, icon: drop.icon, effect: drop.effect },
+    drop: claimed,
     text: `${drop.icon} ${text}`,
   };
 }

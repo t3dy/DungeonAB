@@ -594,16 +594,32 @@ const TRAP_TELLS = {
   alarm: 'A tripwire runs up the wall to something that looks, disappointingly, like a bell.',
 };
 
+/**
+ * The spoils, told at the ending. Victories carry them out into the
+ * sun; wipes hand them back to the dark. The latest trophy is named —
+ * on a victory that's usually the boss's — the rest are counted.
+ */
+function trophyLine(party, victory) {
+  const trophies = party.trophies || [];
+  if (trophies.length === 0) return '';
+  const finest = trophies[trophies.length - 1];
+  const rest = trophies.length - 1;
+  const others = rest > 0 ? ` and ${rest} lesser ${rest === 1 ? 'trophy' : 'trophies'}` : '';
+  return victory
+    ? ` Carried into the sunlight: ${finest.icon} ${finest.name}${others}, every one with a story attached.`
+    : ` Their spoils — ${finest.icon} ${finest.name}${others} — return to the hoards that minted them, and wait.`;
+}
+
 export function composeWipe(party, roomsCleared, theme = null) {
   const fallen = party.members.map(m => m.name).join(', ');
   const where = theme ? ` in ${theme.name}` : '';
-  return `${pick(WIPE_EPITAPHS)} Here ended${where}: ${fallen}. Rooms conquered: ${roomsCleared}.`;
+  return `${pick(WIPE_EPITAPHS)} Here ended${where}: ${fallen}. Rooms conquered: ${roomsCleared}.${trophyLine(party, false)}`;
 }
 
 export function composeVictory(party, roomsCleared, theme = null) {
   const survivors = party.living().map(m => m.name).join(', ');
   const where = theme ? ` of ${theme.name}` : '';
-  return `${pick(VICTORY_CODAS)} Walked out${where}: ${survivors}. Rooms conquered: ${roomsCleared}.`;
+  return `${pick(VICTORY_CODAS)} Walked out${where}: ${survivors}. Rooms conquered: ${roomsCleared}.${trophyLine(party, true)}`;
 }
 
 function capitalize(s) {

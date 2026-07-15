@@ -335,6 +335,11 @@ function updateUI(state) {
   document.getElementById('score-count').textContent = state.party.score;
   document.getElementById('materials-count').textContent = state.party.materials;
   document.getElementById('potions-count').textContent = state.party.potions;
+  // The trophy case: count onscreen, the full inventory on hover
+  const trophyEl = document.getElementById('trophies-count');
+  const trophies = state.party.trophies || [];
+  trophyEl.textContent = trophies.length;
+  trophyEl.title = trophies.map(t => `${t.icon} ${t.name}`).join('\n');
 
   // Afflictions the party carries between rooms
   const badges = [];
@@ -467,6 +472,7 @@ function showTown(state) {
         <span style="color:#887755;">Gold</span><strong style="text-align:right;">${gold}</strong>
         <span style="color:#887755;">Survivors</span><strong style="text-align:right;">${campaign.party.living().length} / ${campaign.party.members.length}</strong>
         <span style="color:#887755;">Potions</span><strong style="text-align:right;">${campaign.party.potions.length}</strong>
+        <span style="color:#887755;">Trophies</span><strong style="text-align:right;">${campaign.party.trophies.length}</strong>
       </div>
     `;
 
@@ -618,9 +624,11 @@ function showFinal(state) {
       <span style="color:#887755;">Rooms conquered</span><strong style="text-align:right;">${summary.roomsCleared}</strong>
       <span style="color:#887755;">Survivors</span><strong style="text-align:right;">${summary.survivors} / ${summary.partySize}</strong>
       <span style="color:#887755;">Spells learned</span><strong style="text-align:right;">${summary.spellsLearned}</strong>
+      <span style="color:#887755;">Trophies claimed</span><strong style="text-align:right;">${summary.trophies}</strong>
       <span style="color:#887755;">Best on ${appState.difficulty}</span><strong style="text-align:right;">${Math.max(best, summary.score)}</strong>
       <span style="color:#887755;">Career</span><strong style="text-align:right;">${stats.totalVictories} retirements / ${stats.totalRuns} campaigns</strong>
     </div>
+    ${trophyCaseHtml(campaign.party.trophies, retired)}
     <div style="margin-top:1.25rem;">
       <div style="color:#d8a53f;font-size:0.85rem;margin-bottom:0.4rem;border-top:1px solid #3a2f1e;padding-top:0.8rem;">🎲 At the Table — how the draft played out</div>
       ${standingsRows}
@@ -647,6 +655,31 @@ function showFinal(state) {
   display.appendChild(storyBtn);
 
   display.classList.add('active');
+}
+
+/**
+ * The trophy case, laid out on the campaign's last page: what the
+ * dead of the dungeon paid, newest first. Wipes show it too — an
+ * inventory of everything the dark just took back.
+ */
+function trophyCaseHtml(trophies, retired) {
+  if (!trophies || trophies.length === 0) return '';
+  const shown = trophies.slice(-10).reverse();
+  const more = trophies.length - shown.length;
+  const rows = shown.map(t => `
+    <div style="display:flex;gap:0.5rem;align-items:baseline;padding:0.22rem 0;border-bottom:1px dashed #2a2318;color:#b0a080;font-size:0.85rem;">
+      <span>${t.icon}</span>
+      <span style="flex:1;">${escapeHtml(t.name)}</span>
+      <span style="color:#776;font-size:0.78em;">from ${escapeHtml(t.from)}</span>
+    </div>`).join('');
+  return `
+    <div style="margin-top:1.25rem;">
+      <div style="color:#d8a53f;font-size:0.85rem;margin-bottom:0.4rem;border-top:1px solid #3a2f1e;padding-top:0.8rem;">
+        🏆 The Trophy Case — ${retired ? 'what came up with them' : 'what the dark took back'}
+      </div>
+      ${rows}
+      ${more > 0 ? `<div style="color:#776;font-size:0.78rem;padding-top:0.3rem;">… and ${more} more, further down the chronicle.</div>` : ''}
+    </div>`;
 }
 
 function escapeHtml(text) {

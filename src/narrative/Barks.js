@@ -22,6 +22,7 @@ const BARKS = {
     ],
     greedy: [
       'The sword\'s just how I open lockboxes.',
+      'Everything down here is carrying something. I collect.',
       'Danger pay. Emphasis on pay.',
     ],
     scholarly: [
@@ -58,6 +59,7 @@ const BARKS = {
     greedy: [
       'Tithes flow both directions, technically.',
       'The god counts. So do I.',
+      'Even the dead tithe here. Especially the dead.',
     ],
     scholarly: [
       'The liturgy has a verse for this. Several, actually.',
@@ -93,6 +95,7 @@ const BARKS = {
     greedy: [
       'Knowledge is treasure, but treasure is also treasure.',
       'Transmutation started as a hobby. It\'s a livelihood now.',
+      'What that thing drops will fund a semester of research.',
     ],
     scholarly: [
       'Fundamentals of Sorcery, volume three, page ninety: this exact mistake.',
@@ -128,6 +131,7 @@ const BARKS = {
     greedy: [
       'It isn\'t stealing if the owner\'s a skeleton.',
       'My fingers itch. That means gold, or a rash.',
+      'I already know which part of it sells.',
     ],
     scholarly: [
       'The lock\'s a three-pin Herrengrave. The book was wrong about them. I\'m not.',
@@ -163,6 +167,7 @@ const BARKS = {
     greedy: [
       'Gold in, gold out — that\'s the whole science.',
       'Everything in this room fits in my satchel if I believe.',
+      'Don\'t burn the carcass — half my income is in the glands.',
     ],
     scholarly: [
       'The notes end mid-sentence. I intend to finish them.',

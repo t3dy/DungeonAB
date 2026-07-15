@@ -215,6 +215,7 @@ export class Simulator {
         poisonLinger: this.party.poisonLinger || 0,
         alarmed: !!this.party.alarmed,
         potions: this.party.potions.length,
+        trophies: this.party.trophies.map(t => ({ name: t.name, icon: t.icon })),
         grimoire: this.party.grimoire.map(s => s.name),
         spellsLearned: this.party.spellsLearned,
         personalities: this.party.personalities,
@@ -237,6 +238,7 @@ export class Simulator {
       survivors: this.party.living().length,
       partySize: this.party.members.length,
       spellsLearned: this.party.spellsLearned,
+      trophies: this.party.trophies.length,
       epitaph: this.epitaph,
     };
   }

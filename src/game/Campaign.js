@@ -186,6 +186,7 @@ export class Campaign {
       survivors: this.party.living().length,
       partySize: this.party.members.length,
       spellsLearned: this.party.spellsLearned,
+      trophies: this.party.trophies.length,
       retired: this.retired,
       over: this.over,
     };

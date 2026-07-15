@@ -187,7 +187,9 @@ export function getRoomOptions(room, party) {
 const PERSONALITY_WEIGHTS = {
   brave: { fight: 3, 'push-through': 2, brace: 2, flee: -2, 'leave-it': -1 },
   cunning: { sneak: 3, disarm: 3, bribe: 2, inspect: 2, 'spell-bypass': 2, fight: -1 },
-  greedy: { loot: 4, desecrate: 2, gather: 2, 'leave-it': -3, bribe: -2 },
+  // Monsters always drop (Drops.js), so to the Covetous every fight
+  // is a payday — and sneaking past one is leaving money on the floor
+  greedy: { loot: 4, desecrate: 2, gather: 2, fight: 1, sneak: -1, 'leave-it': -3, bribe: -2 },
   scholarly: { study: 3, 'deep-study': 3, 'spell-strike': 2, 'spell-bypass': 2 },
   pious: { rest: 3, 'turn-undead': 3, desecrate: -5 },
   reckless: { fight: 2, 'push-through': 3, loot: 2, inspect: -2, 'search-around': -2 },

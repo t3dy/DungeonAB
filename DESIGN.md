@@ -68,6 +68,8 @@ Each AI seat has a **draft persona** (e.g. "Warlord" prioritizes fighters+weapon
 
 ### Room Encounters (personality-weighted party decisions, SnakeAB engine adapted)
 - **Monster** — fight / flee / sneak past (rogue) / turn undead (cleric) / parley (mind check). Every *defeated* monster leaves a signature drop (`game/Drops.js`, the Bestiary's companion table): a trinket, weapon coating, potion, materials, scroll, or coin, each with its own chronicle line. Kinds without an entry fall back by trait, then to a generic trophy — nothing drops nothing. Fleeing, sneaking, and bribing claim no corpse and no drop.
+  - **The trophy case**: every claim is remembered on the party (`party.trophies`, with provenance) and persists across campaign depths. It surfaces in the HUD (count + hover inventory), the town ledger, the campaign's final page (a trophy-case section — victories show what came up, wipes show what the dark took back), the endings' writing (the finest trophy is named), and the onscreen event feed (a `trophy` tick event).
+  - **Drops bend decisions**: the Covetous weight `fight` up and `sneak` down — every kill pays out now — and the greedy barks know it.
 - **Trap** — rogue disarms; brave parties push through; scholarly parties study it.
 - **Treasure** — loot (greedy lingers, risks mimics), inspect first (cunning), leave cursed gold (devout).
 - **Library** — learn a random spell (scholarly learns 2); wizards read the dangerous books.

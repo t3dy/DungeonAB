@@ -51,6 +51,10 @@ export class Party {
     this.materials = 0;
     this.potions = [];
 
+    // The trophy case: every monster drop claimed, remembered by
+    // name (Drops.js). Persists across campaign depths with the party.
+    this.trophies = [];
+
     // Run state
     this.gold = 0;
     this.score = 0;

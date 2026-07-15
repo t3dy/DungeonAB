@@ -16,7 +16,7 @@ import { ROOM_TYPES } from '../world/DungeonGen.js';
 export const ROOM_HELP = {
   [ROOM_TYPES.ENTRANCE]: 'The way in. The party gathers its nerve.',
   [ROOM_TYPES.CORRIDOR]: 'Just passage — a breath between dangers.',
-  [ROOM_TYPES.MONSTER]: 'A monster. The party may fight, flee, sneak past (rogue), turn undead (cleric), bribe, or open with a spell.',
+  [ROOM_TYPES.MONSTER]: 'A monster. The party may fight, flee, sneak past (rogue), turn undead (cleric), bribe, or open with a spell. Every slain monster drops a trophy worth carrying.',
   [ROOM_TYPES.TRAP]: 'A trap. Rogues disarm it; the bold shove through and take the hit.',
   [ROOM_TYPES.TREASURE]: 'Treasure — and maybe a mimic. Loot it, inspect first, or leave the bait.',
   [ROOM_TYPES.LIBRARY]: 'A library. The party can learn a spell; wizards risk the sealed texts for more.',
@@ -50,7 +50,8 @@ export const CONTROL_HELP = [
 /**
  * Compare the previous and current simulator states and return the
  * notable events between them, most urgent first. Each event is
- * { icon, text, kind } where kind ∈ death | boss | spell | gold | depth.
+ * { icon, text, kind } where kind ∈ death | boss | spell | gold |
+ * trophy | depth.
  *
  * Pure: reads the two state snapshots, never mutates them.
  */
@@ -82,6 +83,12 @@ export function describeTickEvents(prev, curr) {
   if (prevParty && currParty && currParty.spellsLearned > prevParty.spellsLearned) {
     const n = currParty.spellsLearned - prevParty.spellsLearned;
     events.push({ icon: '📖', kind: 'spell', text: `The grimoire grows: ${n} new working${n > 1 ? 's' : ''} learned.` });
+  }
+
+  // A trophy claimed from a kill (Drops) — name it while it's warm
+  if (prevParty?.trophies && currParty?.trophies?.length > prevParty.trophies.length) {
+    const latest = currParty.trophies[currParty.trophies.length - 1];
+    events.push({ icon: latest.icon, kind: 'trophy', text: `Claimed from the kill: ${latest.name}.` });
   }
 
   // A windfall of gold (small pickups stay quiet)
