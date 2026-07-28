@@ -2,8 +2,11 @@
 
 Sub-project of DungeonAB: **monastic life & practice simulator** of John of
 Morigny. Read in order: `DESIGN.md`, `STYLE_GUIDE.md`, `INTERFACE.md`,
-`ART_SOURCES.md`, `BIBLIOGRAPHY.md`. The repo root's standing rules apply;
-these are additional and binding for everything under `morigny/`.
+`COMMANDS.md`, `WORLD_DESIGN.md`, `ART_SOURCES.md`, `BIBLIOGRAPHY.md`;
+`SLICE_SPEC.md` holds the current build's numbers. Code lives in
+`src/morigny/` (engine is pure and tested; UI is DOM). The repo root's
+standing rules apply; these are additional and binding for everything
+under `morigny/` and `src/morigny/`.
 
 ## Standing Rules
 
@@ -22,8 +25,12 @@ these are additional and binding for everything under `morigny/`.
 4. **Use Fanger's method, not her person.** The pencil hand is the
    designer-scholar's own voice. It never bears her name or invents her
    words. Cite her constantly; impersonate her never.
-5. **Fixed history stays fixed.** 1323 always arrives. No alternate-history
-   endings. Agency = endurance, revision, transmission.
+5. **Fixed history stays fixed.** 1323 always arrives on the historical
+   path. No *unmarked* alternate history: the Radical Axis
+   (`WORLD_DESIGN.md` §4) may carry a run out of the record ONLY through
+   the mandatory in-fiction departure annotation ("Here the witness
+   departs from the record"), logged in the witness. Default agency =
+   endurance, revision, transmission.
 6. **Asset provenance before pixels.** No image or audio enters the repo
    without a complete `assets_manifest.json` entry (schema in
    `ART_SOURCES.md`). Processing beyond cleanup demotes `attested` →
@@ -39,11 +46,12 @@ these are additional and binding for everything under `morigny/`.
    wins** — then find the fun *inside* what the sources actually say. The
    record so far is that the sources are stranger and better than invention.
 
-## Data layout (all under `morigny/data/`)
+## Data layout (all under `src/morigny/data/`, as ES modules so both the
+Vite app and the Node test runner import them directly)
 
 | File | Contents |
 |---|---|
-| `hours.json` | canonical hours, seasonal horarium (seeded example present) |
+| `hours.js` | canonical hours, seasonal horarium (present) |
 | `rule.json` | Rule of St Benedict excerpts in play (RB 8–20 offices, 22 dormitory, 48 labor/lectio, chapter/discipline) |
 | `liber_florum.json` | structure of the work: books, procedures, prayer sequences, figures — populate from the Fanger–Watson edition |
 | `personae.json` | John, Bridget, the community, the Virgin, the apparitions |

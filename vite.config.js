@@ -1,4 +1,7 @@
 import { defineConfig } from 'vite'
+import { fileURLToPath } from 'node:url'
+
+const page = p => fileURLToPath(new URL(p, import.meta.url))
 
 export default defineConfig({
   root: 'src',
@@ -9,6 +12,13 @@ export default defineConfig({
   build: {
     outDir: '../dist',
     emptyOutDir: true,
+    rollupOptions: {
+      input: {
+        main: page('./src/index.html'),
+        // MORIGNY sub-project (morigny/CLAUDE.md) — served at /morigny/
+        morigny: page('./src/morigny/index.html'),
+      },
+    },
   },
   server: {
     port: 5175,
