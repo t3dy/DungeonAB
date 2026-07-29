@@ -6,9 +6,9 @@ continuation prompt). Then read in order: `DESIGN.md`, `STYLE_GUIDE.md`,
 `INTERFACE.md`, `COMMANDS.md`, `WORLD_DESIGN.md`, `SCRIPTORIUM.md`,
 `ART_SOURCES.md`, `BIBLIOGRAPHY.md`; `SLICE_SPEC.md` holds the current
 build's numbers. Code lives in
-`src/morigny/` (engine is pure and tested; UI is DOM). The repo root's
+`src/` (engine is pure and tested; UI is DOM). The repo root's
 standing rules apply; these are additional and binding for everything
-under `morigny/` and `src/morigny/`.
+under `morigny/` and `src/`.
 
 ## Standing Rules
 
@@ -48,7 +48,7 @@ under `morigny/` and `src/morigny/`.
    wins** — then find the fun *inside* what the sources actually say. The
    record so far is that the sources are stranger and better than invention.
 
-## Data layout (all under `src/morigny/data/`, as ES modules so both the
+## Data layout (all under `src/data/`, as ES modules so both the
 Vite app and the Node test runner import them directly)
 
 | File | Contents |

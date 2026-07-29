@@ -97,7 +97,7 @@ A run has a **disposition axis**, moved by accumulated choices:
   counterfactual run is filed in the stemma as what codicology actually
   calls a **contaminated witness**.
 
-Rules of the axis (extends `morigny/CLAUDE.md` rule 5):
+Rules of the axis (extends `CLAUDE.md` rule 5):
 1. The historical path is default and center-weighted; radical options
    are present but *cost* (they are radical in his world, price them so).
 2. Counterfactual content never ships unmarked: the departure annotation
