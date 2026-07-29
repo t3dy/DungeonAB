@@ -114,19 +114,31 @@ Tests: `tests/morigny_engine.test.js`, `morigny_content.test.js`
 
 ## In flight — pick up here
 
-**Nothing is half-built.** The campaign loop closes. The next work is new:
+**Complete feature audit:** Read `AUDIT.md` first. It has a status table for every system, the research queue, asset inventory, writing coverage, and the recommended build sequence. Nothing is half-built. The campaign loop closes through v3; the next work is staged and specified.
 
-1. **The scriptorium** (`SCRIPTORIUM.md`) — the biggest remaining design,
-   and the one that makes transmission (the actual victory condition)
-   mechanical rather than a metaphor. Build order is in that document:
-   data → pure engine + tests → a stage reusing the recitation grammar →
-   witnesses gaining real copies.
-2. **Orléans, Sens, Paris** on the world map (`WORLD_DESIGN.md` §5), with
-   the pecia book-trade and the clerical underworld as *memory and
-   transaction*, kept rare per `PACING.md`.
-3. **City leaves** — sourced historical imagery for the towns, in the
-   pencil layer with honest dates (`ART_SOURCES.md`).
-4. **The reading sprint** below, which unblocks every `verify` flag.
+**Pick one of two tracks:**
+
+1. **v3 Scriptorium** (the victory condition made mechanical)
+   - Start: `data/exemplars.js`, `data/materials.js` (5 exemplar sources, parchment/ink/pigments with sim fields)
+   - Then: `engine/scriptorium.js` with tests (quire model, copy loop reusing recitation grammar, error classes, correction, figure check → `procedure.corrupt`)
+   - Then: scriptorium stage with daylight constraint on screen
+   - Then: transmission choices and stemma integration
+   - Build order and spec: `SCRIPTORIUM.md` §5
+
+2. **v2 Completion** (three cities, NPC encounters, sourced imagery)
+   - City map design: Orléans, Sens, Paris (3 NPCs × 3 keywords each)
+   - Author city NPC encounters (~27 passages)
+   - Wire city navigation into world.js
+   - Source city leaves (historical imagery with provenance + dating)
+   - Disposition axis choices in city encounters (Obedient/Historical/Radical)
+   - Build order: `WORLD_DESIGN.md` §5, `ART_SOURCES.md`
+
+**Recommendation:** Start v3 Scriptorium Data (one window). It is lowest complexity, highest ROI, and unblocks engine work. Then go either direction.
+
+**Research queue** — do in parallel if someone is reading while code ships:
+- Fanger, *Rewriting Magic* (pin dates, prayer structure, sexual loci; high ROI)
+- Fanger–Watson edition (vision list, figure program, redaction differences)
+- Sophie Page, *Magic in the Cloister* (pecia feasibility at Orléans; medium ROI)
 
 ## Extracting to its own repo
 
@@ -167,29 +179,37 @@ with `sources: [{work, locus}]` filled.
 
 > Continue building **MORIGNY**, a monastic life & practice simulator of
 > John of Morigny (fl. c. 1300–1323), grounded in Claire Fanger's
-> scholarship. The campaign loop is complete through the 1323 ending and
-> the stemma; `npm test` and `npm run dev` should both be green before you
-> change anything.
+> scholarship. v1 (the monastic day) is complete and tested; v2–v3 are
+> fully specified but not yet built. Start with a feature audit.
 >
-> Read `HANDOVER.md` first, then `CLAUDE.md`, `STYLE_GUIDE.md`, and
-> `PACING.md`. Their rules are binding and enforced by tests: no unsourced
+> **First:** Read `AUDIT.md` for a complete status table (v1 ✓, v2 partial,
+> v3 not started), the research queue, asset inventory, writing coverage,
+> recommended build sequence, and why each system matters.
+>
+> **Then:** Read `HANDOVER.md`, `CLAUDE.md`, `STYLE_GUIDE.md`, and
+> `PACING.md`. These rules are binding and enforced by tests: no unsourced
 > content (every record carries `sources[]` + `attested|adapted|invented`),
-> no fabricated quotations from John or from Fanger, the Struggle material
-> stays interior and never depicted, and fixed history stays fixed (1323
-> always arrives; counterfactuals only through the marked departure
-> annotation).
+> no fabricated quotations from John or Fanger, the Struggle material stays
+> interior and never depicted, fixed history stays fixed (1323 always
+> arrives; counterfactuals only through the marked departure annotation).
 >
-> Next task: **build the scriptorium system** specified in
-> `SCRIPTORIUM.md` — manuscript production as core play, since copying is
-> what makes transmission (the victory condition) mechanical. Follow that
-> document's build order: data (`exemplars`, `materials`) → a pure
-> `engine/scriptorium.js` with tests (quire model, the copy loop reusing
-> the recitation grammar, the error classes including the *verba ignota*
-> that cannot be self-corrected from sense, the figure check that sets
-> `procedure.corrupt` silently, concealment state) → a scriptorium stage
-> with the daylight constraint on screen → witnesses gaining real copies
-> that feed the stemma.
+> **Pick a track from HANDOVER.md's "In flight — pick up here":**
+>
+> **Option A (Recommended):** Build **v3 Scriptorium Data** (`data/exemplars.js`,
+> `data/materials.js`) — lowest complexity, highest ROI, unblocks engine work.
+> Then proceed to `engine/scriptorium.js` with tests (quire model, copy loop
+> reusing recitation grammar, error classes including *verba ignota*, correction,
+> figure check → `procedure.corrupt`). Spec in `SCRIPTORIUM.md` §5; this is the
+> victory condition made mechanical.
+>
+> **Option B:** Complete **v2 World Layer** (three cities + NPC encounters +
+> sourced imagery + disposition-axis choices). Spec in `WORLD_DESIGN.md` §5,
+> `ART_SOURCES.md`. Ship independently; no blockers.
+>
+> **Option C:** Read the **Research Queue** in parallel (Fanger, Fanger–Watson,
+> Sophie Page). High ROI for pinning `verify` flags while code ships.
 >
 > Keep the house rules: tests ship with mechanics (`npm test`), the engine
 > stays pure and seeded-deterministic, writing coverage and the provenance
-> lint must stay green. Commit when done.
+> lint must stay green. `npm run dev` should be green when you start;
+> `npm test` should stay green. Commit each completed piece.
