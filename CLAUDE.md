@@ -1,9 +1,11 @@
 # MORIGNY — Agent Guide (system file)
 
 Sub-project of DungeonAB: **monastic life & practice simulator** of John of
-Morigny. Read in order: `DESIGN.md`, `STYLE_GUIDE.md`, `INTERFACE.md`,
-`COMMANDS.md`, `WORLD_DESIGN.md`, `ART_SOURCES.md`, `BIBLIOGRAPHY.md`;
-`SLICE_SPEC.md` holds the current build's numbers. Code lives in
+Morigny. **Start with `HANDOVER.md`** (current state, what's in flight,
+continuation prompt). Then read in order: `DESIGN.md`, `STYLE_GUIDE.md`,
+`INTERFACE.md`, `COMMANDS.md`, `WORLD_DESIGN.md`, `SCRIPTORIUM.md`,
+`ART_SOURCES.md`, `BIBLIOGRAPHY.md`; `SLICE_SPEC.md` holds the current
+build's numbers. Code lives in
 `src/morigny/` (engine is pure and tested; UI is DOM). The repo root's
 standing rules apply; these are additional and binding for everything
 under `morigny/` and `src/morigny/`.
