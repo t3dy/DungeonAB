@@ -7,9 +7,9 @@
 import { strict as assert } from 'assert';
 import {
   siglumFor, loadWitnesses, saveWitness, corruptionsOf, buildStemma, survivingWitness,
-} from '../src/morigny/engine/stemma.js';
-import { EXAMINATION, VERDICTS, VERDICT_ENVELOPE, DEPARTURE_NOTE, READING_ROOM, SUMMONS, BIBLIO } from '../src/morigny/content/content.js';
-import { STANCES } from '../src/morigny/engine/chronicle.js';
+} from '../src/engine/stemma.js';
+import { EXAMINATION, VERDICTS, VERDICT_ENVELOPE, DEPARTURE_NOTE, READING_ROOM, SUMMONS, BIBLIO } from '../src/content/content.js';
+import { STANCES } from '../src/engine/chronicle.js';
 
 function fakeStorage() {
   const m = new Map();

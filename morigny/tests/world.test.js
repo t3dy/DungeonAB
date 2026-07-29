@@ -8,15 +8,15 @@ import { strict as assert } from 'assert';
 import {
   MAPS, parseMap, tileAt, npcAt, isWalkable, createWorld, move, dueBell,
   keepOffice, missedOffices, adjacentNpc, reachable,
-} from '../src/morigny/engine/world.js';
-import { startTalk, ask, knownKeywords } from '../src/morigny/engine/talk.js';
-import { NPCS } from '../src/morigny/data/npcs.js';
+} from '../src/engine/world.js';
+import { startTalk, ask, knownKeywords } from '../src/engine/talk.js';
+import { NPCS } from '../src/data/npcs.js';
 import {
   WORLD_MAP, ETAMPES_MAP, SPAWNS, ROAD_BELLS,
-} from '../src/morigny/data/worldmap.js';
-import { createJohn } from '../src/morigny/engine/state.js';
-import { buildDay, dayIsLegal } from '../src/morigny/engine/day.js';
-import { ASSETS_MANIFEST } from '../src/morigny/data/assets_manifest.js';
+} from '../src/data/worldmap.js';
+import { createJohn } from '../src/engine/state.js';
+import { buildDay, dayIsLegal } from '../src/engine/day.js';
+import { ASSETS_MANIFEST } from '../src/data/assets_manifest.js';
 
 describe('The maps validate', () => {
   test('both maps are rectangular', () => {

@@ -4,7 +4,7 @@
  * played in full recitation; Terce–None compress into the daylight stage.
  */
 
-import { SeededRandom } from '../../draft/PackDraft.js';
+import { SeededRandom } from './random.js';
 import { HOUR_ORDER } from '../data/hours.js';
 
 /**

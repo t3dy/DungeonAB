@@ -7,7 +7,7 @@
 export const ASSETS_MANIFEST = [
   {
     id: 'tileset-world-v1',
-    role: 'tile set (procedural, drawn in code: src/morigny/ui/tiles.js)',
+    role: 'tile set (procedural, drawn in code: src/ui/tiles.js)',
     institution: 'original work, this project',
     shelfmark: 'n/a',
     folio: 'n/a',

@@ -5,7 +5,7 @@ Ultima's interface is a *vocabulary of life* (Attack, Board, Klimb, Mix,
 Yell…), and a monastery is a *regulated* vocabulary of life. So in MORIGNY
 most letters are refused most of the time — and the refusal line, in period
 voice, is worldbuilding. Ultima's "Not here!" becomes the Rule speaking.
-Canonical data: `src/morigny/engine/commands.js` (each command ships with
+Canonical data: `src/engine/commands.js` (each command ships with
 verb, gloss, and refusal; coverage-tested).
 
 | Key | Verb | When it lives |

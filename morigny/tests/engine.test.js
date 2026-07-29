@@ -5,20 +5,20 @@
  */
 
 import { strict as assert } from 'assert';
-import { SeededRandom } from '../src/draft/PackDraft.js';
+import { SeededRandom } from '../src/engine/random.js';
 import {
   createJohn, pressureTier, isScrupulous, clamp,
-} from '../src/morigny/engine/state.js';
-import { buildDay, dayIsLegal, dayHourIds, stageRng } from '../src/morigny/engine/day.js';
-import { createRecitation, distractionChance } from '../src/morigny/engine/recitation.js';
+} from '../src/engine/state.js';
+import { buildDay, dayIsLegal, dayHourIds, stageRng } from '../src/engine/day.js';
+import { createRecitation, distractionChance } from '../src/engine/recitation.js';
 import {
   nightThreatens, successChance, resolveNight, confess, NIGHT_VERBS,
-} from '../src/morigny/engine/struggle.js';
+} from '../src/engine/struggle.js';
 import {
   dreamEligible, createVision, judge, reckonCorruption, TELL_CATEGORIES,
-} from '../src/morigny/engine/vision.js';
-import { HOUR_ORDER } from '../src/morigny/data/hours.js';
-import { DISTRACTIONS, PROCEDURE_PRAYER } from '../src/morigny/content/content.js';
+} from '../src/engine/vision.js';
+import { HOUR_ORDER } from '../src/data/hours.js';
+import { DISTRACTIONS, PROCEDURE_PRAYER } from '../src/content/content.js';
 
 describe('The day', () => {
   test('all eight offices, canonical order, always legal', () => {

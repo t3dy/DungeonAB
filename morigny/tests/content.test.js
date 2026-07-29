@@ -5,15 +5,15 @@
  */
 
 import { strict as assert } from 'assert';
-import { HOURS, HOUR_ORDER } from '../src/morigny/data/hours.js';
+import { HOURS, HOUR_ORDER } from '../src/data/hours.js';
 import {
   BIBLIO, HOUR_TEXT, VERSICLE, PROCEDURE_PRAYER, COMPLINE_PRAYER,
   DISTRACTIONS, TIER_TEXT, NIGHT_CHOICES, NIGHT_OUTCOMES, CONFESSION,
   VISION_TELLS, VISION_SCENE, DREAM_SHUT, DISCERNMENT_OUTCOMES,
   PENCIL_NOTES, DAYLIGHT, CONTENT_NOTE,
-} from '../src/morigny/content/content.js';
-import { COMMANDS, LETTERS, NIGHT_KEYS } from '../src/morigny/engine/commands.js';
-import { NIGHT_VERBS } from '../src/morigny/engine/struggle.js';
+} from '../src/content/content.js';
+import { COMMANDS, LETTERS, NIGHT_KEYS } from '../src/engine/commands.js';
+import { NIGHT_VERBS } from '../src/engine/struggle.js';
 
 const STATUSES = ['attested', 'adapted', 'invented'];
 

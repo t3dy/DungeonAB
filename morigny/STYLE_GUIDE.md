@@ -2,7 +2,7 @@
 
 The writing carries this game. Three voices, strict registers, and a set of
 scholarly values adopted from Claire Fanger's practice and encoded here as
-binding rules. `morigny/CLAUDE.md` makes these enforceable; this file makes
+binding rules. `CLAUDE.md` makes these enforceable; this file makes
 them writable.
 
 ---

@@ -3,7 +3,7 @@
 Concrete mechanics and tuning for the playable slice: **one liturgical day,
 one night of the Struggle, one sought vision, three-hands apparatus.**
 This file exists because `DESIGN.md` names the systems and this names the
-numbers. Code lives in `src/morigny/`; tests in `tests/morigny_*.test.js`.
+numbers. Code lives in `src/`; tests in `tests/*.test.js`.
 
 ## John's state
 
@@ -83,7 +83,7 @@ pattern-matching.
 
 ## Slice presentation
 
-Typographic codex only — per `morigny/CLAUDE.md` rule 6, no imagery ships
+Typographic codex only — per `CLAUDE.md` rule 6, no imagery ships
 without a provenance manifest, and none is cleared yet. CSS carries the
 grisaille register: paper, iron-gall ink, vermilion rubrics, ultramarine
 reserved for the vision, gold for licentia, graphite for the pencil hand.

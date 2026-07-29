@@ -23,10 +23,14 @@ none of the autobattler engine.
 
 ```bash
 npm install
-npm run dev          # http://localhost:5175/morigny/
-npm test             # 23 suites, all green
-node --test tests/morigny_*.test.js   # just this sub-project
+npm run dev          # http://localhost:5176
+npm test             # all green
 ```
+
+**Standalone project.** It has its own `package.json`, `vite.config.js`,
+`src/`, and `tests/`, and imports nothing from outside this folder. It
+currently still *sits* inside the DungeonAB repo; see
+"Extracting to its own repo" below.
 
 At the incipit: **B** = a day inside the walls · **E** = a road day to Étampes.
 Keyboard-first; arrow keys walk the world map; **T** talks; **Z** = state of
@@ -36,16 +40,17 @@ the soul.
 
 | File | What it holds |
 |---|---|
-| `morigny/DESIGN.md` | pillars, nested loops, the Struggle, fixed-1323 horizon |
-| `morigny/STYLE_GUIDE.md` | **three-hands voice system; binding register rules for the temptation material; encoded scholarly values** |
-| `morigny/CLAUDE.md` | **standing rules — enforced by tests** |
-| `morigny/INTERFACE.md` | codex UI, grisaille palette, semantic earned color |
-| `morigny/COMMANDS.md` | the 26-letter Ultima V alphabet |
-| `morigny/WORLD_DESIGN.md` | tile world, towns, reagent→preparation translation, Radical Axis |
-| `morigny/SLICE_SPEC.md` | the numbers: recitation, Struggle, discernment |
-| `morigny/SCRIPTORIUM.md` | **planned, not built** — manuscript production system |
-| `morigny/ART_SOURCES.md` | image sourcing pipeline + provenance schema |
-| `morigny/BIBLIOGRAPHY.md` | reading program + **Research Queue** |
+| `DESIGN.md` | pillars, nested loops, the Struggle, fixed-1323 horizon |
+| `STYLE_GUIDE.md` | **three-hands voice system; binding register rules for the temptation material; encoded scholarly values** |
+| `CLAUDE.md` | **standing rules — enforced by tests** |
+| `INTERFACE.md` | codex UI, grisaille palette, semantic earned color |
+| `COMMANDS.md` | the 26-letter Ultima V alphabet |
+| `WORLD_DESIGN.md` | tile world, towns, reagent→preparation translation, Radical Axis |
+| `SLICE_SPEC.md` | the numbers: recitation, Struggle, discernment |
+| `PACING.md` | the 70/20/10 ratio and the four kinds of choice |
+| `SCRIPTORIUM.md` | **planned, not built** — manuscript production system |
+| `ART_SOURCES.md` | image sourcing pipeline + provenance schema |
+| `BIBLIOGRAPHY.md` | reading program + **Research Queue** |
 
 ## The five rules that shape everything
 
@@ -61,7 +66,7 @@ the soul.
 5. **Fixed history stays fixed.** 1323 always arrives. Counterfactuals only
    through the *marked* departure annotation.
 
-## Code map (`src/morigny/`)
+## Code map (`src/`)
 
 ```
 engine/     state · day · recitation · struggle · vision · commands
@@ -100,32 +105,52 @@ Tests: `tests/morigny_engine.test.js`, `morigny_content.test.js`
 - **The command alphabet**: 26 letters, each with a refusal line in period
   voice. **A**ttack is nearly always refused by design.
 
+- **1323, complete**: renown accumulates across witnesses until the
+  summons; the examination (three questions from the period's real
+  objections to the *ars notoria*, each answerable submit/defend/scorn);
+  three authored endings — every road burns the book; the **departure
+  annotation** on the counterfactual path; and the **stemma** screen where
+  the modern scholar receives not the best copy but the one that got out.
+
 ## In flight — pick up here
 
-**`engine/chronicle.js` is written and tested but NOT wired to the UI.**
-It is the v3 spine:
-- `recordDay()` accumulates renown across witnesses (suspicion + audacity
-  + licence).
-- `summonsDue()` fires at `SUMMONS_AT` (12 renown).
-- `createExamination()` / `answerQuestion()` / `verdict()` → one of
-  `submitted` | `defiant` | `departed`. Every verdict burns the book;
-  `departed` is the marked counterfactual and must be *earned across days*,
-  not improvised at the bar.
+**Nothing is half-built.** The campaign loop closes. The next work is new:
 
-**To finish v3:**
-1. Load the chronicle at `start()`; call `recordDay()` in `reckoning()`.
-2. If `summonsDue()`, open the day with the summons to Paris instead of
-   chapter; write the examination stage (three questions, stances
-   submit/defend/scorn) in the three hands.
-3. Author the three endings. On `departed`, the pencil hand writes the
-   mandatory annotation — *"Here the witness departs from the record"* —
-   and the witness is filed as a **contaminated witness**.
-4. The stemma screen: witnesses from localStorage as a descent tree; the
-   framing ending (a modern reading room, the manuscript found).
+1. **The scriptorium** (`SCRIPTORIUM.md`) — the biggest remaining design,
+   and the one that makes transmission (the actual victory condition)
+   mechanical rather than a metaphor. Build order is in that document:
+   data → pure engine + tests → a stage reusing the recitation grammar →
+   witnesses gaining real copies.
+2. **Orléans, Sens, Paris** on the world map (`WORLD_DESIGN.md` §5), with
+   the pecia book-trade and the clerical underworld as *memory and
+   transaction*, kept rare per `PACING.md`.
+3. **City leaves** — sourced historical imagery for the towns, in the
+   pencil layer with honest dates (`ART_SOURCES.md`).
+4. **The reading sprint** below, which unblocks every `verify` flag.
 
-**Then**: the scriptorium system in `morigny/SCRIPTORIUM.md` — the
-biggest remaining design, and the one that makes transmission (the actual
-victory condition) mechanical.
+## Extracting to its own repo
+
+The folder is already self-contained and its history is in the DungeonAB
+repo. To split it out with history intact (run locally, where you can
+create repos):
+
+```bash
+# 1. create an empty GitHub repo named Morigny (no README/gitignore)
+
+# 2. from a clone of DungeonAB, on the morigny branch:
+git subtree split --prefix=morigny -b morigny-only
+
+# 3. push that branch as the new repo's main:
+git push git@github.com:t3dy/Morigny.git morigny-only:main
+
+# 4. clone it wherever you want it:
+git clone git@github.com:t3dy/Morigny.git C:/Dev/Morigny
+cd C:/Dev/Morigny && npm install && npm test && npm run dev
+```
+
+Afterwards, delete `morigny/` from DungeonAB in a separate commit so the
+two projects stop sharing a tree. (I could not create the repo from this
+session — the GitHub integration lacks repository-creation permission.)
 
 ## Research Queue (blocks `verify` flags)
 
@@ -140,27 +165,31 @@ with `sources: [{work, locus}]` filled.
 
 ## Continuation prompt (paste into a new window)
 
-> Continue building **MORIGNY**, the John of Morigny monastic practice
-> simulator in the `morigny/` sub-project of this repo, on branch
-> `claude/morigny-monastic-game-tpw2j6`.
+> Continue building **MORIGNY**, a monastic life & practice simulator of
+> John of Morigny (fl. c. 1300–1323), grounded in Claire Fanger's
+> scholarship. The campaign loop is complete through the 1323 ending and
+> the stemma; `npm test` and `npm run dev` should both be green before you
+> change anything.
 >
-> Read `morigny/HANDOVER.md` first, then `morigny/CLAUDE.md` and
-> `morigny/STYLE_GUIDE.md` — their rules are binding: no unsourced content
-> (every record carries `sources[]` + `attested|adapted|invented`), no
-> fabricated quotations from John or from Fanger, the Struggle material
+> Read `HANDOVER.md` first, then `CLAUDE.md`, `STYLE_GUIDE.md`, and
+> `PACING.md`. Their rules are binding and enforced by tests: no unsourced
+> content (every record carries `sources[]` + `attested|adapted|invented`),
+> no fabricated quotations from John or from Fanger, the Struggle material
 > stays interior and never depicted, and fixed history stays fixed (1323
 > always arrives; counterfactuals only through the marked departure
 > annotation).
 >
-> Next task: **finish the v3 chronicle layer.** `src/morigny/engine/chronicle.js`
-> is written and tested but not wired to the UI. Load the chronicle at
-> `start()`, fold each day in at `reckoning()`, open the day with the
-> summons to Paris when `summonsDue()`, write the examination stage (three
-> questions; stances submit/defend/scorn) and author its three endings in
-> the three hands — with the mandatory departure annotation on `departed`.
-> Then build the stemma screen: witnesses from localStorage as a descent
-> tree, ending in the modern reading room where the manuscript is found.
+> Next task: **build the scriptorium system** specified in
+> `SCRIPTORIUM.md` — manuscript production as core play, since copying is
+> what makes transmission (the victory condition) mechanical. Follow that
+> document's build order: data (`exemplars`, `materials`) → a pure
+> `engine/scriptorium.js` with tests (quire model, the copy loop reusing
+> the recitation grammar, the error classes including the *verba ignota*
+> that cannot be self-corrected from sense, the figure check that sets
+> `procedure.corrupt` silently, concealment state) → a scriptorium stage
+> with the daylight constraint on screen → witnesses gaining real copies
+> that feed the stemma.
 >
-> Keep the house rules: tests ship with mechanics (`node --test
-> tests/morigny_*.test.js`), engine stays pure, writing coverage and the
-> provenance lint must stay green. Commit and push to the branch when done.
+> Keep the house rules: tests ship with mechanics (`npm test`), the engine
+> stays pure and seeded-deterministic, writing coverage and the provenance
+> lint must stay green. Commit when done.

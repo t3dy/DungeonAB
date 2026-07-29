@@ -8,7 +8,7 @@ import { strict as assert } from 'assert';
 import {
   loadChronicle, saveChronicle, resetChronicle, recordDay, summonsDue,
   createExamination, answerQuestion, verdict, STANCES, QUESTION_COUNT, SUMMONS_AT,
-} from '../src/morigny/engine/chronicle.js';
+} from '../src/engine/chronicle.js';
 
 function fakeStorage() {
   const m = new Map();
