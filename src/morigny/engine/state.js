@@ -14,6 +14,9 @@ export function createJohn() {
     suspicion: 0,
     purity: { polluted: false, confessed: true },
     procedure: { prayed: false, quality: null, licentia: false, corrupt: false },
+    /** Radical Axis (WORLD_DESIGN.md §4): 0 = the historical center. */
+    disposition: 0,
+    items: { draught: 0, quire: 0 },
     log: [],
   };
 }

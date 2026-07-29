@@ -471,6 +471,70 @@ export const DAYLIGHT = {
   status: 'invented',
 };
 
+// ── The journey (world stage) ───────────────────────────────────────────
+export const JOURNEY = {
+  depart: {
+    rubric: '¶ Of the errand to Étampes, after chapter.',
+    body:
+      'The prior gave me the errand as one gives a coin to a child: kindly, and watching what ' +
+      'I did with it. The infirmary wants poppy and the sacristy wants ink, and I want — I ' +
+      'record it honestly — the road. A monk outside his wall is a snail out of its shell: ' +
+      'quicker, softer, and in season.',
+    sources: [],
+    status: 'invented',
+  },
+  officeWild: {
+    text:
+      'The bell of no church rang it, but the hour rang in me, and I said the office where I ' +
+      'stood, the river carrying the psalm downstream to whoever has ears.',
+    sources: [],
+    status: 'invented',
+  },
+  officeTown: {
+    text:
+      'I said the office in the street, hood back, voice level. A monk praying in a market is ' +
+      'a spectacle exactly as edifying as it is conspicuous, and the town counted the house I ' +
+      'came from twice.',
+    sources: [],
+    status: 'invented',
+  },
+  officeMissedLine:
+    'The hours I let pass on the road sat in me at evening like unanswered letters.',
+  blocked: [
+    'The Juine has the right of way here.',
+    'The forest keeps its own rule, and does not admit novices.',
+    'Wall. The town is firm on the subject.',
+  ],
+  sources: [],
+  status: 'invented',
+};
+
+/** The night after the draught: pressure bought with dreamlessness. */
+export const DRUGGED_DREAM = {
+  rubric: '¶ Of the night under poppy, in which nothing at all was given.',
+  body:
+    'The draught did what the apothecary promised: it shuttered the house of the mind entire. ' +
+    'No siege — and no garden, no figure, no blue of any kind. I woke with the sense of a ' +
+    'door having been knocked upon, softly, in a house where no one was home. I do not know ' +
+    'who knocked. That is the price, and I paid it in advance, and I will wonder about it ' +
+    'for longer than the sleep was worth.',
+  sources: [],
+  status: 'invented',
+};
+
+/** The Radical Axis surfacing (WORLD_DESIGN.md §4) — the pencil hand notices. */
+export const RADICAL_NOTE = {
+  id: 'note-radical',
+  text:
+    'That answer is not in any record. John’s audacity ran through visionary channels — ' +
+    'authorization, not defiance. Keep pushing in this register and this witness will earn ' +
+    'the margin’s gravest annotation: departure from the record. I will mark it when it ' +
+    'comes. That is the deal we made, you and I.',
+  cites: ['fanger-rewriting'],
+  sources: [{ work: 'Fanger, Rewriting Magic', locus: 'John’s stance toward authority (frame)' }],
+  status: 'attested',
+};
+
 // ── Content note (first launch; canonical wording from STYLE_GUIDE.md) ──
 export const CONTENT_NOTE =
   'This game simulates the inner life of a real fourteenth-century monk, John of Morigny, ' +

@@ -228,6 +228,24 @@ body.no-pencil .pencil-note,
 body.no-pencil .provenance,
 body.no-pencil .gloss.pencil { display: none; }
 
+/* ── the world layer (U5 chassis) ─────────────────────────── */
+canvas.worldmap {
+  width: 100%;
+  image-rendering: pixelated;
+  border: 2px solid var(--gutter);
+  background: #22201b;
+}
+.talk-input {
+  width: 100%;
+  font: inherit;
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.35);
+  border: 1px dotted var(--gutter);
+  padding: 0.4rem 0.5rem;
+  margin-top: 0.6rem;
+}
+.talk-input:focus { outline: 2px solid var(--vermilion); }
+
 /* ── semantic, earned color ───────────────────────────────── */
 .ultramarine { color: var(--ultramarine); }
 .gold { color: var(--gold); font-weight: bold; }

@@ -19,7 +19,15 @@ import {
   HOUR_TEXT, VERSICLE, PROCEDURE_PRAYER, COMPLINE_PRAYER, DISTRACTIONS,
   TIER_TEXT, NIGHT_CHOICES, NIGHT_OUTCOMES, CONFESSION, VISION_SCENE,
   DREAM_SHUT, DISCERNMENT_OUTCOMES, PENCIL_NOTES, BIBLIO, DAYLIGHT, CONTENT_NOTE,
+  JOURNEY, DRUGGED_DREAM, RADICAL_NOTE,
 } from './content/content.js';
+import {
+  MAPS, createWorld, move, keepOffice, missedOffices, adjacentNpc, npcAt, tileAt,
+} from './engine/world.js';
+import { startTalk, ask, knownKeywords } from './engine/talk.js';
+import { NPCS } from './data/npcs.js';
+import { SIGNPOST_TEXT } from './data/worldmap.js';
+import { TILE, PAINTERS, paintFigure, paintNpc } from './ui/tiles.js';
 
 const $ = id => document.getElementById(id);
 const el = (tag, cls, text) => {
@@ -78,6 +86,13 @@ function clearActs() {
 
 document.addEventListener('keydown', e => {
   if (e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.target?.tagName === 'INPUT') return; // the Talk line owns its keys
+  if (worldCtl && e.key.startsWith('Arrow')) {
+    e.preventDefault();
+    const d = { ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0] }[e.key];
+    if (d) worldCtl.step(d[0], d[1]);
+    return;
+  }
   const letter = e.key.length === 1 ? e.key.toUpperCase() : e.key;
   if (prompt) {
     const fn = prompt.keys[letter];
@@ -182,14 +197,19 @@ const globalKeys = {
 
 // ── run state ─────────────────────────────────────────────────
 let john, day, stageIdx, journal, currentLook = '';
+let worldCtl = null; // live only during the world stage (arrow keys)
 
-function start(seed) {
+function start(seed, opts = {}) {
   john = createJohn();
-  day = buildDay(seed);
+  day = buildDay(seed, opts);
   stageIdx = 0;
-  journal = { seed, prayed: false, night: null, dream: null, confession: null };
+  journal = {
+    seed, journey: !!opts.journey,
+    prayed: false, night: null, dream: null, confession: null,
+    officesKept: null, talked: [],
+  };
   $('footnotes').replaceChildren();
-  log(`— A new witness begins. seed: ${seed} —`, 'bell');
+  log(`— A new witness begins. seed: ${seed}${opts.journey ? ' · a road day' : ''} —`, 'bell');
   runStage();
 }
 
@@ -205,8 +225,9 @@ function runStage() {
   renderStatus();
   const handlers = {
     'office-full': officeFull, 'office-brief': officeBrief, chapter,
-    daylight, night, dream, reckoning,
+    daylight, world: worldStage, night, dream, reckoning,
   };
+  if (stage.kind !== 'world') worldCtl = null;
   handlers[stage.kind](stage);
 }
 
@@ -382,6 +403,164 @@ function daylight() {
   });
 }
 
+// ── the world stage (journey day) ────────────────────────────
+const VIEW_W = 15, VIEW_H = 11;
+let talkOpen = false;
+
+function worldStage() {
+  ui.setHour('The Road');
+  ui.scene({ rubric: JOURNEY.depart.rubric, verso: '' });
+  ui.body(passage(JOURNEY.depart));
+  ui.body(el('p', 'said',
+    'Walk with the arrow keys. T talks to a neighbor; K keeps a rung hour where you stand; ' +
+    'the abbey door ends the day’s wandering.'));
+
+  const world = createWorld();
+  const canvas = el('canvas', 'worldmap');
+  canvas.width = VIEW_W * TILE;
+  canvas.height = VIEW_H * TILE;
+  $('verso-body').replaceChildren(canvas);
+  const ctx = canvas.getContext('2d');
+
+  const render = () => {
+    const ox = world.x - Math.floor(VIEW_W / 2);
+    const oy = world.y - Math.floor(VIEW_H / 2);
+    ctx.fillStyle = '#22201b';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    for (let vy = 0; vy < VIEW_H; vy++) {
+      for (let vx = 0; vx < VIEW_W; vx++) {
+        const t = tileAt(world.mapId, ox + vx, oy + vy);
+        if (t === null) continue;
+        (PAINTERS[t] ?? PAINTERS['.'])(ctx, vx * TILE, vy * TILE);
+        if (npcAt(world.mapId, ox + vx, oy + vy)) paintNpc(ctx, vx * TILE, vy * TILE);
+      }
+    }
+    paintFigure(ctx, Math.floor(VIEW_W / 2) * TILE, Math.floor(VIEW_H / 2) * TILE);
+  };
+
+  const endStage = () => {
+    worldCtl = null;
+    const missed = missedOffices(world);
+    journal.officesKept = world.kept.length;
+    for (const _ of missed) addPressure(john, 1);
+    if (missed.length) log(JOURNEY.officeMissedLine, 'refused');
+    renderStatus();
+    next();
+  };
+
+  worldCtl = {
+    world,
+    step(dx, dy) {
+      if (talkOpen) return;
+      const ev = move(world, dx, dy);
+      if (ev.sign) log(SIGNPOST_TEXT);
+      if (ev.blocked) log(JOURNEY.blocked[world.steps % JOURNEY.blocked.length], 'refused');
+      if (ev.bell) {
+        const name = ev.bell[0].toUpperCase() + ev.bell.slice(1);
+        log(`✝ The hour of ${name} rings in you. (K to keep it where you stand.)`, 'bell');
+      }
+      if (ev.enter === 'etampes') {
+        log('You pass under the gate of Étampes. The town smells of tallow, mud, and argument.', 'bell');
+      }
+      if (ev.exitTown) log('The gate lets you out with less ceremony than it let you in.');
+      if (ev.enter === 'abbey') {
+        log('The abbey takes you back like a breath drawn in.', 'bell');
+        return endStage();
+      }
+      render();
+    },
+  };
+
+  sceneKeys.T = () => {
+    const npc = adjacentNpc(world);
+    if (!npc) return log(COMMANDS.T.refusal, 'refused');
+    openTalk(npc);
+  };
+  sceneKeys.K = () => {
+    const kept = keepOffice(world);
+    if (!kept) return log('No hour stands rung and unkept.', 'refused');
+    addPressure(john, -1);
+    if (kept.inTown) {
+      addSuspicion(john, 1);
+      log(JOURNEY.officeTown.text);
+    } else {
+      log(JOURNEY.officeWild.text);
+    }
+    renderStatus();
+  };
+  renderCommands();
+  render();
+}
+
+function openTalk(npc) {
+  talkOpen = true;
+  if (!journal.talked.includes(npc.id)) journal.talked.push(npc.id);
+  const convo = startTalk(npc);
+  log(`You speak with ${npc.label}.`, 'bell');
+  log(npc.greeting);
+
+  const input = el('input');
+  input.type = 'text';
+  input.placeholder = 'ask a word… (name, job, bye)';
+  input.className = 'talk-input';
+  $('choices').appendChild(input);
+  input.focus();
+
+  const finish = () => {
+    talkOpen = false;
+    input.remove();
+    log('You part ways.', 'bell');
+  };
+
+  input.addEventListener('keydown', e => {
+    e.stopPropagation();
+    if (e.key === 'Escape') return finish();
+    if (e.key !== 'Enter') return;
+    const word = input.value;
+    input.value = '';
+    log(`» ${word.trim().toLowerCase()}`);
+    const res = ask(convo, word);
+    log(res.text);
+    if (res.unlocked.length) log(`(you might ask: ${res.unlocked.join(', ')})`, 'pencil-log');
+    if (res.effect) applyTalkEffect(res.effect);
+    if (res.ended) finish();
+    else input.placeholder = `ask… (${knownKeywords(convo).join(', ')})`;
+  });
+}
+
+function applyTalkEffect(effect) {
+  switch (effect) {
+    case 'give-draught':
+      john.items.draught++;
+      log('(The poppy draught is in your scrip. U, on a bad night — at a price.)', 'pencil-log');
+      break;
+    case 'give-quire':
+      john.items.quire++;
+      log('(A ruled quire, wrapped. The Work has paper now.)', 'pencil-log');
+      break;
+    case 'suspicion':
+      addSuspicion(john, 1);
+      break;
+    case 'lie':
+      addPressure(john, 1);
+      break;
+    case 'honesty':
+      addSuspicion(john, 1);
+      addDespair(john, -1);
+      break;
+    case 'alms':
+      addDespair(john, -1);
+      break;
+    case 'radical':
+      john.disposition++;
+      addSuspicion(john, 2);
+      log('The pencil hand writes small and fast in the margin.', 'pencil-log');
+      ui.footnote(RADICAL_NOTE);
+      break;
+  }
+  renderStatus();
+}
+
 function night(stage) {
   ui.setHour('The Dormitory');
   const tier = pressureTier(john.pressure);
@@ -389,6 +568,18 @@ function night(stage) {
   ui.body(passage({ sources: [], status: 'invented' }, TIER_TEXT[tier]));
 
   const sleep = () => { addFatigue(john, -3); next(); };
+
+  if (john.items.draught > 0) {
+    act('U', 'Use the poppy draught.',
+      'It shutters the house of the mind entire — no siege, and no visitors. None at all.', () => {
+        john.items.draught--;
+        addPressure(john, -3);
+        journal.night = { outcome: 'drugged' };
+        renderStatus();
+        clearActs();
+        act('R', 'Sink into it.', '', () => { addFatigue(john, -4); next(); });
+      });
+  }
 
   if (!nightThreatens(john)) {
     journal.night = { outcome: 'quiet' };
@@ -420,6 +611,13 @@ function night(stage) {
 
 function dream(stage) {
   ui.setHour('The Dream');
+  if (journal.night?.outcome === 'drugged') {
+    ui.scene({ rubric: DRUGGED_DREAM.rubric, verso: '' });
+    ui.body(passage(DRUGGED_DREAM));
+    journal.dream = 'drugged';
+    act('B', 'Toward Matins, and the reckoning.', '', next);
+    return;
+  }
   if (!dreamEligible(john)) {
     ui.scene({ rubric: DREAM_SHUT.rubric, verso: '' });
     ui.body(passage(DREAM_SHUT));
@@ -465,6 +663,12 @@ function reckoning() {
     `Confession: ${journal.confession ?? 'no matter, no scruple'}.`,
     `The dream: ${journal.dream ?? 'none'}${john.procedure.licentia ? ' — LICENTIA' : ''}.`,
     corrupted ? 'And at the putting-on of weight, the beam spoke: the work was rotten. It must be begun again, and cleanly.' : null,
+    journal.journey
+      ? `The road: hours kept ${journal.officesKept ?? 0} of 3; souls spoken with, ${journal.talked.length}.`
+      : null,
+    john.disposition > 0
+      ? `The witness leans. (Disposition +${john.disposition}. The pencil hand is watching.)`
+      : null,
     `Suspicion in the house: ${john.suspicion} of 10. Despair: ${john.despair} of 5.`,
   ].filter(Boolean);
 
@@ -524,7 +728,9 @@ function incipit() {
     'and who wrote down his temptations so exactly that we can, seven centuries on, attempt this.'));
   ui.body(el('p', 'pencil-note', CONTENT_NOTE));
   const seed = `witness-${Math.floor(Math.random() * 1e6)}`;
-  act('B', 'Begin at Matins.', `seed: ${seed}`, () => start(seed));
+  act('B', 'Begin at Matins — a day within the walls.', `seed: ${seed}`, () => start(seed));
+  act('E', 'Begin at Matins — a road day: the errand to Étampes.',
+    'The world, with witnesses. Arrow keys walk; T talks.', () => start(seed, { journey: true }));
   renderCommands();
 }
 

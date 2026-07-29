@@ -7,20 +7,27 @@
 import { SeededRandom } from '../../draft/PackDraft.js';
 import { HOUR_ORDER } from '../data/hours.js';
 
-/** Ordered stages of the slice day. kind drives the UI scene. */
-export function buildDay(seed) {
+/**
+ * Ordered stages of a day. kind drives the UI scene.
+ * A journey day sends John down the road to Étampes after chapter: the
+ * daylight hours (Terce–None) travel with him as road bells (world stage).
+ */
+export function buildDay(seed, { journey = false } = {}) {
+  const middle = journey
+    ? { id: 'world', kind: 'world', hourIds: ['terce', 'sext', 'none'] }
+    : { id: 'daylight', kind: 'daylight', hourIds: ['terce', 'sext', 'none'] };
   const stages = [
     { id: 'matins', kind: 'office-full', hourId: 'matins', procedureSlot: true },
     { id: 'lauds', kind: 'office-brief', hourId: 'lauds' },
     { id: 'prime', kind: 'chapter', hourId: 'prime' },
-    { id: 'daylight', kind: 'daylight', hourIds: ['terce', 'sext', 'none'] },
+    middle,
     { id: 'vespers', kind: 'office-brief', hourId: 'vespers' },
     { id: 'compline', kind: 'office-full', hourId: 'compline' },
     { id: 'night', kind: 'night' },
     { id: 'dream', kind: 'dream' },
     { id: 'reckoning', kind: 'reckoning' },
   ];
-  return { seed, stages };
+  return { seed, journey, stages };
 }
 
 /** Every stage's hours, flattened, for legality checks. */
