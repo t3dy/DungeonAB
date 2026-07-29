@@ -250,6 +250,21 @@ canvas.worldmap {
 .ultramarine { color: var(--ultramarine); }
 .gold { color: var(--gold); font-weight: bold; }
 
+/* ── the stemma ───────────────────────────────────────────── */
+.stemma { margin: 1rem 0; border-left: 2px solid var(--gutter); padding-left: 0.9rem; }
+.stemma-node { padding: 0.35rem 0; border-bottom: 1px dotted var(--gutter); }
+.stemma-node .siglum {
+  display: inline-block;
+  min-width: 7em;
+  font-weight: bold;
+  font-variant: small-caps;
+  letter-spacing: 0.08em;
+}
+.stemma-node .faults { color: var(--ink-faded); font-size: 0.85rem; }
+.stemma-node.contaminated .siglum { color: var(--graphite); font-style: italic; }
+.stemma-node.received { background: rgba(138, 109, 29, 0.12); }
+.stemma-node.received .siglum { color: var(--gold); }
+
 /* ── footnotes ────────────────────────────────────────────── */
 #footnotes {
   border-top: 1px solid var(--gutter);

@@ -20,7 +20,16 @@ import {
   TIER_TEXT, NIGHT_CHOICES, NIGHT_OUTCOMES, CONFESSION, VISION_SCENE,
   DREAM_SHUT, DISCERNMENT_OUTCOMES, PENCIL_NOTES, BIBLIO, DAYLIGHT, CONTENT_NOTE,
   JOURNEY, DRUGGED_DREAM, RADICAL_NOTE,
+  SUMMONS, ROAD_TO_PARIS, EXAMINATION, EXAMINATION_ENVELOPE, VERDICTS,
+  VERDICT_ENVELOPE, DEPARTURE_NOTE, READING_ROOM,
 } from './content/content.js';
+import {
+  loadChronicle, saveChronicle, recordDay, summonsDue,
+  createExamination, answerQuestion, verdict,
+} from './engine/chronicle.js';
+import {
+  loadWitnesses, saveWitness as pushWitness, buildStemma, survivingWitness, corruptionsOf,
+} from './engine/stemma.js';
 import {
   MAPS, createWorld, move, keepOffice, missedOffices, adjacentNpc, npcAt, tileAt,
 } from './engine/world.js';
@@ -197,20 +206,43 @@ const globalKeys = {
 
 // ── run state ─────────────────────────────────────────────────
 let john, day, stageIdx, journal, currentLook = '';
-let worldCtl = null; // live only during the world stage (arrow keys)
+let worldCtl = null;   // live only during the world stage (arrow keys)
+let chronicle = null;  // what accumulates across witnesses, toward 1323
+let exam = null;       // the examination in progress
 
 function start(seed, opts = {}) {
   john = createJohn();
-  day = buildDay(seed, opts);
-  stageIdx = 0;
+  chronicle = loadChronicle(storage());
   journal = {
     seed, journey: !!opts.journey,
     prayed: false, night: null, dream: null, confession: null,
     officesKept: null, talked: [],
   };
   $('footnotes').replaceChildren();
-  log(`— A new witness begins. seed: ${seed}${opts.journey ? ' · a road day' : ''} —`, 'bell');
+
+  if (summonsDue(chronicle)) {
+    // 1323. The day the letter comes is not an ordinary day.
+    day = { seed, journey: false, stages: [
+      { id: 'summons', kind: 'summons' },
+      { id: 'examination', kind: 'examination' },
+      { id: 'verdict', kind: 'verdict' },
+      { id: 'stemma', kind: 'stemma' },
+    ] };
+    log('— A letter has come from Paris. —', 'bell');
+  } else {
+    day = buildDay(seed, opts);
+    log(`— A new witness begins. seed: ${seed}${opts.journey ? ' · a road day' : ''} —`, 'bell');
+  }
+  stageIdx = 0;
   runStage();
+}
+
+function storage() {
+  try {
+    return window.localStorage;
+  } catch {
+    return { getItem: () => null, setItem: () => {} };
+  }
 }
 
 function next() {
@@ -226,6 +258,7 @@ function runStage() {
   const handlers = {
     'office-full': officeFull, 'office-brief': officeBrief, chapter,
     daylight, world: worldStage, night, dream, reckoning,
+    summons, examination, verdict: verdictStage, stemma: stemmaStage,
   };
   if (stage.kind !== 'world') worldCtl = null;
   handlers[stage.kind](stage);
@@ -684,6 +717,17 @@ function reckoning() {
   for (const n of notes) ui.footnote(n);
 
   saveWitness();
+  chronicle = recordDay(chronicle, {
+    suspicion: john.suspicion,
+    disposition: john.disposition,
+    prayed: journal.prayed,
+    licentia: john.procedure.licentia,
+  });
+  saveChronicle(storage(), chronicle);
+  if (summonsDue(chronicle)) {
+    log('Word of the book has travelled further than the book has. Something will come of it.', 'refused');
+  }
+
   act('J', 'Journal: write the day into the Liber.', 'He wrote it all down. That is why any of this exists.', () => {
     addDespair(john, -1); renderStatus();
     log('You write the day as it was, sparing no one, least of all yourself. The page holds it so you need not.', 'pencil-log');
@@ -695,18 +739,120 @@ function reckoning() {
     start(`${day.seed}-${Math.floor(Math.random() * 1e6)}`));
 }
 
-function saveWitness() {
-  try {
-    const key = 'morigny-witnesses';
-    const witnesses = JSON.parse(localStorage.getItem(key) ?? '[]');
-    witnesses.push({
-      ...journal,
-      licentia: john.procedure.licentia,
-      corrupt: john.procedure.corrupt,
-      at: Date.now(),
-    });
-    localStorage.setItem(key, JSON.stringify(witnesses));
-  } catch { /* storage unavailable: the witness is lost, as many were */ }
+function saveWitness(extra = {}) {
+  pushWitness(storage(), {
+    ...journal,
+    licentia: john.procedure.licentia,
+    corrupt: john.procedure.corrupt,
+    suspicion: john.suspicion,
+    despair: john.despair,
+    disposition: john.disposition,
+    at: Date.now(),
+    ...extra,
+  });
+}
+
+// ── 1323 ──────────────────────────────────────────────────────
+
+function summons() {
+  ui.setHour('The Letter');
+  ui.scene({ rubric: SUMMONS.rubric, verso: '' });
+  ui.body(passage(SUMMONS));
+  act('B', 'Take the road to Paris.', 'Three days, with the Work against your ribs.', () => {
+    ui.body(passage(ROAD_TO_PARIS, ROAD_TO_PARIS.text));
+    clearActs();
+    act('B', 'Enter the room where they are waiting.', '', next);
+  });
+}
+
+function examination() {
+  exam = createExamination(chronicle);
+  ui.setHour('The Examination');
+  askQuestion();
+}
+
+function askQuestion() {
+  const q = EXAMINATION[exam.index];
+  ui.scene({ rubric: q.rubric, verso: `Question ${exam.index + 1} of ${EXAMINATION.length}.` });
+  ui.body(passage(EXAMINATION_ENVELOPE, q.question));
+
+  const answer = stance => {
+    ui.body(passage(EXAMINATION_ENVELOPE, q.stances[stance]));
+    if (stance === 'scorn') { john.disposition++; renderStatus(); }
+    answerQuestion(exam, stance);
+    clearActs();
+    if (exam.done) {
+      act('B', 'They confer. It does not take long.', '', next);
+    } else {
+      act('B', 'The next question.', '', askQuestion);
+    }
+  };
+
+  act('O', 'Submit. Hold what the Church holds.', 'Obedience is not the opposite of the Work.',
+    () => answer('submit'));
+  act('D', 'Defend it. Reasonably, and to the point.', 'The fruits, the authorization, the asking.',
+    () => answer('defend'));
+  act('W', 'Answer them as they deserve.', 'This road, walked far enough, leaves the record.',
+    () => answer('scorn'));
+}
+
+function verdictStage() {
+  const key = verdict(exam);
+  const v = VERDICTS[key];
+  ui.setHour('The Verdict');
+  ui.scene({ rubric: v.rubric, verso: 'They burn it. Every road burns it.' });
+  ui.body(passage(VERDICT_ENVELOPE[key], v.body));
+
+  chronicle.examined = true;
+  saveChronicle(storage(), chronicle);
+  journal.verdict = key;
+  saveWitness({ departed: key === 'departed' });
+
+  if (key === 'departed') {
+    ui.footnote(DEPARTURE_NOTE);
+    log('The pencil hand writes across the margin, and does not stop at the edge.', 'pencil-log');
+  }
+  act('B', 'And then, a long time afterward…', '', next);
+}
+
+function stemmaStage() {
+  ui.setHour('The Stemma');
+  ui.scene({ rubric: READING_ROOM.rubric, verso: '' });
+  ui.body(passage(READING_ROOM));
+
+  const nodes = buildStemma(loadWitnesses(storage()));
+  const received = survivingWitness(nodes);
+
+  const tree = el('div', 'stemma');
+  for (const n of nodes) {
+    const row = el('div', `stemma-node${n.contaminated ? ' contaminated' : ''}${received && n.index === received.index ? ' received' : ''}`);
+    const head = n.parent ? `${n.parent} → ${n.siglum}` : `${n.siglum} (archetype)`;
+    row.appendChild(el('span', 'siglum', head));
+    const faults = n.own.length ? n.own.join('; ') : 'no new faults';
+    row.appendChild(el('span', 'faults',
+      `${faults}${n.inherited.length ? ` · inherits ${n.inherited.length}` : ''}` +
+      `${n.licentia ? ' · LICENTIA' : ''}${n.contaminated ? ' · contaminated' : ''}`));
+    tree.appendChild(row);
+  }
+  ui.body(tree);
+
+  if (received) {
+    ui.body(el('p', 'gold',
+      `The manuscript on the trolley is ${received.siglum} — ` +
+      `${received.total === 0 ? 'clean, which almost never happens' : `carrying ${received.total} fault${received.total === 1 ? '' : 's'}`}. ` +
+      'It is not the copy he kept. It is one of the ones that got out.'));
+  } else {
+    ui.body(el('p', null,
+      'Nothing came up from the stacks. Every witness of this text was contaminated or ' +
+      'burned, and the scholar reads about it only in the chronicle that killed it. ' +
+      'Most books end this way. That is why the ones that do not are worth six hundred years.'));
+  }
+
+  for (const n of PENCIL_NOTES.filter(p => p.id === 'note-witness')) ui.footnote(n);
+
+  act('Q', 'Close the book.', 'The chronicle is spent; a new one begins after this.', () => {
+    incipit();
+  });
 }
 
 // ── incipit ──────────────────────────────────────────────────

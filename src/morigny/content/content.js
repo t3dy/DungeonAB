@@ -535,6 +535,187 @@ export const RADICAL_NOTE = {
   status: 'attested',
 };
 
+// ── 1323: the summons, the examination, the endings ─────────────────────
+
+export const SUMMONS = {
+  rubric: '¶ Of the letter that came to chapter, and was read aloud.',
+  body:
+    'The abbot read it himself, which was a kindness, and did not look at me while he read, ' +
+    'which was a greater one. A monk of Morigny is required at Paris, with his book, to ' +
+    'answer concerning certain prayers and figures. I had imagined this letter so many times ' +
+    'that the real one seemed a poor copy. My hands were steady. I noticed them being steady ' +
+    'and was ashamed of noticing.',
+  sources: [
+    { work: 'Grandes Chroniques de France', locus: 'the 1323 condemnation notice (frame; wording on Research Queue)' },
+  ],
+  status: 'adapted',
+};
+
+export const ROAD_TO_PARIS = {
+  text:
+    'Three days on the road, and the Work in a satchel against my ribs the whole way, and the ' +
+    'country going about its business on either side as though nothing were being carried ' +
+    'through it.',
+  sources: [],
+  status: 'invented',
+};
+
+/**
+ * The examination. Three questions; each takes submit / defend / scorn.
+ * The examiners are composites of the period's theological objections to
+ * the ars notoria: the words, the authorization, the end.
+ */
+export const EXAMINATION = [
+  {
+    id: 'the-words',
+    rubric: '¶ The first question: concerning the words.',
+    question:
+      '"There are words in these prayers," said the master in the middle chair, "that are not ' +
+      'Latin, nor Greek, nor Hebrew, nor any tongue a Christian people has spoken. What is a ' +
+      'word that no one understands, brother, if it is not a word addressed to something that ' +
+      'does understand it?"',
+    stances: {
+      submit:
+        '"I do not know what they are, master. I copied them because they were given to me to ' +
+        'copy, and if they are what you fear, then I have been a fool with a pen, and I would ' +
+        'rather be a fool than the other thing."',
+      defend:
+        '"The Church sings alleluia and hosanna and does not construe them, master. A word may ' +
+        'be a door without the doorkeeper knowing the joinery. Mine were given in prayer, and ' +
+        'in prayer I said them, and to Our Lady and no other."',
+      scorn:
+        '"You have read them aloud in this room, master, to make your point. If they are what ' +
+        'you say, you have just done the thing you are trying me for — and with better ' +
+        'pronunciation than I ever managed."',
+    },
+  },
+  {
+    id: 'the-authorization',
+    rubric: '¶ The second question: concerning by whose leave.',
+    question:
+      '"You write that the Blessed Virgin authorized this book. In a dream." The youngest ' +
+      'examiner did not look up from his notes. "Every heresiarch in the calendar has had a ' +
+      'dream, brother. What has yours that theirs had not?"',
+    stances: {
+      submit:
+        '"Nothing, master, that I can prove to you. I know what I saw. I know also what I am, ' +
+        'and what I am is not a man whose seeing should outweigh the judgment of the Church. ' +
+        'Judge it. I will hold what you hold."',
+      defend:
+        '"Fruits, master. Mine sent me to confession more often, not less; to obedience, not ' +
+        'away from it; and to Our Lady, not past her. A dream that makes a man a better monk ' +
+        'is at least not the enemy\'s usual work."',
+      scorn:
+        '"What has mine that theirs had not? A woman in it who told me to be careful, master. ' +
+        'You would know the type. She is on the wall behind you, and I notice none of you have ' +
+        'turned around."',
+    },
+  },
+  {
+    id: 'the-end',
+    rubric: '¶ The third question: concerning what it is for.',
+    question:
+      '"The old art promised knowledge — grammar, rhetoric, all the arts, poured into a man ' +
+      'without study. You say yours is purified. But it promises the same thing, brother. ' +
+      'What have you purified, if the appetite is unchanged?"',
+    stances: {
+      submit:
+        '"That is the truest thing anyone has said to me about it, master, and I have said it ' +
+        'to myself at Matins for years without answering it. Perhaps I only washed the cup. I ' +
+        'submit the whole of it."',
+      defend:
+        '"The appetite for knowledge is not the sin, master; the theft of it is. I asked. I ' +
+        'fasted and confessed and asked, and was refused more often than granted — which is ' +
+        'not how demons do business, in my experience of them."',
+      scorn:
+        '"Unchanged? Master, this room is full of men who spent twenty years and their fathers\' ' +
+        'money buying what I was offered for a night\'s prayer. The difference between us is not ' +
+        'appetite. It is invoices."',
+    },
+  },
+];
+export const EXAMINATION_ENVELOPE = {
+  sources: [
+    { work: 'Period objections to the ars notoria (after Kieckhefer, Véronèse)', locus: 'frame; composite examiners' },
+  ],
+  status: 'invented',
+};
+
+export const VERDICTS = {
+  submitted: {
+    rubric: '¶ Of the burning, and of what I did after.',
+    body:
+      'They burned it in the square, and I stood where I was told to stand and watched the ' +
+      'thing I had spent my life on become weather. I had expected to feel torn in half. What ' +
+      'I felt was the particular quiet of a debt discharged. I made my satisfaction. I was ' +
+      'received back. And in the spring I began again, in a smaller hand, with the parts they ' +
+      'had been right about left out — because obedience is not the opposite of the Work, ' +
+      'whatever they think in Paris. It is the condition of it.',
+  },
+  defiant: {
+    rubric: '¶ Of the burning, and of the silence they put me under.',
+    body:
+      'They burned it, and I did not give them the face they wanted while it burned. That was ' +
+      'the whole of my rebellion and it cost more than it bought: silence laid on me, my hours ' +
+      'watched, my ink measured out like medicine. I am a man with a locked mouth in a house ' +
+      'full of keys. Somewhere north of here a woman I taught is saying the prayers tonight, ' +
+      'badly, from a copy with my own errors in it, and Paris cannot reach her. Let that be ' +
+      'the account.',
+  },
+  departed: {
+    rubric: '¶ Here the witness departs from the record.',
+    body:
+      'And I did not stop, and I did not go home. I said it in the street where they burned it ' +
+      'and I said it in three towns after, that the vision is given to whoever fasts and asks, ' +
+      'and that a Church which cannot bear to be told so is confessing something about itself ' +
+      'and not about heaven. They took me at Sens in the autumn. What they did then is not ' +
+      'written anywhere, because none of this is written anywhere.',
+  },
+};
+export const VERDICT_ENVELOPE = {
+  submitted: {
+    sources: [{ work: 'Fanger, Rewriting Magic', locus: 'John\'s rewriting after condemnation (frame; verify)' }],
+    status: 'adapted',
+  },
+  defiant: { sources: [], status: 'invented' },
+  departed: { sources: [], status: 'invented' },
+};
+
+/** The mandatory annotation on the counterfactual path (CLAUDE.md rule 5). */
+export const DEPARTURE_NOTE = {
+  id: 'note-departure',
+  text:
+    'Stop. What you just read did not happen. The record has John condemned in 1323 and then ' +
+    '— quietly, astonishingly — still writing: a New Compilation, revised in response to the ' +
+    'people who burned him. He rewrote rather than recanted, and rewrote rather than ' +
+    'martyred. I gave you the Bruno road because you kept walking toward it and because a ' +
+    'game that only permits the documented life is a diorama, not an argument. But this ' +
+    'witness is now contaminated, and it goes into the stemma marked as such. The real John ' +
+    'is stranger than the martyr I just let you make: he survived, and kept working, and that ' +
+    'is why there is anything here to play at all.',
+  cites: ['fanger-rewriting', 'watson-conjuring'],
+  sources: [{ work: 'Fanger, Rewriting Magic', locus: 'the Old and New Compilations (frame)' }],
+  status: 'attested',
+};
+
+/** The framing ending: the reading room, seven centuries on. */
+export const READING_ROOM = {
+  rubric: '¶ Explicit. — And then, a long time afterward:',
+  body:
+    'A reading room, and a call slip, and a foam cradle. The manuscript comes up from the ' +
+    'stacks on a trolley with three others, none of them related to it, which is how the ' +
+    'important things always arrive. It is not the copy he kept. It is one of the ones that ' +
+    'got out — with his errors in it, and somebody else\'s, and a fifteenth-century hand in ' +
+    'the margin arguing with him about a prayer. Nicholas Watson found one like this. Claire ' +
+    'Fanger spent years reading it. That is the whole victory condition, and it took six ' +
+    'hundred years to score.',
+  sources: [
+    { work: 'Watson, in Conjuring Spirits (1998)', locus: 'the modern rediscovery' },
+    { work: 'Fanger, Rewriting Magic', locus: 'the reading of the text' },
+  ],
+  status: 'attested',
+};
+
 // ── Content note (first launch; canonical wording from STYLE_GUIDE.md) ──
 export const CONTENT_NOTE =
   'This game simulates the inner life of a real fourteenth-century monk, John of Morigny, ' +
