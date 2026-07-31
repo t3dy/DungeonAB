@@ -2,9 +2,7 @@
 
 **Dungeon-crawling autobattler.** MTG-style pack draft (player + 3 AI drafters, pass the packs), then a drafted party of Fighters / Clerics / Wizards / Rogues / Alchemists auto-crawls a procgen dungeon: fights, loot, spell-learning, alchemy at lab rooms.
 
-**Sub-project:** `morigny/` — MORIGNY, a monastic life & practice simulator
-of John of Morigny (design stage). It has its own `morigny/CLAUDE.md` with
-binding scholarly-fidelity rules; read it before touching anything there.
+*(MORIGNY — a separate monastic life & practice simulator of John of Morigny — is now a standalone project at https://github.com/t3dy/MorignyGame)*
 
 **Read `DESIGN.md` first** — it consolidates the Megabase design chats
 (`2025-12-14_Dungeon crawling auto battler`, `2025-01-10_RPG Auto-Battler Concept`),
