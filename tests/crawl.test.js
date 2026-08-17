@@ -17,11 +17,17 @@ const wizard = CHARACTER_CARDS.find(c => c.class === 'wizard');
 const alchemist = CHARACTER_CARDS.find(c => c.class === 'alchemist');
 
 describe('Party assembly', () => {
-  test('characters become the roster; party size is whatever was drafted', () => {
+  test('characters become the roster, capped at four; the rest are reserve', () => {
     const small = new Party([fighter, cleric]);
     assert.equal(small.members.length, 2);
-    const big = new Party([fighter, cleric, rogue, wizard, alchemist]);
-    assert.equal(big.members.length, 5);
+    assert.equal(small.reserve.length, 0);
+
+    // Five classes cannot all march — the cap forces a choice, which
+    // is the point of it (AUDIT.md D1)
+    const overfull = new Party([fighter, cleric, rogue, wizard, alchemist]);
+    assert.equal(overfull.members.length, 4);
+    assert.equal(overfull.reserve.length, 1);
+    assert.ok(!overfull.hasClass('alchemist'), 'the fifth pick waits in town');
   });
 
   test('an empty draft gets Pip the Tavern Volunteer (no dead runs)', () => {

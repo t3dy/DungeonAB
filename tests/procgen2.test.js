@@ -1,12 +1,17 @@
 /**
- * Tests for procgen v2 — the Spelunky-style critical path with
- * branches, secret doors, and vaults (per Shaker/Togelius/Nelson
- * ch.3 and the roguelike canon: NetHack secret corridors, DCSS
- * optional branches).
+ * Tests for procgen v2/v3 — the Spelunky-style critical path with
+ * branches, secret doors and vaults (per Shaker/Togelius/Nelson ch.3
+ * and the roguelike canon: NetHack secret corridors, DCSS optional
+ * branches), now with real room footprints: halls, chambers, caverns,
+ * rotundas and cells that must tile the plane without overlapping.
  */
 
 import { strict as assert } from 'assert';
-import { generateDungeon, ROOM_TYPES } from '../src/world/DungeonGen.js';
+import {
+  generateDungeon, ROOM_TYPES, ROOM_SHAPES, COMBAT_FLOOR,
+} from '../src/world/DungeonGen.js';
+
+const ROOM_SHAPES_LIST = Object.values(ROOM_SHAPES);
 import { detectSecretDoor, decideDetour } from '../src/encounters/RoomEncounters.js';
 import { Simulator } from '../src/sim/Simulator.js';
 import { Party } from '../src/agents/Party.js';
@@ -49,11 +54,55 @@ describe('The spatial layout', () => {
     }
   });
 
-  test('rooms never overlap on the grid', () => {
+  test('room footprints never overlap', () => {
+    // Rooms are rectangles now (procgen v3), not grid cells, so cell
+    // identity proves nothing — this has to be real intersection math.
     for (const seed of SEEDS) {
       const d = generateDungeon(seed, 'hard', { theme: 'volcanic' });
-      const cells = d.rooms.map(r => `${r.x},${r.y}`);
-      assert.equal(new Set(cells).size, cells.length, `${seed}: unique cells`);
+      for (let i = 0; i < d.rooms.length; i++) {
+        for (let j = i + 1; j < d.rooms.length; j++) {
+          const a = d.rooms[i];
+          const b = d.rooms[j];
+          const apart = Math.abs(a.x - b.x) * 2 >= a.w + b.w
+                     || Math.abs(a.y - b.y) * 2 >= a.h + b.h;
+          assert.ok(apart,
+            `${seed}: ${a.type}(${a.w}x${a.h}@${a.x},${a.y}) overlaps ${b.type}(${b.w}x${b.h}@${b.x},${b.y})`);
+        }
+      }
+    }
+  });
+
+  test('every room is big enough for what happens in it', () => {
+    for (const seed of SEEDS) {
+      const d = generateDungeon(seed, 'medium');
+      for (const room of d.rooms) {
+        assert.ok(room.w >= 2 && room.h >= 2, `${room.type} has a real footprint`);
+        assert.ok(ROOM_SHAPES_LIST.includes(room.shape), `${room.type} has a known shape (${room.shape})`);
+        // A fight needs floor for four adventurers and a monster
+        if (room.type === ROOM_TYPES.MONSTER || room.type === ROOM_TYPES.BOSS) {
+          const long = Math.max(room.w, room.h);
+          const short = Math.min(room.w, room.h);
+          assert.ok(long >= COMBAT_FLOOR.w && short >= COMBAT_FLOOR.h,
+            `${room.type} ${room.w}x${room.h} fits a fight`);
+        }
+      }
+      // The boss chamber is the biggest room in the dungeon
+      const boss = d.rooms.find(r => r.type === ROOM_TYPES.BOSS);
+      const biggest = Math.max(...d.rooms.map(r => r.w * r.h));
+      assert.equal(boss.w * boss.h, biggest, `${seed}: the boss gets the great hall`);
+    }
+  });
+
+  test('the map stays compact enough to draw', () => {
+    for (const seed of SEEDS) {
+      const d = generateDungeon(seed, 'medium');
+      const xs = d.rooms.map(r => r.x);
+      const ys = d.rooms.map(r => r.y);
+      const spanX = Math.max(...xs) - Math.min(...xs);
+      const spanY = Math.max(...ys) - Math.min(...ys);
+      // A straight line of rooms is neither a dungeon nor renderable
+      const ratio = Math.max(spanX, spanY) / Math.max(1, Math.min(spanX, spanY));
+      assert.ok(ratio < 4, `${seed}: layout is not a corridor (${spanX.toFixed(0)}x${spanY.toFixed(0)})`);
     }
   });
 
@@ -103,10 +152,11 @@ describe('The spatial layout', () => {
     const a = generateDungeon('pg-det', 'medium', { theme: 'delve' });
     const b = generateDungeon('pg-det', 'medium', { theme: 'delve' });
     assert.deepEqual(
-      a.rooms.map(r => [r.type, r.x, r.y, !!r.secret]),
-      b.rooms.map(r => [r.type, r.x, r.y, !!r.secret]),
+      a.rooms.map(r => [r.type, r.x, r.y, r.w, r.h, r.shape, !!r.secret]),
+      b.rooms.map(r => [r.type, r.x, r.y, r.w, r.h, r.shape, !!r.secret]),
     );
     assert.deepEqual(a.edges, b.edges);
+    assert.deepEqual(a.trapdoors, b.trapdoors);
   });
 });
 

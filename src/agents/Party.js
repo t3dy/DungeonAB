@@ -9,13 +9,28 @@
 import { CARD_TYPES, CLASSES } from '../game/Cards.js';
 import { Adventurer, makeTavernVolunteer } from './Adventurer.js';
 
+/**
+ * A delving party is four adventurers. Not five, not ten.
+ *
+ * The measured reason (see AUDIT.md D1, MINING_REPORT.md): a body was
+ * worth more than any item at every difficulty, so "draft every
+ * character" dominated every other line and the draft solved itself.
+ * A hard cap turns "how many bodies?" into "which four?" — and makes
+ * the kit picks that fill out the remaining 20 draft slots matter.
+ *
+ * Characters drafted beyond the fourth become the reserve: they wait
+ * in town and can take a fallen adventurer's place between dungeons,
+ * so a fifth pick is insurance rather than a dead card.
+ */
+export const PARTY_CAP = 4;
+
 export class Party {
   constructor(pool) {
     // Roster from drafted character cards. The same hero card can
     // be opened in two packs — duplicates get ordinals ("the Second"),
     // as is traditional in adventuring families.
     const nameCounts = {};
-    this.members = pool
+    const drafted = pool
       .filter(c => c.type === CARD_TYPES.CHARACTER)
       .map(c => {
         const adventurer = new Adventurer(c);
@@ -27,6 +42,12 @@ export class Party {
         }
         return adventurer;
       });
+
+    // The first four in draft order march; the rest wait in town.
+    // Draft order is the player's own stated priority, so the cap
+    // rewards taking the adventurer you actually want first.
+    this.members = drafted.slice(0, PARTY_CAP);
+    this.reserve = drafted.slice(PARTY_CAP);
 
     // No dead runs: an empty roster gets Pip
     if (this.members.length === 0) {
@@ -90,17 +111,39 @@ export class Party {
 
   /**
    * Enlist a new adventurer (a town recruit). Duplicate names get an
-   * ordinal, same as at draft time. Returns the new member.
+   * ordinal, same as at draft time. A full party sends them to the
+   * reserve instead of marching five. Returns the new adventurer.
    */
   addMember(card) {
     const adventurer = new Adventurer(card);
-    const sameName = this.members.filter(m => m.name.startsWith(card.name)).length;
+    const sameName = [...this.members, ...this.reserve]
+      .filter(m => m.name.startsWith(card.name)).length;
     if (sameName > 0) {
       const ordinals = ['', 'the Second', 'the Third', 'the Fourth', 'the Fifth', 'the Umpteenth'];
       adventurer.name = `${card.name}, ${ordinals[Math.min(sameName, 5)]}`;
     }
-    this.members.push(adventurer);
+    if (this.living().length >= PARTY_CAP) this.reserve.push(adventurer);
+    else this.members.push(adventurer);
     return adventurer;
+  }
+
+  /** Is this adventurer waiting in town rather than marching? */
+  isBenched(member) {
+    return this.reserve.includes(member);
+  }
+
+  /**
+   * Fill a dead adventurer's place from the reserve (town only —
+   * nobody joins mid-dungeon). The fallen stay on the roster for the
+   * chronicle; the cap counts the living. Returns the promoted
+   * adventurer, or null if there's no room or nobody waiting.
+   */
+  promoteReserve() {
+    if (this.reserve.length === 0) return null;
+    if (this.living().length >= PARTY_CAP) return null;
+    const recruit = this.reserve.shift();
+    this.members.push(recruit);
+    return recruit;
   }
 
   isAlive() {
@@ -128,17 +171,19 @@ export class Party {
   }
 
   /**
-   * Attack that actually lands in a dungeon fight: corridor frontage.
-   * Only about five blades can work at once — the five hardest
-   * hitters swing freely, everyone behind contributes a quarter
-   * (thrown daggers, shouted advice, the occasional shove).
+   * Attack that actually lands in a dungeon fight. Frontage used to be
+   * the brake on mob drafts (only five blades could work at once);
+   * PARTY_CAP now does that job at the draft table, so a capped party
+   * all swings — and the rooms are built with the floor space for it
+   * (DungeonGen COMBAT_FLOOR). Anyone over the cap (a promoted
+   * reserve mid-run can't happen, but be safe) trails at a quarter.
    */
   combatAttack() {
     const attackers = this.living()
       .map(m => m.attack)
       .sort((a, b) => b - a);
-    const front = attackers.slice(0, 5).reduce((s, a) => s + a, 0);
-    const rear = attackers.slice(5).reduce((s, a) => s + a, 0);
+    const front = attackers.slice(0, PARTY_CAP).reduce((s, a) => s + a, 0);
+    const rear = attackers.slice(PARTY_CAP).reduce((s, a) => s + a, 0);
     return Math.round(front + rear * 0.25);
   }
 

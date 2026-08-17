@@ -128,6 +128,15 @@ export class Campaign {
   }
 
   /**
+   * Call up a reserve adventurer to fill a dead one's place. Free —
+   * they were drafted and have been waiting in town. Returns the
+   * promoted adventurer, or null if the party is full or empty-benched.
+   */
+  callUpReserve() {
+    return this.party.promoteReserve();
+  }
+
+  /**
    * Hire a candidate from the board. Returns the new member, or null
    * if unaffordable / not on offer.
    */

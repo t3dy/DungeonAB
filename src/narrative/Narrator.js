@@ -73,6 +73,23 @@ export function composeDetour(taken) {
     : '🚶 The party passes the side passage by and keeps to the main route.';
 }
 
+/**
+ * A shaft in the floor. Three outcomes, all reported plainly: found
+ * and climbed, found and refused, or blundered into.
+ */
+export function composeTrapdoor({ outcome, rooms, damage, finder }) {
+  if (outcome === 'descend') {
+    return `🕳️ ${finder} finds a trapdoor in the floor. The party ropes down the shaft, skipping ${rooms} room${rooms === 1 ? '' : 's'} ahead and taking ${damage} damage on the landing.`;
+  }
+  if (outcome === 'refused') {
+    return `🕳️ ${finder} finds a trapdoor in the floor. The party leaves it shut: the rooms it skips hold loot as well as danger.`;
+  }
+  if (outcome === 'fell') {
+    return `🕳️ The floor gives way — a hidden trapdoor. The party falls ${rooms} room${rooms === 1 ? '' : 's'} deeper, taking ${damage} damage, and the rooms between go unlooted.`;
+  }
+  return '';
+}
+
 /* ------------------------------------------------------------------ */
 /* Deliberation — options, advocate, choice                            */
 /* ------------------------------------------------------------------ */

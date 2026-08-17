@@ -51,38 +51,67 @@ export function drawMinimap(canvas, layout) {
   ctx.fillStyle = '#0d0b08';
   ctx.fillRect(0, 0, W, H);
 
-  const xs = layout.rooms.map(r => r.x);
-  const ys = layout.rooms.map(r => r.y);
-  const pad = 12;
-  const sx = (W - pad * 2) / Math.max(1, Math.max(...xs) - Math.min(...xs));
-  const sy = (H - pad * 2) / Math.max(1, Math.max(...ys) - Math.min(...ys));
-  const s = Math.min(sx, sy, 26);
-  const px = r => pad + (r.x - Math.min(...xs)) * s;
-  const py = r => pad + (r.y - Math.min(...ys)) * s;
+  // Fit by true extent: room footprints, not just their centers
+  const wOf = r => r.w || 4;
+  const hOf = r => r.h || 4;
+  const minX = Math.min(...layout.rooms.map(r => r.x - wOf(r) / 2));
+  const maxX = Math.max(...layout.rooms.map(r => r.x + wOf(r) / 2));
+  const minY = Math.min(...layout.rooms.map(r => r.y - hOf(r) / 2));
+  const maxY = Math.max(...layout.rooms.map(r => r.y + hOf(r) / 2));
+  const pad = 10;
+  const s = Math.min(
+    (W - pad * 2) / Math.max(1, maxX - minX),
+    (H - pad * 2) / Math.max(1, maxY - minY)
+  );
+  const px = r => pad + (r.x - minX) * s;
+  const py = r => pad + (r.y - minY) * s;
   const byIdx = new Map(layout.rooms.map(r => [r.index, r]));
 
   for (const e of layout.edges) {
     const a = byIdx.get(e.a);
     const b = byIdx.get(e.b);
     if (!a || !b) continue;
+    // A trapdoor is a vertical shortcut, not a corridor: dotted red
+    const isShaft = e.kind === 'trapdoor';
     ctx.beginPath();
-    ctx.setLineDash(e.secret ? [3, 3] : []);
-    ctx.strokeStyle = e.secret ? '#d8a53f' : '#4a443a';
-    ctx.lineWidth = 1.5;
+    ctx.setLineDash(isShaft ? [1, 3] : e.secret ? [3, 3] : []);
+    ctx.strokeStyle = isShaft ? '#c85a3c' : e.secret ? '#d8a53f' : '#4a443a';
+    ctx.lineWidth = isShaft ? 1 : 1.5;
     ctx.moveTo(px(a), py(a));
     ctx.lineTo(px(b), py(b));
     ctx.stroke();
   }
   ctx.setLineDash([]);
 
+  // Rooms at their real footprints — a boss cavern dwarfs a vault
   for (const r of layout.rooms) {
-    const size = r.type === 'boss' ? 9 : 6;
+    const rw = Math.max(3, wOf(r) * s);
+    const rh = Math.max(3, hOf(r) * s);
     ctx.fillStyle = TYPE_COLORS[r.type] || '#777';
-    ctx.fillRect(px(r) - size / 2, py(r) - size / 2, size, size);
+    if (r.shape === 'rotunda') {
+      ctx.beginPath();
+      ctx.arc(px(r), py(r), Math.min(rw, rh) / 2, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      ctx.fillRect(px(r) - rw / 2, py(r) - rh / 2, rw, rh);
+    }
     if (r.secret) {
       ctx.strokeStyle = '#ffd75e';
-      ctx.strokeRect(px(r) - size / 2 - 1.5, py(r) - size / 2 - 1.5, size + 3, size + 3);
+      ctx.lineWidth = 1;
+      ctx.strokeRect(px(r) - rw / 2 - 1.5, py(r) - rh / 2 - 1.5, rw + 3, rh + 3);
     }
+  }
+
+  // Trapdoor mouths, marked in the room that holds them
+  for (const t of layout.trapdoors || []) {
+    const room = byIdx.get(t.from);
+    if (!room) continue;
+    ctx.fillStyle = t.secret ? '#6a3a2a' : '#111';
+    ctx.strokeStyle = '#c85a3c';
+    ctx.lineWidth = 1;
+    const size = Math.max(3, s * 1.4);
+    ctx.fillRect(px(room) - size / 2, py(room) - size / 2, size, size);
+    ctx.strokeRect(px(room) - size / 2, py(room) - size / 2, size, size);
   }
 }
 

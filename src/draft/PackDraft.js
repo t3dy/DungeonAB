@@ -8,6 +8,7 @@
  */
 
 import { CARD_TYPES, CLASSES } from '../game/Cards.js';
+import { PARTY_CAP } from '../agents/Party.js';
 import { pooledCards } from '../game/CardPacks.js';
 
 /**
@@ -126,9 +127,16 @@ export const PILOT_PERSONAS = [...DRAFT_PERSONAS, ...PILOT_TIERS];
 /* ------------------------------------------------------------------ */
 
 /**
- * Build one 8-card pack: 3 characters, 2 equipment, 2 spells,
+ * Build one 8-card pack: 2 characters, 3 equipment, 2 spells,
  * 1 personality. Duplicates across packs are allowed (multiple
  * copies exist "in the box") but not within a pack.
+ *
+ * Two characters is the guaranteed-coverage floor (CLAUDE.md: packs
+ * always contain ≥2 characters, so no draft is dead). It used to be
+ * three — but a party caps at four (Party.PARTY_CAP) while a drafter
+ * makes 24 picks, so a third character per pack was measured forcing
+ * ~5 picks per draft onto adventurers nobody could ever field. The
+ * freed slot goes to equipment, which every party can use.
  */
 export function buildPack(rng) {
   const pack = [];
@@ -147,8 +155,8 @@ export function buildPack(rng) {
   };
 
   // The pool = base cards + every enabled content pack's
-  take(pooledCards(CARD_TYPES.CHARACTER), 3);
-  take(pooledCards(CARD_TYPES.EQUIPMENT), 2);
+  take(pooledCards(CARD_TYPES.CHARACTER), 2);
+  take(pooledCards(CARD_TYPES.EQUIPMENT), 3);
   take(pooledCards(CARD_TYPES.SPELL), 2);
   take(pooledCards(CARD_TYPES.PERSONALITY), 1);
 
@@ -221,10 +229,17 @@ export function rationalValue(card, pool) {
   let v = 1;
 
   if (card.type === CARD_TYPES.CHARACTER) {
-    // A body is the best card in the format until you have four
-    v = characters.length < 4
-      ? 6.5 - characters.length * 0.4
-      : 4 - (characters.length - 3) * 0.9;
+    // A body is the best card in the format until the party is full.
+    // Past the cap they can only sit in reserve as insurance, so the
+    // fifth body is worth about as much as a decent trinket and the
+    // sixth is worth nothing (Party.PARTY_CAP).
+    if (characters.length < PARTY_CAP) {
+      v = 6.5 - characters.length * 0.4;
+    } else if (characters.length === PARTY_CAP) {
+      v = 2;                     // one spare against a death
+    } else {
+      v = 0.2;                   // a bench nobody will ever call
+    }
     // The mythic uncommon: unglamorous, measured at ~+7 win points
     if (card.class === CLASSES.CLERIC && !characters.some(c => c.class === CLASSES.CLERIC)) v += 1.5;
   }

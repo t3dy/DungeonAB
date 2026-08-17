@@ -10,6 +10,7 @@ import {
   rationalValue, evaluatePick, aiPick,
 } from '../src/draft/PackDraft.js';
 import { CHARACTER_CARDS, EQUIPMENT_CARDS, CLASSES, CARD_TYPES } from '../src/game/Cards.js';
+import { PARTY_CAP } from '../src/agents/Party.js';
 import { simulate } from '../tools/mine.js';
 
 const prodigy = PILOT_TIERS.find(p => p.id === 'prodigy');
@@ -71,23 +72,34 @@ describe('Skill tiers make different picks from the same pack', () => {
 
 describe('Skill expression is measurable (the 17lands check)', () => {
   test('across simulated tables, the Prodigy outperforms the Novice', () => {
-    // Seat-0 pilots rotate through all PILOT_PERSONAS; seeds are fixed,
-    // so this is deterministic, not flaky. Nightmare, because the
-    // measured finding is that easier tiers barely punish bad drafting
-    // (guaranteed-coverage packs force bodies into every pool).
-    const games = simulate({ tables: PILOT_PERSONAS.length * 12, difficulty: 'nightmare' });
+    // Drafts and dungeons are seeded, but combat rolls come from the
+    // global Math.random, so win rates need a real sample: at 300
+    // games per pilot the Prodigy's edge measures a steady 6-9 points.
+    // `hard` is where evaluation starts to matter at all — easy and
+    // medium forgive almost any pool (DESIGN_DIALOGUE.md §6).
+    const games = simulate({ tables: PILOT_PERSONAS.length * 300, difficulty: 'hard' });
+    const seat0 = id => games.filter(g => g.seat === 0 && g.pilotId === id);
     const wr = id => {
-      const mine = games.filter(g => g.seat === 0 && g.pilotId === id);
+      const mine = seat0(id);
       return mine.filter(g => g.victory).length / mine.length;
     };
-    const bodies = id => {
-      const mine = games.filter(g => g.seat === 0 && g.pilotId === id);
-      return mine.reduce((s, g) => s + g.partySize, 0) / mine.length;
+    const shortHanded = id => {
+      const mine = seat0(id);
+      return mine.filter(g => g.partySize < PARTY_CAP).length / mine.length;
     };
-    assert.ok(bodies('prodigy') > bodies('novice'),
-      `the Prodigy drafts more bodies (${bodies('prodigy').toFixed(1)} vs ${bodies('novice').toFixed(1)})`);
+
+    // The party cap is absolute, for every pilot
+    for (const g of games) {
+      assert.ok(g.partySize <= PARTY_CAP, `no pilot fields more than ${PARTY_CAP}`);
+    }
+
+    // The Novice's body-blindness now shows as a short-handed party —
+    // the measurable version of "took the shiny rare over the body"
+    assert.ok(shortHanded('novice') > shortHanded('prodigy'),
+      `the Novice marches short-handed more often (${shortHanded('novice').toFixed(2)} vs ${shortHanded('prodigy').toFixed(2)})`);
+
     assert.ok(wr('prodigy') > wr('novice'),
-      `skill separates win rates (prodigy ${wr('prodigy')} vs novice ${wr('novice')})`);
+      `skill separates win rates (prodigy ${wr('prodigy').toFixed(2)} vs novice ${wr('novice').toFixed(2)})`);
   });
 });
 

@@ -270,3 +270,46 @@ trophies short, a grimoire full of resisted elements. When the
 endings learn to read `encounterHistory` (§4), a loss should teach the
 evaluation lesson in prose. Skill expression and storytelling are the
 same feature viewed from two chairs.
+
+---
+
+## 7. What the party cap did (measured, 2026-07-15)
+
+*The cap (`Party.PARTY_CAP = 4`) plus the pack rebalance (2 characters
+per pack instead of 3) landed. Re-measured on the same harness.*
+
+**TCG:** Every number in §1-6 moved, and mostly the way we wanted:
+
+| | Before the cap | After |
+|---|---|---|
+| Overall win rate | 96% (nightmare) | 88% medium / **73%** hard / 44% nightmare |
+| Difficulty gradient | none — 100% at medium *and* 96% at nightmare | a real curve |
+| Party-size curve | 8-10 bodies, flat 98%+ | 2 → 30%, 3 → 58%, **4 → 74%** |
+| Wasted character picks | ~5 per draft (forced by 3/pack) | ~2 |
+| Skill spread (Prodigy vs Novice) | 17 pts at nightmare, **0 below** | 12 pts at hard, and it holds |
+| Top 10 by improvement-when-drafted | mostly characters | **9 of 10 are equipment** (+16 to +21) |
+| Bottom 10 | spells + wizards | **all spells + wizards** (−18 to −24) |
+
+Three findings worth acting on:
+
+1. **The format's decisions moved to the kit, which was the point.**
+   With bodies capped, equipment is where wins come from — Haunted
+   Armor +21.3, Greatsword +19.9, Tower Shield +19.9. Twenty of
+   twenty-four picks now matter.
+2. **The spell package is the clearest balance problem in the game.**
+   Every one of the bottom ten cards is a spell or a wizard; the
+   Archmage persona wins 55% where the Warlord wins 89% — a 34-point
+   gap between two *identity* personas at the same skill tier. That is
+   no longer an accidental trap, it's the headline: spells need to be
+   worth their picks, or the wizard needs a reason to exist that isn't
+   "amplifies cards you shouldn't have taken."
+3. **The Novice's mistake changed shape.** Body-blindness used to be
+   invisible (coverage force-fed everyone bodies); now it shows as a
+   **short-handed party 50% of the time**, which is exactly the kind of
+   legible, teachable error a skill ladder should produce.
+
+**NARR:** And the cap gave the reserve a story job it didn't have: a
+fifth pick is now insurance with a name, sitting in town, waiting for
+someone to die. The town screen calls them up for free. That's a small
+narrative engine — the understudy — that only exists because the cap
+made "one more body" a decision instead of a default.

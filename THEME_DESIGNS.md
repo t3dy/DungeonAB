@@ -13,7 +13,8 @@ room-mix features, hazards, a monster roster, and its own writing
 | Room mix | `weightTweaks` | What the place is *for* (a witch's cellar drips reagents; a castle hoards treasure) |
 | Hazard bite | `trapBonus` | How the environment itself hurts |
 | Identity guarantees | `alwaysLab`, `minLibraries` | The rooms the theme can't exist without |
-| Roster | `monsters` / `bosses` | Who lives here (undead flags feed cleric play; `bribable` feeds gold play; `slow` flavors) |
+| Roster | `monsters` / `bosses` | Who lives here (undead flags feed cleric play; `bribable` feeds gold play) |
+| Structure | (per room type, `ROOM_GEOMETRY`) | Room shapes and sizes — halls, chambers, caverns, rotundas, cells — plus secret doors and trapdoor shafts (procgen v3) |
 | Voice | `THEME_ENTRANCES`, `THEME_DISASTERS` (Narrator) | Arrival and catastrophe, in the theme's own register |
 
 ## The Eight Themes

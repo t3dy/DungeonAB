@@ -71,7 +71,14 @@ describe('Layouts as data', () => {
     assert.ok(defaultPayloadFor(ROOM_TYPES.MONSTER, theme).monster.name);
     assert.ok(defaultPayloadFor(ROOM_TYPES.BOSS, theme).monster.isBoss);
     assert.ok(defaultPayloadFor(ROOM_TYPES.VAULT, theme).gold > defaultPayloadFor(ROOM_TYPES.TREASURE, theme).gold);
-    assert.deepEqual(defaultPayloadFor(ROOM_TYPES.SHRINE, theme), {});
+    // A retyped room also takes its new function's footprint, so a
+    // corridor promoted to a shrine is shaped like a shrine
+    const shrine = defaultPayloadFor(ROOM_TYPES.SHRINE, theme);
+    assert.ok(shrine.w > 0 && shrine.h > 0 && shrine.shape, 'geometry comes with the type');
+    const bossFloor = defaultPayloadFor(ROOM_TYPES.BOSS, theme);
+    const vaultFloor = defaultPayloadFor(ROOM_TYPES.VAULT, theme);
+    assert.ok(bossFloor.w * bossFloor.h > vaultFloor.w * vaultFloor.h,
+      'a boss chamber dwarfs a vault');
   });
 });
 

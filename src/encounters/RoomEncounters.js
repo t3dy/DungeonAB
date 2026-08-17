@@ -350,6 +350,39 @@ export function detectSecretDoor(party, rollValue = roll()) {
 }
 
 /**
+ * Does the party spot the shaft under the rubble before standing on
+ * it? Rogues have the eyes and the pole; a lantern helps. Pure.
+ */
+export function detectTrapdoor(party, rollValue = roll()) {
+  const rogues = party.living().filter(m => m.class === CLASSES.ROGUE);
+  const eyes = rogues.length > 0
+    ? Math.max(...rogues.map(m => m.mind)) + 2      // tapping the floor ahead is the job
+    : Math.floor(party.bestMind() / 2);
+  let bonus = getPreparationBonuses(party).secretDoor;   // the lantern shows the seam
+  if (party.hasPersonality('craven')) bonus += 1;        // watches the floor, always
+  if (party.hasPersonality('reckless')) bonus -= 1;      // strides on ahead
+  return eyes + bonus + rollValue > 11;
+}
+
+/**
+ * Does the party climb down a shaft they've found? It skips rooms —
+ * their danger and their loot both — for a drop and a hard landing.
+ * The Craven take the short way; the Covetous refuse to skip treasure;
+ * a battered party takes any road to the end. Pure — pass the roll.
+ */
+export function decideTrapdoor(party, rollValue = roll()) {
+  let w = 3.5;                                           // a shortcut is tempting
+  if (party.hasPersonality('craven')) w += 3;            // fewer rooms, fewer teeth
+  if (party.hasPersonality('cunning')) w += 1.5;
+  if (party.hasPersonality('greedy')) w -= 3;            // skipped rooms hold coin
+  if (party.hasPersonality('brave')) w -= 2;             // we walk in the front door
+  if (party.hasPersonality('scholarly')) w -= 1;         // there is more to read this way
+  // Hurt parties want the boss sooner and the corridors fewer
+  if (party.totalHealth() / party.totalMaxHealth() < 0.5) w += 3;
+  return rollValue < w;
+}
+
+/**
  * Does the party take the side passage? The Covetous smell gold; the
  * Craven wants no part of optional danger. Pure — pass the roll.
  */

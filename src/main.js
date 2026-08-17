@@ -8,6 +8,7 @@ import { DraftUI } from './ui/DraftUI.js';
 import { DungeonRenderer } from './ui/DungeonRenderer.js';
 import { IsoDungeonRenderer } from './ui/IsoDungeonRenderer.js';
 import { Campaign, TOWN_PRICES } from './game/Campaign.js';
+import { PARTY_CAP } from './agents/Party.js';
 import { composeTownInterlude } from './narrative/Narrator.js';
 import { progression, DIFFICULTIES } from './game/Progression.js';
 import { getCondition, combineConditions, DUNGEON_CONDITIONS } from './game/Conditions.js';
@@ -347,8 +348,16 @@ function updateUI(state) {
   if (state.party.alarmed) badges.push('🔔 alarm raised');
   document.getElementById('status-badges').textContent = badges.join(' · ');
 
-  // Roster
+  // Roster (the four who march; reserves listed under them)
   const roster = document.getElementById('party-roster');
+  const reserveRows = (state.party.reserve || []).map(r => `
+      <div class="member-row" style="opacity:0.5;">
+        <span>${r.icon}</span>
+        <span style="flex:1;min-width:0;">
+          <div>${r.name} <span style="color:#665;font-size:0.7rem;">(${r.class})</span></div>
+          <div style="color:#556;font-size:0.68rem;">in reserve — waits in town for a place in the four</div>
+        </span>
+      </div>`).join('');
   roster.innerHTML = state.party.members.map(m => {
     const pct = Math.round((m.health / m.maxHealth) * 100);
     const barColor = pct > 60 ? '#3ddc84' : pct > 30 ? '#d8a53f' : '#e05555';
@@ -364,7 +373,7 @@ function updateUI(state) {
         <span class="member-hp" style="color:${barColor};">${m.health}</span>
       </div>
     `;
-  }).join('');
+  }).join('') + reserveRows;
 
   // Log
   const log = document.getElementById('debug-log');
@@ -496,6 +505,32 @@ function showTown(state) {
       gold >= TOWN_PRICES.potion,
       () => { campaign.buyPotion(); render(); },
     );
+
+    // The reserve — adventurers you drafted but couldn't field. Free,
+    // and the whole reason a fifth character pick is worth anything.
+    const bench = campaign.party.reserve;
+    const roomToMarch = campaign.party.living().length < PARTY_CAP;
+    if (bench.length > 0) {
+      const benchLabel = document.createElement('div');
+      benchLabel.style.cssText = 'margin-top:1rem;color:#887755;font-size:0.78rem;border-top:1px dashed #3a2f1e;padding-top:0.7rem;';
+      benchLabel.textContent = roomToMarch
+        ? `🛡️ Your reserve — a place has opened in the party (${bench.length} waiting):`
+        : `🛡️ Your reserve — ${bench.length} waiting for a place in the four:`;
+      display.appendChild(benchLabel);
+      const next = bench[0];
+      btn(
+        roomToMarch
+          ? `${next.icon} Call up ${next.name} (${next.class}) — free`
+          : `${next.icon} ${next.name} (${next.class}) waits — the four still stand`,
+        roomToMarch,
+        () => {
+          const m = campaign.callUpReserve();
+          if (m) showToast(m.icon, `${m.name} joins the party from the reserve.`, 'room');
+          render();
+        },
+        'font-size:0.82rem;padding:0.6rem;background:#17231a;color:#a8d5b0;',
+      );
+    }
 
     // The hiring board — replace the fallen, or just field a bigger band
     const label = document.createElement('div');

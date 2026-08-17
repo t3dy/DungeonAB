@@ -32,7 +32,7 @@ export const ROOM_HELP = {
  * A one-line legend of what the four draft card types do.
  */
 export const CARD_TYPE_HELP = [
-  { type: 'character', label: 'Character', text: 'A named hero of one of five classes. Party size = however many you draft.' },
+  { type: 'character', label: 'Character', text: 'A named hero of one of five classes. Four march — the rest wait in town as reserves, ready to replace the dead.' },
   { type: 'equipment', label: 'Equipment', text: 'Auto-assigns to the best-fit member. Some items do different things per class.' },
   { type: 'spell', label: 'Spell', text: 'Shared grimoire. A scroll burns after one cast — unless a wizard makes it repeatable.' },
   { type: 'personality', label: 'Personality', text: 'Biases the whole party\'s decisions. Some look weak but hide an upside.' },

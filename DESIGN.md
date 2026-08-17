@@ -17,7 +17,8 @@ A **narrative dungeon-crawling autobattler**. The player drafts a party MTG-styl
 ### Design Pillars
 
 1. **The Draft Is the Game** — Every meaningful player decision happens at the table. Pack picks are agonizing: take the second fighter, or the fireball the wizard across the table clearly wants?
-2. **Party = Whatever You Drafted** — No fixed party size. Five characters and no gear? A mob of unarmed heroes. Two characters buried in spells and equipment? A small elite. Both are viable, both tell different stories.
+2. **Party = Which Four You Drafted** *(revised 2026-07-15)* — A party is **four adventurers**, so the question is never *how many* bodies but *which four*, and what kit the other twenty picks win. Four fighters and a pile of steel? A wall. A cleric, a rogue, a wizard and a mule of scrolls? A toolkit. Both are viable, both tell different stories.
+   *This pillar previously promised unlimited party size ("five characters and no gear… two buried in spells… both viable"). Measurement killed it: a body outvalued any item at every difficulty, so "draft every character" dominated and the draft solved itself (AUDIT.md D1 — five bare bodies won 100% of medium runs; the fully-kitted elite duo won 55%). The cap restores the tension the pillar was reaching for, by making composition and kit the axes instead of headcount.*
 3. **Personality-Driven Party AI** — Personality archetypes bias group decisions (from RPG Auto-Battler Concept: the same archetype expresses differently per class — a Reckless fighter charges, a Reckless wizard overchannels).
 4. **Boss Monster Lessons** (from Megabase feedback analysis): guaranteed coverage in packs (never a "no good pick" pack), gradient outcomes over binary ones, catch-up drama built into the dungeon.
 
@@ -32,13 +33,13 @@ A **narrative dungeon-crawling autobattler**. The player drafts a party MTG-styl
 - Total: 24 picks per drafter → the player's pool is their party + kit.
 
 ### Card Types (one pick = one card of any type)
-- **Character** — a named adventurer of one of 5 classes: **Fighter, Cleric, Wizard, Rogue, Alchemist**. Party size = number of characters drafted (minimum 1 enforced by pack coverage).
+- **Character** — a named adventurer of one of 5 classes: **Fighter, Cleric, Wizard, Rogue, Alchemist**. **A party is four** (`Party.PARTY_CAP`): the first four in draft order march, and any beyond that wait in town as the **reserve**, free to call up when someone dies. The cap replaced "draft every body," which measured as the dominant line (AUDIT.md D1: five bare bodies won 100% of medium runs) and solved the draft.
 - **Equipment** — auto-assigned to the best-fit member (fighters get shields, rogues get lockpicks); class-agnostic pieces exist.
 - **Spell** — party-wide magic. Wizards amplify spell power; anyone can carry a scroll.
 - **Personality** — archetypes that bias the whole party's decisions (The Bold, The Cunning, The Covetous, The Scholarly, The Devout, The Reckless).
 
 ### Pack Construction (guaranteed coverage)
-Every pack contains: 2–3 characters, 2–3 equipment, 2 spells, 1 personality. This guarantees a drafter can always build a legal party (Boss Monster lesson: no dead packs).
+Every pack contains: **2 characters, 3 equipment, 2 spells, 1 personality**. Two characters is the coverage floor — enough that no draft is dead, few enough that a four-strong party isn't force-fed adventurers it can never field (at 3/pack the mining harness measured ~5 wasted picks per draft). With the cap, 20 of a drafter's 24 picks are kit, which is where the format's decisions now live.
 
 ### AI Drafters
 Each AI seat has a **draft persona** (e.g. "Warlord" prioritizes fighters+weapons, "Archmage" hoards spells, "Guildmaster" balances). AI picks by need-weighted scoring: class gaps, kit synergies, personality fit — with a small chaos factor so drafts differ. The player sees what neighbors picked trickle back in later packs (signal reading, like real MTG).
@@ -65,6 +66,26 @@ Each AI seat has a **draft persona** (e.g. "Warlord" prioritizes fighters+weapon
 1. Seeded room graph: 10–14 rooms, entrance → boss, 1–2 branches with optional loot rooms.
 2. Room types (from The Alchemist's Dungeon + classic crawl): **entrance, corridor, monster, trap, treasure, library, shrine, lab, materials, disaster, boss**.
 3. Guarantees: ≥1 lab if any drafter took an alchemist (soft), ≥1 library, ≥1 shrine; boss always terminal.
+
+### Structure (procgen v3 — rooms with footprints)
+Rooms are **rectangles in tile space, not graph dots**. Each carries `w × h` and a `shape`:
+
+| Shape | Reads as | Typical use |
+|---|---|---|
+| `chamber` | squarish room | the standard fighting room |
+| `hall` | long rectangle | processionals, libraries |
+| `cavern` | big and ragged (broken corners) | disasters, materials, boss lairs |
+| `passage` | narrow connector | corridors, trap runs |
+| `cell` | closet | vaults, treasure, oubliettes |
+| `rotunda` | round | shrines, wells |
+
+`ROOM_GEOMETRY` maps each room *function* to the shapes and sizes it may take, so structure follows purpose: a boss gets a 10×8-to-14×11 cavern (always the largest room in the dungeon), a vault is 4×4. Fighting rooms are floored at `COMBAT_FLOOR` (5×4) — genuine floor space for four adventurers plus a monster, which the renderer draws literally.
+
+Placement walks the spine outward, one axis at a time, rejecting any position whose footprint (plus a corridor gap) overlaps a placed room, and steering to keep the map roughly square rather than a 130-tile straight line. Tests enforce: no overlaps, every fighting room ≥ the combat floor, the boss is the biggest room, and the layout's aspect ratio stays under 4:1.
+
+**Connections** carry a `kind`: `door`, `arch`, `secret`, `trapdoor`. Doorways are derived from edge directions and drawn as real gaps in the perimeter walls.
+
+**Trapdoors** are the vertical shortcut: a shaft that skips 2–4 rooms of the spine (never the boss) for a fall. Found ones are a choice — the Craven take them, the Covetous refuse to skip loot, a battered party takes any road to the end; roping down halves the drop. Unfound ones are an accident that costs the full fall. Either way the skipped rooms' loot *and* danger are both forgone.
 
 ### Room Encounters (personality-weighted party decisions, SnakeAB engine adapted)
 - **Monster** — fight / flee / sneak past (rogue) / turn undead (cleric) / parley (mind check). Every *defeated* monster leaves a signature drop (`game/Drops.js`, the Bestiary's companion table): a trinket, weapon coating, potion, materials, scroll, or coin, each with its own chronicle line. Kinds without an entry fall back by trait, then to a generic trophy — nothing drops nothing. Fleeing, sneaking, and bribing claim no corpse and no drop.

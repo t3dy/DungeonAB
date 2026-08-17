@@ -16,8 +16,13 @@ describe('Pack construction', () => {
       const equip = pack.filter(c => c.type === CARD_TYPES.EQUIPMENT);
       const spells = pack.filter(c => c.type === CARD_TYPES.SPELL);
       const pers = pack.filter(c => c.type === CARD_TYPES.PERSONALITY);
-      assert.equal(chars.length, 3, 'every pack carries 3 characters');
-      assert.equal(equip.length, 2);
+      // Two characters is the guaranteed-coverage floor (CLAUDE.md):
+      // enough that no draft is dead, few enough that a four-strong
+      // party (Party.PARTY_CAP) isn't force-fed adventurers it can
+      // never field. The freed slot went to equipment.
+      assert.ok(chars.length >= 2, 'every pack carries at least 2 characters');
+      assert.equal(chars.length, 2);
+      assert.equal(equip.length, 3);
       assert.equal(spells.length, 2);
       assert.equal(pers.length, 1);
     }

@@ -1,10 +1,10 @@
 /**
- * DungeonRenderer — the delve as a torchlit map
+ * DungeonRenderer — the delve as a torchlit floorplan (2D fallback)
  *
- * Canvas 2D: the room chain drawn as connected chambers descending
- * the winding path DungeonGen laid out. Cleared rooms dim; the
- * current room glows; the party stands as a cluster of class icons.
- * (Isometric Three.js port planned — this is the readable v1.)
+ * Canvas 2D for machines without WebGL. Rooms are drawn as the actual
+ * rectangles DungeonGen laid out — halls long, caverns wide, vaults
+ * cramped — joined by corridors along the dungeon's edges. The party
+ * stands inside the current room, one icon per adventurer.
  */
 
 export class DungeonRenderer {
@@ -29,74 +29,109 @@ export class DungeonRenderer {
     ctx.fillRect(0, 0, w, h);
 
     const rooms = dungeon.rooms;
+    const visible = rooms.filter(r => !(r.secret && !r.discovered));
+    if (visible.length === 0) return;
 
-    // Scale the winding layout to the canvas
-    const maxX = Math.max(...rooms.map(r => r.x));
-    const maxY = Math.max(...rooms.map(r => r.y));
-    const pad = 40;
-    const sx = (w - pad * 2) / Math.max(1, maxX);
-    const sy = (h - pad * 2) / Math.max(1, maxY);
-    const px = r => pad + r.x * sx;
-    const py = r => pad + r.y * sy;
+    // Fit the layout to the canvas by its true extent — footprints
+    // included, and normalized by the minimum (rooms can sit at
+    // negative tile coordinates)
+    const pad = 26;
+    const minX = Math.min(...visible.map(r => r.x - (r.w || 4) / 2));
+    const maxX = Math.max(...visible.map(r => r.x + (r.w || 4) / 2));
+    const minY = Math.min(...visible.map(r => r.y - (r.h || 4) / 2));
+    const maxY = Math.max(...visible.map(r => r.y + (r.h || 4) / 2));
+    const s = Math.min(
+      (w - pad * 2) / Math.max(1, maxX - minX),
+      (h - pad * 2) / Math.max(1, maxY - minY)
+    );
+    const px = r => pad + (r.x - minX) * s;
+    const py = r => pad + (r.y - minY) * s;
+    const current = rooms[Math.min(roomIndex, rooms.length - 1)];
 
-    // Corridors between consecutive rooms
+    // Corridors along the real edges (so branches show), skipping the
+    // vertical ones — a trapdoor is a hole, not a hallway
     ctx.strokeStyle = '#3a2f1e';
-    ctx.lineWidth = 6;
-    ctx.beginPath();
-    for (let i = 0; i < rooms.length - 1; i++) {
-      ctx.moveTo(px(rooms[i]), py(rooms[i]));
-      ctx.lineTo(px(rooms[i + 1]), py(rooms[i + 1]));
+    ctx.lineWidth = Math.max(3, s * 1.4);
+    for (const edge of dungeon.edges || []) {
+      if (edge.kind === 'trapdoor') continue;
+      const ra = rooms[edge.a];
+      const rb = rooms[edge.b];
+      if (!ra || !rb) continue;
+      if ((ra.secret && !ra.discovered) || (rb.secret && !rb.discovered)) continue;
+      ctx.setLineDash(edge.secret ? [4, 3] : []);
+      ctx.beginPath();
+      ctx.moveTo(px(ra), py(ra));
+      ctx.lineTo(px(rb), py(rb));
+      ctx.stroke();
     }
-    ctx.stroke();
+    ctx.setLineDash([]);
 
-    // Rooms
+    // Rooms, drawn at their real size
     for (let i = 0; i < rooms.length; i++) {
       const room = rooms[i];
+      if (room.secret && !room.discovered) continue;
+      const rw = Math.max(6, (room.w || 4) * s);
+      const rh = Math.max(6, (room.h || 4) * s);
       const x = px(room);
       const y = py(room);
-      const isCurrent = i === roomIndex;
-      const isVisited = i < roomIndex || room.cleared;
+      const isCurrent = room === current;
+      const isVisited = room.cleared;
       const isBoss = room.type === 'boss';
-      const radius = isBoss ? 20 : 14;
 
       // Torchlight glow on the current room
       if (isCurrent) {
-        const glow = ctx.createRadialGradient(x, y, 4, x, y, 44);
-        glow.addColorStop(0, 'rgba(216, 165, 63, 0.5)');
+        const reach = Math.max(rw, rh);
+        const glow = ctx.createRadialGradient(x, y, 4, x, y, reach);
+        glow.addColorStop(0, 'rgba(216, 165, 63, 0.45)');
         glow.addColorStop(1, 'rgba(216, 165, 63, 0)');
         ctx.fillStyle = glow;
-        ctx.fillRect(x - 44, y - 44, 88, 88);
+        ctx.fillRect(x - reach, y - reach, reach * 2, reach * 2);
       }
 
       ctx.fillStyle = isCurrent ? '#2a2213' : isVisited ? '#171310' : '#14110b';
       ctx.strokeStyle = isCurrent ? '#d8a53f' : isBoss ? '#8a3a3a' : '#3a2f1e';
       ctx.lineWidth = isCurrent ? 2.5 : 1.5;
-      ctx.beginPath();
-      ctx.arc(x, y, radius, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
+      if (room.shape === 'rotunda') {
+        ctx.beginPath();
+        ctx.arc(x, y, Math.min(rw, rh) / 2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+      } else {
+        ctx.fillRect(x - rw / 2, y - rh / 2, rw, rh);
+        ctx.strokeRect(x - rw / 2, y - rh / 2, rw, rh);
+      }
 
       // Room icon — unknown rooms ahead show as ?
-      const known = i <= roomIndex + 1 || isBoss;
-      ctx.font = `${isBoss ? 18 : 13}px serif`;
+      const known = room.cleared || isCurrent || isBoss
+        || (state.knownIdxs ? state.knownIdxs.includes(i) : true);
+      ctx.font = `${Math.max(10, Math.min(20, Math.min(rw, rh) * 0.5))}px serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.globalAlpha = isVisited && !isCurrent ? 0.45 : 1;
-      ctx.fillText(known ? room.icon : '❓', x, y);
+      // Leave the middle of the current room for the party
+      ctx.fillText(known ? room.icon : '❓', x, isCurrent ? y - rh * 0.3 : y);
       ctx.globalAlpha = 1;
     }
 
-    // The party: a cluster of living class icons at the current room
-    const current = rooms[Math.min(roomIndex, rooms.length - 1)];
-    if (current && party) {
+    // The party, standing inside the current room
+    if (current && party && !(current.secret && !current.discovered)) {
       const living = party.members.filter(m => m.alive);
+      const rw = Math.max(6, (current.w || 4) * s);
+      const rh = Math.max(6, (current.h || 4) * s);
       const cx = px(current);
-      const cy = py(current) - 26;
-      ctx.font = '13px serif';
-      const spread = Math.min(14, 44 / Math.max(1, living.length));
+      const cy = py(current) + rh * 0.18;
+      ctx.font = `${Math.max(11, Math.min(16, s))}px serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      // Two ranks if the room is deep enough to show them
+      const perRank = rh > rw ? Math.min(living.length, 2) : Math.min(living.length, 4);
+      const spread = Math.min(s * 1.1, rw / Math.max(1, perRank + 0.5));
       living.forEach((m, i) => {
-        const off = (i - (living.length - 1) / 2) * spread;
-        ctx.fillText(m.icon, cx + off, cy);
+        const rank = Math.floor(i / perRank);
+        const inRank = i % perRank;
+        const count = Math.min(perRank, living.length - rank * perRank);
+        const off = (inRank - (count - 1) / 2) * spread;
+        ctx.fillText(m.icon, cx + off, cy + rank * Math.min(s, rh * 0.22));
       });
     }
   }
