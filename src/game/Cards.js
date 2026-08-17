@@ -103,6 +103,47 @@ export const EQUIPMENT_CARDS = [
     },
   },
 
+  // Room-feature tools: gear whose value is the architecture, not the
+  // stat line. A prybar is +1 attack and a key to every sarcophagus,
+  // crate and rubble pile in the dungeon; a grapple turns any pit into
+  // a weapon. These are the cards that make a furnished room worth
+  // reading before you pick (see world/RoomFeatures.js FEATURE_ACTIONS).
+  {
+    id: 'eq-prybar', type: CARD_TYPES.EQUIPMENT, name: 'Ironwood Prybar', icon: '🪝',
+    slot: 'tool', bonus: { attack: 1, defense: 1 }, bestFor: CLASSES.FIGHTER,
+    text: 'Opens sarcophagi, crates and rubble. Doubles as an argument.',
+  },
+  {
+    id: 'eq-grapple', type: CARD_TYPES.EQUIPMENT, name: 'Grapple and Line', icon: '🪢',
+    slot: 'tool', bonus: { mind: 1, defense: 1 }, bestFor: CLASSES.ROGUE,
+    text: 'Forty feet of good rope. Pits become options; a shaft becomes a stairway.',
+  },
+  {
+    id: 'eq-tinderbox', type: CARD_TYPES.EQUIPMENT, name: 'Alchemist\'s Tinderbox', icon: '🔥',
+    slot: 'tool', bonus: { attack: 1, mind: 1 }, bestFor: CLASSES.ALCHEMIST,
+    text: 'Lights braziers, shelves, and anything else the room has generously left flammable.',
+  },
+  {
+    id: 'eq-winch-hook', type: CARD_TYPES.EQUIPMENT, name: 'Winch Hook', icon: '⚓',
+    slot: 'tool', bonus: { attack: 2 }, bestFor: CLASSES.ROGUE,
+    text: 'For chains, cranks and portcullises. Whatever the dungeon raised can be dropped.',
+  },
+  {
+    id: 'eq-smiths-kit', type: CARD_TYPES.EQUIPMENT, name: 'Field Smith\'s Kit', icon: '🔨',
+    slot: 'tool', bonus: { attack: 1, defense: 1 }, bestFor: CLASSES.FIGHTER,
+    text: 'Hammer, file, flux. Useless in a corridor; worth a sword at an anvil.',
+  },
+  {
+    id: 'eq-waterskin', type: CARD_TYPES.EQUIPMENT, name: 'Great Waterskin', icon: '🫗',
+    slot: 'tool', bonus: { defense: 1, mind: 1 }, bestFor: null,
+    text: 'Holds four days. Wounds get washed, venom gets flushed, fonts get emptied.',
+  },
+  {
+    id: 'eq-silvered-mirror', type: CARD_TYPES.EQUIPMENT, name: 'Silvered Hand-Mirror', icon: '🪞',
+    slot: 'focus', bonus: { mind: 2 }, bestFor: CLASSES.CLERIC,
+    text: 'Shows what is standing there rather than what wants to be seen.',
+  },
+
   // Trap cards: cursed gear with hidden upsides. They look like
   // mistakes in the pack and play like gambles at the table.
   {
@@ -142,6 +183,12 @@ export const SPELL_CARDS = [
   { id: 'sp-balm', type: CARD_TYPES.SPELL, name: 'Balm of Hours', icon: '🌾', school: 'restoration', power: 6, use: 'heal', text: 'Borrows healing from a quieter week and spends it now.' },
   { id: 'sp-eyes', type: CARD_TYPES.SPELL, name: 'Eyes of the Mouse', icon: '👁️', school: 'divination', power: 2, use: 'utility', text: 'See what the small and cautious see. It is a lot.' },
   { id: 'sp-feather', type: CARD_TYPES.SPELL, name: 'Feather Step', icon: '🪶', school: 'transmutation', power: 3, use: 'utility', text: 'The floor agrees to pretend nobody is on it.' },
+
+  // Workings that read the room: each one turns a piece of a furnished
+  // chamber into a weapon or a resource (world/RoomFeatures.js)
+  { id: 'sp-shatter', type: CARD_TYPES.SPELL, name: 'Shatter', icon: '🪨', school: 'transmutation', power: 4, use: 'combat', text: 'Stone remembers being loose. Pillars, boulders and bad ceilings all listen.' },
+  { id: 'sp-kindle', type: CARD_TYPES.SPELL, name: 'Kindle', icon: '🕯️', school: 'evocation', element: 'fire', power: 3, use: 'combat', text: 'Lights any fire in the room from across it — braziers included, and whatever is standing near one.' },
+  { id: 'sp-purify', type: CARD_TYPES.SPELL, name: 'Purify the Font', icon: '⛲', school: 'theurgy', power: 4, use: 'heal', text: 'Still water, said over and made willing. Best used where the dungeon left a font.' },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -157,7 +204,14 @@ export const PERSONALITY_CARDS = [
   { id: 'pers-reckless', type: CARD_TYPES.PERSONALITY, name: 'The Reckless', icon: '💥', archetype: 'reckless', text: 'Rushes in. Sometimes that works. Gloriously.' },
   // Trap personality (Megabase): looks like a liability, spots what
   // the brave walk into. Cowards notice tripwires.
-  { id: 'pers-craven', type: CARD_TYPES.PERSONALITY, name: 'The Craven', icon: '🐔', archetype: 'craven', trap: true, text: 'Avoids every fight it can. Notices every exit — and every tripwire.' },
+  { id: 'pers-craven', type: CARD_TYPES.PERSONALITY, name: 'The Craven', icon: '🐔', archetype: 'craven', trap: true, text: 'Avoids every fight it can. Notices every exit — and every tripwire. Skipped fights pay no spoils.' },
+
+  // Feature-forward personalities. Both reuse a proven archetype (the
+  // alchemy pack's Hermetic set the precedent) so the barks and
+  // deliberation voices stay fully covered per class — the new name is
+  // a new *lens* on the same decision weights.
+  { id: 'pers-tinkerer', type: CARD_TYPES.PERSONALITY, name: 'The Tinkerer', icon: '🔧', archetype: 'cunning', text: 'Touches everything in the room: the chain, the lid, the lever. Uses the architecture as a weapon.' },
+  { id: 'pers-vandal', type: CARD_TYPES.PERSONALITY, name: 'The Vandal', icon: '🪓', archetype: 'reckless', text: 'If a thing in the room can be toppled, burned, or dropped on someone, it will be.' },
 ];
 
 /**

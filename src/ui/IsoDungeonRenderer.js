@@ -16,9 +16,10 @@
  */
 
 import * as THREE from 'three';
-import { ATLAS, FX_TILES, getClassTile, getMonsterTile, getRoomProp } from './SpriteAtlas.js';
+import { ATLAS, FX_TILES, getClassTile, getMonsterTile, getRoomProp, getFeatureTile } from './SpriteAtlas.js';
 import {
   TILE, DOOR_W, roomHalf, roomAxis, monsterSpot, partySlots, wallSpans, doorMap,
+  featureSlots,
 } from './RoomLayout.js';
 
 const VIEW_HALF = 11;       // half-height of the view, in world units (~2 rooms)
@@ -284,6 +285,24 @@ export class IsoDungeonRenderer {
         sprite.userData.phase = i * 2.3;
         this.occupantGroup.add(sprite);
       }
+
+      // The room's furniture: pillars, braziers, a sarcophagus against
+      // the wall (world/RoomFeatures.js). Drawn along the edges so the
+      // party's ranks and the monster's end stay clear.
+      const features = room.features || [];
+      const slots = featureSlots(room, x, z, features.length);
+      features.forEach((fid, fi) => {
+        const tile = getFeatureTile(fid);
+        const slot = slots[fi];
+        if (!tile || !slot) return;
+        const fsprite = this.tileSprite(tile, 0.8);
+        fsprite.position.set(slot.mx, 0.58, slot.mz);
+        fsprite.userData.baseY = 0.58;
+        fsprite.userData.phase = i * 1.1 + fi;
+        // A brazier flickers; stone does not
+        if (fid === 'brazier') fsprite.userData.sway = true;
+        this.occupantGroup.add(fsprite);
+      });
     });
   }
 

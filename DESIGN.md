@@ -87,6 +87,70 @@ Placement walks the spine outward, one axis at a time, rejecting any position wh
 
 **Trapdoors** are the vertical shortcut: a shaft that skips 2–4 rooms of the spine (never the boss) for a fall. Found ones are a choice — the Craven take them, the Covetous refuse to skip loot, a battered party takes any road to the end; roping down halves the drop. Unfound ones are an accident that costs the full fall. Either way the skipped rooms' loot *and* danger are both forgone.
 
+### Room Features (what's *in* a chamber)
+A room is no longer one type and one decision. Every room big enough to
+hold furniture (≥18 tiles; a vault-sized cell holds none) is furnished
+from `world/RoomFeatures.js` — up to three of: **pillars, rubble,
+crates, brazier, pit, boulder, sarcophagus, font, spout, portcullis,
+anvil, shelves, mirror**. Each is drawn with art already on the Kenney
+sheet, so the catalog was designed around tiles that exist rather than
+tiles we'd need.
+
+Features do three jobs:
+
+1. **Passive modifiers.** Pillars, rubble and crates give **cover**
+   (−1 incoming damage each, capped at 2 — furniture is not a
+   fortress). A **mirror** negates the ethereal ×0.6 penalty exactly as
+   a cleric does. A **font** douses fire; a **sarcophagus** is a risk
+   carried into the fight.
+2. **Interactions.** Thirteen extra options, each gated by a class *or*
+   a drafted card. In a fight the furniture is a weapon (shove the
+   monster into the pit, drop the portcullis on it, topple the boulder)
+   and the opener damages the monster before the first blow, exactly as
+   `spell-strike` does. Outside a fight it's a resource (pry the
+   sarcophagus, harvest the spout, work the anvil, strip the shelves).
+3. **Writing.** Every feature states its own `tell` in the predicament,
+   so the player can see why an option exists, and every interaction
+   reports what it did with the number.
+
+**Tools upgrade; they don't merely unlock.** A fighter can shove
+something into a pit barehanded for 5; a party holding the Grapple and
+Line does it for 12. This rule exists because the first cut gated on
+presence alone and a controlled A/B measured the new tools as
+*redundant* — a four-class party already opened eleven of thirteen
+interactions, so the cards were worth only their stat lines. A few
+interactions are **tool-only**: an anvil without hammer, file and flux
+is a heavy table.
+
+#### Feature cards (2026-07-15)
+Seven tools, three workings and two personalities exist to exploit the
+architecture. Measured against an equal-bonus plain card over 500
+seeded delves on hard, six of seven tools are worth **+1.8 to +3.8 win
+points** (the Ironwood Prybar also +44 score). The **Silvered
+Hand-Mirror** is the format's first true hate card: roughly neutral in
+general and **+38 win points in the Castle of the Vampire Lord**, where
+an ethereal household meets a party with no cleric.
+
+| Card | Feature hook |
+|---|---|
+| Ironwood Prybar | sarcophagi, crates, rubble — opens them cleanly and quietly |
+| Grapple and Line | pits (shove without following), and shafts |
+| Alchemist's Tinderbox | braziers, and anything flammable |
+| Winch Hook | portcullis chains — drops the whole gate at once |
+| Field Smith's Kit | the anvil (tool-only): a permanent +3 attack edge |
+| Great Waterskin | fonts and spouts; flushes lingering venom |
+| Silvered Hand-Mirror | carries the mirror's ethereal-reveal with the party |
+| Shatter | boulders and pillars — drops the slope, not one stone |
+| Kindle | lights a brazier at range |
+| Purify the Font | a font, said over, for double the healing |
+| The Tinkerer / The Vandal | reuse `cunning` / `reckless`; reach for the furniture |
+
+The three new *spells* measure at −19 to −21 IWD, in the same band as
+every other spell in the pool (Knock −24, Dancing Light −22, Firebolt
+−20). They are not uniquely bad — they inherit the format's standing
+spell problem, which remains the top balance target
+(`DESIGN_DIALOGUE.md` §6-7).
+
 ### Room Encounters (personality-weighted party decisions, SnakeAB engine adapted)
 - **Monster** — fight / flee / sneak past (rogue) / turn undead (cleric) / parley (mind check). Every *defeated* monster leaves a signature drop (`game/Drops.js`, the Bestiary's companion table): a trinket, weapon coating, potion, materials, scroll, or coin, each with its own chronicle line. Kinds without an entry fall back by trait, then to a generic trophy — nothing drops nothing. Fleeing, sneaking, and bribing claim no corpse and no drop.
   - **The trophy case**: every claim is remembered on the party (`party.trophies`, with provenance) and persists across campaign depths. It surfaces in the HUD (count + hover inventory), the town ledger, the campaign's final page (a trophy-case section — victories show what came up, wipes show what the dark took back), the endings' writing (the finest trophy is named), and the onscreen event feed (a `trophy` tick event).

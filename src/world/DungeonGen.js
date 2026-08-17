@@ -11,6 +11,7 @@
 import { SeededRandom } from '../draft/PackDraft.js';
 import { getCondition } from '../game/Conditions.js';
 import { applyNature } from '../game/Bestiary.js';
+import { rollFeatures } from './RoomFeatures.js';
 
 export const ROOM_TYPES = {
   ENTRANCE: 'entrance',
@@ -184,13 +185,14 @@ function nextHeading(placed, rng, heading) {
   const spanX = Math.max(...xs) - Math.min(...xs);
   const spanY = Math.max(...ys) - Math.min(...ys);
 
-  // Keep the current course now and then, so corridors have runs
-  if (heading && rng.next() < 0.35) return heading;
+  // Rooms are big, so a few unbroken steps run the map off the screen.
+  // Once the footprint is clearly lopsided the turn is not optional:
+  // grow the shorter axis, no dice involved.
+  const lopsided = Math.abs(spanX - spanY) > 8;
+  if (lopsided) return spanX > spanY ? [0, 1] : [1, 0];
 
-  const acrossFirst = spanX > spanY + 4;      // too wide: turn downhill
-  const downFirst = spanY > spanX + 4;        // too tall: turn across
-  if (acrossFirst) return rng.next() < 0.8 ? [0, 1] : [1, 0];
-  if (downFirst) return rng.next() < 0.8 ? [1, 0] : [0, 1];
+  // Otherwise keep the course sometimes, so corridors have runs
+  if (heading && rng.next() < 0.4) return heading;
   return rng.next() < 0.5 ? [1, 0] : [0, 1];
 }
 
@@ -273,6 +275,11 @@ export function generateDungeon(seed, difficulty = 'medium', opts = {}) {
   const edges = rooms.slice(1).map((_, i) => ({ a: i, b: i + 1, secret: false, kind: 'door' }));
   const branches = [];
 
+  // Furnish the spine: pillars to fight behind, a brazier to shove
+  // things into, a sarcophagus nobody should open (RoomFeatures).
+  // Footprint decides how much fits, so this runs after the layout.
+  for (const room of rooms) room.features = rollFeatures(room, rng, theme);
+
   // Branches: optional side rooms off the spine. Roughly half are
   // secret — a hidden door the rogue or the scholar might notice,
   // with a vault (NetHack-style riches) at the end.
@@ -305,6 +312,7 @@ export function generateDungeon(seed, difficulty = 'medium', opts = {}) {
       heading = dir;
       room.secret = secret;
       room.discovered = !secret;   // secret rooms start unknown
+      room.features = rollFeatures(room, rng, theme);
       rooms.push(room);
       placed.push(room);
 
@@ -620,6 +628,7 @@ export function serializeDungeon(dungeon) {
       // Footprint travels with the layout, or a replayed dungeon would
       // be a different dungeon (procgen v3)
       w: r.w, h: r.h, shape: r.shape,
+      ...(r.features?.length ? { features: [...r.features] } : {}),
       secret: !!r.secret,
       ...(r.monster ? { monster: { ...r.monster } } : {}),
       ...(r.gold !== undefined ? { gold: r.gold } : {}),
@@ -652,6 +661,7 @@ export function dungeonFromLayout(layout) {
     // Layouts archived before procgen v3 have no footprint; give them
     // their type's smallest one so old designs still draw and still fight
     ...(r.w ? {} : geometryFallback(r.type)),
+    features: [...(r.features || [])],
     ...(r.monster ? { monster: { ...r.monster } } : {}),
   }));
   return new Dungeon(rooms, theme, condition, {

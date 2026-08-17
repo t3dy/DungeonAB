@@ -83,6 +83,37 @@ export function wallSpans(length, doorCount) {
 }
 
 /**
+ * Where the furniture stands. Features line the room's edges — along
+ * the long walls and in the corners — leaving the middle clear for the
+ * party's ranks and the monster's end (partySlots / monsterSpot).
+ * Deterministic: the same room always furnishes the same way.
+ */
+export function featureSlots(room, x = 0, z = 0, count = 0) {
+  const { hx, hz } = roomHalf(room);
+  const { axis } = roomAxis(room);
+  const inset = 0.75;
+  // Along the short walls, offset back toward the party's end so the
+  // furniture frames the fight instead of standing in it
+  const lateral = Math.max(0.6, (axis === 'x' ? hz : hx) - inset);
+  const depth = Math.max(0.6, (axis === 'x' ? hx : hz) - inset);
+
+  const candidates = axis === 'x'
+    ? [
+        { mx: x - depth * 0.15, mz: z - lateral },
+        { mx: x - depth * 0.15, mz: z + lateral },
+        { mx: x - depth * 0.8, mz: z - lateral * 0.55 },
+        { mx: x - depth * 0.8, mz: z + lateral * 0.55 },
+      ]
+    : [
+        { mx: x - lateral, mz: z - depth * 0.15 },
+        { mx: x + lateral, mz: z - depth * 0.15 },
+        { mx: x - lateral * 0.55, mz: z - depth * 0.8 },
+        { mx: x + lateral * 0.55, mz: z - depth * 0.8 },
+      ];
+  return candidates.slice(0, Math.max(0, count));
+}
+
+/**
  * Which wall does each room's doorway belong in? Derived from the
  * dungeon's edges: the direction to the neighbour picks the side.
  * Trapdoor edges are vertical, so they open no wall — they show as a

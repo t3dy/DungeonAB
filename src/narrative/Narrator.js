@@ -14,6 +14,7 @@
 import { ROOM_TYPES } from '../world/DungeonGen.js';
 import { CLASSES } from '../game/Cards.js';
 import { getBark } from './Barks.js';
+import { roomFeatures, getFeature, FEATURE_ACTIONS } from '../world/RoomFeatures.js';
 
 /* ------------------------------------------------------------------ */
 /* Predicaments per room type                                          */
@@ -121,6 +122,20 @@ const OPTION_PHRASES = {
   'knock-open': 'open it with Knock',
   'cause-fear': 'cast Cause Fear',
   'smoke-bomb': 'spring it with a smoke bomb',
+  // Using the room itself (world/RoomFeatures.js FEATURE_ACTIONS)
+  'shove-into-pit': 'shove it into the pit',
+  'topple-boulder': 'topple the boulder onto it',
+  'shove-into-brazier': 'shove it into the brazier',
+  'drop-portcullis': 'drop the portcullis on it',
+  'fight-from-cover': 'fight from behind the pillars',
+  'pry-sarcophagus': 'pry the sarcophagus open',
+  'bless-the-font': 'bless the font and drink',
+  'fill-waterskins': 'fill the waterskins',
+  'harvest-spout': 'harvest the spout',
+  'sift-rubble': 'sift the rubble',
+  'crack-crates': 'crack the crates open',
+  'work-the-anvil': 'put an edge back on at the anvil',
+  'strip-the-shelves': 'strip the shelves',
 };
 
 const ARCHETYPE_VOICES = {
@@ -187,8 +202,75 @@ export function composeDeliberation(chosenId, options, party) {
 /* Resolutions — what happened, with the numbers                       */
 /* ------------------------------------------------------------------ */
 
+/**
+ * Using the room: what the furniture did, with the number. Fight
+ * openers report the damage and then hand off to the ordinary fight
+ * lines; resource uses report what came out of the room.
+ */
+function composeFeatureUse(optionId, result) {
+  const action = FEATURE_ACTIONS[optionId];
+  const feature = getFeature(action.feature);
+  const icon = feature?.icon || '🧱';
+  const name = feature?.name || 'the furniture';
+
+  if (action.fightOnly) {
+    const dealt = result.featureDamage ?? action.openerDamage;
+    switch (optionId) {
+      case 'shove-into-pit':
+        return `${icon} The party shoves the monster into ${name}: ${dealt} damage, and it has to climb back out.`;
+      case 'topple-boulder':
+        return `${icon} The party topples ${name} down the slope onto the monster: ${dealt} damage.`;
+      case 'shove-into-brazier':
+        return `${icon} The party drives the monster into ${name}: ${dealt} fire damage.`;
+      case 'drop-portcullis':
+        return `${icon} The winch lets go and ${name} comes down across the monster: ${dealt} damage.`;
+      case 'fight-from-cover':
+        return `${icon} The party backs into ${name} and makes the monster come down one aisle at a time: ${dealt} damage as it closes.`;
+      default:
+        return `${icon} The party turns ${name} against the monster: ${dealt} damage.`;
+    }
+  }
+
+  const parts = [];
+  if (optionId === 'pry-sarcophagus') parts.push(`${icon} The party pries the lid off ${name}`);
+  else if (optionId === 'bless-the-font') parts.push(`${icon} The cleric says the words over ${name} and the party drinks`);
+  else if (optionId === 'fill-waterskins') parts.push(`${icon} The party fills its waterskins at ${name}`);
+  else if (optionId === 'harvest-spout') parts.push(`${icon} The alchemist bottles what drips from ${name}`);
+  else if (optionId === 'sift-rubble') parts.push(`${icon} The party sifts ${name}`);
+  else if (optionId === 'crack-crates') parts.push(`${icon} The party cracks open ${name}`);
+  else if (optionId === 'work-the-anvil') parts.push(`${icon} The party works ${name}`);
+  else if (optionId === 'strip-the-shelves') parts.push(`${icon} The wizard strips ${name}`);
+  else parts.push(`${icon} The party uses ${name}`);
+
+  const gains = [];
+  if (result.gold) gains.push(`${result.gold} gold`);
+  if (result.materials) gains.push(`${result.materials} material${result.materials === 1 ? '' : 's'}`);
+  if (result.healed) gains.push(`${result.healed} health healed`);
+  if (result.spell) gains.push(`a scroll of ${result.spell} for the grimoire`);
+  if (result.weaponMod) gains.push(`${result.weaponMod.name} on ${result.weaponMod.target}'s weapon (+${result.weaponMod.attack} attack)`);
+  if (result.curedLinger) gains.push('the lingering venom flushed out');
+
+  return `${parts[0]}: ${gains.length ? gains.join(', ') : 'nothing worth carrying'}.`;
+}
+
 export function composeResolution(room, optionId, result, party) {
   const bits = [];
+
+  // The room's furniture, used (world/RoomFeatures.js)
+  if (FEATURE_ACTIONS[optionId]) {
+    bits.push(composeFeatureUse(optionId, result));
+    const action = FEATURE_ACTIONS[optionId];
+    if (action.fightOnly) {
+      // Then the fight itself, on the ordinary lines
+      bits.push(result.success
+        ? (result.rounds === 0
+            ? `⚔️ ${capitalize(result.monster)} is finished before it can strike back.`
+            : `⚔️ The party kills ${result.monster} in ${result.rounds} round${result.rounds === 1 ? '' : 's'}, taking ${result.damage} damage.`)
+        : `☠️ Even so, ${result.monster} beats the party down.`);
+    }
+    for (const prep of result.preps || []) bits.push(prep.text);
+    return bits.join(' ');
+  }
 
   switch (optionId) {
     case 'fight': {
@@ -388,13 +470,23 @@ export function composePredicament(room, theme = null) {
     const lead = room.type === ROOM_TYPES.BOSS
       ? `The boss chamber. ${capitalize(m.name)} waits at its center${stats}; killing it clears the dungeon.`
       : `${capitalize(m.name)} holds the room${stats}. The party must decide how to get past it.`;
-    return lead + monsterTells(m);
+    return lead + monsterTells(m) + featureTells(room);
   }
   if (room.type === ROOM_TYPES.TRAP && room.trapType && TRAP_TELLS[room.trapType]) {
-    return `${pick(PREDICAMENTS.trap)} ${TRAP_TELLS[room.trapType]}`;
+    return `${pick(PREDICAMENTS.trap)} ${TRAP_TELLS[room.trapType]}${featureTells(room)}`;
   }
   const pool = PREDICAMENTS[room.type] || PREDICAMENTS.corridor;
-  return pick(pool);
+  return pick(pool) + featureTells(room);
+}
+
+/**
+ * What the room is furnished with, named so the player can see why an
+ * option exists. Each feature states its own tell (RoomFeatures).
+ */
+function featureTells(room) {
+  const features = roomFeatures(room);
+  if (features.length === 0) return '';
+  return ' ' + features.map(f => f.tell).join(' ');
 }
 
 /* The monster's nature, stated as facts the party can plan around */

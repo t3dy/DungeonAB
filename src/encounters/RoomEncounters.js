@@ -10,6 +10,10 @@ import { CLASSES, SPELL_CARDS } from '../game/Cards.js';
 import { ROOM_TYPES } from '../world/DungeonGen.js';
 import { elementMult } from '../game/Bestiary.js';
 import { claimDrop, bonusText } from '../game/Drops.js';
+import {
+  FEATURE_ACTIONS, featureActions, featureModifiers, featureActionWeights,
+  isFeatureAction, getFeature, roomFeatures, actionTier,
+} from '../world/RoomFeatures.js';
 
 function roll() {
   return Math.random() * 10;
@@ -73,7 +77,24 @@ export function getPreparationBonuses(party) {
 /* Option definitions per room type                                    */
 /* ------------------------------------------------------------------ */
 
+/**
+ * The room's furniture, as options. A pit is scenery until somebody
+ * brings a line or the muscle to shove; a sarcophagus is a wall until
+ * somebody drafted a prybar. This is where room features and drafted
+ * cards meet (world/RoomFeatures.js).
+ */
+export function getFeatureOptions(room, party) {
+  return featureActions(room, party, {
+    item: id => hasItem(party, id),
+    spell: id => hasSpell(party, id),
+  });
+}
+
 export function getRoomOptions(room, party) {
+  return [...baseRoomOptions(room, party), ...getFeatureOptions(room, party)];
+}
+
+function baseRoomOptions(room, party) {
   switch (room.type) {
     case ROOM_TYPES.MONSTER:
     case ROOM_TYPES.BOSS: {
@@ -264,6 +285,15 @@ export function decideRoomAction(room, party) {
         if (prep[archetype]) w += prep[archetype];
       }
     }
+    // Using the room is its own temptation, and each archetype has
+    // opinions about which piece of furniture to reach for
+    const featWeights = featureActionWeights(opt.id);
+    if (featWeights) {
+      w += 1.2;                                  // furniture invites use
+      for (const archetype of party.personalities) {
+        if (featWeights[archetype]) w += featWeights[archetype];
+      }
+    }
     // The monster's nature argues for and against certain plans
     if (nature[opt.id]) w += nature[opt.id];
     if (opt.id === 'rest' && party.totalHealth() / party.totalMaxHealth() < 0.6) w += 3;
@@ -326,6 +356,102 @@ export function rollFind(party, always = false, rollValue = Math.random()) {
   const trinket = TRINKETS[Math.floor(rollValue * 991) % TRINKETS.length];
   const wearer = party.assignEquipment({ ...trinket, id: `${trinket.id}-${Date.now().toString(36)}` });
   return { source: trinket.name, find: 'trinket', text: `🍀 Also in the hoard: ${trinket.name} (${bonusText(trinket.bonus)}), now worn by ${wearer?.name || 'no one'}.` };
+}
+
+/* ------------------------------------------------------------------ */
+/* Feature actions — using the room itself                             */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Resolve a feature interaction. In a fight the furniture is a weapon:
+ * damage the monster with the room, then swing (the same shape as
+ * spell-strike). Outside a fight it's a resource: gold, materials, a
+ * spell, a weapon edge, a wash for the wounds.
+ *
+ * Mutates the party and the room. Returns a result carrying `feature`
+ * so the narration can name what was used.
+ */
+export function resolveFeatureAction(room, party, optionId) {
+  // A drafted tool does the job better than bare hands (RoomFeatures
+  // actionTier): the class opens the option, the card upgrades it
+  const action = actionTier(optionId, party, {
+    item: id => hasItem(party, id),
+    spell: id => hasSpell(party, id),
+  });
+  const feature = getFeature(action.feature);
+  const preps = [];
+
+  /* The room as a weapon: an opener, then the ordinary fight */
+  if (action.fightOnly) {
+    const monster = room.monster;
+    const dealt = Math.min(action.openerDamage, Math.max(0, monster.health - 1));
+    monster.health = Math.max(1, monster.health - action.openerDamage);
+    const result = resolveRoomAction(room, party, 'fight', {
+      extraCover: action.extraCover || 0,
+    });
+    result.feature = action.feature;
+    result.featureAction = optionId;
+    result.featureDamage = dealt;
+    result.featureTier = action.tier;
+    result.spellElement = action.element || null;
+    return result;
+  }
+
+  /* The room as a resource */
+  const result = {
+    success: true, feature: action.feature, featureAction: optionId,
+    featureTier: action.tier, preps,
+  };
+
+  if (action.gold) {
+    party.addGold(action.gold);
+    result.gold = action.gold;
+  }
+  if (action.materials) {
+    party.materials += action.materials;
+    result.materials = action.materials;
+  }
+  if (action.heal) {
+    party.healParty(action.heal);
+    result.healed = action.heal;
+  }
+  if (action.curesLinger && party.poisonLinger > 0) {
+    party.poisonLinger = 0;
+    result.curedLinger = true;
+    preps.push({ source: 'the Great Waterskin', text: '🫗 The venom is flushed out with clean water before it can act again.' });
+  }
+  if (action.weaponMod) {
+    const striker = party.living().reduce((a, b) => (a.attack >= b.attack ? a : b));
+    striker.addWeaponMod({ ...action.weaponMod });
+    result.weaponMod = { ...action.weaponMod, target: striker.name };
+  }
+  if (action.spell) {
+    const spell = { ...action.spell, id: `feature-${optionId}-${party.grimoire.length}`, text: 'Taken off a dungeon shelf.' };
+    party.grimoire.push(spell);
+    result.spell = spell.name;
+    // A grimoire to copy into means taking two good pages, not one
+    if (action.extraSpell) {
+      const second = { ...action.spell, id: `feature-${optionId}-${party.grimoire.length}`, use: 'utility', text: 'Taken off a dungeon shelf.' };
+      party.grimoire.push(second);
+      result.extraSpell = true;
+    }
+  }
+  // Prying a sarcophagus is a gamble: sometimes the occupant objects
+  if (action.wakesDead) {
+    // Proper leverage lifts the lid instead of cracking it
+    const woke = !action.quiet && roll() > 6.5;
+    result.wokeDead = woke;
+    if (woke) {
+      const dmg = 4;
+      party.takeDamage(dmg);
+      result.damage = dmg;
+      preps.push({ source: feature.name, text: `⚰️ The occupant objects: ${dmg} damage before it is put back down.` });
+    }
+  }
+
+  room.cleared = true;
+  party.recordEncounter(optionId, true);
+  return result;
 }
 
 /* ------------------------------------------------------------------ */
@@ -405,7 +531,12 @@ export function decideDetour(party, rollValue = roll()) {
  * Resolve a chosen action in a room. Mutates the party.
  * Returns { success, text, gold, damage, learned, ... }
  */
-export function resolveRoomAction(room, party, optionId) {
+export function resolveRoomAction(room, party, optionId, options = null) {
+  // Feature actions (world/RoomFeatures.js) are dispatched separately:
+  // the room's furniture is its own family of outcomes
+  if (isFeatureAction(optionId)) {
+    return resolveFeatureAction(room, party, optionId);
+  }
   switch (optionId) {
     /* Combat */
     case 'fight': {
@@ -430,8 +561,22 @@ export function resolveRoomAction(room, party, optionId) {
       // blades conviction; the forewarned (a tripped alarm) hit harder
       const preps = [];
       const armorShave = monster.trait === 'armored' ? 2 : 0;
-      const etherealMult = monster.trait === 'ethereal' && !party.hasClass(CLASSES.CLERIC) ? 0.6 : 1;
-      if (monster.trait === 'ethereal') {
+
+      // The room fights too: cover blunts every round, a mirror robs
+      // the ethereal of its advantage (world/RoomFeatures.js)
+      const roomMods = featureModifiers(room);
+      const cover = (roomMods.cover || 0) + (options?.extraCover || 0);
+      const mirrorInHand = hasItem(party, 'eq-silvered-mirror');
+      const blessed = party.hasClass(CLASSES.CLERIC) || roomMods.revealEthereal || mirrorInHand;
+      if (monster.trait === 'ethereal' && mirrorInHand && !roomMods.revealEthereal) {
+        preps.push({ source: 'the Silvered Hand-Mirror', text: '🪞 The Silvered Hand-Mirror catches the ethereal thing where it truly stands: weapons do full damage.' });
+      }
+      const etherealMult = monster.trait === 'ethereal' && !blessed ? 0.6 : 1;
+      for (const note of roomMods.notes) preps.push({ source: note.feature, text: note.text });
+      if (options?.extraCover) {
+        preps.push({ source: 'the pillars', text: `🏛️ Fighting from the aisles: ${options.extraCover} less damage per round on top of the cover.` });
+      }
+      if (monster.trait === 'ethereal' && !roomMods.revealEthereal) {
         preps.push(party.hasClass(CLASSES.CLERIC)
           ? { source: 'the cleric', text: '✨ The cleric blesses the blades: the ethereal monster takes full weapon damage.' }
           : { source: monster.name, text: '👻 The monster is ethereal and the party\'s blows pass through it: weapon damage ×0.6 (no cleric to bless the blades).' });
@@ -468,7 +613,7 @@ export function resolveRoomAction(room, party, optionId) {
         }
         // The slow strike last: no incoming damage on the first round
         if (monster.trait === 'slow' && rounds === 1) continue;
-        const incoming = Math.max(1, monsterAtk - Math.floor(party.totalDefense() / 3) - ward);
+        const incoming = Math.max(1, monsterAtk - Math.floor(party.totalDefense() / 3) - ward - cover);
         party.takeDamage(incoming);
         partyDamageTaken += incoming;
         party.quaffIfNeeded();
