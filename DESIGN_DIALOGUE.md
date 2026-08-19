@@ -417,6 +417,11 @@ combat spells, so the boss unleash rarely has a third working to spend.
 The A/B asks "what is the *package* worth". A package fix should move
 the A/B a lot and the per-card IWD a little, which is what happened.
 
+> **Corrected in §9.** The "residual per-card gap" this section signs
+> off on turned out to be largely an artifact of the instrument. Read §9
+> before quoting the −12 figure: the conclusion below survives, but the
+> evidence for it does not.
+
 **TCG:** And I'd argue the residual per-card gap should *stay*. Spells
 are a package that pays at the throne; equipment is modular and pays
 everywhere. That is an articulable difference between two card types
@@ -450,3 +455,127 @@ kept* — the spell they drafted eight picks ago is still doing something
 in the fight that decides the run. That is the trophy-case lesson again:
 a mechanic the player can watch paying off is worth more than the same
 mechanic resolved silently in the maths.
+
+---
+
+## 9. The healing defect, and what the instrument was hiding (2026-08-19)
+
+§8 closed with two things left open: utility and healing workings being
+the worst cards in the game, and the Archmage persona trailing the
+Warlord by 34 points. Chasing the first one turned up a genuine bug and
+then, unexpectedly, a flaw in how we had been measuring the whole
+problem.
+
+### The bug: a heal that could not fire when it mattered
+
+**TCG:** Healing was applied *after* the fight, gated on
+`party.isAlive()`. Read that gate carefully. The fight loop only exits
+when the monster is dead **or the party is**. So the single situation a
+player drafts a healing spell for — the fight that is about to kill them
+— was the one situation where the heal was guaranteed never to go off.
+Meanwhile a *potion* quaffs mid-fight, inside the round loop, and a
+potion is not even a draft pick.
+
+Measured, holding four bodies and the seeds fixed and filling three flex
+picks with healing workings:
+
+| | heal arm |
+|---|---|
+| Win rate, hard | **13.0%** |
+| Runs where any heal was seen to fire | 79.7% |
+| **Runs that ended with the party dead and a working still prepared** | **87.0%** |
+
+Eighty-seven percent. The card did nothing in the moment it existed for.
+
+Two changes: a prepared healing working now fires **mid-fight** the way a
+potion does, when a companion drops below 40% — and it is tried *before*
+the potion, because a prepared working comes back next room and a potion
+does not, so you spend the renewable resource first. And it **holds**,
+mending each round afterward, on the same `SPELL_SUSTAIN_SHARE` rule as a
+combat working. One rule now covers both: *a working that lands keeps
+working.*
+
+That took Mending Word from −18.5 to −13.6 IWD and levelled the three
+spell uses against each other — utility −12.9, combat −12.6, heal −12.4,
+where healing had been the clear worst.
+
+### The flaw: per-card IWD is confounded for a hoarded card type
+
+**TCG:** At which point I nearly wrote "so spells are still −12 a card
+and equipment is +9, and the 22-point gap is the intentional
+package-vs-modular tradeoff we signed off on in §8." That would have
+been wrong, and the thing that caught it was asking a different
+question: not *what is a spell worth*, but **what is the Nth spell
+worth.**
+
+Controlled, same bodies and seeds, N flex picks filled one way or the
+other:
+
+| Flex picks | All equipment | All spells | Gap |
+|---|---|---|---|
+| 1 | 21.3% | 23.8% | **−2.5 (spells ahead)** |
+| 2 | 30.8% | 40.5% | **−9.8 (spells well ahead)** |
+| 3 | 44.3% | 49.3% | **−5.0 (spells ahead)** |
+| 5 | 50.7% | 51.0% | −0.3 (parity) |
+| 8 | 61.8% | 55.8% | +6.0 (equipment ahead) |
+
+And in real drafted pools from the mining harness, win rate by how many
+of each type the pool holds:
+
+| Held | Spells | Equipment |
+|---|---|---|
+| 0–4 | ~79–86% (flat) | 47–59% (climbing) |
+| 5–8 | 71–79% (sagging) | 60–75% (still climbing) |
+| 9+ | **55.5%** | **80.0%** |
+
+**Equipment scales with count. Spells are flat to about four and then
+fall away** — because ordinary rooms ration the grimoire to one or two
+casts, so past the fourth working the extras only ever matter at the
+throne.
+
+So the −12 per-card figure was never a statement about spells. It was a
+statement about the *company they keep*: a card's WR-in averages over
+every pool containing it, spell-hoarding pools lose badly, and that drags
+down every individual spell those pools happen to hold. **IWD is
+confounded for any card type a drafter persona hoards.** The Archmage
+seat was quietly poisoning the measurement of the cards it liked.
+
+We have added both curves to `MINING_REPORT.md` under *Kit-count win
+curves (read this before trusting IWD)*, so the instrument now carries
+its own caveat instead of us remembering it.
+
+**NARR:** Which retires the "spells are underpowered" story completely,
+and replaces it with a better one: the grimoire is a *front-loaded*
+investment and the armoury is a *linear* one. Two or three workings is
+one of the strongest things you can do with early picks. Nine is a
+hoarder's mistake.
+
+### So the Archmage is not a balance bug
+
+**TCG:** The Archmage drafts nine-plus spells and wins 50% where the
+Warlord wins 83.6%. Given the curves, that is not the format punishing a
+legitimate archetype — it is a persona making a **real, identifiable,
+learnable drafting error**, which is exactly what a .50-skill identity
+persona is supposed to do. It sits alongside the Novice's
+body-blindness (§7) as the second legible mistake in the ladder, and
+both are now *measurable* rather than merely asserted.
+
+And we deliberately stopped buffing here. Every spell buff so far has
+raised the overall win rate and forced a fresh `STAT_SCALE` sweep — this
+pass needed one more (medium 1.37 / hard 1.62 / nightmare 2.01, measured
+99.3 / 88.0 / 71.3 / 46.5). Buffing spells further would not have fixed
+a weak card type; it would have flattened a genuinely good curve.
+
+### Still open
+
+**Utility workings remain the flattest cards in the pool** — Dancing
+Light is now the worst card in the game at −15.4, with Eyes of the Mouse
+and Knock beside it. Sustain and the boss unleash are damage-and-mending
+rules and touch nothing they do. Their real problem is the one the
+instrumentation in §8 exposed: **ordinary rooms cost a party about 11
+health across a whole delve while the boss costs 35–43**, so a card whose
+job is to make ordinary rooms safer is optimising a rounding error. That
+is not fixable by tuning a utility spell. It is fixable by making the
+march itself cost something — which is the **attrition** direction
+already chosen for the dungeon rework, and where this thread should
+rejoin the roadmap rather than spawn another balance pass.

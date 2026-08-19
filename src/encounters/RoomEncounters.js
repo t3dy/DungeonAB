@@ -643,6 +643,11 @@ export function resolveRoomAction(room, party, optionId, options = null) {
       // Bosses turn the fight at half health.
       let rounds = 0;
       let phased = false;
+      // A healing working holds too — the same rule as a combat working
+      // (SPELL_SUSTAIN_SHARE), for the same measured reason: flat
+      // one-shot value cannot compete with a shield that mitigates
+      // every round of a twelve-round boss.
+      let mend = 0;
       while (monsterHealth > 0 && party.isAlive() && rounds < 12) {
         rounds++;
         const swing = Math.max(1, Math.round((party.combatAttack() + summon + coating.bonus + spellSustain + Math.floor(roll() / 3)) * etherealMult) - armorShave);
@@ -653,11 +658,23 @@ export function resolveRoomAction(room, party, optionId, options = null) {
           monsterAtk += 2;
           preps.push({ source: monster.name, text: bossPhaseLine(monster) });
         }
+        if (mend > 0) party.healParty(mend);
         // The slow strike last: no incoming damage on the first round
         if (monster.trait === 'slow' && rounds === 1) continue;
         const incoming = Math.max(1, monsterAtk - Math.floor(party.totalDefense() / 3) - ward - cover);
         party.takeDamage(incoming);
         partyDamageTaken += incoming;
+        // Mend the badly hurt while the fight is still on — a working
+        // spent after the fight is a working that never saved anybody
+        const mid = party.castHealIfNeeded();
+        if (mid) {
+          const holds = Math.round(mid.spell.effectivePower * SPELL_SUSTAIN_SHARE);
+          mend += holds;
+          preps.push({
+            source: mid.spell.name,
+            text: `💚 ${mid.spell.name} closes ${mid.target.name}'s wounds mid-fight: ${mid.spell.effectivePower} healed in round ${rounds}, then ${holds} a round while it holds${mid.spell.consumed ? ' (the scroll is consumed)' : ''}.`,
+          });
+        }
         party.quaffIfNeeded();
       }
 
@@ -691,7 +708,8 @@ export function resolveRoomAction(room, party, optionId, options = null) {
           preps.push({ source: 'the Reckless', text: '💥 The Reckless finish the fight with style: +5 score.' });
         }
       }
-      // A drafted healing spell finally earns its keep after a bloody fight
+      // Anything still prepared tops the party up before the march.
+      // The working that mattered was already loosed mid-fight above.
       if (party.isAlive() && partyDamageTaken >= 6) {
         const heal = party.castSpell('heal');
         if (heal) {

@@ -80,9 +80,16 @@ Four rules govern magic:
    if a wizard is in the party — so the stat the wizard is built around
    finally has a payout, and a high-minded character improves every
    working the party holds.
-3. **A working holds.** A loosed combat spell keeps
-   `SPELL_SUSTAIN_SHARE` (0.5) of its burst as damage **every round for
-   the rest of the fight**. This is the shape Aegis of Ash always had,
+3. **A working holds.** A loosed spell keeps `SPELL_SUSTAIN_SHARE` (0.5)
+   of its force **every round for the rest of the fight** — a combat
+   working goes on biting, a healing working goes on mending. A healing
+   working also fires **mid-fight**, the moment a companion drops below
+   40%, and is tried before a potion because the working comes back next
+   room and the potion does not. (Healing used to be applied *after* the
+   fight and gated on the party surviving it, so the one situation it was
+   drafted for was the one situation it could never fire in: 87% of runs
+   by a heal-heavy party ended with the party dead and a working still
+   prepared.) This is the shape Aegis of Ash always had,
    and it is what lets spells scale with fight length the way a weapon
    bonus does. Measured: without it, three combat spells lost 33 win
    points to three equipment cards on hard, and *all* of that gap was
@@ -92,9 +99,32 @@ Four rules govern magic:
    prepared combat working goes off. So a grimoire is a reserve you spend
    down toward the throne: one spell is a tool, three are a plan.
 
-Utility and healing workings are deliberately *not* on rules 3 and 4 —
-they are the open balance question, not a finished design
-(DESIGN_DIALOGUE.md §8).
+**The grimoire is front-loaded; the armoury is linear.** This is the
+format's central kit decision, and it is measured rather than asserted
+(DESIGN_DIALOGUE.md §9). Because ordinary rooms ration the grimoire to
+one or two casts, only the first few workings pay full value:
+
+| Held | Spells | Equipment |
+|---|---|---|
+| 0–4 | ~79–86% wins (flat) | 47–59% (climbing) |
+| 5–8 | 71–79% (sagging) | 60–75% (climbing) |
+| 9+ | **55.5%** | **80.0%** |
+
+Two or three workings is one of the strongest things early picks can buy;
+nine is a hoarder's mistake, and it is the error that defines the
+Archmage drafter persona. Note the corollary for analysis: **per-card
+improvement-when-drafted is confounded for a hoarded card type**, because
+a card's win-rate-when-present averages over the pools that contain it.
+Every individual spell reads as a −12 card purely from the company it
+keeps. `MINING_REPORT.md` prints both curves under *Kit-count win curves*
+so the caveat travels with the instrument.
+
+**Utility** workings are the one part of this not yet solved: rules 3 and
+4 are damage-and-mending rules and touch nothing a utility spell does.
+Their real problem is that a whole delve's ordinary rooms cost a party
+~11 health against the boss chamber's 35–43, so a card that makes the
+march safer is optimising a rounding error. The fix is **attrition**, not
+spell tuning (DESIGN_DIALOGUE.md §9).
 
 ---
 

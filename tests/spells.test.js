@@ -16,6 +16,7 @@ import { strict as assert } from 'assert';
 import {
   resolveRoomAction, getRoomOptions, SPELL_SUSTAIN_SHARE,
 } from '../src/encounters/RoomEncounters.js';
+import { composeResolution } from '../src/narrative/Narrator.js';
 import { Party } from '../src/agents/Party.js';
 import { ROOM_TYPES } from '../src/world/DungeonGen.js';
 import { CHARACTER_CARDS, SPELL_CARDS, CLASSES } from '../src/game/Cards.js';
@@ -147,6 +148,96 @@ describe('At the throne the party holds nothing back', () => {
     const three = meanLeft(3);
     assert.ok(three < one,
       `three workings leave the King worse off than one (${three.toFixed(1)} < ${one.toFixed(1)})`);
+  });
+});
+
+describe('A healing working fires when it is needed, not after', () => {
+  /* The defect this covers: healing used to be applied after the fight
+   * and gated on the party still being alive, so the one situation a
+   * heal is drafted for was the one situation it could never fire in.
+   * Measured, 87% of runs by a party holding three healing workings
+   * ended with the party dead and a working still prepared. */
+
+  test('a hurt party looses the working mid-fight, and the prose says which round', () => {
+    const party = new Party([byClass('fighter'), byClass('cleric'), sp('sp-mend')]);
+    // Hurt someone past the threshold before the fight starts
+    party.members[0].takeDamage(Math.ceil(party.members[0].maxHealth * 0.75));
+    const result = resolveRoomAction(bruiser(), party, 'fight');
+    const line = result.preps.find(pr => /mid-fight/.test(pr.text));
+    assert.ok(line, 'the working is loosed during the fight');
+    assert.match(line.text, /round \d+/, 'and the prose names the round it happened in');
+    assert.match(line.text, /a round while it holds/, 'and that it goes on mending');
+  });
+
+  test('the working is not spent while everyone is healthy', () => {
+    const party = new Party([byClass('fighter'), sp('sp-mend')]);
+    assert.equal(party.castHealIfNeeded(), null, 'nothing to mend, nothing spent');
+    assert.equal(party.grimoire.length, 1, 'and the working is still prepared');
+  });
+
+  test('a badly hurt companion is mended, and the working goes on the cooldown', () => {
+    const party = new Party([byClass('fighter'), byClass('rogue'), sp('sp-mend')]);
+    const victim = party.members[0];
+    victim.takeDamage(Math.ceil(victim.maxHealth * 0.8));
+    const low = victim.health;
+
+    const cast = party.castHealIfNeeded();
+    assert.ok(cast, 'the working fires for someone under the threshold');
+    assert.equal(cast.target.name, victim.name, 'on the one who needed it');
+    assert.ok(victim.health > low, `and it actually heals (${low} → ${victim.health})`);
+
+    // Prepared, so still in the grimoire — but spent for this room
+    assert.equal(party.grimoire.length, 1, 'a prepared working is not consumed');
+    assert.equal(party.castHealIfNeeded(), null, 'but it cannot fire twice in a room');
+    party.restStep();
+    victim.takeDamage(victim.health - 1);
+    assert.ok(party.castHealIfNeeded(), 'and it is ready again on the march');
+  });
+
+  test('the renewable resource is spent before the consumable one', () => {
+    // A prepared working comes back next room; a potion does not. The
+    // party should reach for the working first.
+    const party = new Party([byClass('fighter'), sp('sp-mend')]);
+    party.potions.push({ name: 'a test draught', heal: 5 });
+    const victim = party.members[0];
+    victim.takeDamage(Math.ceil(victim.maxHealth * 0.8));
+
+    resolveRoomAction(bruiser({ attack: 1, health: 40 }), party, 'fight');
+    assert.equal(party.potions.length, 1, 'the potion is still in the pack');
+  });
+
+  test('the mend reaches the Chronicle even in a fight the party loses', () => {
+    // This is the whole point of the fix, and the case the old
+    // post-fight heal could never reach: the working fires *during* a
+    // losing fight, and the player reads about it.
+    const party = new Party([byClass('fighter'), byClass('cleric'), sp('sp-mend')]);
+    party.members[0].takeDamage(Math.ceil(party.members[0].maxHealth * 0.75));
+    const room = bruiser({ attack: 6, health: 90 });
+    const result = resolveRoomAction(room, party, 'fight');
+    assert.equal(result.success, false, 'a wall of meat this big wins');
+    const prose = composeResolution(room, 'fight', result, party);
+    assert.match(prose, /mid-fight/,
+      'the mend is narrated even though the party lost');
+  });
+
+  test('holding a heal beats holding nothing when the blows are landing', () => {
+    // Same bodies, same wall of meat, 60 trials: the party with a
+    // healing working must end the fight with more health left.
+    const meanLeft = spells => {
+      let total = 0;
+      const trials = 60;
+      for (let i = 0; i < trials; i++) {
+        const party = new Party([byClass('fighter'), byClass('cleric'),
+          ...spells.map(id => sp(id))]);
+        resolveRoomAction(bruiser({ attack: 8, health: 120 }), party, 'fight');
+        total += party.members.reduce((sum, m) => sum + Math.max(0, m.health), 0);
+      }
+      return total / trials;
+    };
+    const bare = meanLeft([]);
+    const healed = meanLeft(['sp-mend', 'sp-balm']);
+    assert.ok(healed > bare,
+      `healing workings keep the party up (${healed.toFixed(1)} > ${bare.toFixed(1)})`);
   });
 });
 

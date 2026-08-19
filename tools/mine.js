@@ -146,6 +146,13 @@ export function aggregate(games, cardIndex) {
 
   // Party-size and class-presence win curves
   const bySize = new Map();
+  // Win rate by how many cards of a type the pool holds. This exists
+  // because per-card IWD is *confounded* for any card type a drafter
+  // persona hoards: every individual spell looked like a -12 card until
+  // these curves showed the truth — pools with 0-4 spells win ~82% and
+  // pools with 9+ win 55%, so a spell's WR-in is dragged down by the
+  // company it keeps, not by the card (DESIGN_DIALOGUE.md §9).
+  const byTypeCount = new Map();
   const byClass = new Map(Object.values(CLASSES).map(c => [c, { with: [0, 0], without: [0, 0] }]));
   const byArchetype = new Map();
   const byTrophies = new Map();
@@ -153,6 +160,13 @@ export function aggregate(games, cardIndex) {
     const size = g.partySize;
     if (!bySize.has(size)) bySize.set(size, [0, 0]);
     bySize.get(size)[0]++; if (g.victory) bySize.get(size)[1]++;
+
+    for (const type of [CARD_TYPES.SPELL, CARD_TYPES.EQUIPMENT]) {
+      const held = Math.min(9, g.poolIds.filter(id => cardIndex.get(id)?.type === type).length);
+      const key = `${type}:${held}`;
+      if (!byTypeCount.has(key)) byTypeCount.set(key, [0, 0]);
+      byTypeCount.get(key)[0]++; if (g.victory) byTypeCount.get(key)[1]++;
+    }
 
     const pool = g.poolIds.map(id => cardIndex.get(id)).filter(Boolean);
     const classes = new Set(pool.filter(c => c.type === CARD_TYPES.CHARACTER).map(c => c.class));
@@ -196,7 +210,7 @@ export function aggregate(games, cardIndex) {
     }
   }
 
-  return { total, totalWins, cardRows, bySize, byClass, byArchetype, byTrophies, byPilot, byAction, byMonster };
+  return { total, totalWins, cardRows, bySize, byTypeCount, byClass, byArchetype, byTrophies, byPilot, byAction, byMonster };
 }
 
 /* ------------------------------------------------------------------ */
@@ -237,6 +251,26 @@ export function renderReport(agg, { tables, difficulty, minSample } = {}) {
   L.push('', '## Party-size win curve', '', '| Characters | Games | Win % |', '|---|---|---|');
   for (const [size, [n, w]] of [...agg.bySize.entries()].sort((a, b) => a[0] - b[0])) {
     L.push(`| ${size} | ${n} | ${pct(w / n)} |`);
+  }
+
+  if (agg.byTypeCount) {
+    L.push('', '## Kit-count win curves (read this before trusting IWD)', '',
+      'How the pool\'s *composition* pays off. Equipment scales with count;',
+      'spells are flat to about four and then fall away, because ordinary',
+      'rooms only ration one or two casts. This is why per-card IWD',
+      'understates every individual spell — spell-hoarding pools lose, and',
+      'they drag down the WR-in of each spell they happen to contain.', '',
+      '| Held | Spells: games | Spells: win % | Equipment: games | Equipment: win % |',
+      '|---|---|---|---|---|');
+    for (let k = 0; k <= 9; k++) {
+      const sp = agg.byTypeCount.get(`${CARD_TYPES.SPELL}:${k}`);
+      const eq = agg.byTypeCount.get(`${CARD_TYPES.EQUIPMENT}:${k}`);
+      if (!sp && !eq) continue;
+      const cell = row => (row && row[0] >= 30 ? [row[0], pct(row[1] / row[0])] : ['—', '—']);
+      const [sn, sw] = cell(sp);
+      const [en, ew] = cell(eq);
+      L.push(`| ${k}${k === 9 ? '+' : ''} | ${sn} | ${sw} | ${en} | ${ew} |`);
+    }
   }
 
   L.push('', '## Class presence', '', '| Class | WR with | WR without | Delta |', '|---|---|---|---|');

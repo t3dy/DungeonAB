@@ -381,6 +381,32 @@ export class Party {
   }
 
   /**
+   * Loose a prepared healing working mid-fight, on the same instinct
+   * that quaffs a potion.
+   *
+   * The reason this exists: healing used to be applied *after* the
+   * fight, gated on the party still being alive — so the one situation
+   * a healing spell is drafted for was the one situation it could never
+   * fire in. Measured, 87% of runs by a party holding three healing
+   * workings ended with the party dead and a working still prepared in
+   * the grimoire, at a 13% win rate against 38% for three equipment
+   * cards (DESIGN_DIALOGUE.md §9).
+   *
+   * Tried before the potion because a prepared working comes back next
+   * room and a potion does not: spend the renewable resource first.
+   *
+   * Returns the cast working (for narration) or null.
+   */
+  castHealIfNeeded() {
+    const hurt = this.living().find(m => m.health / m.maxHealth <= 0.4);
+    if (!hurt) return null;
+    const heal = this.castSpell('heal');
+    if (!heal) return null;
+    hurt.heal(heal.effectivePower);
+    return { spell: heal, target: hurt };
+  }
+
+  /**
    * Quaff stored potions when badly hurt (auto-battler instinct)
    */
   quaffIfNeeded() {
