@@ -19,6 +19,27 @@ function roll() {
   return Math.random() * 10;
 }
 
+/**
+ * A loosed working does not stop working.
+ *
+ * Measured, this is the whole reason the arcane package lost. In a
+ * controlled A/B — identical bodies and seeds, three equipment cards
+ * against three combat spells — both arms reached the boss ~100% of the
+ * time, and the entire 30-point win gap was the boss chamber itself:
+ * 34.8 damage taken with equipment against 42.9 with spells. A +2
+ * weapon is +2 for all twelve rounds of a boss fight; a one-shot burst
+ * off a large health pool is a rounding error, and the spell arm's
+ * fights ran longer, so it bled more. Equipment scaled with fight
+ * length and spells did not scale at all.
+ *
+ * So a combat working now keeps a share of its force for the rest of
+ * the fight: the fire goes on burning, the frost goes on biting. That
+ * is the same shape Aegis of Ash always had — a ward that blunts
+ * *every* round — which is exactly why it was the least-bad spell in
+ * the pool (DESIGN_DIALOGUE.md §8).
+ */
+export const SPELL_SUSTAIN_SHARE = 0.5;
+
 /* ------------------------------------------------------------------ */
 /* Preparation — what the drafted kit unlocks and improves             */
 /* (FTL's lesson: the encounter should notice how you came equipped)   */
@@ -350,7 +371,8 @@ export function rollFind(party, always = false, rollValue = Math.random()) {
   }
   if (kind === 2) {
     const scroll = SPELL_CARDS[Math.floor(rollValue * 997) % SPELL_CARDS.length];
-    party.grimoire.push({ ...scroll, id: `found-${scroll.id}-${party.grimoire.length}` });
+    // A sealed scroll out of a hoard is one cast and gone
+    party.grimoire.push({ ...scroll, id: `found-${scroll.id}-${party.grimoire.length}`, source: 'found' });
     return { source: scroll.name, find: 'scroll', text: `📜 Also in the hoard: a scroll of ${scroll.name}, added to the grimoire.` };
   }
   const trinket = TRINKETS[Math.floor(rollValue * 991) % TRINKETS.length];
@@ -426,12 +448,12 @@ export function resolveFeatureAction(room, party, optionId) {
     result.weaponMod = { ...action.weaponMod, target: striker.name };
   }
   if (action.spell) {
-    const spell = { ...action.spell, id: `feature-${optionId}-${party.grimoire.length}`, text: 'Taken off a dungeon shelf.' };
+    const spell = { ...action.spell, id: `feature-${optionId}-${party.grimoire.length}`, source: 'prepared', text: 'Taken off a dungeon shelf.' };
     party.grimoire.push(spell);
     result.spell = spell.name;
     // A grimoire to copy into means taking two good pages, not one
     if (action.extraSpell) {
-      const second = { ...action.spell, id: `feature-${optionId}-${party.grimoire.length}`, use: 'utility', text: 'Taken off a dungeon shelf.' };
+      const second = { ...action.spell, id: `feature-${optionId}-${party.grimoire.length}`, use: 'utility', source: 'prepared', text: 'Taken off a dungeon shelf.' };
       party.grimoire.push(second);
       result.extraSpell = true;
     }
@@ -548,6 +570,7 @@ export function resolveRoomAction(room, party, optionId, options = null) {
       // wards blunt every round, summons swing alongside the party
       const itemActions = party.combatItemActions();
       let opening = 0, ward = 0, summon = 0;
+
       for (const a of itemActions) {
         opening += a.opening || 0;
         if (monster.undead) opening += a.vsUndead || 0;
@@ -561,6 +584,15 @@ export function resolveRoomAction(room, party, optionId, options = null) {
       // blades conviction; the forewarned (a tripped alarm) hit harder
       const preps = [];
       const armorShave = monster.trait === 'armored' ? 2 : 0;
+
+      // A prepared ward goes up before the first blow — which is what
+      // Aegis of Ash's card text has always claimed, and what the fight
+      // resolver never implemented (ward came only from items)
+      const aegis = hasSpell(party, 'sp-shield') ? party.castSpell('combat', 'sp-shield') : null;
+      if (aegis) {
+        ward += 2;
+        preps.push({ source: aegis.name, text: `🛡️ ${aegis.name} goes up before the first blow: 2 less damage every round.` });
+      }
 
       // The room fights too: cover blunts every round, a mirror robs
       // the ethereal of its advantage (world/RoomFeatures.js)
@@ -590,6 +622,16 @@ export function resolveRoomAction(room, party, optionId, options = null) {
 
       // An elemental coating on someone's blade bites deeper into
       // flesh that hates its element (the alchemist's bench pays off)
+      // A working loosed at the top of the fight goes on biting
+      // (spell-strike passes its share down; see SPELL_SUSTAIN_SHARE)
+      const spellSustain = options?.spellSustain || 0;
+      if (spellSustain > 0) {
+        preps.push({
+          source: options.spellSustainSource || 'the working',
+          text: `✨ The working holds: +${spellSustain} damage every round while the fight lasts.`,
+        });
+      }
+
       const coating = party.coatingBonusVs(monster);
       if (coating.bonus > 0) {
         preps.push({ source: coating.notes.join(' + '), text: `⚗️ The ${coating.notes.join(' and ')} exploits the monster's weakness: +${coating.bonus} damage per round.` });
@@ -603,7 +645,7 @@ export function resolveRoomAction(room, party, optionId, options = null) {
       let phased = false;
       while (monsterHealth > 0 && party.isAlive() && rounds < 12) {
         rounds++;
-        const swing = Math.max(1, Math.round((party.combatAttack() + summon + coating.bonus + Math.floor(roll() / 3)) * etherealMult) - armorShave);
+        const swing = Math.max(1, Math.round((party.combatAttack() + summon + coating.bonus + spellSustain + Math.floor(roll() / 3)) * etherealMult) - armorShave);
         monsterHealth -= swing;
         if (monsterHealth <= 0) break;
         if (monster.isBoss && !phased && monsterHealth <= monster.health / 2) {
@@ -672,30 +714,71 @@ export function resolveRoomAction(room, party, optionId, options = null) {
 
     case 'spell-strike': {
       const monster = room.monster;
-      // The caster reads the foe and reaches for the right working:
-      // the spell whose element bites hardest (Bestiary weaknesses;
-      // swarms take spell openings half again as hard)
-      const combatSpells = party.grimoire.filter(s => s.use === 'combat');
-      let best = null;
-      let bestDmg = -1;
-      for (const s of combatSpells) {
-        const dmg = s.power * elementMult(s, monster);
-        if (dmg > bestDmg) { bestDmg = dmg; best = s; }
-      }
-      const spell = best ? party.castSpell('combat', best.id) : null;
+      // How many workings the party can loose before blades are drawn.
+      // One for anybody; a wizard opens with two, which is the reason
+      // to spend one of four body slots on the class.
+      //
+      // This used to be a flat one cast, and it made the second and
+      // third spell in a grimoire nearly dead cards: equipment scales
+      // linearly with picks, spells did not scale at all. Measured, a
+      // three-spell pool lost 26 win points to three equipment while
+      // one spell lost 9.6 (DESIGN_DIALOGUE.md §8).
+      // Against a boss the party holds nothing back: every prepared
+      // working goes off. Ordinary rooms still ration them, so a
+      // grimoire is a reserve you spend down toward the throne rather
+      // than a battery that fires the same way everywhere.
+      //
+      // This is where it matters. Instrumented, ~100% of A/B runs in
+      // both arms reached the boss and the boss chamber accounted for
+      // *all* of the win-rate difference. Under the old flat cast the
+      // second and third spell in a grimoire were dead cards in the one
+      // fight that decides the run.
+      const combatHeld = party.grimoire.filter(sp => sp.use === 'combat').length;
+      const casts = monster.isBoss
+        ? Math.max(1, combatHeld)
+        : 1 + (party.hasClass(CLASSES.WIZARD) ? 1 : 0);
+      const spellsCast = [];
       let spellEdge = null;
-      if (spell) {
+      let sustain = 0;
+
+      for (let c = 0; c < casts; c++) {
+        // The caster reads the foe and reaches for the right working:
+        // the spell whose element bites hardest (Bestiary weaknesses;
+        // swarms take spell openings half again as hard)
+        // Skip anything already loosed this room, or the second cast
+        // re-picks the same working and castSpell refuses it
+        const combatSpells = party.grimoire.filter(
+          sp => sp.use === 'combat' && !party.castThisRoom.has(sp.id),
+        );
+        let best = null;
+        let bestDmg = -1;
+        for (const sp of combatSpells) {
+          const dmg = sp.power * elementMult(sp, monster);
+          if (dmg > bestDmg) { bestDmg = dmg; best = sp; }
+        }
+        const spell = best ? party.castSpell('combat', best.id) : null;
+        if (!spell) break;                    // nothing left prepared
+
         const mult = elementMult(spell, monster) * (monster.trait === 'swarm' ? 1.5 : 1);
-        if (elementMult(spell, monster) > 1) spellEdge = 'weak';
-        else if (elementMult(spell, monster) < 1) spellEdge = 'resisted';
+        if (elementMult(spell, monster) > 1) spellEdge = spellEdge || 'weak';
+        else if (elementMult(spell, monster) < 1) spellEdge = spellEdge || 'resisted';
         if (monster.trait === 'swarm') spellEdge = spellEdge || 'swarm';
-        monster.health = Math.max(1, monster.health - Math.round(spell.effectivePower * mult));
+        const burst = Math.round(spell.effectivePower * mult);
+        monster.health = Math.max(1, monster.health - burst);
+        // ...and it keeps working for the rest of the fight
+        sustain += Math.round(burst * SPELL_SUSTAIN_SHARE);
+        spellsCast.push(spell);
       }
-      // Then fight the softened monster
-      const result = resolveRoomAction(room, party, 'fight');
-      result.spell = spell ? spell.name : null;
+
+      // Then fight the softened monster, with the workings still up
+      const result = resolveRoomAction(room, party, 'fight', {
+        spellSustain: sustain,
+        spellSustainSource: spellsCast.map(sp => sp.name).join(' + ') || null,
+      });
+      result.spell = spellsCast[0]?.name || null;
+      result.spellsCast = spellsCast.map(sp => sp.name);
       result.spellEdge = spellEdge;
-      result.spellElement = spell?.element || null;
+      result.spellElement = spellsCast[0]?.element || null;
       return result;
     }
 
@@ -895,7 +978,8 @@ export function resolveRoomAction(room, party, optionId, options = null) {
         party.grimoire.push({
           id: `learned-${Date.now()}-${i}`, name: 'Found Cantrip', icon: '📜',
           school: 'found', power: 3, use: Math.random() < 0.5 ? 'combat' : 'utility',
-          text: 'Copied from the stacks.',
+          // Copied into the grimoire by hand, so it is prepared, not sealed
+          source: 'prepared', text: 'Copied from the stacks.',
         });
       }
       room.cleared = true;
@@ -914,7 +998,8 @@ export function resolveRoomAction(room, party, optionId, options = null) {
         party.addScore(50);
         party.grimoire.push({
           id: `sealed-${Date.now()}`, name: 'Sealed Working', icon: '🔏',
-          school: 'forbidden', power: 6, use: 'combat', text: 'The margins screamed. The wizard did not.',
+          school: 'forbidden', power: 6, use: 'combat', source: 'prepared',
+          text: 'The margins screamed. The wizard did not.',
         });
       } else {
         party.takeDamage(4);

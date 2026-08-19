@@ -313,3 +313,140 @@ fifth pick is now insurance with a name, sitting in town, waiting for
 someone to die. The town screen calls them up for free. That's a small
 narrative engine — the understudy — that only exists because the cap
 made "one more body" a decision instead of a default.
+
+---
+
+## 8. The arcane package, diagnosed and fixed (measured, 2026-08-19)
+
+§7 named the spell package as "the clearest balance problem in the
+game" and left it there. This section is the work of closing it, and
+the honest account of how much is closed.
+
+### What was actually wrong (three causes, only two suspected)
+
+**TCG:** We had three hypotheses. Two were right and one was a red
+herring, which is exactly why we measured instead of patching.
+
+1. **Drafted spells burned on use.** A spell you spent a pick on was a
+   one-shot, while a weapon you spent a pick on was permanent. Fixed by
+   splitting the grimoire: drafted workings are *prepared* — reusable
+   run-long, spent once per room — and only scrolls **found** in the
+   dungeon burn. Card text and the help now say which is which.
+2. **`mind` bought nothing.** Wizards were built around a stat with no
+   payout. Spell power is now `power + ⌊best mind ÷ 2⌋`, +2 more with a
+   wizard present, so the class and the stat finally point at each other.
+3. **The wizard was a 24-point body competing for one of four slots
+   against 38-point fighters.** The character pool had never been
+   costed: fighters ran 36–40 points on a documented cap of 34, wizards
+   22–26. Every character is now costed at exactly 30
+   (`health + 2·attack + 2·defense + mind`), the pool's own historical
+   mean, so parity cost no power. Two invariant tests in
+   `tests/balance.test.js` now hold the line, one on equal cost and one
+   on each class still *reading* as itself.
+
+That trio fixed the **characters**: average improvement-when-drafted by
+card type went from Melchior at −22 to characters sitting at +0.6 to
++1.2 across every difficulty. It barely moved the **spells**, which
+stayed at −19.4 on hard against equipment's +14.2. So the red herring
+was ours: we had assumed one-shot-ness was the binding constraint.
+
+### The real constraint: spells had no presence in a long fight
+
+**TCG:** So we stopped reasoning and built a controlled A/B — identical
+four bodies, identical seeds, three top equipment cards in one arm and
+three combat spells in the other. The gap was **33 points on hard**
+(50.0% vs 17.0%) and 23.6 on medium. Then we instrumented where the
+health actually went, and the answer was unambiguous:
+
+| | equipment arm | spell arm |
+|---|---|---|
+| Reached the boss | 400/400 | 398/400 |
+| Damage taken, ordinary rooms | ~11 total | ~12 total |
+| Damage taken, **boss chamber** | **34.8** | **42.9** |
+| Died in the boss chamber | 202 | 324 |
+
+Both arms walked to the throne. **The entire win-rate gap was the boss
+fight**, and the spell arm took *more* damage there, not less — because
+its fights ran longer. A +2 weapon is +2 for all twelve rounds of a
+boss. A one-shot burst against a large health pool is a rounding error.
+Equipment scaled with fight length and spells did not scale at all.
+
+**NARR:** Which is also a fiction problem, and the fiction told us the
+fix. Fire that lands does not politely stop burning for the remaining
+eleven rounds. The mechanic was less realistic than the prose.
+
+### Two changes, both aimed at the boss chamber
+
+1. **A working holds.** A loosed combat spell keeps half its force
+   (`SPELL_SUSTAIN_SHARE = 0.5`) as damage *every round for the rest of
+   the fight*. This is the shape Aegis of Ash always had — a ward that
+   blunts every round — which is precisely why Aegis was the least-bad
+   spell in the pool. Now every combat working works that way.
+2. **At the throne the party holds nothing back.** Ordinary rooms still
+   ration the grimoire (one working, two with a wizard). Against a boss,
+   *every* prepared combat working goes off. Under the old flat cast the
+   second and third spell in a grimoire were dead cards in the one fight
+   that decides the run.
+
+Together these make a grimoire **a reserve you spend down toward the
+throne**: one spell is a tool, three are a plan.
+
+### What it bought (and what it did not)
+
+Controlled A/B, same bodies and seeds throughout:
+
+| | before | sustain only | sustain + boss unleash |
+|---|---|---|---|
+| hard, equipment arm | 50.0% | 54.2% | 58.6% |
+| hard, spell arm | 17.0% | 38.2% | 53.6% |
+| **hard gap** | **33.0** | **16.0** | **5.0** |
+| medium gap | 23.6 | — | **13.8** |
+
+The three-spell *archetype* is now within 5 points of the three-equipment
+archetype on hard. That is the headline, and it is a real fix rather
+than a difficulty cut: both arms rose, so we re-swept `STAT_SCALE` a
+second time to put the curve back on its target (88% medium / 71% hard /
+45% nightmare), and the measured curve is now 99.1 / 88.8 / 71.1 / 42.3.
+
+At the population level the change is real but smaller — worst spell
+improved from −22.6 to −18.5 IWD, and the bottom ten tightened from a
+−18-to-−23 spread to −14-to-−18. **This is the correct result, not a
+disappointment, and the difference is worth being precise about.** IWD
+asks "what is *one* of these worth"; most mined pools hold one or two
+combat spells, so the boss unleash rarely has a third working to spend.
+The A/B asks "what is the *package* worth". A package fix should move
+the A/B a lot and the per-card IWD a little, which is what happened.
+
+**TCG:** And I'd argue the residual per-card gap should *stay*. Spells
+are a package that pays at the throne; equipment is modular and pays
+everywhere. That is an articulable difference between two card types
+rather than a bug, and it creates the draft tension we wanted in §4 —
+committing to the grimoire is a plan you can be punished for abandoning.
+
+### What is still open (the next unit of work)
+
+Two findings we are deliberately not fixing in this pass, because both
+are design decisions rather than defects:
+
+1. **Utility and healing workings are now the worst cards in the game.**
+   Sustain and the boss unleash only touch *combat* spells, so the
+   bottom of the list is Mending Word (−18.5), Dancing Light (−15.7),
+   Balm of Hours (−15.1), Feather Step (−14.6), Eyes of the Mouse
+   (−14.4). They are situational one-liners in a game whose damage is
+   concentrated in one room. They need either a per-round shape of their
+   own or a reason to matter *before* the throne.
+2. **The Archmage persona still wins 47.9% where the Warlord wins
+   84.3%.** The archetype gap narrowed but the *pilot* gap did not,
+   because the Archmage over-drafts spells relative to bodies and
+   equipment and one spell is still worth less than one item. Whether
+   that is the persona drafting badly (fine — it is a .50-skill
+   persona) or the format punishing a legitimate archetype too hard is
+   the open question, and it is answered by deciding item 1.
+
+**NARR:** Worth saying what the fix did to the writing, too. "The
+working holds: +N damage every round while the fight lasts" is a line
+the player now sees in the boss chamber, and it lands as a *promise
+kept* — the spell they drafted eight picks ago is still doing something
+in the fight that decides the run. That is the trophy-case lesson again:
+a mechanic the player can watch paying off is worth more than the same
+mechanic resolved silently in the maths.

@@ -161,7 +161,8 @@ export function claimDrop(party, monster) {
       outcome = `${drop.count} alchemy material${drop.count === 1 ? '' : 's'}`;
       break;
     case 'scroll':
-      party.grimoire.push({ ...drop.spell, id: `drop-${monster?.kind || 'unknown'}-${dropCounter}` });
+      // Taken off a corpse sealed: one cast and it burns (Party.castSpell)
+      party.grimoire.push({ ...drop.spell, id: `drop-${monster?.kind || 'unknown'}-${dropCounter}`, source: 'found' });
       outcome = `a scroll of ${drop.spell.name} (${drop.spell.use}, power ${drop.spell.power}), added to the grimoire`;
       break;
     case 'gold':

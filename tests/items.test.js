@@ -15,6 +15,7 @@ import { scoreCard, DRAFT_PERSONAS } from '../src/draft/PackDraft.js';
 const fighter = CHARACTER_CARDS.find(c => c.class === CLASSES.FIGHTER);
 const fighter2 = CHARACTER_CARDS.filter(c => c.class === CLASSES.FIGHTER)[1];
 const fighter3 = CHARACTER_CARDS.filter(c => c.class === CLASSES.FIGHTER)[2];
+const fighter4 = CHARACTER_CARDS.filter(c => c.class === CLASSES.FIGHTER)[3];
 const wizard = CHARACTER_CARDS.find(c => c.class === CLASSES.WIZARD);
 const cleric = CHARACTER_CARDS.find(c => c.class === CLASSES.CLERIC);
 const wand = EQUIPMENT_CARDS.find(e => e.id === 'eq-wand-embers');
@@ -83,13 +84,14 @@ describe('Class-keyed items in combat', () => {
   });
 
   test('a ward blunts every round of incoming damage', () => {
-    // Three fighters against an unkillable wall: the fight runs the
-    // full 12 rounds with everyone surviving, so damage taken is a
-    // clean per-round comparison. (Attack 6 keeps the party alive.)
-    const bigMonster = () => ({ type: ROOM_TYPES.MONSTER, monster: { name: 'the wall of teeth', attack: 6, health: 999 } });
+    // A capped party of four fighters against an unkillable wall: the
+    // fight runs the full 12 rounds with everyone surviving, so damage
+    // taken is a clean per-round comparison. (Attack 7 keeps them alive
+    // with headroom against the recosted stat lines.)
+    const bigMonster = () => ({ type: ROOM_TYPES.MONSTER, monster: { name: 'the wall of teeth', attack: 7, health: 999 } });
 
-    const unwarded = new Party([fighter, fighter2, fighter3]);
-    const warded = new Party([fighter, fighter2, fighter3, symbol]); // fighter gets Shield of Faith (ward 1)
+    const unwarded = new Party([fighter, fighter2, fighter3, fighter4]);
+    const warded = new Party([fighter, fighter2, fighter3, fighter4, symbol]); // fighter gets Shield of Faith (ward 1)
 
     const plain = resolveRoomAction(bigMonster(), unwarded, 'fight');
     const shielded = resolveRoomAction(bigMonster(), warded, 'fight');

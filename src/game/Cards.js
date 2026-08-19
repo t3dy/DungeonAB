@@ -28,30 +28,30 @@ export const CLASSES = {
 
 export const CHARACTER_CARDS = [
   // Fighters — front line, high health, taunt
-  { id: 'char-brand', type: CARD_TYPES.CHARACTER, class: CLASSES.FIGHTER, name: 'Brand of the Broken Shield', icon: '⚔️', stats: { health: 18, attack: 5, defense: 4, mind: 2 }, trait: 'Holds the door: takes hits meant for the back rank.' },
-  { id: 'char-ursula', type: CARD_TYPES.CHARACTER, class: CLASSES.FIGHTER, name: 'Ursula Ironknee', icon: '⚔️', stats: { health: 20, attack: 4, defense: 5, mind: 2 }, trait: 'Unmovable. Refuses to fall while anyone stands behind her.' },
-  { id: 'char-kestrel', type: CARD_TYPES.CHARACTER, class: CLASSES.FIGHTER, name: 'Kestrel Quickblade', icon: '⚔️', stats: { health: 15, attack: 6, defense: 3, mind: 3 }, trait: 'Strikes first in every fight.' },
+  { id: 'char-brand', type: CARD_TYPES.CHARACTER, class: CLASSES.FIGHTER, name: 'Brand of the Broken Shield', icon: '⚔️', stats: { health: 14, attack: 4, defense: 3, mind: 2 }, trait: 'Holds the door: takes hits meant for the back rank.' },
+  { id: 'char-ursula', type: CARD_TYPES.CHARACTER, class: CLASSES.FIGHTER, name: 'Ursula Ironknee', icon: '⚔️', stats: { health: 14, attack: 3, defense: 4, mind: 2 }, trait: 'Unmovable. Refuses to fall while anyone stands behind her.' },
+  { id: 'char-kestrel', type: CARD_TYPES.CHARACTER, class: CLASSES.FIGHTER, name: 'Kestrel Quickblade', icon: '⚔️', stats: { health: 13, attack: 5, defense: 2, mind: 3 }, trait: 'Strikes first in every fight.' },
 
   // Clerics — healing, undead turning
-  { id: 'char-benedicta', type: CARD_TYPES.CHARACTER, class: CLASSES.CLERIC, name: 'Sister Benedicta', icon: '✨', stats: { health: 13, attack: 2, defense: 3, mind: 5 }, trait: 'Mends wounds between rooms; turns the restless dead.' },
+  { id: 'char-benedicta', type: CARD_TYPES.CHARACTER, class: CLASSES.CLERIC, name: 'Sister Benedicta', icon: '✨', stats: { health: 14, attack: 2, defense: 3, mind: 6 }, trait: 'Mends wounds between rooms; turns the restless dead.' },
   { id: 'char-oswald', type: CARD_TYPES.CHARACTER, class: CLASSES.CLERIC, name: 'Brother Oswald of the Lantern', icon: '✨', stats: { health: 14, attack: 3, defense: 3, mind: 4 }, trait: 'His lantern light steadies the whole party\'s nerve.' },
 
   // Wizards — spell power, fragile
-  { id: 'char-melchior', type: CARD_TYPES.CHARACTER, class: CLASSES.WIZARD, name: 'Melchior the Moth-Eaten', icon: '🔮', stats: { health: 9, attack: 2, defense: 1, mind: 7 }, trait: 'Doubles the power of any spell the party casts.' },
-  { id: 'char-sylvane', type: CARD_TYPES.CHARACTER, class: CLASSES.WIZARD, name: 'Sylvane of the Nine Candles', icon: '🔮', stats: { health: 10, attack: 3, defense: 2, mind: 6 }, trait: 'Reads sealed doors and cursed scripts aloud, safely. Usually.' },
+  { id: 'char-melchior', type: CARD_TYPES.CHARACTER, class: CLASSES.WIZARD, name: 'Melchior the Moth-Eaten', icon: '🔮', stats: { health: 12, attack: 2, defense: 3, mind: 8 }, trait: 'Doubles the power of any spell the party casts.' },
+  { id: 'char-sylvane', type: CARD_TYPES.CHARACTER, class: CLASSES.WIZARD, name: 'Sylvane of the Nine Candles', icon: '🔮', stats: { health: 11, attack: 3, defense: 3, mind: 7 }, trait: 'Reads sealed doors and cursed scripts aloud, safely. Usually.' },
 
   // Rogues — traps, locks, scouting, treasure
-  { id: 'char-vex', type: CARD_TYPES.CHARACTER, class: CLASSES.ROGUE, name: 'Vex Threefingers', icon: '🗡️', stats: { health: 11, attack: 4, defense: 2, mind: 5 }, trait: 'Disarms traps and picks locks; finds the hidden coin.' },
-  { id: 'char-mouse', type: CARD_TYPES.CHARACTER, class: CLASSES.ROGUE, name: 'The Mouse', icon: '🗡️', stats: { health: 10, attack: 5, defense: 2, mind: 4 }, trait: 'Scouts one room ahead. Nobody has ever seen The Mouse first.' },
+  { id: 'char-vex', type: CARD_TYPES.CHARACTER, class: CLASSES.ROGUE, name: 'Vex Threefingers', icon: '🗡️', stats: { health: 12, attack: 4, defense: 2, mind: 6 }, trait: 'Disarms traps and picks locks; finds the hidden coin.' },
+  { id: 'char-mouse', type: CARD_TYPES.CHARACTER, class: CLASSES.ROGUE, name: 'The Mouse', icon: '🗡️', stats: { health: 11, attack: 5, defense: 2, mind: 5 }, trait: 'Scouts one room ahead. Nobody has ever seen The Mouse first.' },
 
   // Alchemists — potions, weapon mods, labs
-  { id: 'char-paracelsus', type: CARD_TYPES.CHARACTER, class: CLASSES.ALCHEMIST, name: 'Paracelsus the Lesser', icon: '⚗️', stats: { health: 12, attack: 3, defense: 2, mind: 6 }, trait: 'Brews potions and mods weapons at any lab bench he finds.' },
-  { id: 'char-perenelle', type: CARD_TYPES.CHARACTER, class: CLASSES.ALCHEMIST, name: 'Perenelle of the Green Lion', icon: '⚗️', stats: { health: 11, attack: 2, defense: 3, mind: 6 }, trait: 'Distills two potions from every lab instead of one.' },
+  { id: 'char-paracelsus', type: CARD_TYPES.CHARACTER, class: CLASSES.ALCHEMIST, name: 'Paracelsus the Lesser', icon: '⚗️', stats: { health: 13, attack: 3, defense: 2, mind: 7 }, trait: 'Brews potions and mods weapons at any lab bench he finds.' },
+  { id: 'char-perenelle', type: CARD_TYPES.CHARACTER, class: CLASSES.ALCHEMIST, name: 'Perenelle of the Green Lion', icon: '⚗️', stats: { health: 12, attack: 2, defense: 3, mind: 8 }, trait: 'Distills two potions from every lab instead of one.' },
 
   // Second wave — one more face per class, for wider tables
-  { id: 'char-gunnhild', type: CARD_TYPES.CHARACTER, class: CLASSES.FIGHTER, name: 'Gunnhild Half-Door', icon: '⚔️', stats: { health: 17, attack: 5, defense: 5, mind: 1 }, trait: 'Got her name blocking one. Has never explained which half.' },
-  { id: 'char-ash', type: CARD_TYPES.CHARACTER, class: CLASSES.CLERIC, name: 'Canoness Ash', icon: '✨', stats: { health: 12, attack: 3, defense: 2, mind: 6 }, trait: 'Buried three orders of her own sisters. The dead listen when she talks.' },
-  { id: 'char-yarrow', type: CARD_TYPES.CHARACTER, class: CLASSES.WIZARD, name: 'Old Yarrow', icon: '🔮', stats: { health: 11, attack: 2, defense: 2, mind: 6 }, trait: 'Forgot more magic than most learn. Occasionally remembers it mid-fight.' },
+  { id: 'char-gunnhild', type: CARD_TYPES.CHARACTER, class: CLASSES.FIGHTER, name: 'Gunnhild Half-Door', icon: '⚔️', stats: { health: 13, attack: 4, defense: 4, mind: 1 }, trait: 'Got her name blocking one. Has never explained which half.' },
+  { id: 'char-ash', type: CARD_TYPES.CHARACTER, class: CLASSES.CLERIC, name: 'Canoness Ash', icon: '✨', stats: { health: 13, attack: 3, defense: 3, mind: 5 }, trait: 'Buried three orders of her own sisters. The dead listen when she talks.' },
+  { id: 'char-yarrow', type: CARD_TYPES.CHARACTER, class: CLASSES.WIZARD, name: 'Old Yarrow', icon: '🔮', stats: { health: 13, attack: 2, defense: 2, mind: 9 }, trait: 'Forgot more magic than most learn. Occasionally remembers it mid-fight.' },
   { id: 'char-silin', type: CARD_TYPES.CHARACTER, class: CLASSES.ROGUE, name: 'Silin the Debt', icon: '🗡️', stats: { health: 12, attack: 4, defense: 3, mind: 4 }, trait: 'Owes everyone. Pays in doors opened and knives thrown.' },
   { id: 'char-crucible', type: CARD_TYPES.CHARACTER, class: CLASSES.ALCHEMIST, name: 'Magister Crucible', icon: '⚗️', stats: { health: 13, attack: 3, defense: 3, mind: 5 }, trait: 'Expelled from three academies. Each explosion taught him something.' },
 ];
@@ -170,10 +170,10 @@ export const EQUIPMENT_CARDS = [
 /* ------------------------------------------------------------------ */
 
 export const SPELL_CARDS = [
-  { id: 'sp-firebolt', type: CARD_TYPES.SPELL, name: 'Firebolt', icon: '🔥', school: 'evocation', element: 'fire', power: 4, use: 'combat', text: 'Opens combat with 4 damage before blades are drawn.' },
+  { id: 'sp-firebolt', type: CARD_TYPES.SPELL, name: 'Firebolt', icon: '🔥', school: 'evocation', element: 'fire', power: 4, use: 'combat', text: 'Opens combat with 4 damage before blades are drawn, and goes on burning while the fight lasts.' },
   { id: 'sp-mend', type: CARD_TYPES.SPELL, name: 'Mending Word', icon: '💚', school: 'restoration', power: 5, use: 'heal', text: 'Restores 5 health to the most wounded companion.' },
   { id: 'sp-knock', type: CARD_TYPES.SPELL, name: 'Knock', icon: '🚪', school: 'transmutation', power: 3, use: 'utility', text: 'Opens any lock. Loudly.' },
-  { id: 'sp-shield', type: CARD_TYPES.SPELL, name: 'Aegis of Ash', icon: '🛡️', school: 'abjuration', power: 3, use: 'combat', text: 'Blunts the first blow in each fight.' },
+  { id: 'sp-shield', type: CARD_TYPES.SPELL, name: 'Aegis of Ash', icon: '🛡️', school: 'abjuration', power: 3, use: 'combat', text: 'Blunts every blow of the fight, not just the first.' },
   { id: 'sp-light', type: CARD_TYPES.SPELL, name: 'Dancing Light', icon: '💡', school: 'evocation', power: 2, use: 'utility', text: 'Reveals traps and ambushes in the next room.' },
   { id: 'sp-fear', type: CARD_TYPES.SPELL, name: 'Cause Fear', icon: '😱', school: 'necromancy', power: 4, use: 'combat', text: 'Weak monsters flee before the fight begins.' },
   { id: 'sp-chain', type: CARD_TYPES.SPELL, name: 'Chain Lightning', icon: '⚡', school: 'evocation', element: 'shock', power: 5, use: 'combat', text: 'Arcs from foe to foe until it runs out of foes or enthusiasm.' },

@@ -16,7 +16,7 @@ import { ROOM_TYPES } from '../world/DungeonGen.js';
 export const ROOM_HELP = {
   [ROOM_TYPES.ENTRANCE]: 'The way in. The party gathers its nerve.',
   [ROOM_TYPES.CORRIDOR]: 'Just passage — a breath between dangers.',
-  [ROOM_TYPES.MONSTER]: 'A monster. The party may fight, flee, sneak past (rogue), turn undead (cleric), bribe, or open with a spell. Every slain monster drops a trophy worth carrying.',
+  [ROOM_TYPES.MONSTER]: 'A monster. The party may fight, flee, sneak past (rogue), turn undead (cleric), bribe, or open with a spell — and a spell opening keeps working through the fight. Every slain monster drops a trophy worth carrying.',
   [ROOM_TYPES.TRAP]: 'A trap. Rogues disarm it; the bold shove through and take the hit.',
   [ROOM_TYPES.TREASURE]: 'Treasure — and maybe a mimic. Loot it, inspect first, or leave the bait.',
   [ROOM_TYPES.LIBRARY]: 'A library. The party can learn a spell; wizards risk the sealed texts for more.',
@@ -24,7 +24,7 @@ export const ROOM_HELP = {
   [ROOM_TYPES.LAB]: 'An alchemist\'s bench. With materials, brew a potion or coat a weapon.',
   [ROOM_TYPES.MATERIALS]: 'Herbs and salts — raw materials for alchemy, if you gather them.',
   [ROOM_TYPES.DISASTER]: 'The dungeon itself turns hostile. Brace together, or scatter and pray.',
-  [ROOM_TYPES.BOSS]: 'The boss chamber. Everything you drafted, tested at once.',
+  [ROOM_TYPES.BOSS]: 'The boss chamber. Everything you drafted, tested at once — and the party looses every prepared working it has kept for this.',
   [ROOM_TYPES.VAULT]: 'A vault — riches hidden behind a secret door. Rogues and scholars find these.',
 };
 
@@ -34,7 +34,7 @@ export const ROOM_HELP = {
 export const CARD_TYPE_HELP = [
   { type: 'character', label: 'Character', text: 'A named hero of one of five classes. Four march — the rest wait in town as reserves, ready to replace the dead.' },
   { type: 'equipment', label: 'Equipment', text: 'Auto-assigns to the best-fit member. Some items do different things per class.' },
-  { type: 'spell', label: 'Spell', text: 'Shared grimoire. A scroll burns after one cast — unless a wizard makes it repeatable.' },
+  { type: 'spell', label: 'Spell', text: 'A prepared working in the shared grimoire: reusable, but spent for the room once cast. Power scales with the party\'s sharpest mind, and a loosed working keeps biting for the rest of the fight. A wizard amplifies it and opens ordinary fights with two — and at the boss the party looses every working it has. Scrolls found in the dungeon still burn.' },
   { type: 'personality', label: 'Personality', text: 'Biases the whole party\'s decisions. Some look weak but hide an upside.' },
 ];
 

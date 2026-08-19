@@ -55,16 +55,34 @@ describe('Party assembly', () => {
     assert.equal(w.health, w.maxHealth, 'wizard untouched behind the line');
   });
 
-  test('wizards make the grimoire reusable; scrolls burn without one', () => {
+  test('prepared workings persist and recharge; found scrolls burn', () => {
     const bolt = SPELL_CARDS.find(s => s.use === 'combat');
-    const noWiz = new Party([fighter, bolt]);
-    noWiz.castSpell('combat');
-    assert.equal(noWiz.grimoire.length, 0, 'scroll burned');
 
-    const withWiz = new Party([wizard, bolt]);
-    const cast = withWiz.castSpell('combat');
-    assert.equal(withWiz.grimoire.length, 1, 'wizard keeps the spell');
-    assert.ok(cast.effectivePower > bolt.power, 'wizard amplifies');
+    // A drafted spell is a prepared working: it stays in the grimoire,
+    // but it is spent for the room once cast
+    const party = new Party([fighter, bolt]);
+    assert.ok(party.castSpell('combat'), 'the first cast works');
+    assert.equal(party.grimoire.length, 1, 'a drafted card is not consumed');
+    assert.equal(party.castSpell('combat'), null, 'but it is spent for this room');
+    party.restStep();
+    assert.ok(party.castSpell('combat'), 'and ready again on the march');
+
+    // A sealed scroll out of a hoard is one cast and gone
+    const scrolled = new Party([fighter]);
+    scrolled.grimoire.push({ ...bolt, id: 'found-bolt', source: 'found' });
+    assert.ok(scrolled.castSpell('combat'));
+    assert.equal(scrolled.grimoire.length, 0, 'the scroll burned');
+  });
+
+  test('mind buys spell power, and a wizard amplifies on top', () => {
+    const bolt = SPELL_CARDS.find(s => s.use === 'combat');
+    const brawn = new Party([fighter, bolt]);
+    const arcane = new Party([wizard, bolt]);
+    const plain = brawn.castSpell('combat');
+    const amped = arcane.castSpell('combat');
+    assert.ok(plain.effectivePower >= bolt.power, 'mind never subtracts');
+    assert.ok(amped.effectivePower > plain.effectivePower,
+      `the wizard's mind and amplification tell (${amped.effectivePower} > ${plain.effectivePower})`);
   });
 
   test('alchemy needs an alchemist and materials', () => {

@@ -35,7 +35,7 @@ A **narrative dungeon-crawling autobattler**. The player drafts a party MTG-styl
 ### Card Types (one pick = one card of any type)
 - **Character** — a named adventurer of one of 5 classes: **Fighter, Cleric, Wizard, Rogue, Alchemist**. **A party is four** (`Party.PARTY_CAP`): the first four in draft order march, and any beyond that wait in town as the **reserve**, free to call up when someone dies. The cap replaced "draft every body," which measured as the dominant line (AUDIT.md D1: five bare bodies won 100% of medium runs) and solved the draft.
 - **Equipment** — auto-assigned to the best-fit member (fighters get shields, rogues get lockpicks); class-agnostic pieces exist.
-- **Spell** — party-wide magic. Wizards amplify spell power; anyone can carry a scroll.
+- **Spell** — party-wide magic in a shared grimoire. A **drafted** working is *prepared*: reusable run-long, spent once per room. A scroll **found** in the dungeon *burns* on use. Power is `power + ⌊best mind ÷ 2⌋`, +2 more with a wizard present; a loosed combat working keeps half its force every round for the rest of the fight, and in the boss chamber the party looses every working it has. See **The Grimoire** below.
 - **Personality** — archetypes that bias the whole party's decisions (The Bold, The Cunning, The Covetous, The Scholarly, The Devout, The Reckless).
 
 ### Pack Construction (guaranteed coverage)
@@ -55,8 +55,46 @@ Each AI seat has a **draft persona** (e.g. "Warlord" prioritizes fighters+weapon
   - **Rogue** — disarms traps, picks locks, scouts ahead, finds hidden treasure.
   - **Alchemist** — at **lab rooms**, brews potions and applies **weapon mods** from materials gathered in the dungeon.
 - Equipment assigns automatically to best-fit members (draft decides the pool, the party sorts itself).
-- Spells are a shared grimoire; casting uses them per-run (scrolls) unless a wizard is present to make them repeatable.
+- Spells are a shared grimoire — see **The Grimoire** for the prepared/found split, mind scaling, sustain, and the boss unleash.
 - Personalities apply party-wide, expressed per class (Megabase RPG Auto-Battler Concept).
+
+---
+
+## The Grimoire
+
+Every character is costed at exactly **30** points
+(`health + 2·attack + 2·defense + mind`) against a documented cap of 34,
+so a wizard and a fighter are genuinely competing for the same one of
+four party slots. Before this the pool was silently uncosted — fighters
+ran 36–40, wizards 22–26 — and that alone was most of why the arcane
+package lost (DESIGN_DIALOGUE.md §8). Two invariant tests hold the line.
+
+Four rules govern magic:
+
+1. **Prepared vs found.** A spell you *drafted* is prepared: it comes
+   back every room, but each working can only be cast once before the
+   party moves on. A scroll *found* in the dungeon burns on use. A pick
+   spent on a spell buys a permanent capability, the way a pick spent on
+   a weapon always did.
+2. **Mind pays.** Effective power is `power + ⌊best mind ÷ 2⌋`, +2 more
+   if a wizard is in the party — so the stat the wizard is built around
+   finally has a payout, and a high-minded character improves every
+   working the party holds.
+3. **A working holds.** A loosed combat spell keeps
+   `SPELL_SUSTAIN_SHARE` (0.5) of its burst as damage **every round for
+   the rest of the fight**. This is the shape Aegis of Ash always had,
+   and it is what lets spells scale with fight length the way a weapon
+   bonus does. Measured: without it, three combat spells lost 33 win
+   points to three equipment cards on hard, and *all* of that gap was
+   the boss chamber.
+4. **At the throne, nothing is held back.** Ordinary rooms ration the
+   grimoire — one working, two with a wizard. Against a **boss**, every
+   prepared combat working goes off. So a grimoire is a reserve you spend
+   down toward the throne: one spell is a tool, three are a plan.
+
+Utility and healing workings are deliberately *not* on rules 3 and 4 —
+they are the open balance question, not a finished design
+(DESIGN_DIALOGUE.md §8).
 
 ---
 

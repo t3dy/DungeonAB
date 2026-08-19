@@ -6,6 +6,7 @@ import { strict as assert } from 'assert';
 import { generateDungeon, STAT_SCALE, ROOM_TYPES } from '../src/world/DungeonGen.js';
 import { Party, PARTY_CAP } from '../src/agents/Party.js';
 import { CHARACTER_CARDS } from '../src/game/Cards.js';
+import { BUDGETS, validateCard } from '../src/game/CardPacks.js';
 
 function bossOf(dungeon) {
   return dungeon.rooms.find(r => r.type === ROOM_TYPES.BOSS).monster;
@@ -62,6 +63,37 @@ describe('Corridor frontage', () => {
     const combat = mob.combatAttack();
     const total = mob.totalAttack();
     assert.equal(combat, total, `a capped party swings in full (${combat})`);
+  });
+
+  test('every character costs the same, and no card breaks the cap', () => {
+    // The pool used to be silently uncosted: fighters ran 36-40 points
+    // while wizards ran 22-26, all against a documented cap of 34. A
+    // 24-point body and a 38-point body cannot compete for the same one
+    // of four party slots, which is most of why the arcane package lost
+    // (DESIGN_DIALOGUE.md §8). Equalized at 30 — the pool's own mean, so
+    // parity cost no power — with the 34 cap left as real headroom.
+    const cost = c => c.stats.health + c.stats.attack * 2 + c.stats.defense * 2 + c.stats.mind;
+    const totals = CHARACTER_CARDS.map(cost);
+    assert.equal(new Set(totals).size, 1,
+      `every character is costed alike (found ${[...new Set(totals)].sort().join(', ')})`);
+    for (const c of CHARACTER_CARDS) {
+      assert.ok(cost(c) <= BUDGETS.character.statTotal,
+        `${c.name} is inside the documented budget`);
+      assert.deepEqual(validateCard(c), [], `${c.name} is a legal card`);
+    }
+  });
+
+  test('each class still reads as itself after recosting', () => {
+    const avg = (cls, key) => {
+      const cards = CHARACTER_CARDS.filter(c => c.class === cls);
+      return cards.reduce((s, c) => s + c.stats[key], 0) / cards.length;
+    };
+    // Fighters hold the line, wizards hold the mind: equal cost, not
+    // equal shape
+    assert.ok(avg('fighter', 'defense') > avg('wizard', 'defense'), 'fighters are armoured');
+    assert.ok(avg('fighter', 'attack') > avg('wizard', 'attack'), 'fighters hit harder');
+    assert.ok(avg('wizard', 'mind') > avg('fighter', 'mind'), 'wizards think harder');
+    assert.ok(avg('cleric', 'health') > avg('rogue', 'health'), 'clerics outlast rogues');
   });
 
   test('a fallen adventurer can be replaced from the reserve, but only to the cap', () => {

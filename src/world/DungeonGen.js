@@ -601,13 +601,22 @@ export const DUNGEON_THEMES = {
 
 /**
  * Difficulty multiplier on monster stats — easy dungeons pull their
- * punches, nightmare dungeons do not
+ * punches, nightmare dungeons do not.
+ *
+ * Recalibrated twice. First (2026-07-15) after the arcane fixes
+ * (uniform character costing, prepared spells, mind scaling, the
+ * wizard's second cast) made parties materially stronger: medium had
+ * drifted to 99% wins. Again after sustained workings and the boss
+ * unleash (RoomEncounters.SPELL_SUSTAIN_SHARE), which pushed hard from
+ * 69% to 76%. Both times the target is the same curve the party cap
+ * earned — roughly 88% medium, 71% hard, 45% nightmare — so that a
+ * balance fix never silently doubles as a difficulty cut.
  */
 export const STAT_SCALE = {
-  easy: 0.85,
-  medium: 1.0,
-  hard: 1.3,
-  nightmare: 1.7,
+  easy: 0.9,
+  medium: 1.32,
+  hard: 1.60,
+  nightmare: 1.98,
 };
 
 /* ------------------------------------------------------------------ */

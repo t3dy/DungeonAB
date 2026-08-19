@@ -73,11 +73,16 @@ describe('Skill tiers make different picks from the same pack', () => {
 describe('Skill expression is measurable (the 17lands check)', () => {
   test('across simulated tables, the Prodigy outperforms the Novice', () => {
     // Drafts and dungeons are seeded, but combat rolls come from the
-    // global Math.random, so win rates need a real sample: at 300
-    // games per pilot the Prodigy's edge measures a steady 6-9 points.
+    // global Math.random, so win rates need a real sample. The Prodigy's
+    // edge over the Novice measures 4-8 points — it narrowed from 6-9
+    // when sustained workings and the boss unleash landed, because the
+    // Novice drafts spells more freely than the Prodigy does. At 300
+    // games a pilot the standard error on that difference is ~3.7
+    // points, which flipped this assertion often enough to matter; 900
+    // brings it to ~2.1 and the comparison back inside the noise floor.
     // `hard` is where evaluation starts to matter at all — easy and
     // medium forgive almost any pool (DESIGN_DIALOGUE.md §6).
-    const games = simulate({ tables: PILOT_PERSONAS.length * 300, difficulty: 'hard' });
+    const games = simulate({ tables: PILOT_PERSONAS.length * 900, difficulty: 'hard' });
     const seat0 = id => games.filter(g => g.seat === 0 && g.pilotId === id);
     const wr = id => {
       const mine = seat0(id);

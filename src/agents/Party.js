@@ -54,8 +54,15 @@ export class Party {
       this.members.push(makeTavernVolunteer());
     }
 
-    // Shared grimoire (spell cards; consumed per-use unless a wizard lives)
-    this.grimoire = pool.filter(c => c.type === CARD_TYPES.SPELL).map(c => ({ ...c }));
+    // Shared grimoire. Drafted spells are prepared workings: reusable,
+    // but a given working is spent for the room once cast (castSpell)
+    this.grimoire = pool
+      .filter(c => c.type === CARD_TYPES.SPELL)
+      .map(c => ({ ...c, source: 'prepared' }));
+
+    // Which workings have been spent in the current room (cleared on
+    // the march between rooms by restStep)
+    this.castThisRoom = new Set();
 
     // Personality archetypes (party-wide)
     this.personalities = pool
@@ -282,6 +289,8 @@ export class Party {
     if (this.hasClass(CLASSES.CLERIC)) {
       this.healParty(1);
     }
+    // On the march, prepared workings are made ready again
+    this.castThisRoom.clear();
   }
 
   /**
@@ -302,18 +311,45 @@ export class Party {
    * id. Scroll-casting consumes the card; a living wizard makes the
    * grimoire reusable (and stronger).
    */
+  /**
+   * Cast from the shared grimoire.
+   *
+   * Two kinds of magic, and the difference is where it came from:
+   *   **prepared** workings — drafted cards, library study, pages taken
+   *     off a dungeon shelf — are yours. Reusable, but a given working
+   *     can only be cast once per room; it needs re-preparing after.
+   *   **found scrolls** — out of a hoard or off a corpse — burn on the
+   *     one cast, as sealed scrolls always have.
+   *
+   * A wizard amplifies everything by +2 power, which is the class's
+   * whole job (DESIGN.md). The wizard used to *also* be the only way to
+   * stop a drafted spell burning, and that tax measured brutally: a
+   * spell card was worth 14 win points less than an equipment card,
+   * and paying a body slot for the wizard cost another 17 (see
+   * DESIGN_DIALOGUE.md §8). A drafted card should not be single-use
+   * when every equipment card is permanent.
+   */
   castSpell(use, spellId = null) {
-    const idx = spellId
-      ? this.grimoire.findIndex(s => s.id === spellId)
-      : this.grimoire.findIndex(s => s.use === use);
+    const usable = s => (spellId ? s.id === spellId : s.use === use)
+      && !this.castThisRoom.has(s.id);
+    const idx = this.grimoire.findIndex(usable);
     if (idx === -1) return null;
     const spell = this.grimoire[idx];
+    // Power scales with the sharpest mind in the party, and a wizard
+    // adds their amplification on top. Before this, `mind` bought
+    // almost nothing a fight cared about — which is why the wizard was
+    // a 24-point body in a pool whose fighters are 38-point bodies, and
+    // why every spell in the game measured 15-20 win points behind an
+    // equipment card (DESIGN_DIALOGUE.md §8).
     const hasWizard = this.hasClass(CLASSES.WIZARD);
-    const power = spell.power + (hasWizard ? 2 : 0);
-    if (!hasWizard) {
-      this.grimoire.splice(idx, 1); // Scroll burns
+    const power = spell.power + Math.floor(this.bestMind() / 2) + (hasWizard ? 2 : 0);
+    const burns = spell.source === 'found';
+    if (burns) {
+      this.grimoire.splice(idx, 1);      // a sealed scroll is one cast
+    } else {
+      this.castThisRoom.add(spell.id);   // prepared: spent for this room
     }
-    return { ...spell, effectivePower: power, consumed: !hasWizard };
+    return { ...spell, effectivePower: power, consumed: burns };
   }
 
   /**
