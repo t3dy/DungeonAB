@@ -46,6 +46,10 @@ export class Simulator {
     // branches splice their rooms in as the party discovers and
     // chooses them (procgen v2).
     this.path = this.dungeon.spine.slice();
+
+    // Fill the lamp for the delve ahead. Scaled to the walk rather than
+    // fixed, so difficulty decides how much of it is spent in the dark.
+    this.party.provision(this.path.length, difficulty);
     this.roomIndex = 0;   // Position along the path (entrance = 0)
     this.turn = 0;
     this.roomsCleared = 0;
@@ -83,8 +87,22 @@ export class Simulator {
       return;
     }
 
-    // Between-room recovery
-    this.party.restStep();
+    // Between-room recovery, and the lantern burning down with it
+    const supplyNote = this.party.restStep();
+    if (supplyNote) this.addLog(supplyNote.text);
+    if (!this.party.isAlive()) {
+      // The dark finished what the dungeon started
+      this.lastNarration = {
+        room: room.type, icon: room.icon, roomIndex: roomIdx, action: 'dark',
+        predicament: composePredicament(room, this.dungeon.theme),
+        deliberation: 'There is no light left to decide anything by.',
+        resolution: supplyNote.text + ' The last of the party does not get up.',
+        falls: this.party.members.filter(m => !m.isAlive()).map(m => composeFall(m)),
+        aside: null,
+      };
+      this.finish(false);
+      return;
+    }
 
     // Poison taken last room works now (the venomous are patient)
     const livingBefore = this.party.living();
@@ -125,11 +143,12 @@ export class Simulator {
       deliberation: composeDeliberation(chosen, options, this.party),
       resolution: composeResolution(room, chosen, result, this.party),
       falls: fallen.map(m => composeFall(m)),
+      supply: this.party.supply,
       aside: linger
         ? (linger.cured
             ? '🐍 The cleric cures the lingering venom on the march: no damage taken.'
             : `🐍 The venom carried from the last room acts: ${linger.damage} damage taken on the march.`)
-        : null,
+        : (supplyNote ? supplyNote.text : null),
     };
 
     // A side passage? Secret doors must be noticed first; open ones
@@ -272,6 +291,8 @@ export class Simulator {
           health: m.health, maxHealth: m.maxHealth,
           attack: m.attack, defense: m.defense, mind: m.mind,
           alive: m.isAlive(),
+          wounds: m.wounds,
+          effectiveMax: m.effectiveMax(),
           equipment: m.equipment.map(e => e.name),
           weaponMods: m.weaponMods.map(w => w.name),
         })),
@@ -279,6 +300,7 @@ export class Simulator {
         reserve: this.party.reserve.map(m => ({
           name: m.name, class: m.class, icon: m.icon,
         })),
+        supply: this.party.supply,
         gold: this.party.gold,
         score: this.party.score,
         materials: this.party.materials,

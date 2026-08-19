@@ -119,12 +119,55 @@ Every individual spell reads as a −12 card purely from the company it
 keeps. `MINING_REPORT.md` prints both curves under *Kit-count win curves*
 so the caveat travels with the instrument.
 
-**Utility** workings are the one part of this not yet solved: rules 3 and
-4 are damage-and-mending rules and touch nothing a utility spell does.
-Their real problem is that a whole delve's ordinary rooms cost a party
-~11 health against the boss chamber's 35–43, so a card that makes the
-march safer is optimising a rounding error. The fix is **attrition**, not
-spell tuning (DESIGN_DIALOGUE.md §9).
+**Utility** workings are paid for by **Attrition** (below) rather than by
+rules 3 and 4, which are damage-and-mending rules. Once the march itself
+costs something, a card that makes the march safer has a job: Dancing
+Light and Eyes of the Mouse went from the two worst cards in the game
+(−15.4 and −13.2 improvement-when-drafted) to two of the best (+6.3 and
++7.4) without either card's power being touched (DESIGN_DIALOGUE.md §10).
+
+---
+
+## Attrition — what the march costs
+
+A dungeon crawl is a war of attrition or it is a boss-rush with scenery.
+This game was the second thing until measured and fixed: a party used to
+arrive at the throne holding **90% of its health pool after ten rooms**,
+which made the whole delve a formality and every card that protected the
+march a dead card (DESIGN_DIALOGUE.md §10). Two clocks now run.
+
+**Supply — the lamp burns down.** Every march spends a unit of oil. Run
+dry and the party walks in the dark, taking `DARK_TOLL` (3) damage each
+march. Provisioning is scaled to the walk ahead, not fixed, and
+`SUPPLY_COVERAGE` sets how much of it each difficulty covers — easy is
+never benighted, nightmare walks the last third dark. The counterplay is
+all cards that already existed:
+
+| Answer | What it does |
+|---|---|
+| 🏮 Everburning Lantern | Sips: burns oil every *other* march |
+| 💡 Dancing Light | Once dry, carries one march for free |
+| 👁️ Eyes of the Mouse | Reads the dark; the toll is never paid |
+
+The first answer to the dark is close to mandatory and the second is
+nearly redundant — the shape of a format staple, and the draft AI prices
+it that way.
+
+**Wounds — not everything mends on the march.** A blow worth a quarter of
+a body (`WOUND_THRESHOLD`) leaves a scar. Each wound costs
+`WOUND_COST` (2) off the ceiling healing can reach, never below a third
+of the body, and **only town clears them**. Damage therefore accumulates
+across a delve instead of washing out between rooms; the health bar
+hatches the part that can no longer be reached.
+
+Together these took health-entering-the-throne from 90% of pool to 55%,
+and levelled the card economy: average improvement-when-drafted by type
+is now within two points across all four types, where this line of work
+began with equipment at +14 and spells at −19.
+
+> **Difficulty lives in two constants now.** `STAT_SCALE` sharpens the
+> monsters; `SUPPLY_COVERAGE` decides how much of the walk is dark.
+> Tune one, look at the other.
 
 ---
 

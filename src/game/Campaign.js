@@ -90,7 +90,13 @@ export class Campaign {
     const healed = this.missingHealth();
     if (healed === 0 || this.party.gold < cost) return null;
     this.party.gold -= cost;
-    for (const m of this.party.living()) m.heal(m.maxHealth);
+    // Town is where the delve's scars are actually worked out: the
+    // surgeon sets what the march only bandaged, so wounds clear before
+    // the healing is applied (Adventurer.mendWounds).
+    for (const m of this.party.living()) {
+      m.mendWounds();
+      m.heal(m.maxHealth);
+    }
     return { healed, cost };
   }
 

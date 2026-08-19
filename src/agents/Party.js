@@ -24,6 +24,36 @@ import { Adventurer, makeTavernVolunteer } from './Adventurer.js';
  */
 export const PARTY_CAP = 4;
 
+/**
+ * The light burns down.
+ *
+ * The resource half of dungeon attrition. A party starts a delve with
+ * STARTING_SUPPLY units of oil and spends one on every march; a lantern
+ * makes it last twice as long. Run dry and the party is **in the dark**,
+ * which costs DARK_TOLL health a room and lets the next thing find them
+ * first.
+ *
+ * This exists because the march was free — a party arrived at the throne
+ * holding 90% of its health pool after ten rooms, so every card whose job
+ * was to make ordinary rooms safer was optimising a rounding error
+ * (DESIGN_DIALOGUE.md §10). A clock gives the trip a cost, and gives the
+ * utility workings — Dancing Light above all — something to be good at.
+ */
+export const STARTING_SUPPLY = 8;
+export const DARK_TOLL = 3;
+
+/**
+ * How much of a delve the quartermaster's oil actually covers, by
+ * difficulty. Provisioning is scaled to the dungeon rather than fixed,
+ * because a flat allowance punishes a short easy dungeon and a long
+ * nightmare one quite differently — measured, a flat 8 units dropped
+ * easy from 99% to 87% while barely touching nightmare.
+ *
+ * These are fractions of the marches ahead: on easy the party is never
+ * benighted, on nightmare it is walking dark for the last third.
+ */
+export const SUPPLY_COVERAGE = { easy: 1.1, medium: 0.85, hard: 0.7, nightmare: 0.55 };
+
 export class Party {
   constructor(pool) {
     // Roster from drafted character cards. The same hero card can
@@ -74,6 +104,10 @@ export class Party {
     for (const eq of equipment) {
       this.assignEquipment(eq);
     }
+
+    // The lantern's reserve, spent on the march (see restStep)
+    this.supply = STARTING_SUPPLY;
+    this.marches = 0;
 
     // Alchemy satchel: materials gathered in the dungeon
     this.materials = 0;
@@ -283,6 +317,68 @@ export class Party {
   }
 
   /**
+   * Spend a march's worth of oil. A lantern doubles what a unit buys,
+   * so the party with one burns on every *other* march.
+   *
+   * Returns a note for the Chronicle when something changed — the light
+   * guttering, or the dark taking its toll — and null on a quiet march.
+   */
+  burnSupply() {
+    this.marches++;
+    const lantern = this.living().some(m => m.equipment.some(e => e.id === 'eq-lantern'));
+    const burns = !lantern || this.marches % 2 === 0;
+
+    if (this.supply > 0) {
+      if (!burns) return null;
+      this.supply--;
+      if (this.supply === 0) {
+        return { kind: 'guttered', text: '🕯️ The last of the oil goes. From here the party walks in the dark.' };
+      }
+      if (this.supply <= 2) {
+        return { kind: 'low', text: `🕯️ The lantern is burning low: oil for ${this.supply} more ${this.supply === 1 ? 'march' : 'marches'}.` };
+      }
+      return null;
+    }
+
+    // Out of oil. A working that makes light is worth its pick now:
+    // Dancing Light is a lamp the party does not have to carry.
+    const lit = this.castSpell('utility', 'sp-light');
+    if (lit) {
+      return { kind: 'conjured', text: `💡 ${lit.name} carries the party through the dark this march — no oil needed.` };
+    }
+
+    // Someone who can see in it spares the party the worst.
+    if (this.canSeeInDark()) {
+      return { kind: 'dark-seen', text: '👁️ The dark is no trouble to eyes that know it: the party moves on unharmed.' };
+    }
+    for (const m of this.living()) m.takeDamage(DARK_TOLL);
+    return { kind: 'dark', text: `🌑 The party gropes through the dark and pays for it: ${DARK_TOLL} damage to everyone.` };
+  }
+
+  /** Eyes of the Mouse, or a rogue's night sense, reads the dark. */
+  canSeeInDark() {
+    return this.grimoire.some(sp => sp.id === 'sp-eyes');
+  }
+
+  /**
+   * Fill the lamp for the delve ahead: enough oil to cover the
+   * difficulty's share of the marches between here and the throne.
+   */
+  provision(marches, difficulty = 'medium') {
+    const share = SUPPLY_COVERAGE[difficulty] ?? SUPPLY_COVERAGE.medium;
+    this.supply = Math.max(2, Math.round(marches * share));
+    this.marches = 0;
+    return this.supply;
+  }
+
+  /** Oil found, brewed, or bought. Returns how much was actually taken. */
+  addSupply(n) {
+    const before = this.supply;
+    this.supply = Math.min(STARTING_SUPPLY * 3, this.supply + n);
+    return this.supply - before;
+  }
+
+  /**
    * Between-room recovery: clerics mend as the party walks
    */
   restStep() {
@@ -291,6 +387,7 @@ export class Party {
     }
     // On the march, prepared workings are made ready again
     this.castThisRoom.clear();
+    return this.burnSupply();
   }
 
   /**

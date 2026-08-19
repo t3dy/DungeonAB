@@ -611,12 +611,19 @@ export const DUNGEON_THEMES = {
  * 69% to 76%. Both times the target is the same curve the party cap
  * earned — roughly 88% medium, 71% hard, 45% nightmare — so that a
  * balance fix never silently doubles as a difficulty cut.
+ *
+ * The third sweep (attrition: the supply clock and wounds) went the
+ * other way — the march itself now costs a party 45% of its health pool
+ * on the way to the throne where it used to cost 10%, so the monsters
+ * had to give some of that back. Difficulty lives in two places now,
+ * and this constant is only one of them: see Party.SUPPLY_COVERAGE for
+ * how much of the walk each difficulty spends in the dark.
  */
 export const STAT_SCALE = {
   easy: 0.9,
-  medium: 1.37,
-  hard: 1.62,
-  nightmare: 2.01,
+  medium: 1.29,
+  hard: 1.50,
+  nightmare: 1.84,
 };
 
 /* ------------------------------------------------------------------ */

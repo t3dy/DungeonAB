@@ -224,6 +224,18 @@ export function scoreCard(card, persona, pool, rng) {
  * the real bombs, the Craven is a measured trap. This is the "pro"
  * evaluation that skill blends toward.
  */
+/**
+ * Cards that answer the dark. Under the supply clock a party that runs
+ * out of oil takes DARK_TOLL damage every march, so *some* answer to
+ * the dark is close to mandatory and the second one is nearly redundant
+ * — the shape of a classic format staple.
+ */
+export const LIGHT_ANSWERS = ['eq-lantern', 'sp-light', 'sp-eyes'];
+
+function lightAnswers(pool) {
+  return pool.filter(c => LIGHT_ANSWERS.includes(c.id)).length;
+}
+
 export function rationalValue(card, pool) {
   const characters = pool.filter(c => c.type === CARD_TYPES.CHARACTER);
   let v = 1;
@@ -245,16 +257,32 @@ export function rationalValue(card, pool) {
   }
 
   if (card.type === CARD_TYPES.EQUIPMENT) {
+    const held = pool.filter(c => c.type === CARD_TYPES.EQUIPMENT).length;
     v = 2;
     if (card.classActions) v += 2;   // the real bombs (+22 pts on a thin party)
     if (card.bestFor && characters.some(c => c.class === card.bestFor)) v += 1;
     if (card.cursed) v -= 0.2;       // the pro prices the printed cost, reads the upside
+    // The armoury stops paying past about six pieces (MINING_REPORT.md,
+    // kit-count win curves): a seventh weapon does not swing a fight the
+    // first six were already winning.
+    if (held >= 6) v -= (held - 5) * 0.35;
   }
 
   if (card.type === CARD_TYPES.SPELL) {
+    const held = pool.filter(c => c.type === CARD_TYPES.SPELL).length;
     v = 2
       + (characters.some(c => c.class === CLASSES.WIZARD) ? 1 : 0)
       + (card.use === 'heal' ? 0.5 : 0);
+    // Ordinary rooms ration the grimoire to one or two casts, so the
+    // workings past the fourth only ever matter at the throne
+    if (held >= 4) v -= (held - 3) * 0.45;
+  }
+
+  // Whatever type it is, the first answer to the dark is a staple and
+  // the second is close to dead weight (Party.SUPPLY_COVERAGE)
+  if (LIGHT_ANSWERS.includes(card.id)) {
+    const held = lightAnswers(pool);
+    v += held === 0 ? 3 : (held === 1 ? 0.5 : 0);
   }
 
   if (card.type === CARD_TYPES.PERSONALITY) {

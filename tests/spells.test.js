@@ -221,23 +221,29 @@ describe('A healing working fires when it is needed, not after', () => {
   });
 
   test('holding a heal beats holding nothing when the blows are landing', () => {
-    // Same bodies, same wall of meat, 60 trials: the party with a
-    // healing working must end the fight with more health left.
-    const meanLeft = spells => {
-      let total = 0;
+    // Same two bodies, same wall of meat, 60 trials. The foe is sized
+    // to a regime where the question is decidable: wound attrition
+    // (Adventurer.WOUND_COST) means a big enough monster kills both
+    // arms and a small enough one kills neither, and a test run in
+    // either of those regimes measures nothing.
+    const outcome = spells => {
+      let total = 0, survived = 0;
       const trials = 60;
       for (let i = 0; i < trials; i++) {
         const party = new Party([byClass('fighter'), byClass('cleric'),
           ...spells.map(id => sp(id))]);
-        resolveRoomAction(bruiser({ attack: 8, health: 120 }), party, 'fight');
+        resolveRoomAction(bruiser({ attack: 6, health: 90 }), party, 'fight');
         total += party.members.reduce((sum, m) => sum + Math.max(0, m.health), 0);
+        if (party.isAlive()) survived++;
       }
-      return total / trials;
+      return { hp: total / trials, survival: survived / trials };
     };
-    const bare = meanLeft([]);
-    const healed = meanLeft(['sp-mend', 'sp-balm']);
-    assert.ok(healed > bare,
-      `healing workings keep the party up (${healed.toFixed(1)} > ${bare.toFixed(1)})`);
+    const bare = outcome([]);
+    const healed = outcome(['sp-mend', 'sp-balm']);
+    assert.ok(healed.hp > bare.hp,
+      `healing workings keep the party up (${healed.hp.toFixed(1)} > ${bare.hp.toFixed(1)})`);
+    assert.ok(healed.survival > bare.survival,
+      `and keep it alive (${(healed.survival * 100).toFixed(0)}% vs ${(bare.survival * 100).toFixed(0)}%)`);
   });
 });
 

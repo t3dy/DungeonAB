@@ -19,7 +19,7 @@ import { serializeDungeon } from './world/DungeonGen.js';
 import { setupArchive } from './ui/ArchiveUI.js';
 import { setupCardEditor, loadPlayerPacks } from './ui/CardEditorUI.js';
 import { installAlchemyPack } from './packs/alchemyPack.js';
-import { ROOM_HELP, CARD_TYPE_HELP, describeTickEvents } from './ui/GameGuide.js';
+import { ROOM_HELP, CARD_TYPE_HELP, ATTRITION_HELP, describeTickEvents } from './ui/GameGuide.js';
 
 const HELP_SEEN_KEY = 'dungeonab_help_seen';
 
@@ -79,6 +79,10 @@ function setupHelp() {
   // Populate the card-type legend from the single source of truth
   document.getElementById('help-card-legend').innerHTML = CARD_TYPE_HELP
     .map(h => `<dt>${h.label}</dt><dd>${h.text}</dd>`).join('');
+
+  // ...and the two attrition clocks from theirs
+  document.getElementById('help-attrition-legend').innerHTML = ATTRITION_HELP
+    .map(h => `<dt>${h.key}</dt><dd>${h.text}</dd>`).join('');
 
   const open = () => overlay.classList.add('active');
   const close = () => {
@@ -334,6 +338,14 @@ function updateUI(state) {
   document.getElementById('room-count').textContent = `${state.roomIndex} / ${(state.pathLength || state.dungeon.length) - 1}`;
   document.getElementById('gold-count').textContent = state.party.gold;
   document.getElementById('score-count').textContent = state.party.score;
+  // The lamp. Amber while it lasts, red once the party is in the dark.
+  const supplyEl = document.getElementById('supply-count');
+  const supply = state.party.supply ?? 0;
+  supplyEl.textContent = supply === 0 ? 'dark' : supply;
+  supplyEl.style.color = supply === 0 ? '#e05555' : (supply <= 2 ? '#d8a53f' : '#e8c07a');
+  supplyEl.title = supply === 0
+    ? 'The oil is gone. Every march in the dark costs the whole party health.'
+    : `Oil for ${supply} more march${supply === 1 ? '' : 'es'}.`;
   document.getElementById('materials-count').textContent = state.party.materials;
   document.getElementById('potions-count').textContent = state.party.potions;
   // The trophy case: count onscreen, the full inventory on hover
@@ -362,6 +374,16 @@ function updateUI(state) {
     const pct = Math.round((m.health / m.maxHealth) * 100);
     const barColor = pct > 60 ? '#3ddc84' : pct > 30 ? '#d8a53f' : '#e05555';
     const kit = [...m.equipment, ...m.weaponMods].join(', ');
+    // Wounds close off the top of the bar: healing cannot reach past
+    // the scar until town (Adventurer.effectiveMax)
+    const ceiling = m.effectiveMax ?? m.maxHealth;
+    const scarPct = Math.max(0, Math.round(((m.maxHealth - ceiling) / m.maxHealth) * 100));
+    const scar = scarPct > 0
+      ? `<span class="hp-scar" style="position:absolute;right:0;top:0;bottom:0;width:${scarPct}%;background:repeating-linear-gradient(45deg,#5a2a2a,#5a2a2a 2px,#3a1c1c 2px,#3a1c1c 4px);"></span>`
+      : '';
+    const scarNote = m.wounds
+      ? `<span title="${m.wounds} wound${m.wounds === 1 ? '' : 's'} — healing cannot pass ${ceiling} until town" style="color:#c76;font-size:0.68rem;">${'✚'.repeat(Math.min(m.wounds, 4))}</span>`
+      : '';
     return `
       <div class="member-row ${m.alive ? '' : 'member-dead'}">
         <span>${m.icon}</span>
@@ -369,7 +391,8 @@ function updateUI(state) {
           <div>${m.name} <span style="color:#665;font-size:0.7rem;">(${m.class})</span></div>
           ${kit ? `<div style="color:#556;font-size:0.68rem;">${kit}</div>` : ''}
         </span>
-        <span class="hp-bar"><span class="hp-fill" style="width:${pct}%;background:${barColor};"></span></span>
+        ${scarNote}
+        <span class="hp-bar" style="position:relative;overflow:hidden;"><span class="hp-fill" style="width:${pct}%;background:${barColor};"></span>${scar}</span>
         <span class="member-hp" style="color:${barColor};">${m.health}</span>
       </div>
     `;

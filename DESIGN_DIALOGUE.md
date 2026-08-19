@@ -579,3 +579,116 @@ is not fixable by tuning a utility spell. It is fixable by making the
 march itself cost something — which is the **attrition** direction
 already chosen for the dungeon rework, and where this thread should
 rejoin the roadmap rather than spawn another balance pass.
+
+---
+
+## 10. Attrition — making the march cost something (2026-08-19)
+
+§9 ended by naming the real reason utility workings were dead: **a whole
+delve's ordinary rooms cost a party about 11 health while the boss
+chamber cost 35–43**, so any card whose job was to make the march safer
+was optimising a rounding error. This section is the fix, which is the
+attrition direction already chosen for the dungeon rework.
+
+The number that framed it: instrumented over 300 runs, a party arrived
+at the throne holding **90% of its health pool after ten rooms**. Ten
+rooms of monsters, traps and disasters, and the party turned up
+essentially fresh. Everything before the boss was a formality.
+
+### Two clocks, because one would only have been half of it
+
+**TCG:** Resource attrition and damage attrition answer different
+questions, and a dungeon crawl wants both. A resource clock asks *how
+long can you stay down here*; a wound clock asks *what does this fight
+cost you three rooms from now*. Either alone leaves the other lesson
+unlearned.
+
+**1. Supply — the lamp burns down.** Every march spends a unit of oil.
+Run dry and the party is in the dark, taking `DARK_TOLL` (3) damage
+each march thereafter. Provisioning is scaled to the walk ahead rather
+than fixed, and difficulty sets the share of it that is covered
+(`SUPPLY_COVERAGE`): easy is never benighted, nightmare walks the last
+third in the dark. A flat allowance was tried first and rejected — it
+dropped easy from 99% to 87% while barely touching nightmare, because
+the same 8 units mean very different things in a short dungeon and a
+long one.
+
+The counterplay is entirely made of cards that already existed:
+the **Everburning Lantern** sips (burns every *other* march), **Dancing
+Light** carries a march for free once the oil is gone, and **Eyes of the
+Mouse** reads the dark so the toll is never paid at all.
+
+**2. Wounds — not everything mends on the march.** A blow worth a
+quarter of a body (`WOUND_THRESHOLD`) leaves a scar. Each wound costs
+two points (`WOUND_COST`) off the ceiling healing can reach, never below
+a third of the body, and only **town** clears them. So damage
+accumulates across a delve instead of washing out between rooms, and the
+health bar shows it: the unreachable part is hatched.
+
+### What it did
+
+The march now costs what it should: **health entering the throne fell
+from 90% of pool to 55%**, and a delve that used to reach the boss 299
+times in 300 now does so about four times in five.
+
+But the headline is what happened to the cards nobody wanted:
+
+| Card | Before attrition | After |
+|---|---|---|
+| Dancing Light | **−15.4** (worst card in the game) | **+6.3** |
+| Eyes of the Mouse | −13.2 | **+7.4** |
+
+**NARR:** And note *how* they got good. We did not touch either card's
+power. We built a system that made what they already did matter, and
+they became premium picks on their own. That is the difference between
+balancing a card and giving it a job.
+
+The card economy came level as a whole. Average
+improvement-when-drafted by type on hard is now character +0.8,
+equipment +1.4, spell −0.8, personality +0.1 — inside two points of each
+other, where this thread started with equipment at +14 and spells at
+−19. The bottom ten of the whole pool is now **mixed across all four
+card types**, worst card −8.2. It used to be ten spells out of ten at
+−18 to −23. There is no longer a dead card type in the game.
+
+It also retired the Archmage problem for free: 50.0% against the
+Warlord's 83.6% became 66.4% against 77.1%. A 34-point identity gap
+became 11, without touching a single spell, because the arcane package
+finally had a job on the march as well as at the throne.
+
+### The regression we caused, and had to chase
+
+**TCG:** Attrition broke the skill ladder, and it took a moment to see
+why. Right after the change the Guildmaster (.70) was *beating* the
+Prodigy (.95), and the Prodigy-to-Novice spread had collapsed to nine
+points. Nothing was wrong with the dungeon. **The draft AI's value model
+was stale** — `rationalValue` had been calibrated against a game with no
+supply clock, so it priced the lantern as a minor trinket and Dancing
+Light as filler. The "skilled" drafter was skilled at the old game.
+
+Teaching it the new economy — the first answer to the dark is a staple
+and the second is nearly dead weight, and both kit types stop paying
+past their measured ceilings — restored the ladder and then some:
+
+| | before attrition | right after | after re-teaching the AI |
+|---|---|---|---|
+| Prodigy − Novice | 4–8 pts | ~9 pts, order inverted | **25.7 pts, correctly ordered** |
+
+That is the widest, cleanest skill signal this format has ever measured.
+
+**NARR:** It is also a standing lesson for this project: every time we
+change what the game rewards, the AI drafters encode the *old* answer
+until told otherwise, and a stale evaluator reads exactly like a balance
+problem. Worth checking the pilots after any economy change.
+
+### Calibration, and where difficulty lives now
+
+Attrition needed two `STAT_SCALE` sweeps in opposite directions — down
+when the march started costing health, back up when the drafters got
+smarter — settling at medium 1.29 / hard 1.50 / nightmare 1.84, measured
+99.1 / 88.9 / 69.7 / 44.8 against the standing 88 / 71 / 45 target.
+
+Worth naming explicitly: **difficulty now lives in two constants, not
+one.** `STAT_SCALE` sharpens the monsters; `SUPPLY_COVERAGE` decides how
+much of the walk is spent in the dark. Anyone tuning one should look at
+the other.

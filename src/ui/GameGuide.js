@@ -41,6 +41,16 @@ export const CARD_TYPE_HELP = [
 /**
  * The player-facing rundown of the controls.
  */
+/**
+ * The two attrition clocks, in one line each — the systems that make the
+ * march between rooms cost something rather than being a formality
+ * before the boss.
+ */
+export const ATTRITION_HELP = [
+  { key: 'Oil 🏮', text: 'The lamp burns a unit every march. Run dry and the whole party takes damage every room it walks in the dark. An Everburning Lantern makes it last twice as long; Dancing Light and Eyes of the Mouse answer the dark outright.' },
+  { key: 'Wounds ✚', text: 'A blow worth a quarter of a body leaves a scar, and healing can no longer reach past it — the hatched part of the health bar. Wounds only mend in town, so the delve accumulates.' },
+];
+
 export const CONTROL_HELP = [
   { key: 'Pause / Resume', text: 'Freeze the delve to read the story, or let it run.' },
   { key: 'Step', text: 'Advance exactly one room, then pause — for savoring a run beat by beat.' },
