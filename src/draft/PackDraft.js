@@ -67,7 +67,7 @@ export const DRAFT_PERSONAS = [
     icon: '⚔️',
     desc: 'Drafts muscle first: fighters, weapons, and the will to use them.',
     skill: 0.55,
-    weights: { character: 3, equipment: 2.5, spell: 0.8, personality: 1 },
+    weights: { character: 3, equipment: 2.5, spell: 0.8, personality: 1, tactic: 2.2 },
     classBias: { fighter: 3, rogue: 1.5 },
   },
   {
@@ -76,7 +76,7 @@ export const DRAFT_PERSONAS = [
     icon: '🔮',
     desc: 'Hoards spells and the wizards to wield them.',
     skill: 0.5,
-    weights: { character: 2, equipment: 1, spell: 3, personality: 1 },
+    weights: { character: 2, equipment: 1, spell: 3, personality: 1, tactic: 1.8 },
     classBias: { wizard: 3, cleric: 1.5 },
   },
   {
@@ -85,7 +85,7 @@ export const DRAFT_PERSONAS = [
     icon: '⚖️',
     desc: 'Balances the ledger: a bit of everything, nothing wasted.',
     skill: 0.7,
-    weights: { character: 2, equipment: 2, spell: 2, personality: 2 },
+    weights: { character: 2, equipment: 2, spell: 2, personality: 2, tactic: 2.5 },
     classBias: { rogue: 2, alchemist: 2 },
   },
 ];
@@ -104,7 +104,7 @@ export const PILOT_TIERS = [
     icon: '🧠',
     desc: 'Evaluates coldly: bodies to four, the mythic uncommons, no romance.',
     skill: 0.95,
-    weights: { character: 2, equipment: 2, spell: 2, personality: 2 },
+    weights: { character: 2, equipment: 2, spell: 2, personality: 2, tactic: 2 },
     classBias: {},
   },
   {
@@ -113,9 +113,9 @@ export const PILOT_TIERS = [
     icon: '🎈',
     desc: 'Takes the shiniest rare every time. The glass cannon is SO cool.',
     skill: 0.15,
-    weights: { character: 1.2, equipment: 2.2, spell: 2.2, personality: 1.5 },
+    weights: { character: 1.2, equipment: 2.2, spell: 2.2, personality: 1.5, tactic: 2.4 },
     classBias: {},
-    quirks: { shiny: 2.5, bodyBlind: true, curseChaser: true },
+    quirks: { shiny: 2.5, bodyBlind: true, curseChaser: true, treeBlind: true },
   },
 ];
 
@@ -127,9 +127,9 @@ export const PILOT_PERSONAS = [...DRAFT_PERSONAS, ...PILOT_TIERS];
 /* ------------------------------------------------------------------ */
 
 /**
- * Build one 8-card pack: 2 characters, 3 equipment, 2 spells,
- * 1 personality. Duplicates across packs are allowed (multiple
- * copies exist "in the box") but not within a pack.
+ * Build one 9-card pack: 2 characters, 3 equipment, 2 spells,
+ * 1 personality, 1 tactic. Duplicates across packs are allowed
+ * (multiple copies exist "in the box") but not within a pack.
  *
  * Two characters is the guaranteed-coverage floor (CLAUDE.md: packs
  * always contain ≥2 characters, so no draft is dead). It used to be
@@ -159,6 +159,9 @@ export function buildPack(rng) {
   take(pooledCards(CARD_TYPES.EQUIPMENT), 3);
   take(pooledCards(CARD_TYPES.SPELL), 2);
   take(pooledCards(CARD_TYPES.PERSONALITY), 1);
+  // One tactic a pack: enough that a tree can be assembled across a
+  // draft, few enough that assembling one is a commitment
+  take(pooledCards(CARD_TYPES.TACTIC), 1);
 
   return rng.shuffle(pack);
 }
@@ -200,6 +203,32 @@ export function scoreCard(card, persona, pool, rng) {
   if (card.type === CARD_TYPES.SPELL) {
     // Spells sing with a wizard in the pool
     if (characters.some(c => c.class === CLASSES.WIZARD)) score += 1.2;
+  }
+
+  if (card.type === CARD_TYPES.TACTIC) {
+    const held = pool.filter(c => c.type === CARD_TYPES.TACTIC);
+    const heldIds = new Set(held.map(c => c.id));
+    v = 2.5;
+
+    // A tier-two tactic is a blank without its root. Pricing that
+    // correctly is the whole skill test the tree exists to create:
+    // reading a branch card early, before you own the trunk, is exactly
+    // the mistake a novice makes with a splashy rare.
+    if (card.requires) {
+      v = heldIds.has(card.requires) ? 4.5 : 0.4;
+    }
+
+    // A root whose branch you already took is suddenly excellent: it
+    // switches a dead card on
+    if (held.some(c => c.requires === card.id)) v += 3;
+
+    // The arcane branch needs something to work on
+    if (card.capability === 'cast' && !pool.some(c => c.type === CARD_TYPES.SPELL)) {
+      v -= 1.5;
+    }
+
+    // Duplicates do nothing
+    if (heldIds.has(card.id)) v = 0;
   }
 
   if (card.type === CARD_TYPES.PERSONALITY) {
@@ -317,6 +346,14 @@ export function biasValue(card, persona, pool) {
   }
   if (quirks.shiny && (card.classActions || (card.type === CARD_TYPES.SPELL && card.power >= 5))) {
     v += quirks.shiny;
+  }
+  // The tree's own novice trap: a tier-two tactic has the biggest text
+  // in the pack and does nothing without its trunk. A body-blind,
+  // shiny-chasing drafter reads that as a bomb.
+  if (card.type === CARD_TYPES.TACTIC && card.requires) {
+    const hasRoot = pool.some(c => c.id === card.requires);
+    if (quirks.treeBlind && !hasRoot) v += 2;
+    else if (!hasRoot) v -= 1.5;
   }
   if (card.type === CARD_TYPES.PERSONALITY) {
     const personalities = pool.filter(c => c.type === CARD_TYPES.PERSONALITY);

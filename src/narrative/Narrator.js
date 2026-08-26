@@ -510,6 +510,33 @@ export function composeMend(mended) {
   return `✚ The town surgeon sets what the march only bandaged: ${mended.wounds} wound${mended.wounds === 1 ? '' : 's'} closed on ${who}, and full health is theirs again.`;
 }
 
+/**
+ * A drafted tactic that is doing nothing, and why.
+ *
+ * The tree's whole design is that a tier-two card is a blank without
+ * its root — which is only a fair decision if the player is *told*.
+ * A silently dead card reads as a bug.
+ */
+export function composeDormant(entry) {
+  if (!entry) return null;
+  const { tactic, reason, missing, capability } = entry;
+  if (reason === 'requires') {
+    return `${tactic.icon} ${tactic.name} is drafted but idle: it grows out of ${missing.name}, and nobody in this party has learned that.`;
+  }
+  const need = {
+    cast: 'a working in the grimoire to use it on',
+    attack: 'somebody still standing',
+  }[capability] || 'something this party does not have';
+  return `${tactic.icon} ${tactic.name} is drafted but idle: it wants ${need}.`;
+}
+
+/** The technique the party actually brought, named once at the start. */
+export function composeTactics(live) {
+  if (!live || live.length === 0) return null;
+  const names = live.map(t => `${t.icon} ${t.name}`).join(', ');
+  return `The party has drilled: ${names}.`;
+}
+
 export function composeFall(member) {
   return `☠️ ${member.name} falls. The party's ${member.class} is dead; the survivors march on.`;
 }

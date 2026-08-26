@@ -9,6 +9,7 @@
 
 import { generateDungeon, dungeonFromLayout, ROOM_TYPES } from '../world/DungeonGen.js';
 import { Party } from '../agents/Party.js';
+import { activeTactics, dormantTactics } from '../game/Tactics.js';
 import { CLASSES } from '../game/Cards.js';
 import {
   getRoomOptions, decideRoomAction, resolveRoomAction,
@@ -18,7 +19,7 @@ import {
   composePredicament, composeDeliberation, composeResolution,
   composeWipe, composeVictory, composeFall,
   composeSecretFound, composeDetour, composeTrapdoor,
-  composeSupply, composeWound,
+  composeSupply, composeWound, composeDormant, composeTactics,
 } from '../narrative/Narrator.js';
 
 export class Simulator {
@@ -60,6 +61,14 @@ export class Simulator {
     this.epitaph = null;
     this.lastNarration = null;
     this.log = [];
+
+    // Say what the party drilled, and warn about anything drafted that
+    // cannot fire — a silently dead card reads as a bug (Tactics.js)
+    const drilled = composeTactics(activeTactics(this.party));
+    if (drilled) this.log.push(drilled);
+    for (const idle of dormantTactics(this.party)) {
+      this.log.push(composeDormant(idle));
+    }
 
     // Score multiplier: difficulty (mirrors SnakeAB progression), then
     // the condition's wager on top — a meaner dungeon pays out more.
@@ -321,6 +330,8 @@ export class Simulator {
         grimoire: this.party.grimoire.map(s => s.name),
         spellsLearned: this.party.spellsLearned,
         personalities: this.party.personalities,
+        tactics: activeTactics(this.party).map(t => ({ name: t.name, icon: t.icon })),
+        dormantTactics: dormantTactics(this.party).map(d => composeDormant(d)),
       },
       gameOver: this.gameOver,
       victory: this.victory,

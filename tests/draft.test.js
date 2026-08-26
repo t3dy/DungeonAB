@@ -7,15 +7,16 @@ import { PackDraft, buildPack, SeededRandom, DRAFT_PERSONAS } from '../src/draft
 import { CARD_TYPES } from '../src/game/Cards.js';
 
 describe('Pack construction', () => {
-  test('packs have 8 cards with guaranteed coverage', () => {
+  test('packs have 9 cards with guaranteed coverage', () => {
     const rng = new SeededRandom('pack-test');
     for (let i = 0; i < 10; i++) {
       const pack = buildPack(rng);
-      assert.equal(pack.length, 8);
+      assert.equal(pack.length, 9);
       const chars = pack.filter(c => c.type === CARD_TYPES.CHARACTER);
       const equip = pack.filter(c => c.type === CARD_TYPES.EQUIPMENT);
       const spells = pack.filter(c => c.type === CARD_TYPES.SPELL);
       const pers = pack.filter(c => c.type === CARD_TYPES.PERSONALITY);
+      const tactics = pack.filter(c => c.type === CARD_TYPES.TACTIC);
       // Two characters is the guaranteed-coverage floor (CLAUDE.md):
       // enough that no draft is dead, few enough that a four-strong
       // party (Party.PARTY_CAP) isn't force-fed adventurers it can
@@ -25,6 +26,9 @@ describe('Pack construction', () => {
       assert.equal(equip.length, 3);
       assert.equal(spells.length, 2);
       assert.equal(pers.length, 1);
+      // One tactic a pack: enough that a tree can be assembled across a
+      // draft, few enough that assembling one is a real commitment
+      assert.equal(tactics.length, 1);
     }
   });
 
@@ -51,7 +55,7 @@ describe('The draft table', () => {
     assert.equal(DRAFT_PERSONAS.length, 3);
   });
 
-  test('a full draft completes with 24 picks per seat', () => {
+  test('a full draft completes with 27 picks per seat', () => {
     const draft = new PackDraft('table-2');
     let safety = 0;
     while (!draft.finished && safety < 100) {
@@ -62,7 +66,7 @@ describe('The draft table', () => {
     }
     assert.ok(draft.finished);
     for (const seat of draft.seats) {
-      assert.equal(seat.pool.length, 24, `${seat.name} drafted 24 cards`);
+      assert.equal(seat.pool.length, 27, `${seat.name} drafted 27 cards`);
     }
   });
 

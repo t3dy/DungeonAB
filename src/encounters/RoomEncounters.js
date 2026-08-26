@@ -15,6 +15,7 @@ import {
   isFeatureAction, getFeature, roomFeatures, actionTier,
 } from '../world/RoomFeatures.js';
 import { reactionsFor, foldReactions } from '../world/Reactions.js';
+import { tacticModifiers } from '../game/Tactics.js';
 
 function roll() {
   return Math.random() * 10;
@@ -420,8 +421,17 @@ export function resolveFeatureAction(room, party, optionId) {
   /* The room as a weapon: an opener, then the ordinary fight */
   if (action.fightOnly) {
     const monster = room.monster;
-    const dealt = Math.min(action.openerDamage, Math.max(0, monster.health - 1));
-    monster.health = Math.max(1, monster.health - action.openerDamage);
+    // Improvised Arms: technique for using what the room left lying about
+    const improvised = tacticModifiers(party).featureOpener;
+    const opener = action.openerDamage + improvised;
+    const dealt = Math.min(opener, Math.max(0, monster.health - 1));
+    monster.health = Math.max(1, monster.health - opener);
+    if (improvised) {
+      preps.push({
+        source: 'improvised arms',
+        text: `🔧 The party knows how to swing what the room left lying about: +${improvised} to the opening.`,
+      });
+    }
     const result = resolveRoomAction(room, party, 'fight', {
       extraCover: action.extraCover || 0,
     });
@@ -631,7 +641,34 @@ export function resolveRoomAction(room, party, optionId, options = null) {
       // What an area working did to the room, if one was loosed here
       for (const note of options?.reactionNotes || []) preps.push(note);
 
-      let monsterAtk = Math.max(1, monster.attack + (options?.monsterAtkMod || 0));
+      // Learned technique (game/Tactics.js). Gated by capability, not
+      // class: every class swings at something, so the whole party
+      // fights better for a tactic any one of them could have taught.
+      const tac = tacticModifiers(party);
+      const flanking = tac.flankDamage > 0 && party.living().length >= tac.flankMin;
+      if (flanking) {
+        preps.push({
+          source: 'the party\'s footwork',
+          text: `⚔️ The party has the numbers and uses them: +${tac.flankDamage} damage a round.`,
+        });
+      }
+      const armorEdge = (monster.trait === 'armored' && tac.vsArmored) ? tac.vsArmored : 0;
+      if (armorEdge) {
+        preps.push({
+          source: 'focused fire',
+          text: `🎯 Everyone strikes the same seam in the plate: +${armorEdge} damage a round.`,
+        });
+      }
+      if (tac.cover) {
+        preps.push({ source: 'the shield wall', text: `🛡️ The party closes ranks: ${tac.cover} less damage a round.` });
+      }
+      const castWard = tac.wardPerCast * (options?.castsThisFight || 0);
+      if (castWard) {
+        preps.push({ source: 'ward-weaving', text: `🕸️ Every working leaves a ward behind it: ${castWard} less damage a round.` });
+      }
+
+      let monsterAtk = Math.max(1, monster.attack + (options?.monsterAtkMod || 0)
+        + (tac.monsterAtk || 0));
       if (party.alarmed) {
         monsterAtk += 2;
         party.alarmed = false;
@@ -668,7 +705,8 @@ export function resolveRoomAction(room, party, optionId, options = null) {
       let mend = 0;
       while (monsterHealth > 0 && party.isAlive() && rounds < 12) {
         rounds++;
-        const swing = Math.max(1, Math.round((party.combatAttack() + summon + coating.bonus + spellSustain + Math.floor(roll() / 3)) * etherealMult) - armorShave);
+        const tactical = (flanking ? tac.flankDamage : 0) + armorEdge;
+        const swing = Math.max(1, Math.round((party.combatAttack() + summon + coating.bonus + spellSustain + tactical + Math.floor(roll() / 3)) * etherealMult) - armorShave);
         monsterHealth -= swing;
         if (monsterHealth <= 0) break;
         if (monster.isBoss && !phased && monsterHealth <= monster.health / 2) {
@@ -679,7 +717,7 @@ export function resolveRoomAction(room, party, optionId, options = null) {
         if (mend > 0) party.healParty(mend);
         // The slow strike last: no incoming damage on the first round
         if (monster.trait === 'slow' && rounds === 1) continue;
-        const incoming = Math.max(1, monsterAtk - Math.floor(party.totalDefense() / 3) - ward - cover);
+        const incoming = Math.max(1, monsterAtk - Math.floor(party.totalDefense() / 3) - ward - cover - tac.cover - castWard);
         party.takeDamage(incoming);
         partyDamageTaken += incoming;
         // Mend the badly hurt while the fight is still on — a working
@@ -770,10 +808,11 @@ export function resolveRoomAction(room, party, optionId, options = null) {
       // second and third spell in a grimoire were dead cards in the one
       // fight that decides the run.
       const reactions = [];
+      const tac = tacticModifiers(party);
       const combatHeld = party.grimoire.filter(sp => sp.use === 'combat').length;
       const casts = monster.isBoss
         ? Math.max(1, combatHeld)
-        : 1 + (party.hasClass(CLASSES.WIZARD) ? 1 : 0);
+        : 1 + (party.hasClass(CLASSES.WIZARD) ? 1 : 0) + tac.extraCast;
       const spellsCast = [];
       let spellEdge = null;
       let sustain = 0;
@@ -803,20 +842,29 @@ export function resolveRoomAction(room, party, optionId, options = null) {
         const burst = Math.round(spell.effectivePower * mult);
         monster.health = Math.max(1, monster.health - burst);
         // ...and it keeps working for the rest of the fight
-        sustain += Math.round(burst * SPELL_SUSTAIN_SHARE);
+        // Concentration holds the working at full force instead of half
+        sustain += Math.round(burst * (tac.sustainFull ? 1 : SPELL_SUSTAIN_SHARE));
         spellsCast.push(spell);
 
         // The room answers. An area working does not stop at the
         // monster: fire takes the crates, lightning runs through the
         // font, frost puts the brazier out (Reactions.js).
-        for (const r of reactionsFor(spell, room)) reactions.push(r);
+        // Widening lets every working out wide, so the room answers
+        // anything, not only the spells printed as area workings
+        const wide = tac.allSpellsArea ? { ...spell, aoe: true } : spell;
+        for (const r of reactionsFor(wide, room)) reactions.push(r);
       }
 
       // What the room did, folded into one set of modifiers
       const room_ = foldReactions(reactions);
       if (room_.damage) monster.health = Math.max(1, monster.health - room_.damage);
       if (room_.heal) party.healParty(room_.heal);
-      if (room_.selfHarm) for (const m of party.living()) m.takeDamage(room_.selfHarm);
+      // Firewatch: a party that sets the room alight stands clear of it
+      if (room_.selfHarm && !tac.noSelfHarm) {
+        for (const m of party.living()) m.takeDamage(room_.selfHarm);
+      } else if (room_.selfHarm && tac.noSelfHarm) {
+        room_.notes.push({ source: 'firewatch', text: '🧯 The party set it off and stood well clear: none of it comes back on them.' });
+      }
       // A blaze is light to march by; a doused brazier takes light away
       if (room_.light > 0) party.addSupply(room_.light);
       else if (room_.light < 0) party.supply = Math.max(0, party.supply + room_.light);
@@ -830,6 +878,7 @@ export function resolveRoomAction(room, party, optionId, options = null) {
         spellSustain: sustain + room_.burn,
         spellSustainSource: spellsCast.map(sp => sp.name).join(' + ') || null,
         extraCover: room_.cover,
+        castsThisFight: spellsCast.length,
         monsterAtkMod: room_.monsterAtk,
         forceRevealEthereal: room_.revealEthereal,
         reactionNotes: room_.notes,
@@ -924,7 +973,13 @@ export function resolveRoomAction(room, party, optionId, options = null) {
       const trapType = room.trapType || 'spike';
       let dmg = Math.max(1, (room.trapDamage || 3) - spotter - prep.trapSoak);
       if (trapType === 'fire') {
-        if (hasSpell(party, 'sp-frost')) {
+        // Firewatch is knowledge about where fire goes, and a flame trap
+        // is the commonest place to use it (game/Tactics.js)
+        const watched = tacticModifiers(party).fireTrapSoak;
+        if (watched) {
+          dmg = Math.max(1, dmg - watched);
+          preps.push({ source: 'firewatch', text: `🧯 The party reads the jet before it fires and is not standing there: ${watched} less damage.` });
+        } else if (hasSpell(party, 'sp-frost')) {
           dmg = Math.max(1, dmg - 2);
           preps.push({ source: 'Frost Lance', text: '❄️ Frost Lance counters the flame jet: 2 less damage.' });
         } else {
@@ -1071,9 +1126,21 @@ export function resolveRoomAction(room, party, optionId, options = null) {
     /* Shrine */
     case 'rest': {
       const bonus = party.hasPersonality('pious') ? 4 : 0;
+      // Field Surgery: somebody learned to set a break on the road, so a
+      // shrine closes a wound the delve would otherwise keep until town
+      const mend = tacticModifiers(party).mendAtShrine;
+      const mended = [];
+      if (mend) {
+        for (const m of party.living()) {
+          if (m.wounds > 0) { m.mendWounds(mend); mended.push(m.name); }
+        }
+      }
       for (const m of party.living()) m.heal(5 + bonus);
       room.cleared = true;
-      return { success: true, healed: 5 + bonus };
+      const preps = mended.length
+        ? [{ source: 'field surgery', text: `✚ Somebody sets what the march only bandaged: a wound closed on ${mended.join(', ')} without waiting for town.` }]
+        : [];
+      return { success: true, healed: 5 + bonus, mended, preps };
     }
 
     case 'desecrate': {

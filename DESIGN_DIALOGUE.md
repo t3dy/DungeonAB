@@ -781,3 +781,111 @@ rework not yet built; the reaction table is written so a position layer
 can extend it rather than replace it. And **tactics cards**, a
 class-agnostic skill tree, which is where a player will buy the ability
 to exploit all of this on purpose.
+
+---
+
+## 12. Tactics — a skill tree gated by capability, not class (2026-08-19)
+
+The brief: a tree of combat and magical technique that is **not
+class-specific** — any class that attacks (which is all of them) should
+benefit from Flanking; anything that casts should benefit from
+Concentration.
+
+### Why capability beats class as a gate
+
+**TCG:** A card that reads "fighters only" collapses into the class it
+names. It stops being a decision and becomes a rider on a character
+card, and the draft already has character cards for that. Gating on
+*capability* keeps the card wide: `attack` is true of any living party,
+`cast` is true of anyone with a working in the grimoire regardless of who
+put it there. Twelve tactics across four branches — the Line, the
+Working, the Room, the March — and only the arcane branch has a gate that
+can actually be closed.
+
+**NARR:** It also reads better. "The party has drilled" is a thing a
+band of people does together; "the fighter has drilled" is a stat block.
+
+### The tree is the decision
+
+A tier-two tactic is a **blank** without its root. That makes tactics
+the first card type where a pick's value depends on a pick you already
+made, which is a real draft tension and a real skill test — reading a
+splashy tier-two card early, before you own the trunk, is exactly the
+mistake the Novice persona should make. It now does, on purpose
+(`quirks.treeBlind`).
+
+Measured on hard, holding bodies, kit and seeds fixed:
+
+| | win % |
+|---|---|
+| no tactics | 10.6 |
+| orphaned branch card | 11.8 |
+| a root alone | ~15 |
+| **complete line branch** | **22.0** |
+| two unrelated roots | 17.4 |
+
+An orphan is worth almost nothing, a root is worth a few points, and
+completing the branch beats spreading. That is the shape we wanted.
+
+### Two things the measurement corrected
+
+**Rationing was a bomb.** At +2 marches of oil it was worth **+13.8 win
+points alone** — four times any other tactic — because the supply clock
+is the dominant threat on hard and a card that answers it directly runs
+away with the whole type. Cut to +1, it sits with Flanking and Shield
+Wall at about +3.
+
+**The first cut had the tree backwards.** Roots were individually strong
+and branches individually weak, so *two unrelated roots beat every
+complete branch* (+9.4 against +1.8 to +7.4) — the tree created no
+decision at all. Branches must pay **more** than a second root precisely
+because they are conditional: a safe pick that always works should earn
+less than a risky pick that can be a blank. Encirclement, Focused Fire
+and Ward-Weaving were all roughly doubled.
+
+**NARR:** And a silently dead card reads as a bug, so an idle tactic now
+says why: *"Field Surgery is drafted but idle: it grows out of Rationing,
+and nobody in this party has learned that."* It shows dashed in the party
+panel with that line on hover.
+
+### A bug the browser found that the tests did not
+
+Drafting the same tactic twice **stacked** it. Three Quickenings meant
+three extra workings a room. The party panel showed the same chip three
+times, which is how it surfaced — the unit tests all used distinct
+cards. A tactic is knowledge; knowing it twice is knowing it once, so
+they deduplicate by id now, and the duplicate count is kept rather than
+silently dropped.
+
+### The honest residual
+
+The four branches are not equal, and the reason is structural rather
+than numerical:
+
+| branch | over baseline |
+|---|---|
+| Line (Flanking → Encirclement) | +11.4 |
+| Wall (Shield Wall → Focused Fire) | +6.4 |
+| March (Rationing → Field Surgery) | +3.4 |
+| Room (Improvised Arms → Firewatch) | +3.0 |
+
+**TCG:** Line and Wall give **per-round** combat value. Room and March
+give situational and utility value. We have measured three times now
+that this game's damage concentrates almost entirely in the boss chamber
+— it is why equipment beat spells in §8, and why healing beat nothing in
+§9 — so a per-round combat effect compounds over twelve rounds while a
+situational one fires once or not at all.
+
+No branch is a *trap*: all four beat taking nothing. But closing this
+spread means giving the Room and March branches per-round presence, the
+same structural fix the grimoire needed, not bigger numbers. Deliberately
+left for a future pass rather than tuned blind.
+
+### What it did to skill expression
+
+The Prodigy-to-Novice spread went from 25.7 points to **27.7–32.0**,
+with the Prodigy top in every run. The tree added a real evaluation
+skill — knowing when a conditional card is a bomb and when it is a blank
+— which is the most transferable kind of card-game judgement there is.
+
+Curve held at 99.4 / 87.9 / 70.8 / 45.0.

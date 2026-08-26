@@ -13,7 +13,7 @@ describe('Drafting a full AI table', () => {
     const draft = draftTable(0);
     assert.equal(draft.finished, true, 'the draft completes');
     for (const seat of draft.seats) {
-      assert.equal(seat.pool.length, 24, `${seat.name} made all 24 picks`);
+      assert.equal(seat.pool.length, 27, `${seat.name} made all 27 picks`);
       const chars = seat.pool.filter(c => c.type === CARD_TYPES.CHARACTER);
       assert.ok(chars.length >= 1, `${seat.name} has at least one character`);
     }
@@ -32,9 +32,9 @@ describe('Game records', () => {
     assert.equal(games.length, 8, '2 tables × 4 seats');
     for (const g of games) {
       assert.equal(typeof g.victory, 'boolean');
-      assert.ok(g.poolIds.length === 24);
-      assert.equal(g.picks.length, 24, 'every pick logged');
-      assert.ok(g.picks.every(p => p.takenAt >= 1 && p.takenAt <= 24), 'pick positions in range');
+      assert.ok(g.poolIds.length === 27);
+      assert.equal(g.picks.length, 27, 'every pick logged');
+      assert.ok(g.picks.every(p => p.takenAt >= 1 && p.takenAt <= 27), 'pick positions in range');
       assert.ok(g.decisions.length > 0, 'room decisions were logged');
       assert.ok(g.decisions.every(d => d.room && d.action), 'decisions carry room and action');
     }

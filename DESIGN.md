@@ -36,10 +36,11 @@ A **narrative dungeon-crawling autobattler**. The player drafts a party MTG-styl
 - **Character** — a named adventurer of one of 5 classes: **Fighter, Cleric, Wizard, Rogue, Alchemist**. **A party is four** (`Party.PARTY_CAP`): the first four in draft order march, and any beyond that wait in town as the **reserve**, free to call up when someone dies. The cap replaced "draft every body," which measured as the dominant line (AUDIT.md D1: five bare bodies won 100% of medium runs) and solved the draft.
 - **Equipment** — auto-assigned to the best-fit member (fighters get shields, rogues get lockpicks); class-agnostic pieces exist.
 - **Spell** — party-wide magic in a shared grimoire. A **drafted** working is *prepared*: reusable run-long, spent once per room. A scroll **found** in the dungeon *burns* on use. Power is `power + ⌊best mind ÷ 2⌋`, +2 more with a wizard present; a loosed combat working keeps half its force every round for the rest of the fight, and in the boss chamber the party looses every working it has. See **The Grimoire** below.
+- **Tactic** — learned technique, gated by **capability rather than class** and arranged in a small skill tree. See **Tactics** below.
 - **Personality** — archetypes that bias the whole party's decisions (The Bold, The Cunning, The Covetous, The Scholarly, The Devout, The Reckless).
 
 ### Pack Construction (guaranteed coverage)
-Every pack contains: **2 characters, 3 equipment, 2 spells, 1 personality**. Two characters is the coverage floor — enough that no draft is dead, few enough that a four-strong party isn't force-fed adventurers it can never field (at 3/pack the mining harness measured ~5 wasted picks per draft). With the cap, 20 of a drafter's 24 picks are kit, which is where the format's decisions now live.
+Every pack contains: **2 characters, 3 equipment, 2 spells, 1 personality, 1 tactic**. Two characters is the coverage floor — enough that no draft is dead, few enough that a four-strong party isn't force-fed adventurers it can never field (at 3/pack the mining harness measured ~5 wasted picks per draft). With the cap, 20 of a drafter's 24 picks are kit, which is where the format's decisions now live.
 
 ### AI Drafters
 Each AI seat has a **draft persona** (e.g. "Warlord" prioritizes fighters+weapons, "Archmage" hoards spells, "Guildmaster" balances). AI picks by need-weighted scoring: class gaps, kit synergies, personality fit — with a small chaos factor so drafts differ. The player sees what neighbors picked trickle back in later packs (signal reading, like real MTG).
@@ -162,6 +163,45 @@ takes light away. The grimoire, the room and the lantern are one economy.
 > answer. Before that, 55% of fight rooms held something reactive and a
 > reaction fired in 15% of them; after, 30%. The cards were never
 > underpowered, they were under-noticed (DESIGN_DIALOGUE.md §11).
+
+---
+
+## Tactics — a skill tree gated by capability
+
+Twelve tactics on four branches. The design rule: **a tactic is gated by
+what a party can DO, not by what class it is.** Every class swings at
+something, so anyone benefits from Flanking; anything with a working in
+the grimoire benefits from Concentration. A card that read "fighters
+only" would collapse into the class it names, and the draft already has
+character cards for that.
+
+| Branch | Root | Branch card |
+|---|---|---|
+| ⚔️ **The Line** | Flanking — +1 a round with the numbers | Encirclement — +3 a round, and the thing in the middle swings 2 weaker |
+| 🛡️ **The Line** | Shield Wall — 1 less damage a round | Focused Fire — +1 a round, +4 against armour |
+| 🧠 **The Working** | Concentration — a working holds at *full* force | Widening — every combat spell becomes an area working |
+| ⏱️ **The Working** | Quickening — one more cast a room | Ward-Weaving — 2 less damage a round per spell loosed |
+| 🔧 **The Room** | Improvised Arms — +5 to any opening made from the furniture | Firewatch — no self-harm from your own reactions, and flame traps hold no surprises |
+| 🕯️ **The March** | Rationing — one more march of light | Field Surgery — two wounds close at every shrine, not only in town |
+
+**The tree is the decision.** A tier-two tactic is a **blank** without its
+root, which makes tactics the first card type where a pick's value
+depends on a pick you already made. Measured on hard: an orphaned branch
+card is worth 11.8% against a 10.6% baseline, a root alone about 15%, and
+a completed Line branch **22.0%** — beating two unrelated roots at 17.4%.
+
+Branches are deliberately stronger than roots. A root is a safe pick that
+always works; a branch is a conditional one that can be a blank, so it
+has to pay more or nobody would complete a tree. The first cut had this
+backwards and the tree created no decision at all
+(DESIGN_DIALOGUE.md §12).
+
+> **An idle tactic says why.** A silently dead card reads as a bug, so
+> the party panel shows it dashed with its reason: *"Field Surgery is
+> drafted but idle: it grows out of Rationing, and nobody in this party
+> has learned that."*
+
+A tactic is knowledge: drafting the same one twice is drafting it once.
 
 ---
 

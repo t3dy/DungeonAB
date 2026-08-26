@@ -8,6 +8,7 @@
 
 import { CARD_TYPES, CLASSES } from '../game/Cards.js';
 import { Adventurer, makeTavernVolunteer } from './Adventurer.js';
+import { tacticModifiers } from '../game/Tactics.js';
 
 /**
  * A delving party is four adventurers. Not five, not ten.
@@ -93,6 +94,20 @@ export class Party {
     // Which workings have been spent in the current room (cleared on
     // the march between rooms by restStep)
     this.castThisRoom = new Set();
+
+    // Learned technique. A tactic is live only when the party has the
+    // capability it asks for and holds its prerequisite (game/Tactics.js).
+    //
+    // Deduplicated by id: a tactic is knowledge, and knowing it twice is
+    // knowing it once. The same card can be opened in two packs, and
+    // without this a party that drafted three Quickenings would have
+    // loosed three extra workings a room.
+    const seenTactics = new Set();
+    this.tactics = pool
+      .filter(c => c.type === 'tactic')
+      .filter(c => !seenTactics.has(c.id) && seenTactics.add(c.id))
+      .map(c => ({ ...c }));
+    this.duplicateTactics = pool.filter(c => c.type === 'tactic').length - this.tactics.length;
 
     // Personality archetypes (party-wide)
     this.personalities = pool
@@ -398,7 +413,10 @@ export class Party {
    */
   provision(marches, difficulty = 'medium') {
     const share = SUPPLY_COVERAGE[difficulty] ?? SUPPLY_COVERAGE.medium;
-    this.supply = Math.max(2, Math.round(marches * share));
+    // Rationing is learned technique, not more oil: the same lamp,
+    // trimmed and measured (game/Tactics.js)
+    const rationed = tacticModifiers(this).supply;
+    this.supply = Math.max(2, Math.round(marches * share) + rationed);
     this.marches = 0;
     return this.supply;
   }

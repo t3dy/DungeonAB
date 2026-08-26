@@ -399,6 +399,20 @@ function updateUI(state) {
     `;
   }).join('') + reserveRows;
 
+  // Drilled technique, and anything drafted that cannot fire. An idle
+  // tactic is shown dashed with its reason on hover, because a silently
+  // dead card reads as a bug (game/Tactics.js).
+  const tacticsEl = document.getElementById('party-tactics');
+  const live = state.party.tactics || [];
+  const idle = state.party.dormantTactics || [];
+  tacticsEl.innerHTML = [
+    ...live.map(t => `<span class="tactic-chip">${t.icon} ${escapeHtml(t.name)}</span>`),
+    ...idle.map(text => {
+      const name = (text.match(/^\S+\s(.+?) is drafted/) || [])[1] || 'A tactic';
+      return `<span class="tactic-chip idle" title="${escapeHtml(text)}">${escapeHtml(name)} · idle</span>`;
+    }),
+  ].join('');
+
   // Log
   const log = document.getElementById('debug-log');
   log.innerHTML = state.log.map(e => `<div class="log-entry">${escapeHtml(e)}</div>`).join('');

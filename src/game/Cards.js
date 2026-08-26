@@ -7,11 +7,21 @@
  * scholarly one.
  */
 
+/* Tactic cards are defined in Tactics.js, beside the tree that gives
+ * them meaning, and re-exported here so the draft pool stays one list.
+ * Tactics.js deliberately does NOT import back from this file -- see the
+ * note on TACTIC_TYPE there. */
+import { TACTIC_CARDS } from './Tactics.js';
+export { TACTIC_CARDS };
+
 export const CARD_TYPES = {
   CHARACTER: 'character',
   EQUIPMENT: 'equipment',
   SPELL: 'spell',
   PERSONALITY: 'personality',
+  // Learned technique, gated by what a party can do rather than by
+  // class, and arranged in a small skill tree (game/Tactics.js)
+  TACTIC: 'tactic',
 };
 
 export const CLASSES = {
@@ -226,6 +236,7 @@ export function getAllCards() {
     ...EQUIPMENT_CARDS,
     ...SPELL_CARDS,
     ...PERSONALITY_CARDS,
+    ...TACTIC_CARDS,
   ];
 }
 
