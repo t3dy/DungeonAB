@@ -43,3 +43,16 @@ tests/                   ← Node test runner suites
 4. **Gradient outcomes**: encounters resolve on a spectrum, not binary win/lose.
 5. **Procgen validates**: dungeon graph must be traversable entrance→boss before acceptance.
 6. **The story panel is a product surface**: writing quality matters as much as mechanics.
+7. **No state change is silent**: if a number the player could care about moves, the run's
+   record says so. Every observable field lives in `Chronicle.snapshotState` and has writing
+   in `Chronicle.FIELDS`; `tick()` wraps its body and diffs on every exit path, so a mechanic
+   cannot dodge the record by returning early. `tests/silence.test.js` is the gate and fails
+   if a field can move unreported or is added without writing.
+   *Why it is a rule:* hand-placed narration proved bypassable — heroes were dying on the
+   march with the Chronicle saying nothing, because a snapshot was taken three lines too late.
+8. **A new mechanic ships with its writing and its record**: prose for what the player reads,
+   a `Chronicle` field + entry for what gets saved, and coverage that both exist. Curate what
+   reaches the prose (a beat, not a steady state) — but record everything.
+9. **When a mechanic lands, run the asset pass**: ask which existing cards, classes and
+   personalities should now interact with it, and redesign the ones written for a game that no
+   longer exists. Mechanics drift ahead of assets otherwise. See `ASSET_REVIEW.md`.

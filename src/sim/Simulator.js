@@ -10,6 +10,7 @@
 import { generateDungeon, dungeonFromLayout, ROOM_TYPES } from '../world/DungeonGen.js';
 import { Party } from '../agents/Party.js';
 import { activeTactics, dormantTactics } from '../game/Tactics.js';
+import { Chronicle, snapshotState, diffEvents, SALIENCE } from '../narrative/Chronicle.js';
 import { CLASSES } from '../game/Cards.js';
 import {
   getRoomOptions, decideRoomAction, resolveRoomAction,
@@ -62,6 +63,21 @@ export class Simulator {
     this.lastNarration = null;
     this.log = [];
 
+    // The chronicle spans the campaign, not the delve: a party that
+    // descends again appends a chapter rather than starting over
+    // (narrative/Chronicle.js). A caller may hand in the party's
+    // existing chronicle to continue the saga.
+    this.chronicle = opts.chronicle instanceof Chronicle
+      ? opts.chronicle
+      : new Chronicle(this.party.members.map(m => m.name).join(', ') || 'the party');
+    this.chronicle.beginDelve({
+      seed, difficulty, depth: this.depth,
+      theme: this.dungeon.theme?.name || null,
+      condition: this.condition && this.condition.id !== 'none' ? this.condition.name : null,
+      roster: this.party.members.map(m => `${m.icon} ${m.name} (${m.class})`),
+    });
+    this.stateBefore = snapshotState(this);
+
     // Say what the party drilled, and warn about anything drafted that
     // cannot fire — a silently dead card reads as a bug (Tactics.js)
     const drilled = composeTactics(activeTactics(this.party));
@@ -81,10 +97,51 @@ export class Simulator {
   }
 
   /**
-   * One tick = one room entered, decided, resolved
+   * One tick = one room entered, decided, resolved.
+   *
+   * The body is wrapped rather than inlined so that the state diff runs
+   * on EVERY path out of it, including the half-dozen early returns for
+   * wipes, venom and the dark. That wrapping is the whole guarantee
+   * behind "nothing is silent": a mechanic cannot dodge the record by
+   * returning early, because it does not control the exit
+   * (narrative/Chronicle.js).
    */
   tick() {
     if (this.paused || this.gameOver) return;
+    const logBefore = this.log.length;
+    try {
+      this._tick();
+    } finally {
+      this.recordTick(logBefore);
+    }
+  }
+
+  /**
+   * Diff the run's observable state and hand every change to the
+   * chronicle, along with the room's prose. Called by tick() on every
+   * exit path.
+   */
+  recordTick(logBefore = this.log.length) {
+    const after = snapshotState(this);
+    const events = diffEvents(this.stateBefore, after, {
+      turn: this.turn,
+      room: this.lastNarration?.room || null,
+    });
+    // Lines the tick pushed straight to the log (supply, march deaths)
+    // are beats in their own right and belong in the record too
+    for (const text of this.log.slice(logBefore)) {
+      events.push({
+        turn: this.turn, room: this.lastNarration?.room || null, field: null,
+        icon: '·', text, salience: SALIENCE.BEAT, described: true,
+      });
+    }
+    this.stateBefore = after;
+    this.lastEvents = events;
+    if (this.lastNarration) this.chronicle.recordRoom(this.lastNarration, events);
+    else if (events.length) for (const e of events) this.chronicle.recordAside(e.text, e.salience);
+  }
+
+  _tick() {
 
     this.turn++;
     this.roomIndex++;
@@ -96,6 +153,16 @@ export class Simulator {
       this.finish(true);
       return;
     }
+
+    // Snapshot the roster BEFORE anything in this tick can touch it.
+    //
+    // restStep() burns the lamp, and the dark takes health and leaves
+    // scars — so capturing after it meant anyone the march killed or
+    // wounded was already excluded from the comparison and never got a
+    // line. A silence audit found 47% of wounds unreported and, worse,
+    // heroes dying with the Chronicle saying nothing at all.
+    const rosterBefore = this.party.living();
+    const woundsBefore = new Map(this.party.members.map(m => [m.name, m.wounds]));
 
     // Between-room recovery, and the lantern burning down with it
     const supplyNote = this.party.restStep();
@@ -115,8 +182,17 @@ export class Simulator {
       return;
     }
 
+    // Anyone the march itself took, before a single decision is made.
+    // Captured HERE, not after the room resolves — otherwise everyone
+    // the room kills is misread as a march death and filtered out of
+    // the room's own report.
+    const marchDeadList = rosterBefore.filter(m => !m.isAlive());
+    const marchDead = new Set(marchDeadList.map(m => m.name));
+    const marchFalls = marchDeadList.map(m => composeFall(m));
+    for (const line of marchFalls) this.addLog(line);
+
     // Poison taken last room works now (the venomous are patient)
-    const livingBefore = this.party.living();
+    const livingBefore = rosterBefore;
     const linger = this.party.applyLinger();
     if (linger && !this.party.isAlive()) {
       // The venom finishes what the fight started
@@ -132,11 +208,6 @@ export class Simulator {
       return;
     }
 
-    // Scars carried in, so the room can report the ones it adds. One
-    // place for all of them: a fight, a trap, a disaster, lingering
-    // venom and the dark all land here, and none of them can forget.
-    const woundsBefore = new Map(this.party.members.map(m => [m.name, m.wounds]));
-
     // The room, decided and resolved
     const predicament = composePredicament(room, this.dungeon.theme);
     const options = getRoomOptions(room, this.party);
@@ -144,12 +215,15 @@ export class Simulator {
     const result = resolveRoomAction(room, this.party, chosen);
     this.lastResult = result;   // structured outcome, for analytics/mining
 
-    // Anyone who walked in alive and didn't walk out gets their beat
-    const fallen = livingBefore.filter(m => !m.isAlive());
+    // Anyone who walked in alive and didn't walk out. The march's own
+    // dead were reported above, so they are excluded rather than counted
+    // twice (marchDead is captured before the room, not after).
+    const fallen = livingBefore.filter(m => !m.isAlive() && !marchDead.has(m.name));
 
     if (result.success !== false || room.cleared) this.roomsCleared++;
 
     this.lastNarration = {
+      turn: this.turn,
       room: room.type,
       icon: room.icon,
       roomIndex: roomIdx,          // array index, for the renderer's effects
@@ -158,7 +232,7 @@ export class Simulator {
       predicament,
       deliberation: composeDeliberation(chosen, options, this.party),
       resolution: composeResolution(room, chosen, result, this.party),
-      falls: fallen.map(m => composeFall(m)),
+      falls: [...marchFalls, ...fallen.map(m => composeFall(m))],
       wounds: this.party.members
         .filter(m => m.isAlive() && m.wounds > (woundsBefore.get(m.name) ?? 0))
         .map(m => composeWound(m)),
@@ -283,6 +357,18 @@ export class Simulator {
       ? composeVictory(this.party, this.roomsCleared, this.dungeon.theme)
       : composeWipe(this.party, this.roomsCleared, this.dungeon.theme);
     this.addLog(victory ? '🏆 The dungeon is beaten!' : '☠️ The party has fallen.');
+
+    // Close the chapter with the tally the ending is read against
+    this.chronicle.endDelve({
+      victory,
+      epitaph: this.epitaph,
+      roomsCleared: this.roomsCleared,
+      score: this.party.score,
+      gold: this.party.gold,
+      trophies: this.party.trophies.length,
+      survivors: this.party.living().length,
+      turns: this.turn,
+    });
   }
 
   getState() {
@@ -339,6 +425,11 @@ export class Simulator {
       narration: this.lastNarration,
       log: this.log.slice(-12),
     };
+  }
+
+  /** The saga so far, for saving, exporting, or reading later. */
+  getChronicle() {
+    return this.chronicle;
   }
 
   getRunResult() {
