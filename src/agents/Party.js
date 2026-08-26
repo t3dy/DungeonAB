@@ -161,6 +161,77 @@ export class Party {
     return target;
   }
 
+  /**
+   * The whole band, saveable.
+   *
+   * This is what makes "the same party delves again" mean something:
+   * wounds, trophies, learned workings, drilled technique and the
+   * contents of the purse all survive the trip to town and back.
+   * Cards are stored by id and rehydrated, so a save stays valid across
+   * rebalances (Chronicles.js).
+   */
+  toJSON() {
+    return {
+      members: this.members.map(m => m.toJSON()),
+      reserve: this.reserve.map(m => m.toJSON()),
+      grimoire: this.grimoire.map(s => ({ ...s })),
+      tactics: this.tactics.map(t => ({ ...t })),
+      personalities: [...this.personalities],
+      trophies: this.trophies.map(t => ({ ...t })),
+      gold: this.gold,
+      score: this.score,
+      materials: this.materials,
+      potions: this.potions.map(x => ({ ...x })),
+      supply: this.supply,
+      spellsLearned: this.spellsLearned,
+      poisonLinger: this.poisonLinger || 0,
+      alarmed: !!this.alarmed,
+      desecrated: !!this.desecrated,
+    };
+  }
+
+  /**
+   * Rebuild a party from a save. `lookup` resolves a card id to a card
+   * (getCard from the pool); anything it cannot resolve is dropped
+   * rather than crashing the load.
+   */
+  static fromJSON(saved, lookup) {
+    const cards = [];
+    for (const m of saved.members || []) {
+      const card = lookup(m.id);
+      if (card) cards.push(card);
+    }
+    for (const m of saved.reserve || []) {
+      const card = lookup(m.id);
+      if (card) cards.push(card);
+    }
+    const party = new Party(cards);
+
+    // Reapply the marks of previous delves
+    const all = [...party.members, ...party.reserve];
+    const savedAll = [...(saved.members || []), ...(saved.reserve || [])];
+    all.forEach((m, i) => m.restore(savedAll[i], lookup));
+
+    // Prefer the pool's copy so rebalances reach saved parties, but keep
+    // the stored one for anything the pool never had -- found scrolls
+    // carry synthetic ids and used to vanish on load without a word.
+    const rehydrate = c => (c && { ...(lookup(c.id) || {}), ...c });
+    party.grimoire = (saved.grimoire || []).map(rehydrate).filter(Boolean);
+    party.tactics = (saved.tactics || []).map(rehydrate).filter(Boolean);
+    party.personalities = [...(saved.personalities || [])];
+    party.trophies = (saved.trophies || []).map(t => ({ ...t }));
+    party.gold = saved.gold || 0;
+    party.score = saved.score || 0;
+    party.materials = saved.materials || 0;
+    party.potions = (saved.potions || []).map(x => ({ ...x }));
+    party.supply = saved.supply ?? party.supply;
+    party.spellsLearned = saved.spellsLearned || 0;
+    party.poisonLinger = saved.poisonLinger || 0;
+    party.alarmed = !!saved.alarmed;
+    party.desecrated = !!saved.desecrated;
+    return party;
+  }
+
   living() {
     return this.members.filter(m => m.isAlive());
   }

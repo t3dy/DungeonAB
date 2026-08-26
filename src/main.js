@@ -21,6 +21,50 @@ import { setupCardEditor, loadPlayerPacks } from './ui/CardEditorUI.js';
 import { installAlchemyPack } from './packs/alchemyPack.js';
 import { ROOM_HELP, CARD_TYPE_HELP, ATTRITION_HELP, describeTickEvents } from './ui/GameGuide.js';
 import { composeMend } from './narrative/Narrator.js';
+import { ChronicleLibrary, chronicleFilename } from './game/Chronicles.js';
+import { toMarkdown } from './narrative/Chronicle.js';
+
+/* The shelf the party's saga is kept on (game/Chronicles.js) */
+const chronicles = new ChronicleLibrary();
+
+/**
+ * Hand the player a file. The viewer sandbox blocks nothing here — this
+ * is the game's own page — but the object URL is revoked either way so a
+ * long session does not leak blobs.
+ */
+function offerDownload(filename, text, mime = 'text/markdown') {
+  const blob = new Blob([text], { type: `${mime};charset=utf-8` });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+/**
+ * Write the run to the shelf. Called at the end of every delve and
+ * again when the campaign closes, so a refresh never costs the story.
+ * Returns the stored record, or null if there is nothing to save.
+ */
+function saveChronicle() {
+  const sim = appState.simulator;
+  if (!sim?.getChronicle) return null;
+  try {
+    const record = chronicles.save({
+      id: appState.sagaId || null,
+      chronicle: sim.getChronicle(),
+      party: sim.party,
+      difficulty: appState.difficulty,
+    });
+    appState.sagaId = record.id;
+    return record;
+  } catch (e) {
+    return null;   // a full shelf must never cost the player their run
+  }
+}
 
 const HELP_SEEN_KEY = 'dungeonab_help_seen';
 
@@ -137,11 +181,100 @@ function setupRecords() {
         }).join('')
       : '<div class="records-empty">No campaigns yet. The Hall awaits its first name.</div>';
 
+    // The shelf of sagas: every party whose story was kept, readable
+    // again and — if anyone came back — continuable (game/Chronicles.js)
+    const sagas = chronicles.list();
+    const sagaRows = sagas.length
+      ? sagas.map(sg => {
+          const when = new Date(sg.date).toLocaleDateString();
+          const state = sg.alive ? '<span style="color:#3ddc84;">still standing</span>'
+            : '<span style="color:#8a6a5a;">did not come back</span>';
+          return `<div class="saga-row" data-saga="${sg.id}">
+            <div style="flex:1;min-width:0;">
+              <div style="color:#c0b090;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(sg.partyName.split(',')[0])}${sg.partyName.includes(',') ? ' &amp; co.' : ''}</div>
+              <div style="color:#665;font-size:0.68rem;">${sg.delves} delve${sg.delves > 1 ? 's' : ''} · ${state} · ${when}</div>
+            </div>
+            <button data-read="${sg.id}" title="Read the saga">📖</button>
+            <button data-save="${sg.id}" title="Download the save file">💾</button>
+            <button data-drop="${sg.id}" title="Forget this saga">🗑️</button>
+          </div>`;
+        }).join('')
+      : '<div class="records-empty">No sagas kept yet. Finish a delve and the story is written down.</div>';
+
     body.innerHTML =
       (bestRows ? `<dl class="records-best">${bestRows}</dl>` : '') +
       career +
+      `<div style="color:#d8a53f;font-size:0.8rem;margin-bottom:0.4rem;">📜 Sagas kept</div>` +
+      sagaRows +
+      `<div style="display:flex;gap:0.4rem;margin:0.5rem 0 1rem;">
+         <button id="saga-import-btn" style="flex:1;font-size:0.75rem;padding:0.4rem;">📂 Load a save file</button>
+       </div>
+       <input id="saga-import-input" type="file" accept="application/json,.json" style="display:none;">` +
       `<div style="color:#d8a53f;font-size:0.8rem;margin-bottom:0.4rem;">Recent campaigns</div>` +
       runRows;
+
+    body.querySelectorAll('[data-read]').forEach(btn => {
+      btn.addEventListener('click', () => showSaga(btn.dataset.read));
+    });
+    body.querySelectorAll('[data-save]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const rec = chronicles.get(btn.dataset.save);
+        offerDownload(`chronicle-${rec.partyName.split(',')[0].toLowerCase().replace(/[^a-z0-9]+/g, '-')}.json`,
+          chronicles.exportJSON(btn.dataset.save), 'application/json');
+      });
+    });
+    body.querySelectorAll('[data-drop]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const rec = chronicles.get(btn.dataset.drop);
+        const who = rec?.partyName.split(',')[0] || 'this saga';
+        // Forgetting a saga is not undoable, so it is asked for plainly
+        if (window.confirm(`Forget the chronicle of ${who}? The story cannot be recovered.`)) {
+          chronicles.remove(btn.dataset.drop);
+          render();
+        }
+      });
+    });
+    const importBtn = body.querySelector('#saga-import-btn');
+    const importInput = body.querySelector('#saga-import-input');
+    if (importBtn && importInput) {
+      importBtn.addEventListener('click', () => importInput.click());
+      importInput.addEventListener('change', async () => {
+        const file = importInput.files?.[0];
+        if (!file) return;
+        const result = chronicles.importJSON(await file.text());
+        if (result.ok) {
+          showToast('📂', `${result.record.partyName.split(',')[0]}'s saga is on the shelf.`);
+          render();
+        } else {
+          showToast('⚠️', result.error);
+        }
+      });
+    }
+  };
+
+  /**
+   * Read a kept saga. The whole document, rendered from the same
+   * Markdown the download hands over, so what the player reads onscreen
+   * and what they keep on disk are the same story.
+   */
+  const showSaga = (id) => {
+    const resumed = chronicles.resume(id);
+    if (!resumed) return;
+    const body = document.getElementById('records-body');
+    const md = chronicles.exportMarkdown(id, { ledger: true });
+    body.innerHTML = `
+      <button id="saga-back" style="font-size:0.75rem;padding:0.35rem 0.7rem;margin-bottom:0.6rem;">← Back to the Hall</button>
+      <div style="color:${resumed.continuable ? '#3ddc84' : '#8a6a5a'};font-size:0.75rem;margin-bottom:0.6rem;">
+        ${resumed.continuable
+          ? `${resumed.standing} still standing${resumed.bench ? ` · ${resumed.bench} in reserve` : ''} — this party can delve again.`
+          : escapeHtml(resumed.reason || 'This saga is finished.')}
+      </div>
+      <div class="saga-doc">${renderChronicleHtml(md)}</div>
+      <button id="saga-download" style="width:100%;margin-top:0.7rem;padding:0.6rem;font-size:0.8rem;">📖 Download this chronicle</button>`;
+    body.querySelector('#saga-back').addEventListener('click', render);
+    body.querySelector('#saga-download').addEventListener('click', () => {
+      offerDownload(`chronicle-${resumed.chronicle.partyName.split(',')[0].toLowerCase().replace(/[^a-z0-9]+/g, '-')}.md`, md);
+    });
   };
 
   const open = () => { render(); overlay.classList.add('active'); };
@@ -150,6 +283,24 @@ function setupRecords() {
   openBtn.addEventListener('click', open);
   closeBtn.addEventListener('click', close);
   overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+}
+
+/**
+ * Just enough Markdown for a chronicle: headings, list items, emphasis
+ * and the foldable ledger. Everything is escaped first, so a party name
+ * can never smuggle markup into the page.
+ */
+function renderChronicleHtml(md) {
+  return escapeHtml(md)
+    .replace(/^### (.*)$/gm, '<h4>$1</h4>')
+    .replace(/^## (.*)$/gm, '<h3>$1</h3>')
+    .replace(/^# (.*)$/gm, '<h2>$1</h2>')
+    .replace(/^- (.*)$/gm, '<li>$1</li>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/_(.+?)_/g, '<em>$1</em>')
+    .replace(/&lt;details&gt;&lt;summary&gt;Ledger&lt;\/summary&gt;/g, '<details><summary>Ledger</summary>')
+    .replace(/&lt;\/details&gt;/g, '</details>')
+    .split('\n\n').map(p => (/^<(h\d|li|details)/.test(p.trim()) ? p : `<p>${p}</p>`)).join('');
 }
 
 /* -------------------------------------------------------------- */
@@ -739,6 +890,40 @@ function showFinal(state) {
     document.getElementById('show-results-btn').classList.add('active');
   });
   display.appendChild(storyBtn);
+
+  // The saga goes on the shelf whether they won or not, and can be
+  // carried out of the browser (game/Chronicles.js)
+  const saved = saveChronicle();
+  if (saved) {
+    const chronicle = appState.simulator.getChronicle();
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;gap:0.5rem;margin-top:0.5rem;';
+
+    const mdBtn = document.createElement('button');
+    mdBtn.textContent = '📖 Download the chronicle';
+    mdBtn.title = 'The whole saga as a document you can read';
+    mdBtn.style.cssText = 'flex:1;padding:0.7rem;font-size:0.82rem;background:#221c14;color:#c0b090;';
+    mdBtn.addEventListener('click', () => {
+      offerDownload(chronicleFilename(chronicle, 'md'), toMarkdown(chronicle, { ledger: true }));
+    });
+
+    const jsonBtn = document.createElement('button');
+    jsonBtn.textContent = '💾 Save file';
+    jsonBtn.title = 'A save you can keep, share, or load back in to delve again with this party';
+    jsonBtn.style.cssText = 'flex:1;padding:0.7rem;font-size:0.82rem;background:#221c14;color:#c0b090;';
+    jsonBtn.addEventListener('click', () => {
+      offerDownload(chronicleFilename(chronicle, 'json'),
+        chronicles.exportJSON(saved.id), 'application/json');
+    });
+
+    row.append(mdBtn, jsonBtn);
+    display.appendChild(row);
+
+    const note = document.createElement('div');
+    note.style.cssText = 'margin-top:0.4rem;font-size:0.7rem;color:#776;text-align:center;';
+    note.textContent = `Saved as "${saved.partyName.split(',')[0]}" — delve ${saved.delves}. Find it under 🏛️ Records.`;
+    display.appendChild(note);
+  }
 
   display.classList.add('active');
 }

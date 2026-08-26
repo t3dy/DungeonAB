@@ -102,6 +102,40 @@ export class Adventurer {
     this.wounds = Math.max(0, this.wounds - n);
   }
 
+  /**
+   * Everything that must survive a save: the card it was built from,
+   * plus the marks the delve left on it.
+   *
+   * Kit is stored WHOLE rather than by id. Ids alone looked tidier and
+   * silently lost anything the draft pool has never heard of -- a
+   * scroll picked up in a library is filed as `found-sp-fear-1`, and a
+   * dead adventurer's belt buckle as `found-buckle`, and neither
+   * resolves. On load the id is still preferred when the pool knows it,
+   * so rebalances reach saved parties; the stored copy is the fallback,
+   * not the default.
+   */
+  toJSON() {
+    return {
+      id: this.id, name: this.name,
+      health: this.health, wounds: this.wounds, alive: this.alive,
+      equipment: this.equipment.map(e => ({ ...e })),
+      weaponMods: this.weaponMods.map(w => ({ ...w })),
+    };
+  }
+
+  /** Restore onto a freshly built Adventurer. */
+  restore(saved, lookup = () => null) {
+    if (!saved) return this;
+    this.name = saved.name ?? this.name;
+    this.health = Math.min(this.maxHealth, saved.health ?? this.health);
+    this.wounds = saved.wounds ?? 0;
+    this.alive = saved.alive !== false;
+    const rehydrate = c => (c && (lookup(c.id) || c)) || null;
+    this.equipment = (saved.equipment || []).map(rehydrate).filter(Boolean);
+    this.weaponMods = (saved.weaponMods || []).map(rehydrate).filter(Boolean);
+    return this;
+  }
+
   isAlive() {
     return this.alive && this.health > 0;
   }
