@@ -692,3 +692,92 @@ Worth naming explicitly: **difficulty now lives in two constants, not
 one.** `STAT_SCALE` sharpens the monsters; `SUPPLY_COVERAGE` decides how
 much of the walk is spent in the dark. Anyone tuning one should look at
 the other.
+
+---
+
+## 11. The room as a participant — element × feature reactions (2026-08-19)
+
+The question that started this: *would an area-of-effect spell like a
+fireball light wooden furniture in the room on fire?*
+
+It should. And once you ask it, the answer reorganises how the whole
+game's parts relate. Up to now a room's furniture was a menu of
+*options* — shove the monster into the pit, crack the crates, fight from
+behind the pillars — and a spell was a number applied to a monster. The
+two systems shared a room and ignored each other.
+
+### The design, in two rules
+
+**NARR:** The rule we wrote first was not mechanical, it was about
+legibility: **every reaction must be one a player would guess.** Fire
+takes wood. Lightning runs through standing water. Frost puts a brazier
+out and glazes a floor. Holy light soaks into old stone and stops
+whatever was going to climb out of the sarcophagus. Nobody should need a
+rules lookup, because the fun is *seeing it coming* — noticing the
+crates before you cast, not being surprised afterwards.
+
+**TCG:** And the mechanical rule: **a reaction is a trade, not a bonus.**
+Burning the crates costs the cover they were giving. Dousing the brazier
+costs the light. Freezing the font makes the floor treacherous for
+everyone, party included. Electrifying standing water hurts the party,
+because the party is standing on the same floor.
+
+That rule is enforced by a test rather than by good intentions, and it
+caught two entries we had written as pure upside — steam (cover *and* a
+half-blind monster, for nothing) and the brazier flare (six damage and
+light, for nothing). Steam now scalds the party too; the flare spends the
+brazier's fuel and leaves the bracket cold.
+
+### It is built entirely out of what we already had
+
+Thirteen features already existed with tiles on screen. Four elements
+already existed on spell cards. All the new module adds is a **matter**
+map — what each feature is physically made of, kept separate from `tags`
+because a font's matter is water and its *role* is a shrine fixture, and
+those are different questions — and a 4 x 7 reaction table.
+
+Three existing cards became area workings (Chain Lightning, Kindle, and
+Shatter, which gained the frost element its own card text always implied
+— "stone remembers being loose, and cold reminds it"). Three new ones
+fill out the elements: **Fireball**, **Hoarfrost**, **Dawnbreak**.
+
+A bolt is still a bolt. Firebolt does not set the room alight, and a
+player who wants the room to catch has to draft for it.
+
+### It reaches the other systems, which is the point
+
+**NARR:** The line that made this feel like one game instead of three
+was the blaze feeding the lamp. A burning room *is* light. So a fireball
+in a crate-stacked room buys marches of oil, and a frost working that
+douses the only brazier takes light away — the grimoire, the room and
+the supply clock turn out to be one economy, and nobody had to bolt that
+together. It fell out of the fiction.
+
+### The measurement that mattered was not damage, it was noticing
+
+First pass, the system was almost invisible: **55% of fight rooms held
+something the party's elements could touch, and a reaction fired in
+15% of them.** The reactions worked; the party never looked up.
+
+So the decision layer learned to read the room — a caster holding fire,
+standing in front of dry crates, can see what is about to happen.
+Firing went to **30%**, and the arcane package went from −1.3 to +0.1
+average improvement-when-drafted on hard.
+
+**TCG:** Which is the more interesting finding. We could have made
+Fireball hit harder and got nothing; the card was never underpowered, it
+was under-*noticed*. Content that the decision layer cannot see is
+content that does not exist — the same lesson as the stale drafter
+evaluator in §10, one layer down.
+
+Final state: all four card types within 1.1 points of each other on hard,
+curve at 87.9 / 69.5 / 45.6 against the 88 / 71 / 45 target.
+
+### Where this goes next
+
+Two threads open deliberately. **Positional combat** — ranks, and who
+stands where when the fireball goes off — is the half of the spatial
+rework not yet built; the reaction table is written so a position layer
+can extend it rather than replace it. And **tactics cards**, a
+class-agnostic skill tree, which is where a player will buy the ability
+to exploit all of this on purpose.

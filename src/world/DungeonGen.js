@@ -621,9 +621,9 @@ export const DUNGEON_THEMES = {
  */
 export const STAT_SCALE = {
   easy: 0.9,
-  medium: 1.29,
-  hard: 1.50,
-  nightmare: 1.84,
+  medium: 1.33,
+  hard: 1.56,
+  nightmare: 1.96,
 };
 
 /* ------------------------------------------------------------------ */

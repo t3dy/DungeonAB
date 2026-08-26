@@ -14,6 +14,7 @@ import {
   FEATURE_ACTIONS, featureActions, featureModifiers, featureActionWeights,
   isFeatureAction, getFeature, roomFeatures, actionTier,
 } from '../world/RoomFeatures.js';
+import { reactionsFor, foldReactions } from '../world/Reactions.js';
 
 function roll() {
   return Math.random() * 10;
@@ -275,6 +276,19 @@ export function natureAdjustments(party, room) {
   if (m.trait === 'swarm') {
     add('spell-strike', 2);
   }
+  // The party reads the room, not just the monster. A caster holding
+  // fire, standing in front of a stack of dry crates, can see what is
+  // about to happen — and so can the player. Without this the reactions
+  // existed but almost never fired: 55% of fight rooms held something
+  // the party's elements could touch and a reaction landed in 15% of
+  // them, because nobody thought to look up (Reactions.js).
+  const areaHeld = party.grimoire.filter(sp => sp.use === 'combat' && sp.aoe);
+  const roomAnswers = areaHeld.some(sp => reactionsFor(sp, room).length > 0);
+  if (roomAnswers) {
+    add('spell-strike', 3);
+    add('fight', -1);
+  }
+
   // A caster holding the foe's weakness knows it — and wants to use it
   const combatSpells = party.grimoire.filter(s => s.use === 'combat');
   if (combatSpells.some(s => elementMult(s, m) > 1)) {
@@ -599,7 +613,8 @@ export function resolveRoomAction(room, party, optionId, options = null) {
       const roomMods = featureModifiers(room);
       const cover = (roomMods.cover || 0) + (options?.extraCover || 0);
       const mirrorInHand = hasItem(party, 'eq-silvered-mirror');
-      const blessed = party.hasClass(CLASSES.CLERIC) || roomMods.revealEthereal || mirrorInHand;
+      const blessed = party.hasClass(CLASSES.CLERIC) || roomMods.revealEthereal
+        || mirrorInHand || !!options?.forceRevealEthereal;
       if (monster.trait === 'ethereal' && mirrorInHand && !roomMods.revealEthereal) {
         preps.push({ source: 'the Silvered Hand-Mirror', text: '🪞 The Silvered Hand-Mirror catches the ethereal thing where it truly stands: weapons do full damage.' });
       }
@@ -613,7 +628,10 @@ export function resolveRoomAction(room, party, optionId, options = null) {
           ? { source: 'the cleric', text: '✨ The cleric blesses the blades: the ethereal monster takes full weapon damage.' }
           : { source: monster.name, text: '👻 The monster is ethereal and the party\'s blows pass through it: weapon damage ×0.6 (no cleric to bless the blades).' });
       }
-      let monsterAtk = monster.attack;
+      // What an area working did to the room, if one was loosed here
+      for (const note of options?.reactionNotes || []) preps.push(note);
+
+      let monsterAtk = Math.max(1, monster.attack + (options?.monsterAtkMod || 0));
       if (party.alarmed) {
         monsterAtk += 2;
         party.alarmed = false;
@@ -751,6 +769,7 @@ export function resolveRoomAction(room, party, optionId, options = null) {
       // *all* of the win-rate difference. Under the old flat cast the
       // second and third spell in a grimoire were dead cards in the one
       // fight that decides the run.
+      const reactions = [];
       const combatHeld = party.grimoire.filter(sp => sp.use === 'combat').length;
       const casts = monster.isBoss
         ? Math.max(1, combatHeld)
@@ -786,12 +805,34 @@ export function resolveRoomAction(room, party, optionId, options = null) {
         // ...and it keeps working for the rest of the fight
         sustain += Math.round(burst * SPELL_SUSTAIN_SHARE);
         spellsCast.push(spell);
+
+        // The room answers. An area working does not stop at the
+        // monster: fire takes the crates, lightning runs through the
+        // font, frost puts the brazier out (Reactions.js).
+        for (const r of reactionsFor(spell, room)) reactions.push(r);
+      }
+
+      // What the room did, folded into one set of modifiers
+      const room_ = foldReactions(reactions);
+      if (room_.damage) monster.health = Math.max(1, monster.health - room_.damage);
+      if (room_.heal) party.healParty(room_.heal);
+      if (room_.selfHarm) for (const m of party.living()) m.takeDamage(room_.selfHarm);
+      // A blaze is light to march by; a doused brazier takes light away
+      if (room_.light > 0) party.addSupply(room_.light);
+      else if (room_.light < 0) party.supply = Math.max(0, party.supply + room_.light);
+      // Burnt crates are gone, and so is the cover they gave
+      for (const id of room_.consumed) {
+        room.features = (room.features || []).filter(f => f !== id);
       }
 
       // Then fight the softened monster, with the workings still up
       const result = resolveRoomAction(room, party, 'fight', {
-        spellSustain: sustain,
+        spellSustain: sustain + room_.burn,
         spellSustainSource: spellsCast.map(sp => sp.name).join(' + ') || null,
+        extraCover: room_.cover,
+        monsterAtkMod: room_.monsterAtk,
+        forceRevealEthereal: room_.revealEthereal,
+        reactionNotes: room_.notes,
       });
       result.spell = spellsCast[0]?.name || null;
       result.spellsCast = spellsCast.map(sp => sp.name);

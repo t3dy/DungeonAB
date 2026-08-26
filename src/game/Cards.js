@@ -176,7 +176,7 @@ export const SPELL_CARDS = [
   { id: 'sp-shield', type: CARD_TYPES.SPELL, name: 'Aegis of Ash', icon: '🛡️', school: 'abjuration', power: 3, use: 'combat', text: 'Blunts every blow of the fight, not just the first.' },
   { id: 'sp-light', type: CARD_TYPES.SPELL, name: 'Dancing Light', icon: '💡', school: 'evocation', power: 2, use: 'utility', text: 'Reveals traps and ambushes in the next room — and once the oil is gone, carries the party through a march of dark for free.' },
   { id: 'sp-fear', type: CARD_TYPES.SPELL, name: 'Cause Fear', icon: '😱', school: 'necromancy', power: 4, use: 'combat', text: 'Weak monsters flee before the fight begins.' },
-  { id: 'sp-chain', type: CARD_TYPES.SPELL, name: 'Chain Lightning', icon: '⚡', school: 'evocation', element: 'shock', power: 5, use: 'combat', text: 'Arcs from foe to foe until it runs out of foes or enthusiasm.' },
+  { id: 'sp-chain', type: CARD_TYPES.SPELL, name: 'Chain Lightning', icon: '⚡', school: 'evocation', element: 'shock', power: 5, use: 'combat', aoe: true, text: 'Arcs from foe to foe until it runs out of foes or enthusiasm — and through anything wet or metal on the way.' },
   { id: 'sp-frost', type: CARD_TYPES.SPELL, name: 'Frost Lance', icon: '❄️', school: 'evocation', element: 'frost', power: 5, use: 'combat', text: 'Cold, precise, and deeply personal.' },
   { id: 'sp-sunder', type: CARD_TYPES.SPELL, name: 'Sunder', icon: '💢', school: 'transmutation', power: 4, use: 'combat', text: 'Armor remembers being ore. This spell reminds it.' },
   { id: 'sp-radiance', type: CARD_TYPES.SPELL, name: 'Radiant Lance', icon: '🌟', school: 'theurgy', element: 'holy', power: 4, use: 'combat', text: 'A line of noon driven through whatever the dark is wearing.' },
@@ -186,8 +186,11 @@ export const SPELL_CARDS = [
 
   // Workings that read the room: each one turns a piece of a furnished
   // chamber into a weapon or a resource (world/RoomFeatures.js)
-  { id: 'sp-shatter', type: CARD_TYPES.SPELL, name: 'Shatter', icon: '🪨', school: 'transmutation', power: 4, use: 'combat', text: 'Stone remembers being loose. Pillars, boulders and bad ceilings all listen.' },
-  { id: 'sp-kindle', type: CARD_TYPES.SPELL, name: 'Kindle', icon: '🕯️', school: 'evocation', element: 'fire', power: 3, use: 'combat', text: 'Lights any fire in the room from across it — braziers included, and whatever is standing near one.' },
+  { id: 'sp-shatter', type: CARD_TYPES.SPELL, name: 'Shatter', icon: '🪨', school: 'transmutation', element: 'frost', power: 4, use: 'combat', aoe: true, text: 'Stone remembers being loose, and cold reminds it. Pillars, boulders and bad ceilings all listen.' },
+  { id: 'sp-kindle', type: CARD_TYPES.SPELL, name: 'Kindle', icon: '🕯️', school: 'evocation', element: 'fire', power: 3, use: 'combat', aoe: true, text: 'Lights any fire in the room from across it — braziers, crates, shelves, and whatever is standing near one.' },
+  { id: 'sp-fireball', type: CARD_TYPES.SPELL, name: 'Fireball', icon: '🔥', school: 'evocation', element: 'fire', power: 5, use: 'combat', aoe: true, text: 'It does not stop at the monster. Whatever else in the room will burn, burns.' },
+  { id: 'sp-hoarfrost', type: CARD_TYPES.SPELL, name: 'Hoarfrost', icon: '🧊', school: 'evocation', element: 'frost', power: 4, use: 'combat', aoe: true, text: 'The cold goes everywhere at once: into the water, into the fire, into the cracks in the stone.' },
+  { id: 'sp-dawnbreak', type: CARD_TYPES.SPELL, name: 'Dawnbreak', icon: '🌟', school: 'theurgy', element: 'holy', power: 4, use: 'combat', aoe: true, text: 'Noon, indoors, all at once. Old stone and old glass both answer it.' },
   { id: 'sp-purify', type: CARD_TYPES.SPELL, name: 'Purify the Font', icon: '⛲', school: 'theurgy', power: 4, use: 'heal', text: 'Still water, said over and made willing — poured out when someone is failing, and again each round after. Best where the dungeon left a font.' },
 ];
 

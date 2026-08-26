@@ -128,6 +128,43 @@ Light and Eyes of the Mouse went from the two worst cards in the game
 
 ---
 
+## The Room as a Participant — element × feature reactions
+
+A fireball loosed in a room stacked with crates should not politely
+strike only the monster. Every room feature is made of something
+(`Reactions.MATTER`), every spell carries an element, and the pairing
+does what a player would guess — which is the design rule: **no reaction
+should need a rules lookup.**
+
+|  | 🪵 wood | 💧 water | 🔥 flame | 🪨 stone | ⚙️ metal | 🪞 glass |
+|---|---|---|---|---|---|---|
+| 🔥 **fire** | **blaze** — burns every round, cover burns away, light to march by | **steam** — monster half-blind, fog is cover, party scalded | **flare** — 6 damage, spends the fuel | — | searing | — |
+| ⚡ **shock** | — | **conduction** — 7 damage, and the party is on the same floor | — | — | **arc** — 4 damage | shiver |
+| ❄️ **frost** | — | **glaze** — monster cannot keep its feet, nor quite can the party | **douse** — smoke for cover, and that much less light | brittle | — | — |
+| 🌟 **holy** | — | **blessing** — the party drinks | — | **consecrate** — nothing rises from the sarcophagus | — | reveals the ethereal |
+
+Two rules govern the table:
+
+1. **A reaction is a trade, not a bonus.** Burning the crates costs their
+   cover; dousing the brazier costs the light; electrifying the floor
+   hurts whoever is standing on it. A test enforces this — any reaction
+   whose gain crosses a threshold must give something back.
+2. **Only an area working reaches the furniture.** A bolt is a bolt.
+   Firebolt does not set the room alight; **Fireball**, **Hoarfrost**,
+   **Dawnbreak**, Chain Lightning, Kindle and Shatter do.
+
+Reactions cross into the other systems rather than sitting beside them:
+a blaze is light, so it **feeds the supply clock**, and a doused brazier
+takes light away. The grimoire, the room and the lantern are one economy.
+
+> **Content the decision layer cannot see does not exist.** The party
+> weights `spell-strike` up when it is holding a working the room will
+> answer. Before that, 55% of fight rooms held something reactive and a
+> reaction fired in 15% of them; after, 30%. The cards were never
+> underpowered, they were under-noticed (DESIGN_DIALOGUE.md §11).
+
+---
+
 ## Attrition — what the march costs
 
 A dungeon crawl is a war of attrition or it is a boss-rush with scenery.
