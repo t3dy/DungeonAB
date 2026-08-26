@@ -20,6 +20,7 @@ import { setupArchive } from './ui/ArchiveUI.js';
 import { setupCardEditor, loadPlayerPacks } from './ui/CardEditorUI.js';
 import { installAlchemyPack } from './packs/alchemyPack.js';
 import { ROOM_HELP, CARD_TYPE_HELP, ATTRITION_HELP, describeTickEvents } from './ui/GameGuide.js';
+import { composeMend } from './narrative/Narrator.js';
 
 const HELP_SEEN_KEY = 'dungeonab_help_seen';
 
@@ -412,6 +413,11 @@ function appendStory(narration, roomIndex) {
   const fallLines = (narration.falls || [])
     .map(f => `<div class="story-fall">${escapeHtml(f)}</div>`)
     .join('');
+  // Wounds sit between the outcome and the deaths: worse than a scratch,
+  // short of a fall (Narrator.composeWound)
+  const woundLines = (narration.wounds || [])
+    .map(w => `<div class="story-wound">${escapeHtml(w)}</div>`)
+    .join('');
   const asideLine = narration.aside
     ? `<div class="story-aside">${escapeHtml(narration.aside)}</div>`
     : '';
@@ -423,6 +429,7 @@ function appendStory(narration, roomIndex) {
     <div class="story-predicament">${escapeHtml(narration.predicament)}</div>
     <div class="story-deliberation">${escapeHtml(narration.deliberation)}</div>
     <div class="story-resolution">${escapeHtml(narration.resolution)}</div>
+    ${woundLines}
     ${fallLines}
     ${asideLine}
   `;
@@ -521,7 +528,14 @@ function showTown(state) {
     btn(
       missing === 0 ? '💤 Everyone Is Rested' : `🛏️ Rest & Heal All — ${healCost}g${pious ? ' (temple rate)' : ''}`,
       missing > 0 && gold >= healCost,
-      () => { campaign.healAll(); render(); },
+      () => {
+        // The surgeon's report: wounds closed is news, and the delve
+        // never told the player they would be (Narrator.composeMend)
+        const result = campaign.healAll();
+        const line = composeMend(result?.mended);
+        if (line) showToast('✚', line.replace(/^✚\s*/, ''));
+        render();
+      },
     );
     btn(
       `🧪 Buy a Healing Draught — ${TOWN_PRICES.potion}g`,

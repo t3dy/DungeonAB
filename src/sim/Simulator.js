@@ -18,6 +18,7 @@ import {
   composePredicament, composeDeliberation, composeResolution,
   composeWipe, composeVictory, composeFall,
   composeSecretFound, composeDetour, composeTrapdoor,
+  composeSupply, composeWound,
 } from '../narrative/Narrator.js';
 
 export class Simulator {
@@ -89,14 +90,15 @@ export class Simulator {
 
     // Between-room recovery, and the lantern burning down with it
     const supplyNote = this.party.restStep();
-    if (supplyNote) this.addLog(supplyNote.text);
+    const supplyLine = composeSupply(supplyNote);
+    if (supplyLine) this.addLog(supplyLine);
     if (!this.party.isAlive()) {
       // The dark finished what the dungeon started
       this.lastNarration = {
         room: room.type, icon: room.icon, roomIndex: roomIdx, action: 'dark',
         predicament: composePredicament(room, this.dungeon.theme),
         deliberation: 'There is no light left to decide anything by.',
-        resolution: supplyNote.text + ' The last of the party does not get up.',
+        resolution: supplyLine + ' The last of the party does not get up.',
         falls: this.party.members.filter(m => !m.isAlive()).map(m => composeFall(m)),
         aside: null,
       };
@@ -121,6 +123,11 @@ export class Simulator {
       return;
     }
 
+    // Scars carried in, so the room can report the ones it adds. One
+    // place for all of them: a fight, a trap, a disaster, lingering
+    // venom and the dark all land here, and none of them can forget.
+    const woundsBefore = new Map(this.party.members.map(m => [m.name, m.wounds]));
+
     // The room, decided and resolved
     const predicament = composePredicament(room, this.dungeon.theme);
     const options = getRoomOptions(room, this.party);
@@ -143,12 +150,15 @@ export class Simulator {
       deliberation: composeDeliberation(chosen, options, this.party),
       resolution: composeResolution(room, chosen, result, this.party),
       falls: fallen.map(m => composeFall(m)),
+      wounds: this.party.members
+        .filter(m => m.isAlive() && m.wounds > (woundsBefore.get(m.name) ?? 0))
+        .map(m => composeWound(m)),
       supply: this.party.supply,
       aside: linger
         ? (linger.cured
             ? '🐍 The cleric cures the lingering venom on the march: no damage taken.'
             : `🐍 The venom carried from the last room acts: ${linger.damage} damage taken on the march.`)
-        : (supplyNote ? supplyNote.text : null),
+        : supplyLine,
     };
 
     // A side passage? Secret doors must be noticed first; open ones

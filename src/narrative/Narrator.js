@@ -410,6 +410,106 @@ export function composeResolution(room, optionId, result, party) {
 /* Falls — a hero's death is reported by name                          */
 /* ------------------------------------------------------------------ */
 
+/* ------------------------------------------------------------------ */
+/* Attrition — the two clocks, reported as they tick                   */
+/* ------------------------------------------------------------------ */
+
+/*
+ * House style, same as everywhere else in this file: say what happened
+ * and what it cost. No flourishes standing in for information — a line
+ * the player cannot act on is a line that should not be here.
+ *
+ * Variety matters more for these than for room writing, because a delve
+ * fires them five or six times. The dark in particular escalates: the
+ * first benighted march reads differently from the fourth, so a long
+ * walk in the dark tells a story instead of repeating a sentence.
+ */
+const SUPPLY_LINES = {
+  low: [
+    n => `🕯️ The lantern is burning low: oil for ${n} more ${n === 1 ? 'march' : 'marches'}.`,
+    n => `🕯️ The wick is well down the oil. ${n} more ${n === 1 ? 'march' : 'marches'} of light, then none.`,
+    n => `🕯️ Someone checks the reservoir and does not like the answer: oil for ${n} more ${n === 1 ? 'march' : 'marches'}.`,
+  ],
+  guttered: [
+    () => '🕯️ The last of the oil goes. From here the party walks in the dark.',
+    () => '🕯️ The flame stands up, thins, and is gone. The party is out of oil.',
+    () => '🕯️ The lantern dies with the party still under the hill. No more light to carry.',
+  ],
+  conjured: [
+    (name, full) => `💡 ${name} carries the march instead of oil: none of the ${full} damage the dark would have taken.`,
+    (name, full) => `💡 No oil left, so ${name} does the work — light enough to walk by, and ${full} damage nobody pays.`,
+    (name, full) => `💡 ${name} kindles in the empty air and the party walks on seeing. The dark takes nothing.`,
+  ],
+  'dark-seen': [
+    full => `👁️ The dark is no trouble to eyes that know it: the party walks on, ${full} damage unpaid.`,
+    full => `👁️ Someone in the party reads the black like a page, and the march costs nothing.`,
+    full => `👁️ Borrowed night-sight leads them through whole — none of the usual ${full} damage.`,
+  ],
+};
+
+/* The dark gets worse the longer it lasts — the player should feel the
+ * clock running, not read the same sentence four times. */
+const DARK_LINES = [
+  d => `🌑 The party gropes through the dark and pays for it: ${d} damage to everyone.`,
+  d => `🌑 Another march by touch alone. Walls, edges, and things underfoot take ${d} from each of them.`,
+  d => `🌑 The dark is telling now. Everyone is bleeding somewhere they cannot see: ${d} damage each.`,
+  d => `🌑 They have stopped calling it a march. ${d} damage to everyone, again, and the hill goes on.`,
+];
+
+/**
+ * One march's worth of the supply clock, as prose.
+ * Takes the data note from Party.burnSupply.
+ */
+export function composeSupply(note) {
+  if (!note) return null;
+  if (note.kind === 'dark') {
+    const n = Math.max(1, note.darkMarches || 1);
+    const line = DARK_LINES[Math.min(n, DARK_LINES.length) - 1];
+    return line(note.damage);
+  }
+  const pool = SUPPLY_LINES[note.kind];
+  if (!pool) return null;
+  if (note.kind === 'conjured') return pick(pool)(note.source, note.full);
+  if (note.kind === 'dark-seen') return pick(pool)(note.full);
+  return pick(pool)(note.supply);
+}
+
+const WOUND_LINES = [
+  (n, c) => `✚ ${n} takes a wound that will not close down here. Healing can bring them back to ${c}, no further, until town.`,
+  (n, c) => `✚ That one leaves a mark on ${n}. Their ceiling drops to ${c} for the rest of the delve.`,
+  (n, c) => `✚ ${n} is opened up badly enough that the delve will keep it: ${c} is as whole as they get until town.`,
+];
+
+const DEEP_WOUND_LINES = [
+  (n, c, w) => `✚ ${n} is wounded again — ${w} scars now, and nothing can heal them past ${c} before town.`,
+  (n, c, w) => `✚ ${w} wounds on ${n}, and the ceiling with them: ${c}, and no more.`,
+];
+
+/**
+ * A newly taken wound, named for the player.
+ *
+ * Wounds used to happen in silence — the health bar's ceiling quietly
+ * dropped and the Chronicle never said why. A mechanic the player cannot
+ * see is a mechanic they cannot plan around.
+ */
+export function composeWound(member) {
+  const ceiling = member.effectiveMax ? member.effectiveMax() : member.maxHealth;
+  return member.wounds > 1
+    ? pick(DEEP_WOUND_LINES)(member.name, ceiling, member.wounds)
+    : pick(WOUND_LINES)(member.name, ceiling);
+}
+
+/**
+ * The surgeon's bill, reported when town clears the delve's scars.
+ */
+export function composeMend(mended) {
+  if (!mended || mended.wounds === 0) return null;
+  const who = mended.names.length === 1
+    ? mended.names[0]
+    : `${mended.names.slice(0, -1).join(', ')} and ${mended.names[mended.names.length - 1]}`;
+  return `✚ The town surgeon sets what the march only bandaged: ${mended.wounds} wound${mended.wounds === 1 ? '' : 's'} closed on ${who}, and full health is theirs again.`;
+}
+
 export function composeFall(member) {
   return `☠️ ${member.name} falls. The party's ${member.class} is dead; the survivors march on.`;
 }

@@ -71,7 +71,13 @@ describe('The lantern burns down', () => {
       'everyone pays the toll');
   });
 
-  test('a conjured light spares the party, and is spent for the room', () => {
+  test('a conjured light spares the march, and is spent for the room', () => {
+    // Two cards answer the dark and both spare the toll; they are
+    // differentiated by cost, not effect. Dancing Light is a prepared
+    // working, so lighting the march spends it for that room and it
+    // cannot also be revealing traps. Eyes of the Mouse is passive.
+    // Splitting their power instead measured worse twice over -- see
+    // the note on Party.burnSupply.
     const party = new Party([byClass('fighter'), sp('sp-light')]);
     party.provision(2, 'medium');
     while (party.supply > 0) party.restStep();
@@ -80,6 +86,10 @@ describe('The lantern burns down', () => {
     const note = party.restStep();
     assert.equal(note.kind, 'conjured', 'Dancing Light carries the march');
     assert.equal(hp(party), before, 'and nobody pays the toll');
+    assert.equal(note.source, 'Dancing Light', 'the note names what saved them');
+
+    // Spent for the room: the working is unavailable until the march
+    assert.equal(party.castSpell('utility', 'sp-light'), null, 'already loosed this room');
   });
 
   test('eyes that read the dark never pay the toll at all', () => {
@@ -88,11 +98,15 @@ describe('The lantern burns down', () => {
     while (party.supply > 0) party.restStep();
 
     const before = hp(party);
+    // Announced once, then the Chronicle goes quiet about a state that
+    // is not changing -- but the party still pays nothing, march after
+    // march, which is the part that matters here.
+    const first = party.restStep();
+    assert.equal(first.kind, 'dark-seen', 'the dark is simply readable');
     for (let i = 0; i < 3; i++) {
-      const note = party.restStep();
-      assert.equal(note.kind, 'dark-seen', 'the dark is simply readable');
+      assert.equal(party.restStep(), null, 'and it stops being news');
     }
-    assert.equal(hp(party), before, 'across march after march');
+    assert.equal(hp(party), before, 'across march after march, nobody pays');
   });
 
   test('provisioning scales to the walk, and difficulty decides the dark', () => {

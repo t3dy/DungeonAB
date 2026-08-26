@@ -93,11 +93,16 @@ export class Campaign {
     // Town is where the delve's scars are actually worked out: the
     // surgeon sets what the march only bandaged, so wounds clear before
     // the healing is applied (Adventurer.mendWounds).
+    const scarred = this.party.living().filter(m => m.wounds > 0);
+    const mended = {
+      wounds: scarred.reduce((sum, m) => sum + m.wounds, 0),
+      names: scarred.map(m => m.name),
+    };
     for (const m of this.party.living()) {
       m.mendWounds();
       m.heal(m.maxHealth);
     }
-    return { healed, cost };
+    return { healed, cost, mended };
   }
 
   /**
