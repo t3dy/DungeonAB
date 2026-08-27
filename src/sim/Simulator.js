@@ -85,12 +85,18 @@ export class Simulator {
 
     // Say what the party drilled, and warn about anything drafted that
     // cannot fire — a silently dead card reads as a bug (Tactics.js)
+    // ...and the saga carries all three, not just the onscreen log. A
+    // drafted card that cannot fire is exactly the kind of thing a
+    // player reads the record to understand (tools/census.mjs found the
+    // idle line reaching the panel and nothing else).
     const packed = composeProvision(this.party.provisionNotes);
-    if (packed) this.log.push(packed);
+    if (packed) { this.log.push(packed); this.chronicle.recordAside(packed); }
     const drilled = composeTactics(activeTactics(this.party));
-    if (drilled) this.log.push(drilled);
+    if (drilled) { this.log.push(drilled); this.chronicle.recordAside(drilled); }
     for (const idle of dormantTactics(this.party)) {
-      this.log.push(composeDormant(idle));
+      const line = composeDormant(idle);
+      this.log.push(line);
+      this.chronicle.recordAside(line);
     }
 
     // Score multiplier: difficulty (mirrors SnakeAB progression), then
@@ -242,6 +248,11 @@ export class Simulator {
       icon: room.icon,
       roomIndex: roomIdx,          // array index, for the renderer's effects
       action: chosen,
+      // Everything the party could have done here. The deliberation
+      // prints two of them; the record keeps all of them, which is what
+      // tools/census.mjs reads to tell an option nobody is offered from
+      // an option nobody takes.
+      offered: options.map(o => o.id),
       spellElement: result.spellElement || null,   // colors the strike FX
       predicament,
       deliberation: composeDeliberation(chosen, options, this.party),

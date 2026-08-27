@@ -1199,3 +1199,53 @@ The editor got the same treatment: a stair is structure, not furniture,
 and retyping one leaves a floor with no way off it. The archive's
 minimap draws each floor as its own plan, side by side, from its own
 origin — floors stacked in a single plan view are an illegible pile.
+
+
+## 16. The census — asking how often, not whether (2026-08-27)
+
+**NARR:** Every gate here answers *whether*. Coverage says a beat has
+writing; `tests/prose.js` says it appears in a real seeded transcript;
+the golden files say it has not changed. None of them says **how
+often**, and that is a different question with different answers.
+
+`npm run census` walks six hundred delves and counts what the player
+actually reads. The first run, once the extractor was pointed at the
+right field, found six mechanics under 5% and three of them were real:
+
+- **The boss unleash had no line.** The help has promised since the
+  spell rework that the party empties the grimoire in the throne room.
+  The resolver did it. No transcript ever said so — the mechanic
+  shipped without its writing and every existence-shaped test passed.
+- **The idle-tactic warning reached the panel and never the saga.** A
+  player who reads the record later cannot see why their Field Surgery
+  did nothing, which is exactly the thing the line exists to explain.
+- **The stairhead camp was met by 2% of delves.** Built that morning,
+  with a tactic card written for it. The instrumentation says why: a
+  party reaches the stair at **96% health with 0.35 wounds**, because
+  the first floor is three or four rooms long. A camp that only heals
+  is a choice nobody has a reason to make.
+
+**TCG:** The fix is not to make camping stronger, it is to give it a
+job that exists at 96% health. Wounds do not heal down here — Field
+Surgery at a shrine is the only exception — so a night off the party's
+feet now sets one wound, and the option is offered to the wounded as
+well as the hurt. Met by 2% of delves before, 4-7% after, and Cold Camp
+has something to be good at.
+
+### Offered against taken
+
+The census counts options as well as beats, and the two columns answer
+different questions: an option nobody is *offered* is a generation
+problem, an option nobody *takes* is a decision-layer problem. That
+second column is where the recurring failure of this project lives —
+reactions at 15%, the stale drafter evaluator, the coin-flip stairhead.
+It is now a gate: an option offered forty times and taken under 3% of
+them is decoration.
+
+Calibrating the gate meant sabotaging it. Pinning `study` to a negative
+weight did not make it unreachable, because the chooser floors every
+weight at 0.1 — it was still taken 1.3% of the time it was offered. So
+the threshold sits between a pinned option (~1%) and the least popular
+live one (`leave-it`, 4.8%). A gate whose floor is below what a dead
+option actually scores is a gate that passes on the thing it was
+written to catch.

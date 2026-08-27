@@ -506,11 +506,13 @@ export function composeResolution(room, optionId, result, party) {
     case 'rope-down':
       bits.push(`\u{1FA9C} The party ropes down the shaft beside the stair and lands on ${floorName(room.descendsTo)}.`);
       break;
-    case 'camp-stair':
+    case 'camp-stair': {
+      const set = result.mended ? ` A night off their feet sets one of ${result.mended}'s wounds.` : '';
       bits.push(result.interrupted
-        ? `\u{1F3D5}\uFE0F The party makes camp at the stairhead and something climbs the stair into it: ${result.healed} healed each, ${result.damage} damage taken, and ${floorName(room.descendsTo)} still to go.`
-        : `\u{1F3D5}\uFE0F The party makes camp at the stairhead and eats before the climb: ${result.healed} healed each, then down to ${floorName(room.descendsTo)}.`);
+        ? `\u{1F3D5}\uFE0F The party makes camp at the stairhead and something climbs the stair into it: ${result.healed} healed each, ${result.damage} damage taken, and ${floorName(room.descendsTo)} still to go.${set}`
+        : `\u{1F3D5}\uFE0F The party makes camp at the stairhead and eats before the climb: ${result.healed} healed each, then down to ${floorName(room.descendsTo)}.${set}`);
       break;
+    }
 
     default:
       bits.push(pick(PROCEED_LINES));

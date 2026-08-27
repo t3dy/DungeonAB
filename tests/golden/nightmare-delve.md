@@ -130,7 +130,7 @@ _🕯️ The lantern is burning low: oil for 1 more march._
 
 Steps down, worn in the middle by traffic that stopped a long time ago.
 
-They might have chosen to take the stair down — the Scholarly wanted the knowledge. The party chose to rope down the shaft beside it.
+They might have chosen to take the stair down, or camp at the stairhead first — the Scholarly wanted the knowledge. The party chose to rope down the shaft beside it.
 
 🪜 The party ropes down the shaft beside the stair and lands on the second floor. 🪢 The line goes down the shaft beside the stair: the party descends without burning a march of oil.
 

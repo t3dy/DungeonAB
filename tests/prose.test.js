@@ -322,6 +322,43 @@ describe('Every line can actually be reached', () => {
       `options with no phrase in the writing: ${[...missing].join(', ')}`);
   });
 
+  test('no option is offered over and over and never taken', () => {
+    // The other half of reachability. A line can have writing, a phrase
+    // and a resolver and still never print, because the decision layer
+    // weighs it at nothing — which is how reactions sat at 15% and how
+    // the stairhead camp was a coin flip nobody flipped. If the game
+    // puts a choice in front of the party a hundred times and the party
+    // never once takes it, the choice is decoration.
+    const offered = new Map();
+    const taken = new Map();
+    const bump = (m, k) => m.set(k, (m.get(k) || 0) + 1);
+
+    for (let i = 0; i < 60; i++) {
+      const seed = `dead-option-${i}`;
+      const pool = new SeededRandom(seed).shuffle(getAllCards()).slice(0, 27);
+      const sim = new Simulator(pool, seed, i % 2 ? 'hard' : 'medium');
+      let guard = 0;
+      while (!sim.gameOver && guard++ < 300) {
+        sim.tick();
+        const n = sim.lastNarration;
+        if (!n?.action) continue;
+        for (const id of n.offered || []) bump(offered, id);
+        bump(taken, n.action);
+      }
+    }
+
+    // Never-taken is not the only shape of dead: the weights are floored
+    // at 0.1, so an option weighted to nothing still creeps in — pinned
+    // to the floor, `study` was still taken 1.3% of the times it was
+    // offered. The measured rates here run from `leave-it` at 4.8% up,
+    // so 3% sits between a live option and a pinned one.
+    const FLOOR_RATE = 0.03;
+    const dead = [...offered.entries()]
+      .filter(([id, count]) => count >= 40 && (taken.get(id) || 0) / count < FLOOR_RATE)
+      .map(([id, count]) => `${id} (offered ${count}, taken ${taken.get(id) || 0})`);
+    assert.deepEqual(dead, [], `options the party is never willing to take: ${dead.join(', ')}`);
+  });
+
   test('the quartermaster line is reachable and in voice', () => {
     const party = new Party([CHARACTER_CARDS[0], getCard('pers-craven')]);
     party.provision(10, 'hard');

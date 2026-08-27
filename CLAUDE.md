@@ -67,7 +67,17 @@ tests/                   ← Node test runner suites
 11. **A comparison that cannot fail is worse than no test**: fixtures must sit in a regime
    where the arms could differ. `tests/helpers.js` `armsDiffer` refuses saturated totals,
    the `max(1, …)` damage floor, and differences inside the noise.
-12. **Writing is gated on accuracy, not just existence**: a line must state the number the
+12. **A mechanic nobody meets is not in the game**: coverage proves a beat *can*
+   happen and `tests/prose.js` proves it appears in *some* transcript; neither says how
+   often. `npm run census` walks 600 delves and reports, per mechanic, the share of delves
+   that met it and the times a delve — plus every option offered against how often it was
+   taken, which separates "nobody is offered this" from "nobody wants this". Anything under
+   5% of delves is flagged. `tests/prose.test.js` gates the sharp end: an option offered
+   forty times and taken under 3% of them is decoration.
+   *Why it is a rule:* the boss unleash had no line at all, the idle-tactic warning reached
+   the panel and never the saga, and the stairhead camp — built the same day, with a card
+   supporting it — was met by 2% of delves because parties arrive at the stair at 96% health.
+13. **Writing is gated on accuracy, not just existence**: a line must state the number the
    mechanic applied and invent none (`narrative/Prose.js`), no line may repeat itself through
    a delve, card text and room tells pass a house-style lint, and every writable beat must
    appear in a real seeded transcript. `tests/prose.test.js` is the gate.

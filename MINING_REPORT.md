@@ -1,6 +1,6 @@
 # Mining Report — 700 tables (2800 games), hard
 
-Overall win rate: **69.4%**. AI-piloted drafts
+Overall win rate: **70.8%**. AI-piloted drafts
 (personas rotate through seat 0), one delve per pool. IWD is
 correlational — see caveats in tools/mine.js.
 
@@ -13,31 +13,31 @@ Measured against `STAT_SCALE`: easy 0.9 · medium 1.19 · hard 1.45 · nightmare
 
 | Card | Type | Games | ATA | WR-in | IWD |
 |---|---|---|---|---|---|
-| Quicksilver Daggers | equipment | 862 | 13.0 | 86.2% | +24.2 |
-| Bandolier of Knives | equipment | 902 | 12.9 | 75.6% | +9.1 |
-| The Cunning | personality | 829 | 16.7 | 73.9% | +6.4 |
-| Everburning Lantern | equipment | 939 | 10.7 | 73.6% | +6.3 |
-| Silin the Debt | character | 907 | 11.2 | 73.5% | +6.1 |
-| Blessed Mace | equipment | 916 | 13.1 | 73.4% | +5.8 |
-| The Mouse | character | 894 | 11.3 | 73.3% | +5.6 |
-| Feather Step | spell | 720 | 12.9 | 73.6% | +5.6 |
-| Eyes of the Mouse | spell | 777 | 10.9 | 73.4% | +5.4 |
-| The Tinkerer | personality | 844 | 16.7 | 73.1% | +5.3 |
+| Quicksilver Daggers | equipment | 862 | 13.0 | 84.8% | +20.2 |
+| Bandolier of Knives | equipment | 902 | 12.9 | 76.6% | +8.5 |
+| The Cunning | personality | 829 | 16.7 | 76.7% | +8.4 |
+| Dancing Light | spell | 797 | 10.9 | 75.9% | +7.1 |
+| Eyes of the Mouse | spell | 777 | 10.9 | 75.9% | +7.1 |
+| Blessed Mace | equipment | 916 | 13.1 | 75.5% | +7.0 |
+| The Craven | personality | 832 | 17.2 | 74.9% | +5.8 |
+| The Scholarly | personality | 837 | 16.8 | 74.7% | +5.5 |
+| Everburning Lantern | equipment | 939 | 10.7 | 74.2% | +5.1 |
+| The Devout | personality | 872 | 17.0 | 74.1% | +4.7 |
 
 ### Bottom 10
 
 | Card | Type | Games | ATA | WR-in | IWD |
 |---|---|---|---|---|---|
-| The Vandal | personality | 792 | 17.2 | 63.0% | -9.0 |
-| Frost Lance | spell | 789 | 12.7 | 63.1% | -8.8 |
-| Balm of Hours | spell | 752 | 11.8 | 64.2% | -7.1 |
-| Firewatch | tactic | 566 | 15.2 | 64.1% | -6.6 |
-| The Reckless | personality | 835 | 16.4 | 64.9% | -6.4 |
-| Ward-Weaving | tactic | 550 | 15.2 | 64.5% | -6.1 |
-| Cause Fear | spell | 759 | 13.4 | 65.3% | -5.6 |
-| Knock | spell | 744 | 13.0 | 66.0% | -4.7 |
-| Widening | tactic | 576 | 15.0 | 66.0% | -4.4 |
-| Chain Lightning | spell | 726 | 12.7 | 66.3% | -4.3 |
+| The Reckless | personality | 835 | 16.4 | 62.9% | -11.3 |
+| Balm of Hours | spell | 752 | 11.8 | 62.6% | -11.2 |
+| The Vandal | personality | 792 | 17.2 | 64.9% | -8.3 |
+| Firewatch | tactic | 566 | 15.2 | 65.7% | -6.4 |
+| The Bold | personality | 814 | 16.6 | 67.0% | -5.5 |
+| Knock | spell | 744 | 13.0 | 66.9% | -5.3 |
+| Mending Word | spell | 751 | 11.8 | 67.1% | -5.1 |
+| Focused Fire | tactic | 564 | 15.2 | 66.8% | -5.0 |
+| Ward-Weaving | tactic | 550 | 15.2 | 67.1% | -4.6 |
+| Cause Fear | spell | 759 | 13.4 | 67.7% | -4.3 |
 
 ## Skill expression — seat-0 pilot win rates
 
@@ -47,20 +47,20 @@ the format's measured skill ceiling.
 
 | Pilot | Skill | Games | Win % | Avg bodies drafted |
 |---|---|---|---|---|
-| prodigy | 0.95 | 140 | 67.1% | 4.0 |
-| guildmaster | 0.70 | 140 | 68.6% | 4.0 |
-| warlord | 0.55 | 140 | 67.1% | 4.0 |
-| archmage | 0.50 | 140 | 70.7% | 4.0 |
-| novice | 0.15 | 140 | 48.6% | 2.5 |
+| prodigy | 0.95 | 140 | 74.3% | 4.0 |
+| guildmaster | 0.70 | 140 | 74.3% | 4.0 |
+| warlord | 0.55 | 140 | 72.1% | 4.0 |
+| archmage | 0.50 | 140 | 67.1% | 4.0 |
+| novice | 0.15 | 140 | 52.9% | 2.5 |
 
 ## Party-size win curve
 
 | Characters | Games | Win % |
 |---|---|---|
-| 1 | 16 | 18.8% |
+| 1 | 16 | 31.3% |
 | 2 | 49 | 53.1% |
-| 3 | 57 | 54.4% |
-| 4 | 2678 | 70.4% |
+| 3 | 57 | 59.6% |
+| 4 | 2678 | 71.6% |
 
 ## Kit-count win curves (read this before trusting IWD)
 
@@ -72,203 +72,202 @@ they drag down the WR-in of each spell they happen to contain.
 
 | Held | Spells: games | Spells: win % | Equipment: games | Equipment: win % |
 |---|---|---|---|---|
-| 0 | 31 | 61.3% | — | — |
-| 1 | 119 | 66.4% | — | — |
-| 2 | 186 | 71.0% | — | — |
-| 3 | 225 | 77.3% | 32 | 50.0% |
-| 4 | 333 | 71.8% | 93 | 63.4% |
-| 5 | 386 | 72.8% | 196 | 64.3% |
-| 6 | 380 | 69.2% | 274 | 65.7% |
-| 7 | 247 | 71.3% | 226 | 62.8% |
-| 8 | 229 | 65.9% | 207 | 68.6% |
-| 9+ | 664 | 64.8% | 1766 | 72.2% |
+| 0 | 31 | 64.5% | — | — |
+| 1 | 119 | 72.3% | — | — |
+| 2 | 186 | 72.0% | — | — |
+| 3 | 225 | 79.1% | 32 | 56.3% |
+| 4 | 333 | 74.5% | 93 | 65.6% |
+| 5 | 386 | 68.4% | 196 | 59.7% |
+| 6 | 380 | 71.6% | 274 | 68.2% |
+| 7 | 247 | 75.3% | 226 | 67.3% |
+| 8 | 229 | 69.0% | 207 | 71.0% |
+| 9+ | 664 | 65.8% | 1766 | 73.4% |
 
 ## Class presence
 
 | Class | WR with | WR without | Delta |
 |---|---|---|---|
-| fighter | 69.2% | 70.0% | -0.9 |
-| cleric | 70.7% | 65.1% | +5.6 |
-| wizard | 69.1% | 69.9% | -0.8 |
-| rogue | 71.0% | 66.1% | +4.8 |
-| alchemist | 69.3% | 69.7% | -0.5 |
+| fighter | 70.5% | 71.5% | -0.9 |
+| cleric | 72.3% | 65.7% | +6.5 |
+| wizard | 70.3% | 71.7% | -1.4 |
+| rogue | 71.9% | 68.4% | +3.5 |
+| alchemist | 70.5% | 71.6% | -1.1 |
 
 ## Personality presence
 
 | Archetype | Games | WR with | Delta vs field |
 |---|---|---|---|
-| cunning | 1470 | 72.8% | +3.4 |
-| craven | 832 | 72.5% | +3.0 |
-| scholarly | 837 | 72.3% | +2.9 |
-| pious | 872 | 70.1% | +0.6 |
-| brave | 814 | 67.4% | -2.0 |
-| greedy | 839 | 66.7% | -2.7 |
-| reckless | 1443 | 65.0% | -4.4 |
+| cunning | 1470 | 75.2% | +4.4 |
+| craven | 832 | 74.9% | +4.1 |
+| scholarly | 837 | 74.7% | +3.9 |
+| pious | 872 | 74.1% | +3.3 |
+| greedy | 839 | 69.1% | -1.7 |
+| brave | 814 | 67.0% | -3.9 |
+| reckless | 1443 | 64.7% | -6.1 |
 
 ## Trophies claimed vs winning
 
 | Trophies | Games | Win % |
 |---|---|---|
-| 0 | 273 | 21.2% |
-| 1 | 884 | 62.6% |
-| 2 | 932 | 78.3% |
-| 3 | 444 | 85.1% |
-| 4 | 194 | 81.4% |
-| 5+ | 73 | 91.8% |
+| 0 | 265 | 23.0% |
+| 1 | 887 | 59.9% |
+| 2 | 910 | 82.1% |
+| 3 | 482 | 85.7% |
+| 4 | 190 | 89.5% |
+| 5+ | 66 | 92.4% |
 
 ## Decision outcomes by room and action
 
 | Room:Action | N | Success | Avg damage |
 |---|---|---|---|
-| monster:spell-strike | 1969 | 100.0% | 0.0 |
-| library:study | 1817 | 100.0% | 0.0 |
-| materials:gather | 1785 | 100.0% | 0.0 |
-| stairs:descend | 1688 | 100.0% | 0.0 |
-| lab:pass-by | 1149 | 100.0% | 0.0 |
-| shrine:rest | 1104 | 100.0% | 0.0 |
-| boss:spell-strike | 1093 | 98.3% | 2.5 |
-| trap:push-through | 1045 | 100.0% | 4.4 |
-| monster:fight | 768 | 99.5% | 1.2 |
-| shrine:desecrate | 756 | 100.0% | 0.0 |
-| disaster:scatter | 736 | 46.1% | 0.0 |
-| trap:spell-bypass | 724 | 100.0% | 0.0 |
-| library:pass-by | 720 | 100.0% | 0.0 |
-| monster:flee | 668 | 100.0% | 2.4 |
-| monster:sneak | 653 | 89.7% | 0.0 |
-| disaster:brace | 617 | 100.0% | 5.4 |
-| shrine:pass-by | 612 | 100.0% | 0.0 |
-| treasure:loot | 590 | 84.6% | 0.0 |
-| lab:alchemy | 588 | 100.0% | 0.0 |
-| vault:loot | 562 | 74.0% | 0.0 |
-| trap:disarm | 529 | 90.5% | 0.0 |
-| materials:pass-by | 491 | 100.0% | 0.0 |
-| library:deep-study | 429 | 98.8% | 0.0 |
-| stairs:rope-down | 428 | 100.0% | 0.0 |
-| boss:flee | 388 | 100.0% | 2.4 |
-| disaster:sift-rubble | 369 | 100.0% | 0.0 |
-| library:bless-the-font | 366 | 100.0% | 0.0 |
-| lab:crack-crates | 363 | 100.0% | 0.0 |
-| boss:fight | 358 | 33.0% | 44.8 |
-| trap:search-around | 358 | 99.2% | 0.0 |
-| library:strip-the-shelves | 308 | 100.0% | 0.0 |
-| lab:harvest-spout | 304 | 100.0% | 0.0 |
-| vault:inspect | 291 | 100.0% | 0.0 |
-| trap:smoke-bomb | 283 | 100.0% | 0.0 |
-| treasure:inspect | 281 | 100.0% | 0.0 |
-| boss:fight-from-cover | 268 | 56.0% | 37.3 |
-| corridor:proceed | 266 | 100.0% | 0.0 |
-| boss:shove-into-brazier | 242 | 44.6% | 41.0 |
-| trap:sift-rubble | 238 | 100.0% | 0.0 |
-| lab:strip-the-shelves | 235 | 100.0% | 0.0 |
-| boss:shove-into-pit | 219 | 50.7% | 39.8 |
-| materials:sift-rubble | 213 | 100.0% | 0.0 |
-| shrine:bless-the-font | 195 | 100.0% | 0.0 |
-| shrine:pry-sarcophagus | 188 | 100.0% | 0.9 |
-| monster:turn-undead | 188 | 92.0% | 0.0 |
-| monster:fight-from-cover | 180 | 100.0% | 0.4 |
-| materials:crack-crates | 164 | 100.0% | 0.0 |
-| boss:pry-sarcophagus | 161 | 100.0% | 0.6 |
-| boss:drop-portcullis | 160 | 53.8% | 36.3 |
-| monster:shove-into-brazier | 147 | 99.3% | 0.5 |
+| monster:spell-strike | 1939 | 99.8% | 0.0 |
+| library:study | 1833 | 100.0% | 0.0 |
+| materials:gather | 1765 | 100.0% | 0.0 |
+| stairs:descend | 1591 | 100.0% | 0.0 |
+| boss:spell-strike | 1116 | 98.1% | 2.5 |
+| lab:pass-by | 1115 | 100.0% | 0.0 |
+| shrine:rest | 1114 | 100.0% | 0.0 |
+| trap:push-through | 1002 | 100.0% | 4.3 |
+| monster:fight | 786 | 99.7% | 1.2 |
+| disaster:scatter | 771 | 45.4% | 0.0 |
+| shrine:desecrate | 723 | 100.0% | 0.0 |
+| trap:spell-bypass | 722 | 100.0% | 0.0 |
+| library:pass-by | 686 | 100.0% | 0.0 |
+| monster:sneak | 641 | 88.0% | 0.0 |
+| monster:flee | 639 | 100.0% | 2.4 |
+| shrine:pass-by | 631 | 100.0% | 0.0 |
+| disaster:brace | 597 | 100.0% | 5.4 |
+| lab:alchemy | 586 | 100.0% | 0.0 |
+| treasure:loot | 549 | 80.1% | 0.0 |
+| vault:loot | 544 | 72.6% | 0.0 |
+| trap:disarm | 505 | 90.3% | 0.0 |
+| materials:pass-by | 505 | 100.0% | 0.0 |
+| stairs:rope-down | 441 | 100.0% | 0.0 |
+| library:deep-study | 430 | 97.0% | 0.0 |
+| trap:search-around | 372 | 98.9% | 0.0 |
+| boss:fight | 371 | 33.4% | 45.5 |
+| boss:flee | 366 | 100.0% | 2.4 |
+| lab:crack-crates | 364 | 100.0% | 0.0 |
+| library:bless-the-font | 345 | 100.0% | 0.0 |
+| disaster:sift-rubble | 339 | 100.0% | 0.0 |
+| library:strip-the-shelves | 309 | 100.0% | 0.0 |
+| trap:smoke-bomb | 301 | 100.0% | 0.0 |
+| lab:harvest-spout | 300 | 100.0% | 0.0 |
+| vault:inspect | 286 | 100.0% | 0.0 |
+| treasure:inspect | 284 | 100.0% | 0.0 |
+| boss:fight-from-cover | 272 | 57.7% | 38.8 |
+| corridor:proceed | 271 | 100.0% | 0.0 |
+| lab:strip-the-shelves | 244 | 100.0% | 0.0 |
+| boss:shove-into-brazier | 239 | 50.6% | 38.2 |
+| trap:sift-rubble | 229 | 100.0% | 0.0 |
+| boss:shove-into-pit | 228 | 52.6% | 37.7 |
+| materials:sift-rubble | 216 | 100.0% | 0.0 |
+| shrine:pry-sarcophagus | 209 | 100.0% | 0.9 |
+| materials:crack-crates | 189 | 100.0% | 0.0 |
+| monster:turn-undead | 173 | 91.9% | 0.0 |
+| monster:fight-from-cover | 171 | 100.0% | 0.3 |
+| shrine:bless-the-font | 169 | 100.0% | 0.0 |
+| boss:drop-portcullis | 158 | 55.7% | 33.2 |
+| monster:shove-into-brazier | 152 | 100.0% | 0.2 |
+| treasure:knock-open | 142 | 100.0% | 0.0 |
+| boss:pry-sarcophagus | 140 | 100.0% | 0.7 |
 | materials:harvest-spout | 139 | 100.0% | 0.0 |
-| library:fill-waterskins | 125 | 100.0% | 0.0 |
-| monster:sift-rubble | 124 | 100.0% | 0.0 |
-| monster:shove-into-pit | 123 | 100.0% | 0.5 |
-| treasure:knock-open | 120 | 100.0% | 0.0 |
-| vault:knock-open | 117 | 100.0% | 0.0 |
-| lab:work-the-anvil | 98 | 100.0% | 0.0 |
-| treasure:crack-crates | 97 | 100.0% | 0.0 |
-| vault:leave-it | 94 | 100.0% | 0.0 |
-| stairs:camp-stair | 87 | 100.0% | 2.9 |
-| monster:drop-portcullis | 86 | 100.0% | 0.2 |
-| monster:crack-crates | 84 | 100.0% | 0.0 |
-| monster:topple-boulder | 82 | 100.0% | 0.2 |
-| monster:strip-the-shelves | 81 | 100.0% | 0.0 |
-| boss:turn-undead | 80 | 95.0% | 0.0 |
-| monster:harvest-spout | 78 | 100.0% | 0.0 |
+| stairs:camp-stair | 137 | 100.0% | 2.5 |
+| library:fill-waterskins | 123 | 100.0% | 0.0 |
+| vault:knock-open | 122 | 100.0% | 0.0 |
+| monster:shove-into-pit | 113 | 100.0% | 0.2 |
+| monster:sift-rubble | 109 | 100.0% | 0.0 |
+| monster:crack-crates | 101 | 100.0% | 0.0 |
+| vault:leave-it | 100 | 100.0% | 0.0 |
+| treasure:crack-crates | 98 | 100.0% | 0.0 |
+| lab:work-the-anvil | 93 | 100.0% | 0.0 |
+| monster:topple-boulder | 92 | 100.0% | 0.2 |
+| monster:pry-sarcophagus | 84 | 100.0% | 0.8 |
+| boss:turn-undead | 82 | 84.1% | 0.0 |
+| monster:drop-portcullis | 81 | 100.0% | 0.3 |
+| monster:harvest-spout | 81 | 100.0% | 0.0 |
+| monster:strip-the-shelves | 79 | 100.0% | 0.0 |
 | shrine:fill-waterskins | 77 | 100.0% | 0.0 |
-| treasure:leave-it | 76 | 100.0% | 0.0 |
-| monster:pry-sarcophagus | 73 | 100.0% | 0.9 |
-| monster:bless-the-font | 69 | 100.0% | 0.0 |
-| materials:work-the-anvil | 63 | 100.0% | 0.0 |
-| boss:dark | 59 | 96.6% | 0.7 |
-| boss:bribe | 58 | 100.0% | 0.0 |
-| treasure:pry-sarcophagus | 50 | 100.0% | 1.0 |
+| monster:bless-the-font | 71 | 100.0% | 0.0 |
+| treasure:pry-sarcophagus | 70 | 100.0% | 0.9 |
+| treasure:leave-it | 69 | 100.0% | 0.0 |
+| boss:bribe | 63 | 100.0% | 0.0 |
+| lab:brew-oil | 55 | 100.0% | 0.0 |
+| materials:work-the-anvil | 52 | 100.0% | 0.0 |
+| boss:dark | 48 | 93.8% | 0.5 |
 | vault:strip-the-shelves | 41 | 100.0% | 0.0 |
-| monster:work-the-anvil | 38 | 100.0% | 0.0 |
-| vault:pry-sarcophagus | 37 | 100.0% | 0.6 |
-| lab:brew-oil | 34 | 100.0% | 0.0 |
-| materials:brew-oil | 30 | 100.0% | 0.0 |
-| monster:bribe | 28 | 100.0% | 0.0 |
-| monster:fill-waterskins | 27 | 100.0% | 0.0 |
-| corridor:crack-crates | 24 | 100.0% | 0.0 |
-| monster:cause-fear | 24 | 100.0% | 0.0 |
-| monster:dark | 24 | 91.7% | 0.7 |
-| corridor:sift-rubble | 17 | 100.0% | 0.0 |
-| corridor:harvest-spout | 11 | 100.0% | 0.0 |
-| corridor:bless-the-font | 9 | 100.0% | 0.0 |
-| library:dark | 8 | 100.0% | 0.9 |
-| materials:dark | 6 | 83.3% | 0.3 |
-| trap:dark | 6 | 100.0% | 0.0 |
-| shrine:dark | 6 | 66.7% | 0.0 |
-| disaster:dark | 6 | 100.0% | 0.0 |
+| monster:work-the-anvil | 39 | 100.0% | 0.0 |
+| monster:fill-waterskins | 37 | 100.0% | 0.0 |
+| materials:brew-oil | 35 | 100.0% | 0.0 |
+| monster:bribe | 32 | 100.0% | 0.0 |
+| monster:cause-fear | 29 | 100.0% | 0.0 |
+| vault:pry-sarcophagus | 28 | 100.0% | 0.7 |
+| corridor:crack-crates | 19 | 100.0% | 0.0 |
+| corridor:sift-rubble | 18 | 100.0% | 0.0 |
+| monster:dark | 14 | 100.0% | 1.4 |
+| corridor:harvest-spout | 12 | 100.0% | 0.0 |
+| shrine:dark | 8 | 100.0% | 0.9 |
+| library:dark | 8 | 100.0% | 0.5 |
+| materials:dark | 7 | 100.0% | 0.0 |
+| trap:dark | 7 | 100.0% | 0.0 |
+| vault:dark | 6 | 100.0% | 0.0 |
+| disaster:dark | 5 | 100.0% | 0.0 |
+| corridor:bless-the-font | 5 | 100.0% | 0.0 |
+| lab:dark | 5 | 100.0% | 0.0 |
 | corridor:work-the-anvil | 4 | 100.0% | 0.0 |
-| corridor:fill-waterskins | 4 | 100.0% | 0.0 |
-| lab:dark | 4 | 100.0% | 0.0 |
-| vault:dark | 3 | 100.0% | 0.0 |
-| corridor:dark | 3 | 100.0% | 0.0 |
-| treasure:dark | 2 | 100.0% | 0.0 |
+| treasure:dark | 3 | 100.0% | 0.0 |
+| corridor:fill-waterskins | 2 | 100.0% | 0.0 |
 
 ## Monster lethality (fights + spell-strikes)
 
 | Kind | Fights | Party loss % | Avg damage |
 |---|---|---|---|
-| mad-alchemist | 86 | 25.6% | 19.8 |
-| mad-pyromancer | 95 | 25.3% | 15.0 |
-| bog-witch | 73 | 21.9% | 17.1 |
-| the-cauldron | 96 | 21.9% | 15.4 |
-| grand-errata | 99 | 20.2% | 12.3 |
-| forge-tyrant | 93 | 19.4% | 12.6 |
-| the-precipitate | 92 | 18.5% | 12.0 |
-| dragon-whelp | 92 | 18.5% | 10.7 |
-| ogre-king | 83 | 18.1% | 14.6 |
-| cinder-wyrm | 82 | 17.1% | 11.5 |
-| vampire-lord | 103 | 15.5% | 12.4 |
-| archivist | 98 | 15.3% | 13.4 |
-| abbot-of-worms | 83 | 14.5% | 11.3 |
-| the-bride | 84 | 14.3% | 10.1 |
-| shrouded-king | 93 | 10.8% | 7.6 |
-| glacier-heart | 99 | 10.1% | 11.6 |
-| skeleton | 69 | 1.4% | 0.4 |
-| failed-homunculus | 76 | 1.3% | 0.4 |
-| obsidian-golem | 82 | 1.2% | 1.6 |
-| gelatinous | 86 | 1.2% | 0.6 |
-| mutant-vine | 87 | 0.0% | 0.6 |
-| barrow-shade | 102 | 0.0% | 0.3 |
-| potion-rats | 93 | 0.0% | 0.1 |
-| ink-elemental | 93 | 0.0% | 0.4 |
-| spectral-scribe | 65 | 0.0% | 0.2 |
-| ice-crawler | 99 | 0.0% | 0.3 |
-| frost-wisp | 81 | 0.0% | 0.1 |
-| cinder-bats | 96 | 0.0% | 0.0 |
-| root-golem | 82 | 0.0% | 0.9 |
-| bat-cloud | 96 | 0.0% | 0.0 |
-| goblin-gang | 61 | 0.0% | 0.3 |
-| wraith | 66 | 0.0% | 0.5 |
-| sludge-elemental | 53 | 0.0% | 0.4 |
-| crimson-mist | 91 | 0.0% | 0.5 |
-| thawed-dead | 74 | 0.0% | 0.6 |
-| flying-tomes | 91 | 0.0% | 0.0 |
-| salamander | 102 | 0.0% | 0.5 |
-| magma-toad | 75 | 0.0% | 0.2 |
-| bone-warden | 86 | 0.0% | 0.4 |
-| grave-mites | 122 | 0.0% | 0.0 |
-| rat-swarm | 75 | 0.0% | 0.1 |
-| cinder-imp | 90 | 0.0% | 0.2 |
-| index-wight | 71 | 0.0% | 0.9 |
-| hungry-ghoul | 95 | 0.0% | 0.3 |
-| castle-thrall | 80 | 0.0% | 0.3 |
-| jar-imp | 75 | 0.0% | 0.2 |
-| pickled-thing | 80 | 0.0% | 0.6 |
-| bog-toad | 58 | 0.0% | 0.0 |
-| pale-hound | 85 | 0.0% | 0.1 |
+| the-cauldron | 94 | 25.5% | 17.9 |
+| dragon-whelp | 84 | 25.0% | 16.6 |
+| mad-pyromancer | 99 | 24.2% | 15.9 |
+| bog-witch | 74 | 23.0% | 15.0 |
+| vampire-lord | 88 | 21.6% | 16.0 |
+| forge-tyrant | 89 | 20.2% | 13.0 |
+| mad-alchemist | 92 | 19.6% | 12.4 |
+| cinder-wyrm | 94 | 19.1% | 13.1 |
+| shrouded-king | 95 | 17.9% | 10.9 |
+| archivist | 109 | 16.5% | 13.9 |
+| the-precipitate | 100 | 16.0% | 11.9 |
+| the-bride | 94 | 14.9% | 11.8 |
+| ogre-king | 84 | 14.3% | 11.6 |
+| glacier-heart | 104 | 13.5% | 12.8 |
+| grand-errata | 94 | 10.6% | 9.0 |
+| abbot-of-worms | 93 | 8.6% | 10.7 |
+| obsidian-golem | 93 | 3.2% | 2.2 |
+| wraith | 50 | 2.0% | 0.3 |
+| failed-homunculus | 64 | 1.6% | 0.7 |
+| root-golem | 89 | 1.1% | 1.0 |
+| mutant-vine | 79 | 0.0% | 0.7 |
+| barrow-shade | 100 | 0.0% | 0.3 |
+| potion-rats | 87 | 0.0% | 0.1 |
+| rat-swarm | 80 | 0.0% | 0.1 |
+| ink-elemental | 84 | 0.0% | 0.6 |
+| spectral-scribe | 78 | 0.0% | 0.2 |
+| ice-crawler | 93 | 0.0% | 0.4 |
+| cinder-bats | 87 | 0.0% | 0.0 |
+| pickled-thing | 67 | 0.0% | 0.4 |
+| frost-wisp | 74 | 0.0% | 0.0 |
+| jar-imp | 78 | 0.0% | 0.0 |
+| bog-toad | 78 | 0.0% | 0.3 |
+| crimson-mist | 89 | 0.0% | 0.5 |
+| bone-warden | 97 | 0.0% | 0.2 |
+| goblin-gang | 63 | 0.0% | 0.3 |
+| sludge-elemental | 55 | 0.0% | 0.9 |
+| pale-hound | 93 | 0.0% | 0.1 |
+| thawed-dead | 76 | 0.0% | 0.1 |
+| salamander | 97 | 0.0% | 0.4 |
+| magma-toad | 79 | 0.0% | 0.4 |
+| grave-mites | 116 | 0.0% | 0.0 |
+| gelatinous | 80 | 0.0% | 0.4 |
+| bat-cloud | 103 | 0.0% | 0.0 |
+| cinder-imp | 99 | 0.0% | 0.1 |
+| flying-tomes | 86 | 0.0% | 0.2 |
+| index-wight | 79 | 0.0% | 0.5 |
+| hungry-ghoul | 86 | 0.0% | 0.4 |
+| castle-thrall | 84 | 0.0% | 0.4 |
+| skeleton | 62 | 0.0% | 0.5 |

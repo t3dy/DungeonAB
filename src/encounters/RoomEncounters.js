@@ -114,6 +114,19 @@ export function getFeatureOptions(room, party) {
   });
 }
 
+/**
+ * Can the party cook a material down into lamp oil?
+ *
+ * The alembic's answer to the supply clock. It used to want a materials
+ * room and three marches of oil or fewer, and the coincidence of those
+ * with the card in the pack meant tools/census.mjs saw it fire in under
+ * one delve in twenty-five. A lab bench is the obvious other place to
+ * do it, and five marches is still running low.
+ */
+export function canBrewOil(party) {
+  return hasItem(party, 'eq-alembic') && party.materials > 0 && party.supply <= 5;
+}
+
 export function getRoomOptions(room, party) {
   return [...baseRoomOptions(room, party), ...getFeatureOptions(room, party)];
 }
@@ -212,7 +225,7 @@ function baseRoomOptions(room, party) {
       // The alembic turns the bench on the supply clock: a material
       // cooked down into light. Only worth offering when the lamp
       // actually needs it, or the party will brew oil it cannot carry.
-      if (hasItem(party, 'eq-alembic') && party.materials > 0 && party.supply <= 3) {
+      if (canBrewOil(party)) {
         opts.unshift({ id: 'brew-oil', name: 'Cook Down Lamp Oil', desc: 'A material becomes two marches of light' });
       }
       return opts;
@@ -223,7 +236,7 @@ function baseRoomOptions(room, party) {
         { id: 'gather', name: 'Gather Materials', desc: 'Herbs, salts, quicksilver' },
         { id: 'pass-by', name: 'Leave Them', desc: 'The satchel stays light' },
       ];
-      if (hasItem(party, 'eq-alembic') && party.materials > 0 && party.supply <= 3) {
+      if (canBrewOil(party)) {
         opts.push({ id: 'brew-oil', name: 'Cook Down Lamp Oil', desc: 'A material becomes two marches of light' });
       }
       return opts;
@@ -240,8 +253,17 @@ function baseRoomOptions(room, party) {
       if (hasItem(party, 'eq-grapple')) {
         opts.push({ id: 'rope-down', name: 'Rope Down the Well', desc: 'Straight down the shaft beside the stair: no supply spent' });
       }
-      if (party.living().some(m => m.health < m.effectiveMax())) {
-        opts.push({ id: 'camp-stair', name: 'Camp at the Stairhead', desc: 'Sleep and eat before the next floor: 2 supply, and something may find you' });
+      // Offered to the hurt and to the wounded. A party reaches the
+      // stair at 96% health on average (tools/census.mjs), so a camp
+      // that only healed was a choice nobody had a reason to make: what
+      // it is really for is the wound the delve would otherwise keep.
+      const hurt = party.living().some(m => m.health < m.effectiveMax());
+      const wounded = party.living().some(m => m.wounds > 0);
+      if (hurt || wounded) {
+        opts.push({
+          id: 'camp-stair', name: 'Camp at the Stairhead',
+          desc: 'Sleep and eat before the next floor: 2 supply for 6 healed each and a wound set, and something may find you',
+        });
       }
       return opts;
     }
@@ -378,6 +400,9 @@ export function decideRoomAction(room, party) {
       if (share < 0.5) w += 5;
       else if (share < 0.75) w += 2;
       else w -= 2;                            // barely scratched: not worth the oil
+      // A wound is the other reason to stop, and it does not care how
+      // full the health bars look: nothing else down here closes one
+      if (party.living().some(m => m.wounds > 0)) w += 3;
       // Camping burns oil, and camping without oil to spare is how a
       // party ends up marching the next floor in the dark. Cold Camp
       // halves the bill, so it does not fear the lamp the same way.
@@ -981,6 +1006,12 @@ export function resolveRoomAction(room, party, optionId, options = null) {
       let spellEdge = null;
       let sustain = 0;
 
+      // The help has always promised that the party empties the
+      // grimoire in the boss chamber, and no transcript ever said it
+      // happened: the mechanic shipped without its line, which
+      // tools/census.mjs finds by asking how often each beat is read.
+
+
       for (let c = 0; c < casts; c++) {
         // The caster reads the foe and reaches for the right working:
         // the spell whose element bites hardest (Bestiary weaknesses;
@@ -1020,6 +1051,18 @@ export function resolveRoomAction(room, party, optionId, options = null) {
       }
 
       // What the room did, folded into one set of modifiers
+      // The help has always promised that the party empties the grimoire
+      // in the boss chamber, and no transcript ever said it happened:
+      // the mechanic shipped without its line (tools/census.mjs asks how
+      // often each beat is actually read). Counted after the casting, so
+      // the number is what was loosed rather than what was held.
+      const unleash = (monster.isBoss && spellsCast.length > 1)
+        ? [{
+          source: 'the boss chamber',
+          text: `✨ Nothing is held back for later: the party looses everything it has, ${spellsCast.length} workings in the one fight that matters.`,
+        }]
+        : [];
+
       const room_ = foldReactions(reactions);
       if (room_.damage) monster.health = Math.max(1, monster.health - room_.damage);
       if (room_.heal) party.healParty(room_.heal);
@@ -1059,7 +1102,9 @@ export function resolveRoomAction(room, party, optionId, options = null) {
         castsThisFight: spellsCast.length,
         monsterAtkMod: room_.monsterAtk,
         forceRevealEthereal: room_.revealEthereal,
-        reactionNotes: room_.notes,
+        // The unleash line leads: it explains why what follows is three
+        // workings rather than one
+        reactionNotes: [...unleash, ...room_.notes],
       });
       result.spell = spellsCast[0]?.name || null;
       result.spellsCast = spellsCast.map(sp => sp.name);
@@ -1395,6 +1440,14 @@ export function resolveRoomAction(room, party, optionId, options = null) {
         m.heal(CAMP_HEAL);
         healed += m.health - before;
       }
+      // A night's sleep sets what the march only bandaged. One wound,
+      // from whoever is carrying the most of them — the only place
+      // besides a shrine with Field Surgery that a wound closes before
+      // town, and the reason to stop when nobody is bleeding.
+      const worst = party.living()
+        .filter(m => m.wounds > 0)
+        .sort((a, b) => b.wounds - a.wounds)[0] || null;
+      if (worst) worst.mendWounds(1);
       // A camp is a fire and a smell of food at the top of a stair that
       // something else also uses
       const found = !tac.campWatched && roll() >= 5;
@@ -1407,7 +1460,11 @@ export function resolveRoomAction(room, party, optionId, options = null) {
       const preps = tac.campWatched
         ? [{ source: 'Cold Camp', text: `🏕️ No fire and a watch kept: the camp costs ${spent} supply and nothing finds it.` }]
         : [];
-      return { success: true, descended: true, camped: true, healed: CAMP_HEAL, healedTotal: healed, supplySpent: spent, damage, interrupted: found, preps };
+      return {
+        success: true, descended: true, camped: true,
+        healed: CAMP_HEAL, healedTotal: healed, mended: worst?.name || null,
+        supplySpent: spent, damage, interrupted: found, preps,
+      };
     }
 
     /* Disaster */
