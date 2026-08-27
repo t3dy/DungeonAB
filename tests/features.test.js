@@ -7,6 +7,7 @@
  */
 
 import { strict as assert } from 'assert';
+import { trials, armsDiffer } from './helpers.js';
 import {
   FEATURES, FEATURE_ACTIONS, FEATURE_IDS, FEATURE_ACTION_IDS,
   rollFeatures, featureCapacity, featureModifiers, featureActions,
@@ -225,10 +226,17 @@ describe('Using the room changes the fight', () => {
       type: ROOM_TYPES.MONSTER, w: 9, h: 8, shape: 'chamber', features: feats,
       monster: { name: 'a wraith', attack: 2, health: 60, trait: 'ethereal' },
     });
-    const noMirror = resolveRoomAction(ghostRoom([]), new Party([fighter, rogue]), 'fight');
-    const mirrored = resolveRoomAction(ghostRoom(['mirror']), new Party([fighter, rogue]), 'fight');
-    assert.ok(mirrored.rounds < noMirror.rounds,
-      `the mirror ends it faster (${mirrored.rounds} < ${noMirror.rounds})`);
+    // One fight proves nothing: the rolls come from the global
+    // Math.random and a single pair came back 11 against 10 about once
+    // in twelve runs. Twenty-five fights an arm, compared as means.
+    const rounds = feats => trials(25, () =>
+      resolveRoomAction(ghostRoom(feats), new Party([fighter, rogue]), 'fight').rounds);
+    const { a: mirroredRounds, b: plainRounds } = armsDiffer(rounds(['mirror']), rounds([]), {
+      label: 'rounds to kill a wraith, with a mirror against without',
+      spread: 0.5,
+    });
+    assert.ok(mirroredRounds < plainRounds,
+      `the mirror ends it faster (${mirroredRounds.toFixed(1)} < ${plainRounds.toFixed(1)})`);
   });
 
   test('cover has a ceiling — furniture is not a fortress', () => {

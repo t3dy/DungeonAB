@@ -333,18 +333,30 @@ describe('Every line can actually be reached', () => {
     const taken = new Map();
     const bump = (m, k) => m.set(k, (m.get(k) || 0) + 1);
 
-    for (let i = 0; i < 60; i++) {
-      const seed = `dead-option-${i}`;
-      const pool = new SeededRandom(seed).shuffle(getAllCards()).slice(0, 27);
-      const sim = new Simulator(pool, seed, i % 2 ? 'hard' : 'medium');
-      let guard = 0;
-      while (!sim.gameOver && guard++ < 300) {
-        sim.tick();
-        const n = sim.lastNarration;
-        if (!n?.action) continue;
-        for (const id of n.offered || []) bump(offered, id);
-        bump(taken, n.action);
+    // Combat rolls come from the global Math.random, so an unpinned
+    // sweep measured `search-around` at 8.7% on most runs and 1.6% on
+    // one in three — a gate that fails at random gets ignored, which is
+    // worse than no gate at all. Pinned, the same 120 delves give the
+    // same rates every time (the golden harness's trick).
+    const realRandom = Math.random;
+    const stream = new SeededRandom('dead-option-rolls');
+    Math.random = () => stream.next();
+    try {
+      for (let i = 0; i < 120; i++) {
+        const seed = `dead-option-${i}`;
+        const pool = new SeededRandom(seed).shuffle(getAllCards()).slice(0, 27);
+        const sim = new Simulator(pool, seed, i % 2 ? 'hard' : 'medium');
+        let guard = 0;
+        while (!sim.gameOver && guard++ < 300) {
+          sim.tick();
+          const n = sim.lastNarration;
+          if (!n?.action) continue;
+          for (const id of n.offered || []) bump(offered, id);
+          bump(taken, n.action);
+        }
       }
+    } finally {
+      Math.random = realRandom;
     }
 
     // Never-taken is not the only shape of dead: the weights are floored

@@ -1249,3 +1249,26 @@ the threshold sits between a pinned option (~1%) and the least popular
 live one (`leave-it`, 4.8%). A gate whose floor is below what a dead
 option actually scores is a gate that passes on the thing it was
 written to catch.
+
+### The gate it took two goes to make honest
+
+**NARR:** The dead-option gate failed on its first outing for the
+reason it was written to catch, only in reverse: `search-around` sits
+at 8.6% most runs and came back 1.6% on one run in three, because
+combat rolls come from the global `Math.random` and 120 delves is a
+small sample when the denominator is one option in one room type. It
+was committed green and failed on the next run.
+
+Pinning the stream — the golden harness's trick — makes the same 120
+delves give the same rates every time, and the lowest live option
+(`leave-it`, 5.3%) now sits well clear of the 3% floor. The gate
+measures one fixed stream rather than the average of all of them, which
+is the right trade for an invariant about the decision layer: a
+borderline option now fails loudly at the moment somebody writes it,
+instead of failing at random forever afterwards.
+
+The same sweep turned up an older flake of exactly this shape:
+*a mirror does for the ethereal what a cleric does* compared a single
+fight against a single fight, and returned 11 rounds against 10 about
+once in twelve runs. Twenty-five fights an arm, compared as means
+through `armsDiffer`, and it stops lying in both directions.
