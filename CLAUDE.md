@@ -56,3 +56,14 @@ tests/                   ← Node test runner suites
 9. **When a mechanic lands, run the asset pass**: ask which existing cards, classes and
    personalities should now interact with it, and redesign the ones written for a game that no
    longer exists. Mechanics drift ahead of assets otherwise. See `ASSET_REVIEW.md`.
+10. **Balance is measured, not judged**: the curve is 99/88/71/45 and every mechanic or
+   asset change moves it. `npm run calibrate` reports the drift and `--write` searches for
+   new constants; `npm run bench` regenerates `MINING_REPORT.md`, which stamps the
+   `STAT_SCALE` it ran against so a stale benchmark fails the gate rather than quietly
+   describing a different game. `npm run card <id>` measures one card's real contribution —
+   the cost model in `game/Costing.js` only screens (rank correlation ~0.69).
+   *Why it is a rule:* STAT_SCALE was re-swept by hand six times in one session, and doing
+   it by hand means sometimes not doing it.
+11. **A comparison that cannot fail is worse than no test**: fixtures must sit in a regime
+   where the arms could differ. `tests/helpers.js` `armsDiffer` refuses saturated totals,
+   the `max(1, …)` damage floor, and differences inside the noise.

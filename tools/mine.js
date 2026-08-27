@@ -20,6 +20,7 @@
  * correlational, not causal. Sample widely before trusting deltas.
  */
 
+import { STAT_SCALE } from '../src/world/DungeonGen.js';
 import { PackDraft, PILOT_PERSONAS, aiPick } from '../src/draft/PackDraft.js';
 import { Simulator } from '../src/sim/Simulator.js';
 import { CARD_TYPES, CLASSES, getAllCards } from '../src/game/Cards.js';
@@ -225,6 +226,14 @@ export function renderReport(agg, { tables, difficulty, minSample } = {}) {
   L.push(`Overall win rate: **${pct(agg.totalWins / agg.total)}**. AI-piloted drafts`);
   L.push(`(personas rotate through seat 0), one delve per pool. IWD is`);
   L.push(`correlational — see caveats in tools/mine.js.`);
+
+  // Stamp the constants this was measured against. A benchmark whose
+  // scales no longer match the source is quietly describing a different
+  // game; tests/balance-gate.test.js checks the two agree.
+  L.push('');
+  L.push(`<!-- STAT_SCALE ${JSON.stringify(STAT_SCALE)} -->`);
+  L.push(`Measured against \`STAT_SCALE\`: `
+    + Object.entries(STAT_SCALE).map(([k, v]) => `${k} ${v}`).join(' · ') + '.');
 
   const eligible = agg.cardRows.filter(r => r.games >= minSample).sort((a, b) => b.iwd - a.iwd);
   const cardTable = rows => {

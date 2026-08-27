@@ -12,7 +12,9 @@
     "test:watch": "node --test --watch tests/*.test.js",
     "mine": "node tools/mine.js",
     "assets": "node tools/assets.mjs",
-    "card": "node tools/card.mjs"
+    "card": "node tools/card.mjs",
+    "calibrate": "node tools/calibrate.mjs",
+    "bench": "node tools/mine.js 700 hard MINING_REPORT.md"
   },
   "dependencies": {
     "three": "^0.170.0"
