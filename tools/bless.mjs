@@ -35,7 +35,10 @@ export const GOLDEN_DIR = path.join(HERE, '../tests/golden');
 export const CASES = [
   { name: 'medium-delve', seed: 'golden-medium', difficulty: 'medium' },
   { name: 'hard-delve', seed: 'golden-hard', difficulty: 'hard' },
-  { name: 'nightmare-delve', seed: 'golden-nightmare', difficulty: 'nightmare' },
+  // Chosen to end in a wipe: the set has to freeze a defeat as well as
+  // victories, or the endings, the fall lines and the trophies-lost
+  // writing are never exercised by a golden at all.
+  { name: 'nightmare-delve', seed: 'golden-fall', difficulty: 'nightmare' },
 ];
 
 /**

@@ -1,244 +1,266 @@
-# The Chronicle of The Mouse
+# The Chronicle of Brand of the Broken Shield, Brother Oswald of the Lantern, The Mouse
 
-## Delve I — the Root Cellar of the Bog Witch
+## Delve I — the Mad Alchemist's Dungeon
 
-**Difficulty:** nightmare · **Depth:** 1 · **Seed:** `golden-nightmare`
+**Difficulty:** nightmare · **Depth:** 1 · **Seed:** `golden-fall`
 
-**Who went down:** 🗡️ The Mouse (rogue)
+**Who went down:** ⚔️ Brand of the Broken Shield (fighter), ✨ Brother Oswald of the Lantern (cleric), 🗡️ The Mouse (rogue)
 
-### 🌋 Room 1 — disaster
+### 👹 Room 1 — monster
 
-A shelf of jars breaks over the party; what spills is corrosive and moving. The party must brace together or scatter.
+A homunculus that failed peer review holds the room (attack 17, health 29). The party must decide how to get past it. A sarcophagus stands against the wall with its lid slightly wrong.
 
-They might have chosen to scatter and regroup — the Reckless did not wait for a vote. The party chose to brace together.
+They might have chosen to stand and fight, or fall back — The Mouse made the case: "Traps are just puzzles with stakes." The party chose to sneak past.
 
-🌋 The party braces together and rides it out: 5 damage taken. 💚 Mending Word heals 13 as the dust settles.
-
-<details><summary>Ledger</summary>
-
-- 🕯️ 1 march of oil burned.
-- 🚪 1 more room behind them.
-- · 🌋 Room 1: disaster — brace
-
-</details>
-
-### ⚠️ Room 2 — trap
-
-A trap blocks the corridor. The party must disarm it, avoid it, or take the hit. Dead beetles ring one tile: a poison trap. Light damage now, lingering venom later unless a cleric cures it. A pit takes up a third of the floor. The bottom is not visible.
-
-They might have chosen to disarm the trap, or search for a way around — the Reckless did not wait for a vote. The party chose to push through and take the hit.
-
-💥 The party pushes through the trap, taking 2 damage. 🪶 Feather Step takes the party's weight off the floor: 3 less damage from anything underfoot. 🐍 Poison needles: the party will take 2 poison damage next room (no cleric to cure it).
-
-_🧭 The party takes the side passage; its rooms join the route._
+🗡️ The rogue leads the party past a homunculus that failed peer review unseen. No damage taken; +15 score.
 
 <details><summary>Ledger</summary>
 
-- 🕯️ 1 march of oil burned.
-- 🐍 Venom works in the blood: 2 damage waiting on the march.
-- ❤️ 2 health taken.
+- 🏅 15 renown earned.
 - 🚪 1 more room behind them.
-- · ⚠️ Room 2: trap — push-through
+- · 👹 Room 1: monster — sneak
 
 </details>
 
-### 👹 Room 3 — monster
+### 🌋 Room 2 — disaster
 
-A golem of taproots and bad intentions holds the room (attack 18, health 47). The party must decide how to get past it. Plate and chitin cover it: the party's blows do 2 less damage each round. It keeps clear of the torches: weak to fire (fire damage ×1.5). Half the ceiling is on the floor, in pieces worth stepping around. An anvil sits under a dead forge, still true.
+An unattended reaction runs out of control and fills the room with caustic vapor. The party must brace together or scatter.
 
-They might have chosen to stand and fight, or fall back — the Reckless did not wait for a vote. The party chose to open with a combat spell.
+They might have chosen to brace together, or scatter and regroup — the Reckless did not wait for a vote. The party chose to sift the rubble.
 
-🔥 The caster opens with Firebolt, chosen precisely for the monster's fire weakness: spell damage ×1.5. ⚔️ The party kills a golem of taproots and bad intentions in 2 rounds, taking 0 damage. 💢 Sunder reminds the plate it was ore: it stops turning blows for the rest of the fight. 🗡️ The daggers land before the argument starts: nothing comes back in the first round. 🧱 The party fights from behind a fall of rubble: 1 less damage per round. 🎯 Everyone strikes the same seam in the plate: +3 damage a round. 🛡️ The party closes ranks: 1 less damage a round. ✨ The working holds: +9 damage every round while the fight lasts. 🌳 A golem of taproots and bad intentions drops a length of heartroot: 3 alchemy materials. 💥 The Reckless finish the fight with style: +5 score.
-
-_🐍 The venom carried from the last room acts: 2 damage taken on the march._
+🪨 The party sifts a fall of rubble: 25 gold, 2 materials.
 
 <details><summary>Ledger</summary>
 
-- 🏅 30 renown earned.
-- 🌿 3 more alchemical materials in the satchel.
+- 💰 The purse is 25 heavier.
+- 🏅 25 renown earned.
+- 🌿 2 more alchemical materials in the satchel.
 - 🕯️ 1 march of oil burned.
-- 🏆 1 trophy taken from the dead.
-- 🐍 The venom is spent.
-- ❤️ 2 health taken.
 - 🚪 1 more room behind them.
-- · 👹 Room 3: monster — spell-strike
+- · 🌋 Room 2: disaster — sift-rubble
 
 </details>
 
-### 🌿 Room 4 — materials
+### 🌋 Room 3 — disaster
 
-A room of herbs, salts, and quicksilver — alchemy materials, free to gather. A gargoyle spout drips something that is not water into a stained channel. An anvil sits under a dead forge, still true.
+An unattended reaction runs out of control and fills the room with caustic vapor. The party must brace together or scatter.
 
-They might have chosen to gather the materials, or move on — the Reckless did not wait for a vote. The party chose to put an edge back on at the anvil.
+They might have chosen to brace together, or sift the rubble — the Reckless did not wait for a vote. The party chose to scatter and regroup.
 
-🔨 The party works a cold anvil: anvil-set edge on The Mouse's weapon (+3 attack).
+🌋 The party scatters; 2 members guessed wrong and took 3 damage each.
+
+- ✚ Brother Oswald of the Lantern is opened up badly enough that the delve will keep it: 12 is as whole as they get until town. The Reckless do not stop to bind anything, and more of it stays with them.
+- ✚ The Mouse is opened up badly enough that the delve will keep it: 9 is as whole as they get until town. The Reckless do not stop to bind anything, and more of it stays with them.
 
 <details><summary>Ledger</summary>
 
-- 🕯️ 1 march of oil burned.
-- ⚗️ 1 blade coated at the bench.
+- ❤️ 6 health taken.
+- ✚ 2 wounds that will not close down here.
 - 🚪 1 more room behind them.
-- · 🌿 Room 4: materials — work-the-anvil
+- · 🌋 Room 3: disaster — scatter
 
 </details>
 
-### 🕯️ Room 5 — shrine
+### ⚠️ Room 4 — trap
 
-A shrine. Resting here heals the party; the gold leaf on the altar could be stripped instead. A font holds water that has been still a long time and is somehow clean.
+A trap blocks the corridor. The party must disarm it, avoid it, or take the hit. Dead beetles ring one tile: a poison trap. Light damage now, lingering venom later unless a cleric cures it.
 
-They might have chosen to rest and heal, or strip the gold leaf — the Reckless did not wait for a vote. The party chose to move on.
+They might have chosen to disarm the trap, or push through and take the hit — the Reckless did not wait for a vote. The party chose to bypass it with a utility spell.
 
 The party moves on to the next room.
 
+_🕳️ The Mouse finds a hidden door. A secret side branch joins the party's route._
+
 <details><summary>Ledger</summary>
 
+- 🏅 10 renown earned.
 - 🕯️ 1 march of oil burned.
+- ❤️ 1 health mended.
 - 🚪 1 more room behind them.
-- · 🕯️ Room 5: shrine — pass-by
+- · 🕳️ A hidden door!
+- · ⚠️ Room 4: trap — spell-bypass
+
+</details>
+
+### 💎 Room 5 — vault
+
+A hidden vault, stacked with treasure. Vaults always hold something beyond coin. Shelves sag under books nobody has audited in a century.
+
+They might have chosen to inspect it first, or leave it alone — the Reckless did not wait for a vote. The party chose to loot the treasure.
+
+🦷 The chest is a mimic. It bites for 5 damage before the party kills it, recovering 46 gold.
+
+- ✚ Brand of the Broken Shield is opened up badly enough that the delve will keep it: 12 is as whole as they get until town. The Reckless do not stop to bind anything, and more of it stays with them.
+
+<details><summary>Ledger</summary>
+
+- 💰 The purse is 46 heavier.
+- 🏅 46 renown earned.
+- ❤️ 4 health taken.
+- ✚ 1 wound that will not close down here.
+- 🚪 1 more room behind them.
+- · 💎 Room 5: vault — loot
 
 </details>
 
 ### 👹 Room 6 — monster
 
-An imp still angry about the jar holds the room (attack 13, health 26). The party must decide how to get past it. It is a swarm: spell openings hit it ×1.5.
+A homunculus that failed peer review holds the room (attack 17, health 29). The party must decide how to get past it. A pit takes up a third of the floor. The bottom is not visible. A gargoyle spout drips something that is not water into a stained channel.
 
 They might have chosen to stand and fight, or fall back — the Reckless did not wait for a vote. The party chose to open with a combat spell.
 
-🔥 Chain Lightning opens the fight; against a swarm the spell hits ×1.5. ⚔️ The party kills an imp still angry about the jar in 1 round, taking 0 damage. 🗡️ The greatsword takes a whole rank of them at a stroke: 3 more damage a round. 🗡️ The daggers land before the argument starts: nothing comes back in the first round. 🛡️ The party closes ranks: 1 less damage a round. ✨ The working holds: +10 damage every round while the fight lasts. 🫙 An imp still angry about the jar drops the imp's jar: a trinket (+1 mind), now worn by The Mouse. 💥 The Reckless finish the fight with style: +5 score.
+🔥 Sunder opens the fight, softening the monster before the first blow. ⚔️ The party kills a homunculus that failed peer review in 1 round, taking 0 damage. 🛡️ Aegis of Ash goes up before the first blow: 2 less damage every round. 🔺 The party drives in as a wedge, everything committed forward. A fifth more damage dealt, a third more taken, and three of them swinging instead of two. ⚔️ The party has the numbers and uses them: +1 damage a round. ✨ The working holds: +8 damage every round while the fight lasts. 🧪 A homunculus that failed peer review drops the homunculus's notes: a trinket (+1 mind), now worn by The Mouse. 💥 The Reckless finish the fight with style: +5 score.
 
 <details><summary>Ledger</summary>
 
 - 🏅 30 renown earned.
 - 🕯️ 1 march of oil burned.
 - 🏆 1 trophy taken from the dead.
+- ❤️ 1 health mended.
 - 🎒 1 piece of kit taken up.
 - 🚪 1 more room behind them.
 - · 👹 Room 6: monster — spell-strike
 
 </details>
 
-### 👹 Room 7 — monster
+### 📚 Room 7 — library
 
-An imp still angry about the jar holds the room (attack 13, health 26). The party must decide how to get past it. It is a swarm: spell openings hit it ×1.5. A sarcophagus stands against the wall with its lid slightly wrong.
+A library. The party can study here to learn spells. Shelves sag under books nobody has audited in a century. Pillars break the room into aisles — something to fight behind.
 
-They might have chosen to fall back, or sneak past — the Reckless did not wait for a vote. The party chose to stand and fight.
+They might have chosen to move on — the Reckless did not wait for a vote. The party chose to study the shelves.
 
-⚔️ The party kills an imp still angry about the jar in 2 rounds, taking 0 damage. 🗡️ The greatsword takes a whole rank of them at a stroke: 3 more damage a round. 🗡️ The daggers land before the argument starts: nothing comes back in the first round. 🛡️ The party closes ranks: 1 less damage a round. 🫙 An imp still angry about the jar drops the imp's jar: a trinket (+1 mind), now worn by The Mouse. 💥 The Reckless finish the fight with style: +5 score.
+📚 The party studies the shelves and learns 1 spell.
+
+_🧭 The party takes the side passage; its rooms join the route. 🕳️ The Mouse finds a trapdoor in the floor. The party leaves it shut: the rooms it skips hold loot as well as danger._
+
+<details><summary>Ledger</summary>
+
+- 🏅 20 renown earned.
+- 📖 1 new working copied into the grimoire.
+- 📜 The grimoire grows by 1.
+- ❤️ 1 health mended.
+- 🚪 1 more room behind them.
+- · 📚 Room 7: library — study
+
+</details>
+
+### 💰 Room 8 — treasure
+
+A treasure chest sits in the room. It may hold gold; it may be a mimic. Somebody stacked supplies here and never came back for them.
+
+They might have chosen to loot the treasure, or inspect it first — the Reckless did not wait for a vote. The party chose to crack the crates open.
+
+📦 The party cracks open stacked crates and barrels: 40 gold, 2 materials.
+
+<details><summary>Ledger</summary>
+
+- 💰 The purse is 40 heavier.
+- 🏅 40 renown earned.
+- 🌿 2 more alchemical materials in the satchel.
+- 🕯️ 1 march of oil burned.
+- ❤️ 1 health mended.
+- 🚪 1 more room behind them.
+- · 💰 Room 8: treasure — crack-crates
+
+</details>
+
+### 🕯️ Room 9 — shrine
+
+A shrine. Resting here heals the party; the gold leaf on the altar could be stripped instead.
+
+They might have chosen to strip the gold leaf, or move on — Brother Oswald of the Lantern made the case: "Heal fast, ask later." The party chose to rest and heal.
+
+🕯️ The party rests at the shrine: 5 health healed per member.
+
+<details><summary>Ledger</summary>
+
+- 🚪 1 more room behind them.
+- · 🕯️ Room 9: shrine — rest
+
+</details>
+
+### 🌿 Room 10 — materials
+
+A room of herbs, salts, and quicksilver — alchemy materials, free to gather. Somebody stacked supplies here and never came back for them.
+
+They might have chosen to gather the materials, or move on — the Reckless did not wait for a vote. The party chose to crack the crates open.
+
+📦 The party cracks open stacked crates and barrels: 40 gold, 2 materials.
 
 _🕯️ The lantern is burning low: oil for 2 more marches._
 
 <details><summary>Ledger</summary>
 
-- 🏅 30 renown earned.
-- 🕯️ 1 march of oil burned.
-- 🏆 1 trophy taken from the dead.
-- 🎒 1 piece of kit taken up.
-- 🚪 1 more room behind them.
-- · 🕯️ The lantern is burning low: oil for 2 more marches.
-- · 👹 Room 7: monster — fight
-
-</details>
-
-### 📚 Room 8 — library
-
-A library. The party can study here to learn spells. A font holds water that has been still a long time and is somehow clean. Pillars break the room into aisles — something to fight behind. Shelves sag under books nobody has audited in a century.
-
-They might have chosen to study the shelves, or move on — the Reckless did not wait for a vote. The party chose to strip the shelves.
-
-📚 The wizard strips sagging shelves: a scroll of Shelf-Found Working for the grimoire.
-
-_🕯️ Someone checks the reservoir and does not like the answer: oil for 1 more march. 🕳️ The Mouse finds a hidden door. A secret side branch joins the party's route._
-
-<details><summary>Ledger</summary>
-
-- 🕯️ 1 march of oil burned.
-- 📜 The grimoire grows by 2.
-- 🚪 1 more room behind them.
-- · 🕯️ Someone checks the reservoir and does not like the answer: oil for 1 more march.
-- · 🕳️ A hidden door!
-- · 📚 Room 8: library — strip-the-shelves
-
-</details>
-
-### 💎 Room 9 — vault
-
-A hidden vault, stacked with treasure. Vaults always hold something beyond coin.
-
-They might have chosen to inspect it first, or leave it alone — the Reckless did not wait for a vote. The party chose to loot the treasure.
-
-💰 The party loots the chest: 174 gold. 🌿 Also in the hoard: 2 alchemy materials.
-
-_🕯️ The lantern dies with the party still under the hill. No more light to carry._
-
-<details><summary>Ledger</summary>
-
-- 💰 The purse is 174 heavier.
-- 🏅 174 renown earned.
+- 💰 The purse is 40 heavier.
+- 🏅 40 renown earned.
 - 🌿 2 more alchemical materials in the satchel.
 - 🕯️ 1 march of oil burned.
 - 🚪 1 more room behind them.
-- · 🕯️ The lantern dies with the party still under the hill. No more light to carry.
-- · 💎 Room 9: vault — loot
+- · 🕯️ The lantern is burning low: oil for 2 more marches.
+- · 🌿 Room 10: materials — crack-crates
 
 </details>
 
-### ⚗️ Room 10 — lab
+### ⚗️ Room 11 — lab
 
-An alchemy lab with a working bench. An alchemist with materials can brew or coat weapons here. A brazier burns in its bracket — nobody has been here to feed it, and it burns anyway. Shelves sag under books nobody has audited in a century.
+An alchemy lab with a working bench. An alchemist with materials can brew or coat weapons here. An anvil sits under a dead forge, still true. A brazier burns in its bracket — nobody has been here to feed it, and it burns anyway.
 
-They might have chosen to cook a material down into lamp oil, or move on — the Reckless did not wait for a vote. The party chose to strip the shelves.
+There was only one option: the party chose to move on.
 
-📚 The wizard strips sagging shelves: a scroll of Shelf-Found Working for the grimoire.
-
-_🪶 No light, but no stumbling either — Feather Step carries them through blind and whole, 3 damage unpaid._
+The party moves on to the next room.
 
 <details><summary>Ledger</summary>
 
-- 📜 The grimoire grows by 2.
 - 🚪 1 more room behind them.
-- · 🪶 No light, but no stumbling either — Feather Step carries them through blind and whole, 3 damage unpaid.
-- · ⚗️ Room 10: lab — strip-the-shelves
+- · ⚗️ Room 11: lab — pass-by
 
 </details>
 
-### 🌿 Room 11 — materials
+### 🌿 Room 12 — materials
 
-A room of herbs, salts, and quicksilver — alchemy materials, free to gather. Half the ceiling is on the floor, in pieces worth stepping around.
+A room of herbs, salts, and quicksilver — alchemy materials, free to gather.
 
-They might have chosen to move on, or cook a material down into lamp oil — the Reckless did not wait for a vote. The party chose to gather the materials.
+They might have chosen to move on — the Reckless did not wait for a vote. The party chose to gather the materials.
 
-🌿 The party gathers 2 bundles of alchemy materials.
+🌿 The party gathers 1 bundle of alchemy materials.
+
+_🕯️ The lantern is burning low: oil for 1 more march._
 
 <details><summary>Ledger</summary>
 
 - 🏅 5 renown earned.
-- 🌿 2 more alchemical materials in the satchel.
+- 🌿 1 more alchemical materials in the satchel.
+- 🕯️ 1 march of oil burned.
 - 🚪 1 more room behind them.
-- · 🌿 Room 11: materials — gather
+- · 🕯️ The lantern is burning low: oil for 1 more march.
+- · 🌿 Room 12: materials — gather
 
 </details>
 
-### 👹 Room 12 — monster
+### 🐉 Room 13 — boss
 
-A bog toad the size of a smokehouse holds the room (attack 16, health 42). The party must decide how to get past it. It is venomous: even a won fight leaves poison working, unless a cleric cures it. A boulder sits at the top of a slope, held by a wedge of rotten timber.
+The boss chamber. The Precipitate, everything the drains refused waits at its center (attack 31, health 89); killing it clears the dungeon. Plate and chitin cover it: the party's blows do 2 less damage each round. A brazier burns in its bracket — nobody has been here to feed it, and it burns anyway. A silvered mirror leans against the wall, and it shows the room more honestly than the room does. Pillars break the room into aisles — something to fight behind.
 
-They might have chosen to fall back, or sneak past — the Reckless did not wait for a vote. The party chose to stand and fight.
+They might have chosen to stand and fight, or fall back — the Reckless did not wait for a vote. The party chose to shove it into the brazier.
 
-☠️ A bog toad the size of a smokehouse is too strong: the party is beaten down over 2 rounds. 🗡️ The daggers land before the argument starts: nothing comes back in the first round. 🛡️ The party closes ranks: 1 less damage a round.
+🔥 The party drives the monster into a brazier still burning: 4 fire damage. ☠️ Even so, the Precipitate, everything the drains refused beats the party down. 💢 Sunder reminds the plate it was ore: it stops turning blows for the rest of the fight. 🛡️ Aegis of Ash goes up before the first blow: 2 less damage every round. 🪞 A tall silvered mirror shows the ethereal where it truly stands: weapons do full damage. 🧱 The party fights from behind a row of squat pillars: 1 less damage per round. 🔺 The party drives in as a wedge, everything committed forward. A fifth more damage dealt, a third more taken, and three of them swinging instead of two. ⚔️ The party has the numbers and uses them: +1 damage a round. 💚 Purify the Font closes The Mouse's wounds mid-fight: 8 healed in round 1, then 4 a round while it holds.
 
+- ☠️ Brand of the Broken Shield falls. The party's fighter is dead; the survivors march on.
+- ☠️ Brother Oswald of the Lantern falls. The party's cleric is dead; the survivors march on.
 - ☠️ The Mouse falls. The party's rogue is dead; the survivors march on.
 
 <details><summary>Ledger</summary>
 
-- ☠️ 1 of the party is down.
-- ❤️ 7 health taken.
-- · 👹 Room 12: monster — fight
+- ☠️ 3 of the party are down.
+- ❤️ 33 health taken.
+- ✚ 1 wound that will not close down here.
+- · 🐉 Room 13: boss — shove-into-brazier
 - · ☠️ The party has fallen.
 
 </details>
 
 ### ☠️ The end of it
 
-The party is wiped out in the Root Cellar of the Bog Witch. The dead: The Mouse. Rooms cleared: 11. Trophies lost with them: 3 (latest: 🫙 the imp's jar).
+The party is wiped out in the Mad Alchemist's Dungeon. The dead: Brand of the Broken Shield, Brother Oswald of the Lantern, The Mouse. Rooms cleared: 12. Trophies lost with them: 1 (latest: 🧪 the homunculus's notes).
 
-**Rooms cleared:** 11 · **Score:** 269 · **Gold:** 174 · **Trophies:** 3 · **Survivors:** 0
+**Rooms cleared:** 12 · **Score:** 231 · **Gold:** 151 · **Trophies:** 1 · **Survivors:** 0

@@ -226,7 +226,12 @@ describe('The room actually changes when it reacts', () => {
       ]);
       pool = partyPool(party);
       const before = partyHealth(party);
-      resolveRoomAction(roomWith(features, { attack: 6, health: 400 }), party, 'spell-strike');
+      // Formation is pinned: the party now picks one per fight
+      // (agents/Formation.js) and a random pick would confound the thing
+      // being measured -- a wedge takes a third more damage than a line
+      // whatever the room's frost is doing.
+      resolveRoomAction(roomWith(features, { attack: 6, health: 400 }), party, 'spell-strike',
+        { formation: 'line' });
       return before - partyHealth(party);
     });
 

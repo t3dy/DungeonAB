@@ -205,6 +205,36 @@ A tactic is knowledge: drafting the same one twice is drafting it once.
 
 ---
 
+## Positional Combat — where the party stands
+
+The room decides what shapes are available; the party chooses from
+those. Rooms have carried `w`, `h` and a shape since procgen v3 and no
+mechanic read them until now.
+
+| Formation | Needs | The trade |
+|---|---|---|
+| ⏸️ **Column** | anything | One blade forward, one thing able to reach it: ~45% less damage a round, and only the front rank swinging. The only shape a passage allows. |
+| ➖ **Line** | 4 wide | The ordinary shape, and one of two that leave room to flank. |
+| 🛡️ **Shield Wall** | 4 wide | 30% less taken, 25% less dealt — and packed tight, so a blast catches everyone. |
+| 🔺 **Wedge** | 5 wide, 30 tiles | 20% more dealt, 30% more taken, three swinging instead of two. |
+| 🌐 **Loose Order** | 6 wide, 48 tiles | A little less given and taken, and only half of any blast reaches the party. |
+
+**Modifiers are proportional, not flat.** Incoming runs ~5 a round and a
+party's swing ~20, so flat numbers made defence a 40% gain for a 10%
+cost and Shield Wall strictly dominated a plain Line — the baseline
+formation was the worst thing to stand in (DESIGN_DIALOGUE.md §14).
+
+> **Against a killable monster, offence is defence.** A wedge takes more
+> damage per round and less damage per *fight*, because it ends sooner.
+> That is the trade, and it is why totals cannot be used to measure a
+> formation's mitigation.
+
+Flanking is a spatial idea: only a line and a wedge leave room to work
+round the sides, so the Flanking branch of the tactics tree needs one of
+them. A room with no geometry takes the ordinary line.
+
+---
+
 ## Attrition — what the march costs
 
 A dungeon crawl is a war of attrition or it is a boss-rush with scenery.

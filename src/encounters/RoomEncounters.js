@@ -16,6 +16,7 @@ import {
 } from '../world/RoomFeatures.js';
 import { reactionsFor, foldReactions } from '../world/Reactions.js';
 import { tacticModifiers } from '../game/Tactics.js';
+import { chooseFormation, formationModifiers } from '../agents/Formation.js';
 
 function roll() {
   return Math.random() * 10;
@@ -418,7 +419,7 @@ export function rollFind(party, always = false, rollValue = Math.random()) {
  * Mutates the party and the room. Returns a result carrying `feature`
  * so the narration can name what was used.
  */
-export function resolveFeatureAction(room, party, optionId) {
+export function resolveFeatureAction(room, party, optionId, options = {}) {
   // A drafted tool does the job better than bare hands (RoomFeatures
   // actionTier): the class opens the option, the card upgrades it
   const action = actionTier(optionId, party, {
@@ -443,6 +444,7 @@ export function resolveFeatureAction(room, party, optionId) {
       });
     }
     const result = resolveRoomAction(room, party, 'fight', {
+      formation: options?.formation,
       extraCover: action.extraCover || 0,
     });
     result.feature = action.feature;
@@ -591,7 +593,7 @@ export function resolveRoomAction(room, party, optionId, options = null) {
   // Feature actions (world/RoomFeatures.js) are dispatched separately:
   // the room's furniture is its own family of outcomes
   if (isFeatureAction(optionId)) {
-    return resolveFeatureAction(room, party, optionId);
+    return resolveFeatureAction(room, party, optionId, options);
   }
   switch (optionId) {
     /* Combat */
@@ -687,11 +689,26 @@ export function resolveRoomAction(room, party, optionId, options = null) {
       // What an area working did to the room, if one was loosed here
       for (const note of options?.reactionNotes || []) preps.push(note);
 
+      // Where the party stands, and what this room's floor allowed it to
+      // choose (agents/Formation.js). A passage six by two permits one
+      // shape; a boss cavern permits all of them.
+      const form = formationModifiers(
+        options?.formation || chooseFormation(party, room), room,
+      );
+      preps.push({
+        source: form.name,
+        text: `${form.icon} ${form.tell} ${form.effect}`,
+      });
+
       // Learned technique (game/Tactics.js). Gated by capability, not
       // class: every class swings at something, so the whole party
       // fights better for a tactic any one of them could have taught.
       const tac = tacticModifiers(party);
-      const flanking = tac.flankDamage > 0 && party.living().length >= tac.flankMin;
+      // Flanking is a spatial idea: it needs a formation with the room
+      // to work round the sides. A column cannot flank anything.
+      const flanking = tac.flankDamage > 0
+        && party.living().length >= tac.flankMin
+        && form.flanking;
       if (flanking) {
         preps.push({
           source: 'the party\'s footwork',
@@ -752,7 +769,7 @@ export function resolveRoomAction(room, party, optionId, options = null) {
       while (monsterHealth > 0 && party.isAlive() && rounds < 12) {
         rounds++;
         const tactical = (flanking ? tac.flankDamage : 0) + armorEdge + cleaves;
-        const swing = Math.max(1, Math.round((party.combatAttack() + summon + coating.bonus + spellSustain + tactical + Math.floor(roll() / 3)) * etherealMult) - armorShave);
+        const swing = Math.max(1, Math.round((party.combatAttack(form.frontage) + summon + coating.bonus + spellSustain + tactical + Math.floor(roll() / 3)) * etherealMult * form.attackMult) - armorShave);
         monsterHealth -= swing;
         if (monsterHealth <= 0) break;
         if (monster.isBoss && !phased && monsterHealth <= monster.health / 2) {
@@ -764,7 +781,7 @@ export function resolveRoomAction(room, party, optionId, options = null) {
         // The slow strike last, and so does anything the quicksilver
         // daggers got in front of: no incoming damage on the first round
         if ((monster.trait === 'slow' || quicksilver) && rounds === 1) continue;
-        const incoming = Math.max(1, monsterAtk - Math.floor(party.totalDefense() / 3) - ward - cover - tac.cover - castWard);
+        const incoming = Math.max(1, Math.round((monsterAtk - Math.floor(party.totalDefense() / 3) - ward - cover - tac.cover - castWard) * form.incomingMult));
         party.takeDamage(incoming);
         partyDamageTaken += incoming;
         // Mend the badly hurt while the fight is still on — a working
@@ -836,7 +853,7 @@ export function resolveRoomAction(room, party, optionId, options = null) {
         }
       }
       party.recordEncounter('fight', won);
-      return { success: won, rounds, damage: partyDamageTaken, monster: monster.name, itemActions, preps, drop, bossPhased: phased };
+      return { success: won, rounds, damage: partyDamageTaken, monster: monster.name, itemActions, preps, drop, bossPhased: phased, formation: form.id };
     }
 
     case 'cause-fear': {
@@ -948,6 +965,9 @@ export function resolveRoomAction(room, party, optionId, options = null) {
 
       // Then fight the softened monster, with the workings still up
       const result = resolveRoomAction(room, party, 'fight', {
+        // Carry the caller's formation through: spell-strike delegates to
+        // the fight, and building a fresh options bag silently dropped it
+        formation: options?.formation,
         spellSustain: sustain + room_.burn,
         spellSustainSource: spellsCast.map(sp => sp.name).join(' + ') || null,
         extraCover: room_.cover,

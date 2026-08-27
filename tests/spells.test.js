@@ -234,7 +234,9 @@ describe('A healing working fires when it is needed, not after', () => {
         const party = new Party([byClass('fighter'), byClass('cleric'),
           ...spells.map(id => sp(id))]);
         pool = partyPool(party);
-        resolveRoomAction(bruiser({ attack: 6, health: 90 }), party, 'fight');
+        // Formation pinned so it does not confound the healing measured
+        resolveRoomAction(bruiser({ attack: 6, health: 90 }), party, 'fight',
+          { formation: 'line' });
         survived.push(party.isAlive() ? 1 : 0);
         return partyHealth(party);
       });

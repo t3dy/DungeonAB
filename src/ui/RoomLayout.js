@@ -47,13 +47,25 @@ export function monsterSpot(room, x = 0, z = 0) {
  * apart and inside the walls, so a capped party of four reads as four
  * people in a room with room to swing (Party.PARTY_CAP).
  */
-export function partySlots(room, x, z, n, facingMonster) {
+/**
+ * How many stand in the front rank, by formation. The drawing has to
+ * agree with the maths: a column really is one blade forward, and a
+ * wedge really is three (agents/Formation.js `frontage`).
+ */
+const FRONT_BY_FORMATION = {
+  column: 1, line: 2, shieldwall: 2, wedge: 3, loose: 2,
+};
+
+export function partySlots(room, x, z, n, facingMonster, formation = 'line') {
   const { axis, far, wide } = roomAxis(room);
   // Stand off the far wall; square up when there's something to fight
   const back = facingMonster ? -Math.max(0.7, far * 0.42) : -Math.max(0.2, far * 0.12);
-  const frontCount = Math.min(n, 2);
-  const rankGap = Math.min(1.25, Math.max(0.75, wide * 0.45));
-  const fileGap = Math.min(1.3, Math.max(0.8, wide * 0.7));
+  const frontCount = Math.min(n, FRONT_BY_FORMATION[formation] ?? 2);
+  // Loose order really does stand apart, and a shield wall really does
+  // lock up: the spacing is the same fact the areaShare modifier prices
+  const spread = formation === 'loose' ? 1.6 : formation === 'shieldwall' ? 0.7 : 1;
+  const rankGap = Math.min(1.25, Math.max(0.75, wide * 0.45)) * spread;
+  const fileGap = Math.min(1.3, Math.max(0.8, wide * 0.7)) * spread;
 
   const slots = [];
   for (let i = 0; i < n; i++) {

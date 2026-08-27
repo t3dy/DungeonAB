@@ -996,3 +996,90 @@ as a gate that fails if a field can move unreported, and
 player cannot see is a mechanic they cannot plan around* — and a bug the
 tests cannot see is a bug that ships. Both were true here, in the same
 ten lines.
+
+---
+
+## 14. Positional combat — the last dungeon fork (2026-08-27)
+
+Of the four directions chosen for the dungeon rework, three were built
+and this one kept getting named as next. It is the one that ties the
+others together.
+
+### Position was already half-real
+
+**NARR:** The renderer has drawn a party as two ranks with the fighters
+forward since the isometric view existed, and `Party.takeDamage` has
+sent blows to the fighters first for just as long. So position was
+visible, and quietly mechanical, and never a decision anybody made. The
+picture was telling the player something the rules did not quite mean.
+
+**TCG:** What it needed was the thing rooms already had and nothing
+used: their **shape**. Rooms have carried `w`, `h` and a shape name
+since the procgen v3 rework — chamber, hall, cavern, passage, cell,
+rotunda — and no mechanic had ever read them. A passage six tiles by two
+cannot hold a line abreast. A boss cavern fourteen by eleven can hold
+anything. So the room sets the menu and the party chooses from it: two
+systems that already existed, finally meeting.
+
+Five formations. A **column** brings one blade and takes one blade — the
+corridor fight, and the only thing a passage permits. A **line** is the
+ordinary shape and the one that leaves room to work round the sides. A
+**shield wall** trades a quarter of the party's output for a third of
+the incoming, and packs them tight enough that a blast catches everyone.
+A **wedge** commits everything forward. **Loose order** needs a big
+floor and halves anything with a blast radius.
+
+### Flat numbers made one formation strictly correct
+
+**TCG:** The first cut used flat modifiers, and it was wrong in a way
+worth recording. Incoming damage runs about 5 a round; a party's swing
+runs about 20. So "2 less taken, 2 less dealt" is a 40% defensive gain
+for a 10% offensive cost, and Shield Wall strictly dominated a plain
+Line. The **baseline formation was the worst thing a party could stand
+in**, which is the same failure as a trap card and harder to see.
+
+Percentages cost what they look like they cost, so the modifiers are
+proportional now. Two other traps came out in the same pass: Loose Order
+was strictly worse than a line in any fight without a blast in it, and
+Column — which at frontage 1 never killed anything in a cavern across
+sixty measured fights — could be chosen at random in open ground. Loose
+got a real defensive edge; filing up is now weighted for the doorway and
+the desperate, which is when a person would actually do it.
+
+### The measurement that corrected me
+
+Testing whether the modifiers reached the fight, the obvious assertion
+was that a shield wall takes less damage than a wedge. It measured the
+other way: **21.0 against 23.4**, because the wedge ends the fight
+sooner. Against a killable monster, offence is defence — which is
+precisely the trade the formations exist to offer, and precisely why
+totals cannot isolate the modifier. The test measures damage *per round*
+now, and a second test measures the rounds the wedge buys.
+
+### What it did to the rest of the suite
+
+**NARR:** Four existing tests started failing, and not one of them was
+about formations. They compared two arms of a fight, one arm drew a
+wedge and the other a column, and the thing being measured was smaller
+than the noise that had just been added underneath it.
+
+`armsDiffer` — written two commits earlier for exactly this — caught
+three of them by refusing to pass on a saturated fixture rather than
+reporting a green comparison of 52 against 52. That is the whole
+argument for the guard, arriving sooner than expected.
+
+The systemic fix was not twenty edits: **a room that does not describe
+its own shape cannot constrain where anyone stands**, so a
+geometry-less fixture takes the ordinary line. Real dungeon rooms always
+carry geometry; test rooms mostly do not. One line, and the confound is
+gone from every fixture at once.
+
+### The drawing agrees with the maths
+
+A column is drawn one-forward, a wedge three, and loose order genuinely
+stands further apart — the same fact the `areaShare` modifier prices.
+The party panel carries a chip for anything other than a plain line, so
+the player can see where they are standing as well as read it.
+
+Curve recalibrated by the tool in one command: medium 1.48, hard 1.71,
+nightmare 2.41, measured 99.4 / 87.5 / 73.1 / 45.1.

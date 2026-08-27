@@ -187,12 +187,35 @@ describe('Using the room changes the fight', () => {
     const bare = { ...wall(), features: [] };
     const covered = { ...wall(), features: ['pillars', 'crates'] };
 
-    const a = resolveRoomAction(bare, party(), 'fight');
-    const b = resolveRoomAction(covered, party(), 'fight');
-    const perRound = r => r.damage / Math.max(1, r.rounds);
-    assert.ok(perRound(b) < perRound(a),
-      `cover reduced damage per round (${perRound(b).toFixed(1)} < ${perRound(a).toFixed(1)})`);
-    assert.ok(b.rounds >= a.rounds, `and the party lasted longer (${b.rounds} >= ${a.rounds})`);
+    // Formation is pinned and both arms averaged. The party now chooses
+    // where it stands per fight (agents/Formation.js) and that scales
+    // incoming by up to a third either way -- more than the cover being
+    // measured -- so an unpinned single run compares the pillars against
+    // the dice.
+    const perRound = (room, runs = 20) => {
+      let total = 0;
+      for (let i = 0; i < runs; i++) {
+        const r = resolveRoomAction({ ...room }, party(), 'fight', { formation: 'line' });
+        total += r.damage / Math.max(1, r.rounds);
+      }
+      return total / runs;
+    };
+    const a = perRound(bare);
+    const b = perRound(covered);
+    assert.ok(b < a,
+      `cover reduced damage per round (${b.toFixed(2)} < ${a.toFixed(2)})`);
+    // Rounds are measured separately now that the arms are averages
+    const meanRounds = (room, runs = 20) => {
+      let total = 0;
+      for (let i = 0; i < runs; i++) {
+        total += resolveRoomAction({ ...room }, party(), 'fight', { formation: 'line' }).rounds;
+      }
+      return total / runs;
+    };
+    const lastedCovered = meanRounds(covered);
+    const lastedBare = meanRounds(bare);
+    assert.ok(lastedCovered >= lastedBare,
+      `and the party lasted longer (${lastedCovered.toFixed(1)} >= ${lastedBare.toFixed(1)})`);
   });
 
   test('a mirror does for the ethereal what a cleric does', () => {

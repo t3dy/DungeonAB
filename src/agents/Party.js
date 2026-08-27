@@ -330,12 +330,21 @@ export class Party {
    * (DungeonGen COMBAT_FLOOR). Anyone over the cap (a promoted
    * reserve mid-run can't happen, but be safe) trails at a quarter.
    */
-  combatAttack() {
+  /**
+   * What the party swings for.
+   *
+   * `frontage` is how many can reach the enemy at once — set by the
+   * formation the room allowed (agents/Formation.js). Anyone behind the
+   * frontage still contributes, but at a quarter: they are reaching past
+   * somebody. Filing up a corridor really does mean one blade forward.
+   */
+  combatAttack(frontage = PARTY_CAP) {
+    const reach = Math.max(1, Math.min(frontage, PARTY_CAP));
     const attackers = this.living()
       .map(m => m.attack)
       .sort((a, b) => b - a);
-    const front = attackers.slice(0, PARTY_CAP).reduce((s, a) => s + a, 0);
-    const rear = attackers.slice(PARTY_CAP).reduce((s, a) => s + a, 0);
+    const front = attackers.slice(0, reach).reduce((s, a) => s + a, 0);
+    const rear = attackers.slice(reach).reduce((s, a) => s + a, 0);
     return Math.round(front + rear * 0.25);
   }
 

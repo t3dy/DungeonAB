@@ -222,6 +222,8 @@ export class Simulator {
     const chosen = decideRoomAction(room, this.party);
     const result = resolveRoomAction(room, this.party, chosen);
     this.lastResult = result;   // structured outcome, for analytics/mining
+    // Where the party stood, so the renderer can draw what the maths did
+    if (result.formation) this.lastFormation = result.formation;
 
     // Anyone who walked in alive and didn't walk out. The march's own
     // dead were reported above, so they are excluded rather than counted
@@ -424,6 +426,7 @@ export class Simulator {
         grimoire: this.party.grimoire.map(s => s.name),
         spellsLearned: this.party.spellsLearned,
         personalities: this.party.personalities,
+        formation: this.lastFormation || 'line',
         tactics: activeTactics(this.party).map(t => ({ name: t.name, icon: t.icon })),
         dormantTactics: dormantTactics(this.party).map(d => composeDormant(d)),
       },

@@ -22,6 +22,13 @@ import { installAlchemyPack } from './packs/alchemyPack.js';
 import { ROOM_HELP, CARD_TYPE_HELP, ATTRITION_HELP, describeTickEvents } from './ui/GameGuide.js';
 import { composeMend } from './narrative/Narrator.js';
 import { ChronicleLibrary, chronicleFilename } from './game/Chronicles.js';
+import { FORMATIONS } from './agents/Formation.js';
+
+/* Where the party is standing, for the party panel */
+const FORMATION_GLYPH = Object.fromEntries(
+  Object.entries(FORMATIONS).map(([id, f]) => [id, f.icon]));
+const FORMATION_LABEL = Object.fromEntries(
+  Object.entries(FORMATIONS).map(([id, f]) => [id, f.name]));
 import { toMarkdown } from './narrative/Chronicle.js';
 
 /* The shelf the party's saga is kept on (game/Chronicles.js) */
@@ -550,6 +557,13 @@ function updateUI(state) {
     `;
   }).join('') + reserveRows;
 
+  // Where the party is standing right now (agents/Formation.js). The
+  // chip sits with the drills because it is the same kind of fact: a
+  // choice the party made that the player should be able to see.
+  const formationChip = state.party.formation && state.party.formation !== 'line'
+    ? `<span class="tactic-chip" title="The room allowed this shape, and the party took it">${FORMATION_GLYPH[state.party.formation] || ''} ${escapeHtml(FORMATION_LABEL[state.party.formation] || '')}</span>`
+    : '';
+
   // Drilled technique, and anything drafted that cannot fire. An idle
   // tactic is shown dashed with its reason on hover, because a silently
   // dead card reads as a bug (game/Tactics.js).
@@ -557,6 +571,7 @@ function updateUI(state) {
   const live = state.party.tactics || [];
   const idle = state.party.dormantTactics || [];
   tacticsEl.innerHTML = [
+    formationChip,
     ...live.map(t => `<span class="tactic-chip">${t.icon} ${escapeHtml(t.name)}</span>`),
     ...idle.map(text => {
       const name = (text.match(/^\S+\s(.+?) is drafted/) || [])[1] || 'A tactic';

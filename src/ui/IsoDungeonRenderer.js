@@ -589,8 +589,10 @@ export class IsoDungeonRenderer {
       .slice()
       .sort((a, b) => (a.class === 'fighter' ? -1 : 0) - (b.class === 'fighter' ? -1 : 0));
     const n = living.length;
+    // Stand them the way they are actually fighting: the formation the
+    // party chose is on the state, and the drawing agrees with the maths
     const slots = room
-      ? partySlots(room, x, z, n, facingMonster)
+      ? partySlots(room, x, z, n, facingMonster, state?.party?.formation || 'line')
       : living.map(() => ({ mx: x, mz: z }));
 
     living.forEach((m, i) => {

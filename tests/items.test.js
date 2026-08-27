@@ -93,13 +93,26 @@ describe('Class-keyed items in combat', () => {
     const unwarded = new Party([fighter, fighter2, fighter3, fighter4]);
     const warded = new Party([fighter, fighter2, fighter3, fighter4, symbol]); // fighter gets Shield of Faith (ward 1)
 
-    const plain = resolveRoomAction(bigMonster(), unwarded, 'fight');
-    const shielded = resolveRoomAction(bigMonster(), warded, 'fight');
+    // Formation is pinned and both arms averaged: the party now picks
+    // where it stands per fight (agents/Formation.js), and incoming is
+    // scaled by that choice -- so a single run of each arm compared the
+    // ward against the dice. A 1-point ward is also small enough that
+    // the `max(1, ...)` floor can swallow it in a given round.
+    const mean = (party, runs = 20) => {
+      let total = 0;
+      for (let i = 0; i < runs; i++) {
+        const fresh = new Party(party);
+        const r = resolveRoomAction(bigMonster(), fresh, 'fight', { formation: 'line' });
+        assert.equal(r.rounds, 12, 'the wall outlasts them every time');
+        total += r.damage;
+      }
+      return total / runs;
+    };
+    const plain = mean([fighter, fighter2, fighter3, fighter4]);
+    const shielded = mean([fighter, fighter2, fighter3, fighter4, symbol]);
 
-    assert.equal(plain.rounds, 12);
-    assert.equal(shielded.rounds, 12);
-    assert.ok(shielded.damage < plain.damage,
-      `ward reduced damage (${shielded.damage} < ${plain.damage})`);
+    assert.ok(shielded < plain,
+      `ward reduced damage (${shielded.toFixed(1)} < ${plain.toFixed(1)})`);
   });
 
   test('the narrator credits the item that opened the fight', () => {
