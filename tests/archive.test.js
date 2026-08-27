@@ -11,6 +11,7 @@ import {
 import { ArchiveManager } from '../src/game/Archive.js';
 import { Simulator } from '../src/sim/Simulator.js';
 import { Campaign } from '../src/game/Campaign.js';
+import { retypeRoom } from '../src/ui/ArchiveUI.js';
 import { CHARACTER_CARDS, CLASSES } from '../src/game/Cards.js';
 
 const fighter = CHARACTER_CARDS.find(c => c.class === CLASSES.FIGHTER);
@@ -35,6 +36,62 @@ describe('Layouts as data', () => {
     assert.deepEqual(rebuilt.spine, d.spine);
     assert.equal(rebuilt.theme.id, 'crypt');
     assert.equal(rebuilt.condition.id, 'traps');
+  });
+
+  test('no field of a room is lost in the round trip', () => {
+    // The enumerated check above only compares the fields somebody
+    // thought to list, which is how trapType, and later floor, wing and
+    // descendsTo, all went missing from archived dungeons. This one
+    // compares everything and names what it does not expect to survive.
+    const RESET = new Set(['cleared', 'discovered', 'visits', 'fled', 'icon']);
+    const missing = new Set();
+    for (const seed of ['rt-1', 'rt-2', 'rt-3', 'rt-4', 'rt-5', 'rt-6']) {
+      const d = generateDungeon(seed, 'hard', { depth: 3 });
+      const rebuilt = dungeonFromLayout(serializeDungeon(d));
+      d.rooms.forEach((room, i) => {
+        const back = rebuilt.rooms[i];
+        for (const [key, value] of Object.entries(room)) {
+          if (RESET.has(key) || value === undefined) continue;
+          const same = JSON.stringify(back[key]) === JSON.stringify(value);
+          if (!same) missing.add(`${room.type}.${key} (${JSON.stringify(value)} → ${JSON.stringify(back[key])})`);
+        }
+      });
+    }
+    assert.deepEqual([...missing].sort(), [],
+      `the archive drops room fields: ${[...missing].join('; ')}`);
+  });
+
+  test('an archived dungeon keeps its floors', () => {
+    const d = generateDungeon('arch-floors', 'hard', { depth: 3 });
+    const rebuilt = dungeonFromLayout(serializeDungeon(d));
+    const floors = rs => rs.map(r => r.floor || 0);
+    assert.deepEqual(floors(rebuilt.rooms), floors(d.rooms), 'every room keeps its floor');
+    const boss = rebuilt.rooms.find(r => r.type === 'boss');
+    assert.equal(boss.floor, Math.max(...floors(rebuilt.rooms)), 'the boss is still at the bottom');
+    const stairs = rebuilt.rooms.filter(r => r.type === 'stairs');
+    assert.ok(stairs.every(r => r.descendsTo === (r.floor || 0) + 1), 'stairs still know where they go');
+  });
+
+  test('the editor cannot retype away the structure', () => {
+    // A dungeon has three kinds of room the player does not get to
+    // redecorate: the way in, the way down, and the throne room. The
+    // stair is the one that was easy to miss — retyping it leaves a
+    // floor with no way off it.
+    const layout = serializeDungeon(generateDungeon('arch-retype', 'hard', { depth: 3 }));
+    const find = type => layout.rooms.find(r => r.type === type);
+
+    const stair = find('stairs');
+    assert.ok(stair, 'a deep dungeon has a stair to try this on');
+    assert.equal(retypeRoom(layout, stair.index, 'treasure'), false, 'a stair is not retypeable');
+    assert.equal(find('stairs').type, 'stairs');
+
+    assert.equal(retypeRoom(layout, find('entrance').index, 'monster'), false, 'nor the entrance');
+    assert.equal(retypeRoom(layout, find('boss').index, 'corridor'), false, 'nor the boss');
+
+    const ordinary = layout.rooms.find(r => !['entrance', 'boss', 'stairs'].includes(r.type));
+    assert.equal(retypeRoom(layout, ordinary.index, 'stairs'), false, 'and nothing becomes a stair');
+    assert.equal(retypeRoom(layout, ordinary.index, 'treasure'), true, 'an ordinary room still retypes');
+    assert.equal(layout.rooms.find(r => r.index === ordinary.index).type, 'treasure');
   });
 
   test('rebuilding resets the run state: sealed secrets, uncleared rooms', () => {

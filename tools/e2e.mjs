@@ -88,10 +88,12 @@ async function run() {
 
   /* The help overlay explains the game before it starts */
   const help = await page.evaluate(() => document.querySelector('#help-overlay')?.innerText || '');
-  check('help explains the draft, the clocks and the tactics',
+  check('help explains the draft, the clocks, the tactics and the floors',
     /Only four adventurers march/.test(help)
     && /delve wears you down/.test(help)
-    && /Tactic/.test(help), 'help text is missing a section');
+    && /Tactic/.test(help)
+    && /A dungeon goes down/.test(help)
+    && /wings/.test(help), 'help text is missing a section');
   await page.click('#help-close-btn').catch(() => {});
 
   /* Draft, favouring tactics so the tree and its idle state show up */

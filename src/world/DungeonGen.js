@@ -772,6 +772,14 @@ export function serializeDungeon(dungeon) {
       // be a different dungeon (procgen v3)
       w: r.w, h: r.h, shape: r.shape,
       ...(r.features?.length ? { features: [...r.features] } : {}),
+      // Which floor the room is on, and where a stair goes. Without
+      // these a replayed dungeon flattens: every room on floor 0, the
+      // footprints overlapping, and no descent to record (rule 7).
+      floor: r.floor || 0,
+      ...(r.descendsTo !== undefined ? { descendsTo: r.descendsTo } : {}),
+      // A wing's identity is in its writing, so it has to survive the
+      // archive or a replayed detour is an anonymous side passage
+      ...(r.wing ? { wing: r.wing } : {}),
       secret: !!r.secret,
       ...(r.monster ? { monster: { ...r.monster } } : {}),
       ...(r.gold !== undefined ? { gold: r.gold } : {}),

@@ -1181,3 +1181,21 @@ above. The 2D floorplan draws one floor and labels it.
 
 Recalibrated after: medium 1.19, hard 1.45, nightmare 1.97 — measured
 97.9 / 88.0 / 69.4 / 45.6 against a 99 / 88 / 71 / 45 target.
+
+### The archive was flattening them
+
+**NARR:** `serializeDungeon` enumerates the fields it saves, and it had
+never heard of `floor`, `descendsTo` or `wing`. An archived three-floor
+dungeon replayed as one level with its footprints overlapping and no
+descent to record — the same failure as the archived trap that replayed
+as a generic spike pit, and the found scroll that vanished from a saved
+kit. Three times is a pattern, so the fix is not three more fields in
+the list: the round-trip test now compares **every** key on every room
+against its rebuilt copy and names the ones it does not expect to
+survive (`cleared`, `discovered`, `visits`, `fled`, `icon`). Deleting
+one line from the serializer fails it with twenty-nine names.
+
+The editor got the same treatment: a stair is structure, not furniture,
+and retyping one leaves a floor with no way off it. The archive's
+minimap draws each floor as its own plan, side by side, from its own
+origin — floors stacked in a single plan view are an illegible pile.
