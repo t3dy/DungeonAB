@@ -67,17 +67,24 @@ takes the worst of a blow. Nothing here needed inventing, only noticing.
 *and* pack more oil. The Covetous will not leave a room unsearched even
 blind, and it costs them.
 
-## Zero is the wrong target
+## On chasing zero
 
-Some cards should stay plain. A Greatsword that is simply a very good
-sword is a fine card, and a pool where every single item has a system
-hook is exhausting to read and impossible to balance. The audit currently
-reports five inert cards and that is a reasonable resting place — plain
-weapons and two situational workings.
+An earlier version of this document argued that some cards should stay
+plain, and that five inert cards was a reasonable resting place. The
+call went the other way: every card now has a hook, and the audit reports
+**0 of 80** inert.
 
-What matters is that inertness is a **choice** somebody made, not a
-thing that happened while nobody was looking. The nine personalities were
-not a choice.
+Both positions have something to them, so here is the honest version.
+Giving the last five a job was cheap and each hook was one the fiction
+already implied — a greatsword takes a whole rank of a swarm, Sunder
+reminds plate it was ore, Feather Step lifts the party off anything
+underfoot. None of them needed inventing. But a pool where *every* card
+has a system hook is harder to read and harder to balance, and the next
+five would not come as easily.
+
+The rule worth keeping is not a number. It is that inertness must be a
+**choice somebody made**, not a thing that happened while nobody was
+looking. The nine personalities were not a choice.
 
 ## Afterwards
 

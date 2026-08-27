@@ -8,11 +8,11 @@
 
 ### 👹 Room 1 — monster
 
-A bone warden on its rounds holds the room (attack 9, health 22). The party must decide how to get past it. Plate and chitin cover it: the party's blows do 2 less damage each round. It will not face the cleric: undead take holy damage ×1.5. A boulder sits at the top of a slope, held by a wedge of rotten timber.
+A bone warden on its rounds holds the room (attack 10, health 24). The party must decide how to get past it. Plate and chitin cover it: the party's blows do 2 less damage each round. It will not face the cleric: undead take holy damage ×1.5. A boulder sits at the top of a slope, held by a wedge of rotten timber.
 
 They might have chosen to stand and fight, or fall back — Melchior the Moth-Eaten made the case: "Why duel what you can outwit?" The party chose to open with a combat spell.
 
-🔥 The caster opens with Dawnbreak, chosen precisely for the monster's holy weakness: spell damage ×1.5. ⚔️ The party kills a bone warden on its rounds in 0 rounds, taking 0 damage. 🛡️ Aegis of Ash goes up before the first blow: 2 less damage every round. 🌟 The light soaks into a boulder on a bad slope. Whatever was going to rise out of it stays put, and the working bites for 3. 🛡️ The party closes ranks: 1 less damage a round. ✨ The working holds: +39 damage every round while the fight lasts. 🦴 A bone warden on its rounds drops a pauldron of century bone: a trinket (+1 defense), now worn by Melchior the Moth-Eaten. 💥 The Reckless finish the fight with style: +5 score.
+🔥 The caster opens with Dawnbreak, chosen precisely for the monster's holy weakness: spell damage ×1.5. ⚔️ A bone warden on its rounds is dead before the party closes: it never gets a round. 🗡️ The daggers land before the argument starts: nothing comes back in the first round. 🌟 The light soaks into a boulder on a bad slope. Whatever was going to rise out of it stays put, and the working bites for 3. 🦴 A bone warden on its rounds drops a pauldron of century bone: a trinket (+1 defense), now worn by Melchior the Moth-Eaten. 💥 The Reckless finish the fight with style: +5 score.
 
 <details><summary>Ledger</summary>
 
@@ -27,11 +27,11 @@ They might have chosen to stand and fight, or fall back — Melchior the Moth-Ea
 
 ### 👹 Room 2 — monster
 
-A boil of grave mites holds the room (attack 6, health 13). The party must decide how to get past it. It is a swarm: spell openings hit it ×1.5. It keeps clear of the torches: weak to fire (fire damage ×1.5). A silvered mirror leans against the wall, and it shows the room more honestly than the room does. A sarcophagus stands against the wall with its lid slightly wrong.
+A boil of grave mites holds the room (attack 6, health 14). The party must decide how to get past it. It is a swarm: spell openings hit it ×1.5. It keeps clear of the torches: weak to fire (fire damage ×1.5). A silvered mirror leans against the wall, and it shows the room more honestly than the room does. A sarcophagus stands against the wall with its lid slightly wrong.
 
 They might have chosen to stand and fight, or fall back — Melchior the Moth-Eaten made the case: "The safety margin is where the good magic lives." The party chose to open with a combat spell.
 
-🔥 The caster opens with Firebolt, chosen precisely for the monster's fire weakness: spell damage ×1.5. ⚔️ The party kills a boil of grave mites in 0 rounds, taking 0 damage. 🛡️ Aegis of Ash goes up before the first blow: 2 less damage every round. 🪞 A tall silvered mirror shows the ethereal where it truly stands: weapons do full damage. 🛡️ The party closes ranks: 1 less damage a round. ✨ The working holds: +65 damage every round while the fight lasts. 🟠 A boil of grave mites drops a handful of grave-amber: 2 alchemy materials. 💥 The Reckless finish the fight with style: +5 score.
+🔥 The caster opens with Firebolt, chosen precisely for the monster's fire weakness: spell damage ×1.5. ⚔️ A boil of grave mites is dead before the party closes: it never gets a round. 🗡️ The daggers land before the argument starts: nothing comes back in the first round. 🪞 A tall silvered mirror shows the ethereal where it truly stands: weapons do full damage. 🟠 A boil of grave mites drops a handful of grave-amber: 2 alchemy materials. 💥 The Reckless finish the fight with style: +5 score.
 
 <details><summary>Ledger</summary>
 
@@ -82,7 +82,7 @@ _🕳️ Vex Threefingers finds a hidden door. A secret side branch joins the pa
 
 ### 👹 Room 5 — monster
 
-A bone warden on its rounds holds the room (attack 9, health 22). The party must decide how to get past it. Plate and chitin cover it: the party's blows do 2 less damage each round. It will not face the cleric: undead take holy damage ×1.5. A silvered mirror leans against the wall, and it shows the room more honestly than the room does. A font holds water that has been still a long time and is somehow clean.
+A bone warden on its rounds holds the room (attack 10, health 24). The party must decide how to get past it. Plate and chitin cover it: the party's blows do 2 less damage each round. It will not face the cleric: undead take holy damage ×1.5. A silvered mirror leans against the wall, and it shows the room more honestly than the room does. A font holds water that has been still a long time and is somehow clean.
 
 They might have chosen to stand and fight, or fall back — Vex Threefingers made the case: "Every door is a suggestion." The party chose to sneak past.
 
@@ -153,11 +153,11 @@ They might have chosen to open it with Knock, or loot the treasure — the Reckl
 
 ### 👹 Room 9 — monster
 
-A ghoul between meals holds the room (attack 10, health 19). The party must decide how to get past it. It is venomous: even a won fight leaves poison working, unless a cleric cures it. It will not face the cleric: undead take holy damage ×1.5. Shelves sag under books nobody has audited in a century.
+A ghoul between meals holds the room (attack 11, health 21). The party must decide how to get past it. It is venomous: even a won fight leaves poison working, unless a cleric cures it. It will not face the cleric: undead take holy damage ×1.5. Shelves sag under books nobody has audited in a century.
 
 They might have chosen to stand and fight, or fall back — Melchior the Moth-Eaten made the case: "Overchannel? I call it generous casting." The party chose to open with a combat spell.
 
-🔥 The caster opens with Dawnbreak, chosen precisely for the monster's holy weakness: spell damage ×1.5. ⚔️ The party kills a ghoul between meals in 0 rounds, taking 0 damage. 🛡️ Aegis of Ash goes up before the first blow: 2 less damage every round. 🛡️ The party closes ranks: 1 less damage a round. ✨ The working holds: +39 damage every round while the fight lasts. 🐍 A ghoul between meals drops a ghoul's paralytic gland: a weapon coating (+2 attack, venom), applied to Kestrel Quickblade's weapon. 🐍 The Blade of the Adder has taught its bearer what venom tastes like: the party shrugs this off. 💥 The Reckless finish the fight with style: +5 score.
+🔥 The caster opens with Dawnbreak, chosen precisely for the monster's holy weakness: spell damage ×1.5. ⚔️ A ghoul between meals is dead before the party closes: it never gets a round. 🗡️ The daggers land before the argument starts: nothing comes back in the first round. 🐍 A ghoul between meals drops a ghoul's paralytic gland: a weapon coating (+2 attack, venom), applied to Kestrel Quickblade's weapon. 🐍 The Blade of the Adder has taught its bearer what venom tastes like: the party shrugs this off. 💥 The Reckless finish the fight with style: +5 score.
 
 <details><summary>Ledger</summary>
 
@@ -246,11 +246,11 @@ _🕯️ Someone checks the reservoir and does not like the answer: oil for 1 mo
 
 ### 🐉 Room 14 — boss
 
-The boss chamber. The Shrouded King in his broken throne-niche waits at its center (attack 17, health 46); killing it clears the dungeon. Plate and chitin cover it: the party's blows do 2 less damage each round. It will not face the cleric: undead take holy damage ×1.5. Pillars break the room into aisles — something to fight behind. A brazier burns in its bracket — nobody has been here to feed it, and it burns anyway. A pit takes up a third of the floor. The bottom is not visible.
+The boss chamber. The Shrouded King in his broken throne-niche waits at its center (attack 19, health 51); killing it clears the dungeon. Plate and chitin cover it: the party's blows do 2 less damage each round. It will not face the cleric: undead take holy damage ×1.5. Pillars break the room into aisles — something to fight behind. A brazier burns in its bracket — nobody has been here to feed it, and it burns anyway. A pit takes up a third of the floor. The bottom is not visible.
 
 They might have chosen to stand and fight, or fall back — Melchior the Moth-Eaten made the case: "There's a cheaper way to do this. There always is." The party chose to open with a combat spell.
 
-🔥 The caster opens with Dawnbreak, chosen precisely for the monster's holy weakness: spell damage ×1.5. ⚔️ The party kills the Shrouded King in his broken throne-niche in 0 rounds, taking 0 damage. 🧱 The party fights from behind a row of squat pillars: 1 less damage per round. 🏛️ Fighting from the aisles: 2 less damage per round on top of the cover. 🌟 The light soaks into a row of squat pillars. Whatever was going to rise out of it stays put, and the working bites for 3. ❄️ Frost gets into a row of squat pillars and cracks it apart: 2 damage in splinters of cold stone. 💨 The working puts a brazier still burning out. Smoke to fight behind, and 2 marches of light gone with it. 🧊 Frost sheets across an open pit until it will bear weight — a bridge to fight from, and a bad place to slip: 2 cover, 1 damage. 💥 A brazier still burning takes the working like a bellows and erupts: 6 damage, and the flare throws a march of light down the passage. It burns its fuel doing it — the bracket is cold afterwards. 🌋 The fire finds an open pit and the shaft draws like a chimney: 3 damage in the updraft, and nothing to shelter behind while it roars. 🛡️ The prayers on the inside of the buckler turn aside half of what the party set off. 🛡️ The party closes ranks: 1 less damage a round. ✨ The working holds: +70 damage every round while the fight lasts. 👻 The Shrouded King in his broken throne-niche drops the Shroud itself: a trinket (+2 mind), now worn by Canoness Ash. 🧪 Also in the hoard: a healing draught (heals 6), added to the satchel. 💥 The Reckless finish the fight with style: +5 score.
+🔥 The caster opens with Dawnbreak, chosen precisely for the monster's holy weakness: spell damage ×1.5. ⚔️ The Shrouded King in his broken throne-niche is dead before the party closes: it never gets a round. 🗡️ The daggers land before the argument starts: nothing comes back in the first round. 🧱 The party fights from behind a row of squat pillars: 1 less damage per round. 🏛️ Fighting from the aisles: 2 less damage per round on top of the cover. 🌟 The light soaks into a row of squat pillars. Whatever was going to rise out of it stays put, and the working bites for 3. ❄️ Frost gets into a row of squat pillars and cracks it apart: 2 damage in splinters of cold stone. 💨 The working puts a brazier still burning out. Smoke to fight behind, and 2 marches of light gone with it. 🧊 Frost sheets across an open pit until it will bear weight — a bridge to fight from, and a bad place to slip: 2 cover, 1 damage. 💥 A brazier still burning takes the working like a bellows and erupts: 6 damage, and the flare throws a march of light down the passage. It burns its fuel doing it — the bracket is cold afterwards. 🌋 The fire finds an open pit and the shaft draws like a chimney: 3 damage in the updraft, and nothing to shelter behind while it roars. 🛡️ The prayers on the inside of the buckler turn aside half of what the party set off. 👻 The Shrouded King in his broken throne-niche drops the Shroud itself: a trinket (+2 mind), now worn by Canoness Ash. 🧪 Also in the hoard: a healing draught (heals 6), added to the satchel. 💥 The Reckless finish the fight with style: +5 score.
 
 _🕯️ The lantern dies with the party still under the hill. No more light to carry._
 

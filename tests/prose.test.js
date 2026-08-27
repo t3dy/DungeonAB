@@ -28,6 +28,10 @@ import { Simulator } from '../src/sim/Simulator.js';
 import { SeededRandom } from '../src/draft/PackDraft.js';
 import { getAllCards, CHARACTER_CARDS, getCard } from '../src/game/Cards.js';
 import { Party, DARK_TOLL } from '../src/agents/Party.js';
+import { resolveRoomAction } from '../src/encounters/RoomEncounters.js';
+import { composeResolution } from '../src/narrative/Narrator.js';
+
+const byClassName = cls => CHARACTER_CARDS.find(c => c.class === cls);
 import { Adventurer } from '../src/agents/Adventurer.js';
 import { REACTIONS } from '../src/world/Reactions.js';
 import { TACTICS } from '../src/game/Tactics.js';
@@ -160,6 +164,45 @@ describe('The line says the number the mechanic applied', () => {
           `${t.name} does ${biggest} but its text never mentions a figure that large: "${t.text}"`);
       }
     }
+  });
+});
+
+describe('A line never describes something that did not happen', () => {
+  test('a fight the openers ended does not report rounds or per-round effects', () => {
+    // Found by reading a golden diff: thrown knives and a loosed working
+    // can kill a monster before a single round is fought, and the
+    // Chronicle was reporting "kills it in 0 rounds" alongside "+39
+    // damage every round while the fight lasts". Both describe a fight
+    // that never happened.
+    const party = new Party([
+      byClassName('fighter'), byClassName('rogue'),
+      getCard('eq-throwing-knives'), getCard('sp-fireball'),
+    ]);
+    const room = {
+      type: 'monster', icon: '👹',
+      features: ['crates'],
+      monster: { name: 'a paper tiger', attack: 4, health: 3 },
+    };
+    const result = resolveRoomAction(room, party, 'spell-strike');
+    assert.equal(result.rounds, 0, 'the openers finished it');
+
+    const prose = composeResolution(room, 'spell-strike', result, party);
+    assert.doesNotMatch(prose, /in 0 rounds/, 'no fight is reported in zero rounds');
+    assert.doesNotMatch(prose, /every round while the fight lasts/,
+      'nothing claims to have happened every round of a fight with no rounds');
+    assert.match(prose, /never gets a round|dead before/,
+      'and the rout is described as a rout');
+  });
+
+  test('a fight that did run rounds still reports them', () => {
+    const party = new Party([byClassName('fighter'), byClassName('cleric')]);
+    const room = {
+      type: 'monster', icon: '👹',
+      monster: { name: 'a wall of meat', attack: 3, health: 80 },
+    };
+    const result = resolveRoomAction(room, party, 'fight');
+    assert.ok(result.rounds > 0, 'this one was a fight');
+    assert.match(composeResolution(room, 'fight', result, party), /\d+ rounds?/);
   });
 });
 

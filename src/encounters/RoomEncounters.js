@@ -617,7 +617,34 @@ export function resolveRoomAction(room, party, optionId, options = null) {
       // blows; the ethereal ignore steel unless faith gives the
       // blades conviction; the forewarned (a tripped alarm) hit harder
       const preps = [];
-      const armorShave = monster.trait === 'armored' ? 2 : 0;
+      // Sunder is the answer to plate, and its card has always said so:
+      // armour remembers being ore, and stops turning blows
+      const sundered = monster.trait === 'armored' && hasSpell(party, 'sp-sunder')
+        ? party.castSpell('combat', 'sp-sunder') : null;
+      const armorShave = (monster.trait === 'armored' && !sundered) ? 2 : 0;
+      if (sundered) {
+        preps.push({ source: sundered.name, text: `💢 ${sundered.name} reminds the plate it was ore: it stops turning blows for the rest of the fight.` });
+      }
+
+      // A greatsword is the wrong weapon for one foe and the right one
+      // for forty
+      const cleaves = monster.trait === 'swarm' && hasItem(party, 'eq-greatsword') ? 3 : 0;
+      if (cleaves) {
+        preps.push({ source: 'the Greatsword of the Vault', text: `🗡️ The greatsword takes a whole rank of them at a stroke: ${cleaves} more damage a round.` });
+      }
+
+      // Thrown before anyone closes
+      const thrown = hasItem(party, 'eq-throwing-knives') ? 4 : 0;
+      if (thrown) {
+        monsterHealth -= thrown;
+        preps.push({ source: 'the Bandolier of Knives', text: `🔪 Six knives arrive before the party does: ${thrown} damage before the first round.` });
+      }
+
+      // Quicksilver daggers land first, so nothing lands back that round
+      const quicksilver = hasItem(party, 'eq-quicksilver-daggers');
+      if (quicksilver) {
+        preps.push({ source: 'the Quicksilver Daggers', text: '🗡️ The daggers land before the argument starts: nothing comes back in the first round.' });
+      }
 
       // A prepared ward goes up before the first blow — which is what
       // Aegis of Ash's card text has always claimed, and what the fight
@@ -724,7 +751,7 @@ export function resolveRoomAction(room, party, optionId, options = null) {
       let mend = 0;
       while (monsterHealth > 0 && party.isAlive() && rounds < 12) {
         rounds++;
-        const tactical = (flanking ? tac.flankDamage : 0) + armorEdge;
+        const tactical = (flanking ? tac.flankDamage : 0) + armorEdge + cleaves;
         const swing = Math.max(1, Math.round((party.combatAttack() + summon + coating.bonus + spellSustain + tactical + Math.floor(roll() / 3)) * etherealMult) - armorShave);
         monsterHealth -= swing;
         if (monsterHealth <= 0) break;
@@ -734,8 +761,9 @@ export function resolveRoomAction(room, party, optionId, options = null) {
           preps.push({ source: monster.name, text: bossPhaseLine(monster) });
         }
         if (mend > 0) party.healParty(mend);
-        // The slow strike last: no incoming damage on the first round
-        if (monster.trait === 'slow' && rounds === 1) continue;
+        // The slow strike last, and so does anything the quicksilver
+        // daggers got in front of: no incoming damage on the first round
+        if ((monster.trait === 'slow' || quicksilver) && rounds === 1) continue;
         const incoming = Math.max(1, monsterAtk - Math.floor(party.totalDefense() / 3) - ward - cover - tac.cover - castWard);
         party.takeDamage(incoming);
         partyDamageTaken += incoming;
@@ -751,6 +779,17 @@ export function resolveRoomAction(room, party, optionId, options = null) {
           });
         }
         party.quaffIfNeeded();
+      }
+
+      // A fight the openers ended never ran a round, so anything that
+      // promised to happen "every round" did not happen at all. Saying
+      // it anyway is the same class of lie as a card that overstates its
+      // effect (found by reading a golden diff).
+      if (rounds === 0) {
+        const perRound = /every round|a round while|less damage a round|damage a round/i;
+        for (let i = preps.length - 1; i >= 0; i--) {
+          if (perRound.test(preps[i].text || '')) preps.splice(i, 1);
+        }
       }
 
       const won = monsterHealth <= 0 && party.isAlive();
@@ -1005,7 +1044,12 @@ export function resolveRoomAction(room, party, optionId, options = null) {
       // for rooms, as it were): fire burns unless frost answers it,
       // poison is patient, an alarm mostly just *tells on you*
       const trapType = room.trapType || 'spike';
-      let dmg = Math.max(1, (room.trapDamage || 3) - spotter - prep.trapSoak);
+      // Feather Step: the floor agrees to pretend nobody is on it
+      const feather = hasSpell(party, 'sp-feather') ? party.castSpell('utility', 'sp-feather') : null;
+      if (feather) {
+        preps.push({ source: feather.name, text: `🪶 ${feather.name} takes the party's weight off the floor: 3 less damage from anything underfoot.` });
+      }
+      let dmg = Math.max(1, (room.trapDamage || 3) - spotter - prep.trapSoak - (feather ? 3 : 0));
       if (trapType === 'fire') {
         // Firewatch is knowledge about where fire goes, and a flame trap
         // is the commonest place to use it (game/Tactics.js)

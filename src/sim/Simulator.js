@@ -211,6 +211,11 @@ export class Simulator {
       return;
     }
 
+    // How many times the party has stood here. A fled room is walked
+    // back into, and reading the same three beats six times running is
+    // how that looked before anyone counted (tests/prose.test.js).
+    room.visits = (room.visits || 0) + 1;
+
     // The room, decided and resolved
     const predicament = composePredicament(room, this.dungeon.theme);
     const options = getRoomOptions(room, this.party);

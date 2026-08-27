@@ -254,6 +254,21 @@ function composeFeatureUse(optionId, result) {
   return `${parts[0]}: ${gains.length ? gains.join(', ') : 'nothing worth carrying'}.`;
 }
 
+/**
+ * How a fight ended.
+ *
+ * A monster can die to the openers -- thrown knives, a loosed working,
+ * the room itself -- before a single round is fought. "kills it in 0
+ * rounds" reads as a bug rather than a rout, which is what it is. Found
+ * by reading a golden diff.
+ */
+function killLine(result) {
+  if (!result.rounds) {
+    return `⚔️ ${capitalize(result.monster)} is dead before the party closes: it never gets a round.`;
+  }
+  return `⚔️ The party kills ${result.monster} in ${result.rounds} round${result.rounds === 1 ? '' : 's'}, taking ${result.damage} damage.`;
+}
+
 export function composeResolution(room, optionId, result, party) {
   const bits = [];
 
@@ -266,7 +281,7 @@ export function composeResolution(room, optionId, result, party) {
       bits.push(result.success
         ? (result.rounds === 0
             ? `⚔️ ${capitalize(result.monster)} is finished before it can strike back.`
-            : `⚔️ The party kills ${result.monster} in ${result.rounds} round${result.rounds === 1 ? '' : 's'}, taking ${result.damage} damage.`)
+            : killLine(result))
         : `☠️ Even so, ${result.monster} beats the party down.`);
     }
     for (const prep of result.preps || []) bits.push(prep.text);
@@ -287,7 +302,7 @@ export function composeResolution(room, optionId, result, party) {
       if (result.success && result.rounds === 0) {
         bits.push(`⚔️ ${capitalize(result.monster)} is killed before it can strike back. The party takes no damage.`);
       } else if (result.success) {
-        bits.push(`⚔️ The party kills ${result.monster} in ${result.rounds} round${result.rounds === 1 ? '' : 's'}, taking ${result.damage} damage.`);
+        bits.push(killLine(result));
       } else {
         bits.push(`☠️ ${capitalize(result.monster)} is too strong: the party is beaten down over ${result.rounds} round${result.rounds === 1 ? '' : 's'}.`);
       }
@@ -306,7 +321,7 @@ export function composeResolution(room, optionId, result, party) {
         bits.push(`🔥 ${result.spell} opens the fight, softening the monster before the first blow.`);
       }
       if (result.success && result.rounds !== undefined) {
-        bits.push(`⚔️ The party kills ${result.monster} in ${result.rounds} round${result.rounds === 1 ? '' : 's'}, taking ${result.damage} damage.`);
+        bits.push(killLine(result));
       } else if (!result.success) {
         bits.push(`☠️ Even softened, ${result.monster} beats the party down.`);
       }
@@ -337,7 +352,9 @@ export function composeResolution(room, optionId, result, party) {
         : `🚪 ${result.spell} opens the lock at range: ${result.gold} gold taken.${result.consumed ? ' The scroll is consumed.' : ''} The noise carries through the dungeon.`);
       break;
     case 'flee':
-      bits.push('💨 The party retreats, taking 2 damage on the way out. The room stays hostile; they will have to try it again.');
+      // A party can flee the same room repeatedly, so the retreat has to
+      // read differently each time or the Chronicle stutters
+      bits.push(pick(RETREAT_LINES)(room?.visits || 1));
       break;
     case 'disarm':
       bits.push(result.success
@@ -445,6 +462,11 @@ const SUPPLY_LINES = {
     (name, full) => `💡 No oil left, so ${name} does the work — light enough to walk by, and ${full} damage nobody pays.`,
     (name, full) => `💡 ${name} kindles in the empty air and the party walks on seeing. The dark takes nothing.`,
   ],
+  'sure-footed': [
+    (name, full) => `🪶 ${name} takes the party's weight off the floor: they walk the dark without walking into it, and pay none of the usual ${full}.`,
+    (name, full) => `🪶 No light, but no stumbling either — ${name} carries them through blind and whole, ${full} damage unpaid.`,
+    (name, full) => `🪶 ${name} means the floor never tells them what they hit. Nothing does: ${full} damage avoided.`,
+  ],
   'dark-seen': [
     full => `👁️ The dark is no trouble to eyes that know it: the party walks on, ${full} damage unpaid.`,
     full => `👁️ Someone in the party reads the black like a page, and the march costs nothing.`,
@@ -480,7 +502,9 @@ export function composeSupply(note) {
   }
   const pool = SUPPLY_LINES[note.kind];
   if (!pool) return null;
-  if (note.kind === 'conjured') return pick(pool)(note.source, note.full);
+  if (note.kind === 'conjured' || note.kind === 'sure-footed') {
+    return pick(pool)(note.source, note.full);
+  }
   if (note.kind === 'dark-seen') return pick(pool)(note.full);
   return pick(pool)(note.supply);
 }
@@ -608,7 +632,39 @@ export function composeTownInterlude(party, depth) {
 /* Predicament composition                                             */
 /* ------------------------------------------------------------------ */
 
+/**
+ * Coming back to a room the party already ran from.
+ *
+ * A retreat leaves the room hostile and the party walks back into it,
+ * so a stubborn or a craven band can meet the same monster half a dozen
+ * times. Repeating the room's first-sight description each time reads
+ * as a stuck record; these say what is actually different, which is
+ * that everyone involved has met before.
+ */
+const RETREAT_LINES = [
+  n => (n > 2
+    ? `💨 They back out again, 2 damage on the way. That is ${n} attempts and no ground gained.`
+    : '💨 The party retreats, taking 2 damage on the way out. The room stays hostile; they will have to try it again.'),
+  n => (n > 2
+    ? `💨 Out through the same door for the ${n}th time, 2 damage the toll. Something has to change.`
+    : '💨 The party gives ground, 2 damage on the way out, and the room keeps what it was holding.'),
+  n => (n > 2
+    ? `💨 Another retreat, another 2 damage. The room is winning this by attrition.`
+    : '💨 They fall back, paying 2 for the room they do not take.'),
+];
+
+const RETURN_LINES = [
+  n => `They are back. ${n === 2 ? 'The room has not improved.' : `This is the ${n}${n === 3 ? 'rd' : 'th'} time, and it knows them now.`}`,
+  n => `The same room again${n > 3 ? ', and the party is running out of ways to describe it' : ''}. Whatever is in it has had time to think.`,
+  n => `Back through the same door, for the ${n === 2 ? 'second' : n === 3 ? 'third' : `${n}th`} time. Nothing here has forgotten them.`,
+];
+
 export function composePredicament(room, theme = null) {
+  // A return visit gets its own opening rather than the room's
+  // first-sight description over again
+  if (room?.visits > 1 && !room.cleared) {
+    return pick(RETURN_LINES)(room.visits) + monsterTells(room.monster);
+  }
   if (room.type === ROOM_TYPES.ENTRANCE && theme && THEME_ENTRANCES[theme.id]) {
     return THEME_ENTRANCES[theme.id];
   }

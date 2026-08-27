@@ -483,6 +483,16 @@ export class Party {
         ? { kind: 'conjured', supply: 0, full: DARK_TOLL, source: lit.name }
         : null;
     }
+    // Feather Step's card says "no stumbling in the dark", and the dark
+    // costs a party precisely by making it stumble
+    const feather = this.castSpell('utility', 'sp-feather');
+    if (feather) {
+      // Its own beat, not the conjured-light one: Feather Step makes no
+      // light at all, it just stops the party walking into things
+      return announce('sure-footed')
+        ? { kind: 'sure-footed', supply: 0, full: DARK_TOLL, source: feather.name }
+        : null;
+    }
     if (this.canSeeInDark()) {
       return announce('dark-seen')
         ? { kind: 'dark-seen', supply: 0, full: DARK_TOLL }

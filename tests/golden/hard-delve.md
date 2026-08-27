@@ -28,7 +28,7 @@ _🚶 The party passes the side passage by and keeps to the main route._
 
 ### 👹 Room 2 — monster
 
-A thrall footman, polite and bloodless holds the room (attack 10, health 22). The party must decide how to get past it. It will not face the cleric: undead take holy damage ×1.5. Shelves sag under books nobody has audited in a century.
+A thrall footman, polite and bloodless holds the room (attack 11, health 24). The party must decide how to get past it. It will not face the cleric: undead take holy damage ×1.5. Shelves sag under books nobody has audited in a century.
 
 They might have chosen to stand and fight, or fall back — the Devout called it the right thing to do. The party chose to open with a combat spell.
 
@@ -63,7 +63,7 @@ The party moves on to the next room.
 
 ### 👹 Room 4 — monster
 
-A crimson mist that pours under the door holds the room (attack 13, health 18). The party must decide how to get past it. It is ethereal: weapons do only 60% damage unless a cleric blesses the blades. It will not face the cleric: undead take holy damage ×1.5. Pillars break the room into aisles — something to fight behind.
+A crimson mist that pours under the door holds the room (attack 15, health 21). The party must decide how to get past it. It is ethereal: weapons do only 60% damage unless a cleric blesses the blades. It will not face the cleric: undead take holy damage ×1.5. Pillars break the room into aisles — something to fight behind.
 
 They might have chosen to stand and fight, or fall back — the Devout called it the right thing to do. The party chose to open with a combat spell.
 
@@ -175,7 +175,7 @@ _🕯️ Someone checks the reservoir and does not like the answer: oil for 2 mo
 
 ### 🐉 Room 10 — boss
 
-The boss chamber. The Vampire Lord, apologizing for the hour waits at its center (attack 22, health 59); killing it clears the dungeon. It is ethereal: weapons do only 60% damage unless a cleric blesses the blades. It will not face the cleric: undead take holy damage ×1.5. Pillars break the room into aisles — something to fight behind.
+The boss chamber. The Vampire Lord, apologizing for the hour waits at its center (attack 24, health 65); killing it clears the dungeon. It is ethereal: weapons do only 60% damage unless a cleric blesses the blades. It will not face the cleric: undead take holy damage ×1.5. Pillars break the room into aisles — something to fight behind.
 
 They might have chosen to stand and fight, or fall back — the Devout called it the right thing to do. The party chose to open with a combat spell.
 
