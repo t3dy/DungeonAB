@@ -20,6 +20,7 @@ import { composeResolution } from '../src/narrative/Narrator.js';
 import { Party } from '../src/agents/Party.js';
 import { ROOM_TYPES } from '../src/world/DungeonGen.js';
 import { CHARACTER_CARDS, SPELL_CARDS, CLASSES } from '../src/game/Cards.js';
+import { armsDiffer, trials, partyHealth, partyPool } from './helpers.js';
 
 const byClass = cls => CHARACTER_CARDS.find(c => c.class === cls);
 const sp = id => SPELL_CARDS.find(s => s.id === id);
@@ -221,27 +222,33 @@ describe('A healing working fires when it is needed, not after', () => {
   });
 
   test('holding a heal beats holding nothing when the blows are landing', () => {
-    // Same two bodies, same wall of meat, 60 trials. The foe is sized
-    // to a regime where the question is decidable: wound attrition
-    // (Adventurer.WOUND_COST) means a big enough monster kills both
-    // arms and a small enough one kills neither, and a test run in
-    // either of those regimes measures nothing.
+    // The foe is sized to a regime where the question is decidable:
+    // wound attrition means a big enough monster kills both arms and a
+    // small enough one kills neither, and a test run in either of those
+    // regimes measures nothing. armsDiffer enforces that rather than
+    // trusting the numbers I picked.
+    let pool = 0;
     const outcome = spells => {
-      let total = 0, survived = 0;
-      const trials = 60;
-      for (let i = 0; i < trials; i++) {
+      const survived = [];
+      const left = trials(60, () => {
         const party = new Party([byClass('fighter'), byClass('cleric'),
           ...spells.map(id => sp(id))]);
+        pool = partyPool(party);
         resolveRoomAction(bruiser({ attack: 6, health: 90 }), party, 'fight');
-        total += party.members.reduce((sum, m) => sum + Math.max(0, m.health), 0);
-        if (party.isAlive()) survived++;
-      }
-      return { hp: total / trials, survival: survived / trials };
+        survived.push(party.isAlive() ? 1 : 0);
+        return partyHealth(party);
+      });
+      return { left, survival: survived.reduce((s, v) => s + v, 0) / survived.length };
     };
     const bare = outcome([]);
     const healed = outcome(['sp-mend', 'sp-balm']);
-    assert.ok(healed.hp > bare.hp,
-      `healing workings keep the party up (${healed.hp.toFixed(1)} > ${bare.hp.toFixed(1)})`);
+
+    const { a, b } = armsDiffer(healed.left, bare.left, {
+      label: 'healing workings against none',
+      spread: 1,
+      bounds: { max: pool },
+    });
+    assert.ok(a > b, `healing workings keep the party up (${a.toFixed(1)} > ${b.toFixed(1)})`);
     assert.ok(healed.survival > bare.survival,
       `and keep it alive (${(healed.survival * 100).toFixed(0)}% vs ${(bare.survival * 100).toFixed(0)}%)`);
   });

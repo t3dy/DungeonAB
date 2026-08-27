@@ -22,6 +22,7 @@ import { Party } from '../src/agents/Party.js';
 import { ROOM_TYPES } from '../src/world/DungeonGen.js';
 import { CHARACTER_CARDS, SPELL_CARDS } from '../src/game/Cards.js';
 import { validateCard, BUDGETS } from '../src/game/CardPacks.js';
+import { armsDiffer, trials, partyHealth, partyPool } from './helpers.js';
 
 const byClass = cls => CHARACTER_CARDS.find(c => c.class === cls);
 const sp = id => SPELL_CARDS.find(s => s.id === id);
@@ -211,28 +212,32 @@ describe('The room actually changes when it reacts', () => {
   });
 
   test('the monster attack modifier actually reaches the fight', () => {
-    // A monster hitting hard enough that mitigation is above the floor
-    const hurt = features => {
-      let total = 0;
-      const trials = 40;
-      for (let i = 0; i < trials; i++) {
-        const party = new Party([
-          byClass('fighter'), byClass('cleric'), byClass('rogue'), byClass('wizard'),
-          sp('sp-hoarfrost'),
-        ]);
-        const before = party.members.reduce((s, m) => s + m.health, 0);
-        resolveRoomAction(roomWith(features, { attack: 6, health: 400 }), party, 'spell-strike');
-        assert.ok(party.isAlive(), 'the fixture must leave the party standing to be measurable');
-        total += before - party.members.reduce((s, m) => s + Math.max(0, m.health), 0);
-      }
-      return total / trials;
-    };
-    // Hoarfrost glazes a font: -3 to what the monster hits for, every
-    // round, against a foe hitting well clear of the floor.
-    const glazed = hurt(['font']);
-    const bare = hurt(['anvil']);
-    assert.ok(glazed < bare,
-      `a frozen floor costs the monster more than it costs the party (${glazed.toFixed(1)} < ${bare.toFixed(1)})`);
+    // Sized deliberately: hard enough that mitigation clears the
+    // `max(1, ...)` damage floor, soft enough that the party survives
+    // and totals do not saturate at the health pool. armsDiffer refuses
+    // to pass on a fixture outside that band -- an earlier version of
+    // this test compared 52.0 against 52.0 (both arms wiped) and would
+    // have reported green whatever the mechanic did.
+    let pool = 0;
+    const hurt = features => trials(40, () => {
+      const party = new Party([
+        byClass('fighter'), byClass('cleric'), byClass('rogue'), byClass('wizard'),
+        sp('sp-hoarfrost'),
+      ]);
+      pool = partyPool(party);
+      const before = partyHealth(party);
+      resolveRoomAction(roomWith(features, { attack: 6, health: 400 }), party, 'spell-strike');
+      return before - partyHealth(party);
+    });
+
+    const glazed = hurt(['font']);     // Hoarfrost freezes it: -3 to the monster
+    const bare = hurt(['anvil']);      // nothing frost answers
+    const { a, b } = armsDiffer(glazed, bare, {
+      label: 'a frozen floor against bare stone',
+      spread: 2,
+      bounds: { min: 0, max: pool },
+    });
+    assert.ok(a < b, `the glaze costs the monster more than it costs the party (${a.toFixed(1)} < ${b.toFixed(1)})`);
   });
 });
 
