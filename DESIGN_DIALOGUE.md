@@ -1083,3 +1083,101 @@ the player can see where they are standing as well as read it.
 
 Curve recalibrated by the tool in one command: medium 1.48, hard 1.71,
 nightmare 2.41, measured 99.4 / 87.5 / 73.1 / 45.1.
+
+
+## 15. The dungeon goes down — floors, wings, and what the map was hiding (2026-08-27)
+
+### The claim that was wrong
+
+**NARR:** The record said all four dungeon forks were built. They were
+not. What existed was a spine of eight to eleven rooms with one or two
+two-room stubs off it, plus trapdoors that skipped *along* that spine.
+A trapdoor is a hole in a floor; a hole that lands you on the same level
+is a hole to nowhere. The dungeon had no floors for it to go through.
+
+### Floors are a schedule, not a coin flip
+
+**TCG:** The first cut rolled a third floor 35% of the time at any
+depth, and the attrition test caught it inside a minute: 23 of 60
+parties reached the throne, against a design that wants most of them to.
+Supply is provisioned from the length of the path, so the lamp scaled —
+but health did not, and a dungeon of twenty-five rooms is a different
+game from one of eleven. Floor count is now **how far the campaign has
+dug**: two, and three from depth 3.
+
+Each floor multiplies its monsters by `1 + 0.18f`, guarantees included —
+a library swapped in on the bottom floor is a bottom-floor library, not
+a soft one grafted onto deep stone. That is one of three bugs the same
+shape: the guarantee pass replaced rooms **without carrying their
+floor**, and it could eat a stair, leaving a floor with no way down.
+Adding `STAIRS` to `PROTECTED_TYPES` and copying `floor` onto the
+replacement fixed both. A 200-seed sweep is the gate now: no room with
+an undefined floor, one stair per floor boundary, boss on the last.
+
+### Four tests failed for four different reasons, and three were the tests
+
+**NARR:** Lengthening the dungeon broke tests that were never measuring
+what they claimed:
+
+- *Room footprints never overlap* — floors stack, so a stairhead sits
+  directly above the room you land in. The overlap check had to become
+  per-floor. **The generator was right and the test was wrong.**
+- *Deeper dungeons pay better* — compared one seed's first gold room
+  against another's, and depth now changes the shape of the draw. It
+  reported `43 > 43`. Averaged over 24 seeds it says what it meant.
+- *Monster Swarms multiplies the fights* — a weight tweak is a change to
+  a distribution, and one seed can land either way. 24 seeds.
+- *The caverns keep failing* — counted disasters absolutely, so it read
+  the length of the dungeon as much as its weighting. It now compares
+  the caverns against a plain delve on the same seeds: 4× the rate.
+
+**TCG:** And one was a real design hole. *The boss gets the great hall*
+asserted the boss chamber is the biggest room, and it was passing by
+luck: a boss hall could roll 72 tiles while a disaster cavern rolled
+108. The fix belongs in the generator, not the assertion — the boss's
+smallest footprint now beats every other type's largest.
+
+### What the goldens caught that no unit test could
+
+Re-blessing the three golden transcripts and **reading the diff** turned
+up three things at once:
+
+1. `### ⬛ Room 7 — stairs` — the new room type had no icon.
+2. `The party chose to camp-stair.` — a raw option id in the prose,
+   because `OPTION_PHRASES` had no entry and **nothing checked that it
+   did**. There is a gate for that now: every option any room can offer
+   across 30 seeded delves must have a phrase, and removing one line
+   from the table fails it.
+3. Two identical renders of the same seeded case. `recentBarks` is
+   module state that survived from one delve into the next, so a party's
+   dialogue depended on what a previous party had said. The golden
+   harness pins `Math.random`; it cannot pin a module-level array.
+
+### The party that fled seven times
+
+**NARR:** The repetition gate found a Craven party backing out of the
+same room seven times with an identical deliberation each time. The
+answer is not seven more ways to write a retreat. **Twice is a retreat;
+a third time is a rout**, and the room does not permit one: each
+withdrawal costs `2 × the number of times they have tried it`, and after
+two the `flee` option is gone and the predicament says why —
+*it is between them and the door*.
+
+### Wings
+
+A branch of one or two random rooms is an alcove with loot in it. A wing
+is a 2–4 room themed detour with a payoff: the burial, workshop,
+archive, barracks and flooded wings, each with a body pool and an end
+room, and a secret one always ends in a vault. The name and the tell go
+into the writing, because a detour the player cannot tell apart from any
+other detour is not a decision.
+
+### The drawing
+
+Floors drop 7 world units each, stair edges draw as a flight of steps
+instead of a corridor, and the camera tracks the floor the party stands
+on rather than framing the level below from the ceiling of the one
+above. The 2D floorplan draws one floor and labels it.
+
+Recalibrated after: medium 1.19, hard 1.45, nightmare 1.97 — measured
+97.9 / 88.0 / 69.4 / 45.6 against a 99 / 88 / 71 / 45 target.

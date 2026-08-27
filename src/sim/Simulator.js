@@ -23,6 +23,7 @@ import {
   composeSecretFound, composeDetour, composeTrapdoor,
   composeSupply, composeWound, composeDormant, composeTactics, composeProvision,
 } from '../narrative/Narrator.js';
+import { resetBarks } from '../narrative/Barks.js';
 
 export class Simulator {
   /**
@@ -71,6 +72,9 @@ export class Simulator {
     this.chronicle = opts.chronicle instanceof Chronicle
       ? opts.chronicle
       : new Chronicle(this.party.members.map(m => m.name).join(', ') || 'the party');
+    // A fresh delve starts with nothing said yet: bark history is module
+    // state and would otherwise leak from the last run (narrative/Barks.js)
+    resetBarks();
     this.chronicle.beginDelve({
       seed, difficulty, depth: this.depth,
       theme: this.dungeon.theme?.name || null,
@@ -263,7 +267,7 @@ export class Simulator {
           branch.consumed = true;
           for (const bi of branch.rooms) this.dungeon.rooms[bi].discovered = true;
           this.path.splice(this.roomIndex + 1, 0, ...branch.rooms);
-          this.lastNarration.aside = [this.lastNarration.aside, composeSecretFound(this.party)].filter(Boolean).join(' ');
+          this.lastNarration.aside = [this.lastNarration.aside, composeSecretFound(this.party, branch)].filter(Boolean).join(' ');
           this.addLog('🕳️ A hidden door!');
         }
         // Unnoticed secrets stay secret — the branch may be found on a retreat pass
@@ -271,7 +275,7 @@ export class Simulator {
         branch.consumed = true;
         const going = decideDetour(this.party);
         if (going) this.path.splice(this.roomIndex + 1, 0, ...branch.rooms);
-        this.lastNarration.aside = [this.lastNarration.aside, composeDetour(going)].filter(Boolean).join(' ');
+        this.lastNarration.aside = [this.lastNarration.aside, composeDetour(going, branch)].filter(Boolean).join(' ');
       }
     }
 
@@ -313,6 +317,12 @@ export class Simulator {
     const skipped = toPos - this.roomIndex - 1;
     if (toPos <= this.roomIndex || skipped <= 0) return;   // the route already passed it
 
+    // A shaft that goes through the floor says so: the party lands on
+    // the next level down, and the stair it skipped stays unused.
+    const fromFloor = this.dungeon.rooms[trapdoor.from]?.floor || 0;
+    const toFloor = this.dungeon.rooms[trapdoor.to]?.floor || 0;
+    const floorsDropped = Math.max(0, toFloor - fromFloor);
+
     const found = !trapdoor.secret || detectTrapdoor(this.party);
     let outcome;
     if (found) {
@@ -343,7 +353,7 @@ export class Simulator {
 
     this.lastNarration.aside = [
       this.lastNarration.aside,
-      composeTrapdoor({ outcome, rooms: skipped, damage, finder: this.trapdoorFinder() }),
+      composeTrapdoor({ outcome, rooms: skipped, damage, floors: floorsDropped, finder: this.trapdoorFinder() }),
     ].filter(Boolean).join(' ');
     this.lastNarration.falls = [
       ...(this.lastNarration.falls || []),
@@ -387,6 +397,7 @@ export class Simulator {
       turn: this.turn,
       roomIndex: this.roomIndex,
       currentRoomIndex: this.path[clampedPos],           // array index for the renderer
+      floor: this.dungeon.rooms[this.path[clampedPos]]?.floor || 0,
       pathLength: this.path.length,
       knownIdxs: [...this.path.slice(0, this.roomIndex + 2), this.dungeon.spine[this.dungeon.spine.length - 1]],
       dungeon: this.dungeon,

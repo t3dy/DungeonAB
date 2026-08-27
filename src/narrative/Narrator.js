@@ -46,6 +46,11 @@ const THEME_DISASTERS = {
 const PREDICAMENTS = {
   entrance: ['The party gathers at the dungeon entrance and starts down.'],
   corridor: ['A connecting corridor. Nothing blocks the way; the party moves through.'],
+  stairs: [
+    'A stair cut into the rock, going down. Cold air comes up it.',
+    'The floor ends at a stairwell. Whatever is below has been waiting longer.',
+    'Steps down, worn in the middle by traffic that stopped a long time ago.',
+  ],
   monster: ['A monster holds the room. The party must decide how to get past it.'],
   trap: ['A trap blocks the corridor. The party must disarm it, avoid it, or take the hit.'],
   treasure: ['A treasure chest sits in the room. It may hold gold; it may be a mimic.'],
@@ -62,31 +67,37 @@ const PREDICAMENTS = {
 /* Asides — side passages and secret doors (procgen v2)                */
 /* ------------------------------------------------------------------ */
 
-export function composeSecretFound(party) {
+export function composeSecretFound(party, wing = null) {
   const rogue = party.living().find(m => m.class === CLASSES.ROGUE);
   const finder = rogue ? rogue.name : (party.living()[0]?.name || 'Someone');
-  return `🕳️ ${finder} finds a hidden door. A secret side branch joins the party's route.`;
+  const behind = wing?.tell ? ` Behind it: ${wing.tell}.` : '';
+  return `🕳️ ${finder} finds a hidden door into ${wing?.name || 'a side passage'}.${behind} Its rooms join the route.`;
 }
 
-export function composeDetour(taken) {
+export function composeDetour(taken, wing = null) {
+  const name = wing?.name || 'the side passage';
+  const tell = wing?.tell ? ` — ${wing.tell}` : '';
   return taken
-    ? '🧭 The party takes the side passage; its rooms join the route.'
-    : '🚶 The party passes the side passage by and keeps to the main route.';
+    ? `🧭 The party turns off into ${name}${tell}. Its rooms join the route.`
+    : `🚶 The party looks into ${name}${tell} and keeps to the main route.`;
 }
 
 /**
  * A shaft in the floor. Three outcomes, all reported plainly: found
  * and climbed, found and refused, or blundered into.
  */
-export function composeTrapdoor({ outcome, rooms, damage, finder }) {
+export function composeTrapdoor({ outcome, rooms, damage, floors = 0, finder }) {
+  // A shaft that goes through the floor lands the party a level down,
+  // past the stair; one that does not is a shortcut along this one.
+  const landing = floors > 0 ? ` on ${floorName(floors)}` : '';
   if (outcome === 'descend') {
-    return `🕳️ ${finder} finds a trapdoor in the floor. The party ropes down the shaft, skipping ${rooms} room${rooms === 1 ? '' : 's'} ahead and taking ${damage} damage on the landing.`;
+    return `🕳️ ${finder} finds a trapdoor in the floor. The party ropes down the shaft and lands${landing}, skipping ${rooms} room${rooms === 1 ? '' : 's'} ahead and taking ${damage} damage.`;
   }
   if (outcome === 'refused') {
     return `🕳️ ${finder} finds a trapdoor in the floor. The party leaves it shut: the rooms it skips hold loot as well as danger.`;
   }
   if (outcome === 'fell') {
-    return `🕳️ The floor gives way — a hidden trapdoor. The party falls ${rooms} room${rooms === 1 ? '' : 's'} deeper, taking ${damage} damage, and the rooms between go unlooted.`;
+    return `🕳️ The floor gives way — a hidden trapdoor. The party lands${landing || ' further down the same level'}, ${rooms} room${rooms === 1 ? '' : 's'} past where they were, taking ${damage} damage, and the rooms between go unlooted.`;
   }
   return '';
 }
@@ -94,6 +105,11 @@ export function composeTrapdoor({ outcome, rooms, damage, finder }) {
 /* ------------------------------------------------------------------ */
 /* Deliberation — options, advocate, choice                            */
 /* ------------------------------------------------------------------ */
+
+/** For the writing gate: every option id the prose knows how to name. */
+export function phrasedOptions() {
+  return Object.keys(OPTION_PHRASES);
+}
 
 const OPTION_PHRASES = {
   'brew-oil': 'cook a material down into lamp oil',
@@ -123,6 +139,9 @@ const OPTION_PHRASES = {
   'knock-open': 'open it with Knock',
   'cause-fear': 'cast Cause Fear',
   'smoke-bomb': 'spring it with a smoke bomb',
+  descend: 'take the stair down',
+  'rope-down': 'rope down the shaft beside it',
+  'camp-stair': 'camp at the stairhead first',
   // Using the room itself (world/RoomFeatures.js FEATURE_ACTIONS)
   'shove-into-pit': 'shove it into the pit',
   'topple-boulder': 'topple the boulder onto it',
@@ -139,14 +158,49 @@ const OPTION_PHRASES = {
   'strip-the-shelves': 'strip the shelves',
 };
 
+/**
+ * Who argued for it, when no class advocate speaks up. One line per
+ * archetype meant a party of one temper printed the same sentence in
+ * every room it entered — a delve of six identical deliberations, which
+ * tests/prose.js counts as a repetition and a reader counts as a stuck
+ * record. Several each, so the same party argues in different words.
+ */
 const ARCHETYPE_VOICES = {
-  brave: 'the Bold voted to meet it head-on',
-  cunning: 'the Cunning picked the safer angle',
-  greedy: 'the Covetous wanted the payout',
-  scholarly: 'the Scholarly wanted the knowledge',
-  pious: 'the Devout called it the right thing to do',
-  reckless: 'the Reckless did not wait for a vote',
-  craven: 'the Craven pushed for the safest option',
+  brave: [
+    'the Bold voted to meet it head-on',
+    'the Bold saw no reason to be careful about it',
+    'the Bold wanted it settled here',
+  ],
+  cunning: [
+    'the Cunning picked the safer angle',
+    'the Cunning looked for the way that costs least',
+    'the Cunning had already worked out the odds',
+  ],
+  greedy: [
+    'the Covetous wanted the payout',
+    'the Covetous counted what was in the room first',
+    'the Covetous refused to leave anything behind',
+  ],
+  scholarly: [
+    'the Scholarly wanted the knowledge',
+    'the Scholarly wanted a closer look before anything else',
+    'the Scholarly argued from what the books say about this',
+  ],
+  pious: [
+    'the Devout called it the right thing to do',
+    'the Devout said the god would want it this way',
+    'the Devout would not hear of the other options',
+  ],
+  reckless: [
+    'the Reckless did not wait for a vote',
+    'the Reckless were already moving',
+    'the Reckless settled it by going first',
+  ],
+  craven: [
+    'the Craven pushed for the safest option',
+    'the Craven wanted no part of the alternative',
+    'the Craven argued for whatever kept a door behind them',
+  ],
 };
 
 const CLASS_ADVOCATES = {
@@ -181,7 +235,7 @@ export function composeDeliberation(chosenId, options, party) {
   } else {
     for (const archetype of party.personalities) {
       if (ARCHETYPE_VOICES[archetype]) {
-        voice = ARCHETYPE_VOICES[archetype];
+        voice = pick(ARCHETYPE_VOICES[archetype]);
         break;
       }
     }
@@ -269,6 +323,28 @@ function killLine(result) {
   return `⚔️ The party kills ${result.monster} in ${result.rounds} round${result.rounds === 1 ? '' : 's'}, taking ${result.damage} damage.`;
 }
 
+/**
+ * Floors have names in the party's mouth, not indices. The generator
+ * counts from zero; the writing counts from the door.
+ */
+const FLOOR_NAMES = ['the entrance level', 'the second floor', 'the third floor', 'the fourth floor'];
+export function floorName(floor) {
+  return FLOOR_NAMES[floor] || 'the floor below';
+}
+
+/**
+ * The plain walk between one room and the next. This used to be a
+ * single sentence, which meant a long dungeon printed it ten times
+ * (tests/prose.js finds exactly that).
+ */
+const PROCEED_LINES = [
+  'The party moves on to the next room.',
+  'Nothing here needs doing. The party walks on.',
+  'The party crosses the room and takes the far door.',
+  'There is nothing to fight and nothing to take. The party keeps going.',
+  'The party files through and leaves the room behind.',
+];
+
 export function composeResolution(room, optionId, result, party) {
   const bits = [];
 
@@ -354,7 +430,7 @@ export function composeResolution(room, optionId, result, party) {
     case 'flee':
       // A party can flee the same room repeatedly, so the retreat has to
       // read differently each time or the Chronicle stutters
-      bits.push(pick(RETREAT_LINES)(room?.visits || 1));
+      bits.push(pick(RETREAT_LINES)(result.fled || 1, result.damage ?? 2));
       break;
     case 'disarm':
       bits.push(result.success
@@ -415,8 +491,21 @@ export function composeResolution(room, optionId, result, party) {
         ? '🌋 The party scatters; nearly everyone finds cover. Minimal damage.'
         : `🌋 The party scatters; ${result.hurt} member${result.hurt === 1 ? '' : 's'} guessed wrong and took 3 damage each.`);
       break;
+    /* Stairs down — the floor below is meaner than this one */
+    case 'descend':
+      bits.push(`\u{1FA9C} The party goes down the stair to ${floorName(room.descendsTo)}, ${result.supplySpent === 1 ? 'burning a march of oil on the climb' : 'and the lamp is already out'}.`);
+      break;
+    case 'rope-down':
+      bits.push(`\u{1FA9C} The party ropes down the shaft beside the stair and lands on ${floorName(room.descendsTo)}.`);
+      break;
+    case 'camp-stair':
+      bits.push(result.interrupted
+        ? `\u{1F3D5}\uFE0F The party makes camp at the stairhead and something climbs the stair into it: ${result.healed} healed each, ${result.damage} damage taken, and ${floorName(room.descendsTo)} still to go.`
+        : `\u{1F3D5}\uFE0F The party makes camp at the stairhead and eats before the climb: ${result.healed} healed each, then down to ${floorName(room.descendsTo)}.`);
+      break;
+
     default:
-      bits.push('The party moves on to the next room.');
+      bits.push(pick(PROCEED_LINES));
   }
 
   // Preparation pays, and the log says so by name (the FTL lesson:
@@ -642,15 +731,15 @@ export function composeTownInterlude(party, depth) {
  * that everyone involved has met before.
  */
 const RETREAT_LINES = [
-  n => (n > 2
-    ? `💨 They back out again, 2 damage on the way. That is ${n} attempts and no ground gained.`
-    : '💨 The party retreats, taking 2 damage on the way out. The room stays hostile; they will have to try it again.'),
-  n => (n > 2
-    ? `💨 Out through the same door for the ${n}th time, 2 damage the toll. Something has to change.`
-    : '💨 The party gives ground, 2 damage on the way out, and the room keeps what it was holding.'),
-  n => (n > 2
-    ? `💨 Another retreat, another 2 damage. The room is winning this by attrition.`
-    : '💨 They fall back, paying 2 for the room they do not take.'),
+  (n, dmg) => (n > 1
+    ? `💨 They back out again and it follows further this time: ${dmg} damage on the way.`
+    : `💨 The party retreats, taking ${dmg} damage on the way out. The room stays hostile; they will have to try it again.`),
+  (n, dmg) => (n > 1
+    ? `💨 Out through the same door a second time, ${dmg} damage the toll. There is no third.`
+    : `💨 The party gives ground, ${dmg} damage on the way out, and the room keeps what it was holding.`),
+  (n, dmg) => (n > 1
+    ? `💨 Another retreat, and it costs ${dmg} this time. The room is winning this by attrition.`
+    : `💨 They fall back, paying ${dmg} for the room they do not take.`),
 ];
 
 const RETURN_LINES = [
@@ -662,6 +751,12 @@ const RETURN_LINES = [
 export function composePredicament(room, theme = null) {
   // A return visit gets its own opening rather than the room's
   // first-sight description over again
+  // A room the party has already backed out of twice does not offer a
+  // third exit: the fight is happening (RoomEncounters, CORNERED_AT)
+  if (room?.fled >= 2 && !room.cleared) {
+    return `They are back, and there is no backing out this time: ${room.monster?.name || 'it'} is between them and the door.`
+      + monsterTells(room.monster);
+  }
   if (room?.visits > 1 && !room.cleared) {
     return pick(RETURN_LINES)(room.visits) + monsterTells(room.monster);
   }

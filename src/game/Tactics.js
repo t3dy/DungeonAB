@@ -143,6 +143,17 @@ export const TACTICS = [
     effect: { supply: 1 },
   },
   {
+    id: 'tac-coldcamp', name: 'Cold Camp', icon: '🏕️', branch: 'march', tier: 2,
+    capability: 'march', requires: 'tac-rationing',
+    text: 'No fire, no smell of food, watches kept: a camp at the stairhead costs one supply instead of two, and nothing climbs the stair into it.',
+    // The stairhead camp is the one place the party can choose to stop
+    // (world/DungeonGen.js floors). Unwatched it costs 2 supply and is
+    // interrupted about a third of the time for 4-7 damage; this makes
+    // the stop cheap and safe. It fires once or twice a delve, which is
+    // why it is a tier 2 sibling of Field Surgery rather than a tier 1.
+    effect: { campSupply: 1, campWatched: true },
+  },
+  {
     id: 'tac-fieldsurgery', name: 'Field Surgery', icon: '✚', branch: 'march', tier: 2,
     capability: 'march', requires: 'tac-rationing',
     text: 'Somebody learned to set a break on the road: two wounds close at every shrine, not only in town.',
@@ -219,8 +230,8 @@ export function tacticModifiers(party) {
   const mods = {
     flankDamage: 0, flankMin: 99, cover: 0, monsterAtk: 0, vsArmored: 0,
     extraCast: 0, wardPerCast: 0, featureOpener: 0, supply: 0, mendAtShrine: 0,
-    fireTrapSoak: 0,
-    sustainFull: false, allSpellsArea: false, noSelfHarm: false,
+    fireTrapSoak: 0, campSupply: 0,
+    sustainFull: false, allSpellsArea: false, noSelfHarm: false, campWatched: false,
     live: [],
   };
   for (const t of activeTactics(party)) {
@@ -237,6 +248,8 @@ export function tacticModifiers(party) {
     mods.supply += e.supply || 0;
     mods.mendAtShrine += e.mendAtShrine || 0;
     mods.fireTrapSoak += e.fireTrapSoak || 0;
+    mods.campSupply += e.campSupply || 0;
+    if (e.campWatched) mods.campWatched = true;
     if (e.sustainFull) mods.sustainFull = true;
     if (e.allSpellsArea) mods.allSpellsArea = true;
     if (e.noSelfHarm) mods.noSelfHarm = true;

@@ -29,7 +29,13 @@ export class DungeonRenderer {
     ctx.fillRect(0, 0, w, h);
 
     const rooms = dungeon.rooms;
-    const visible = rooms.filter(r => !(r.secret && !r.discovered));
+    // A dungeon has floors now, and they sit on top of each other in
+    // plan view. The floorplan shows the one the party is standing on;
+    // the rest are drawn when the party gets there.
+    const here = rooms[Math.min(roomIndex, rooms.length - 1)];
+    const floor = here?.floor || 0;
+    const onFloor = r => (r.floor || 0) === floor;
+    const visible = rooms.filter(r => onFloor(r) && !(r.secret && !r.discovered));
     if (visible.length === 0) return;
 
     // Fit the layout to the canvas by its true extent — footprints
@@ -53,10 +59,10 @@ export class DungeonRenderer {
     ctx.strokeStyle = '#3a2f1e';
     ctx.lineWidth = Math.max(3, s * 1.4);
     for (const edge of dungeon.edges || []) {
-      if (edge.kind === 'trapdoor') continue;
+      if (edge.kind === 'trapdoor' || edge.kind === 'stair') continue;
       const ra = rooms[edge.a];
       const rb = rooms[edge.b];
-      if (!ra || !rb) continue;
+      if (!ra || !rb || !onFloor(ra) || !onFloor(rb)) continue;
       if ((ra.secret && !ra.discovered) || (rb.secret && !rb.discovered)) continue;
       ctx.setLineDash(edge.secret ? [4, 3] : []);
       ctx.beginPath();
@@ -69,7 +75,7 @@ export class DungeonRenderer {
     // Rooms, drawn at their real size
     for (let i = 0; i < rooms.length; i++) {
       const room = rooms[i];
-      if (room.secret && !room.discovered) continue;
+      if (!onFloor(room) || (room.secret && !room.discovered)) continue;
       const rw = Math.max(6, (room.w || 4) * s);
       const rh = Math.max(6, (room.h || 4) * s);
       const x = px(room);
@@ -111,6 +117,16 @@ export class DungeonRenderer {
       // Leave the middle of the current room for the party
       ctx.fillText(known ? room.icon : '❓', x, isCurrent ? y - rh * 0.3 : y);
       ctx.globalAlpha = 1;
+    }
+
+    // Which floor this is. Without it, descending looks like the map
+    // being redrawn for no reason.
+    if (floor > 0 || rooms.some(r => (r.floor || 0) > 0)) {
+      ctx.fillStyle = '#8a7a58';
+      ctx.font = '12px system-ui, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'top';
+      ctx.fillText(`Floor ${floor + 1}`, 8, 8);
     }
 
     // The party, standing inside the current room

@@ -168,7 +168,7 @@ takes light away. The grimoire, the room and the lantern are one economy.
 
 ## Tactics — a skill tree gated by capability
 
-Twelve tactics on four branches. The design rule: **a tactic is gated by
+Thirteen tactics on four branches. The design rule: **a tactic is gated by
 what a party can DO, not by what class it is.** Every class swings at
 something, so anyone benefits from Flanking; anything with a working in
 the grimoire benefits from Concentration. A card that read "fighters
@@ -183,6 +183,7 @@ character cards for that.
 | ⏱️ **The Working** | Quickening — one more cast a room | Ward-Weaving — 2 less damage a round per spell loosed |
 | 🔧 **The Room** | Improvised Arms — +5 to any opening made from the furniture | Firewatch — no self-harm from your own reactions, and flame traps hold no surprises |
 | 🕯️ **The March** | Rationing — one more march of light | Field Surgery — two wounds close at every shrine, not only in town |
+| 🏕️ **The March** | Rationing | Cold Camp — a stairhead camp costs one supply instead of two, and nothing climbs the stair into it |
 
 **The tree is the decision.** A tier-two tactic is a **blank** without its
 root, which makes tactics the first card type where a pick's value
@@ -281,9 +282,47 @@ began with equipment at +14 and spells at −19.
 ## The Dungeon
 
 ### Generation (layered, per Procedural Dungeon Design Tips)
-1. Seeded room graph: 10–14 rooms, entrance → boss, 1–2 branches with optional loot rooms.
-2. Room types (from The Alchemist's Dungeon + classic crawl): **entrance, corridor, monster, trap, treasure, library, shrine, lab, materials, disaster, boss**.
-3. Guarantees: ≥1 lab if any drafter took an alchemist (soft), ≥1 library, ≥1 shrine; boss always terminal.
+1. Seeded room graph: entrance → boss across **two or three floors**, with **1–2 wings** hanging off the spine.
+2. Room types (from The Alchemist's Dungeon + classic crawl): **entrance, corridor, monster, trap, treasure, library, shrine, lab, materials, disaster, stairs, boss**.
+3. Guarantees: ≥1 lab if any drafter took an alchemist (soft), ≥1 library, ≥1 shrine; boss always terminal, and always on the bottom floor.
+
+### Floors — the dungeon goes down
+A dungeon used to be one spine of eight to eleven rooms with a couple of
+two-room stubs off it: a corridor with alcoves. It has floors now.
+
+- **Two floors, three once the campaign is at depth 3.** Floor count is
+  how far the party has dug, not a coin flip — a random third floor made
+  early delves twice as long as the oil the party can carry, and the
+  lamp rather than the monsters decided the run.
+- **Each floor is meaner**: `floorScale(f) = STAT_SCALE[difficulty] × (1 + 0.18f)`,
+  applied to every monster made on that floor, guarantees included.
+- **Each floor ends at a stair** (`ROOM_TYPES.STAIRS`), and the stair is
+  the one place in a dungeon where stopping is sensible. Its options are
+  about what to spend before going down: **go down** (1 supply for the
+  long climb), **rope down the shaft** beside it (the Grapple and Line,
+  no supply), or **camp at the stairhead** (2 supply, 6 healed each, and
+  a chance something climbs the stair into the camp).
+- **Trapdoors now drop a floor.** A shaft that lands on the same level
+  is a hole to nowhere; the generator aims each one at the floor below,
+  which skips the stair as well as the rooms between.
+- **The renderer stacks them.** `roomWorldPos` carries a y drop of 7
+  world units per floor, stair edges are drawn as a flight of steps
+  rather than a corridor, and the camera tracks the floor the party is
+  standing on. The 2D floorplan draws the current floor and labels it.
+- **A descent is recorded**: `floor` is a Chronicle field with BEAT
+  salience, so the saga says the party went down and everything below
+  hits harder (rule 7).
+
+### Wings — the side passages
+A branch used to be one or two rooms of a random type. A **wing** is a
+2–4 room themed detour with a payoff at the end, so taking it is a
+choice about what the party wants rather than whether it wants more
+dungeon. Five wings — the **burial**, **workshop**, **archive**,
+**barracks** and **flooded** wings — each with a body pool and a payoff
+room; a secret wing always ends in a vault. The wing's name and its
+`tell` are in the writing when the party finds the door, so "the party
+takes the side passage" became "the party turns off into the flooded
+wing — a floor that slopes down into standing water".
 
 ### Structure (procgen v3 — rooms with footprints)
 Rooms are **rectangles in tile space, not graph dots**. Each carries `w × h` and a `shape`:
@@ -297,11 +336,11 @@ Rooms are **rectangles in tile space, not graph dots**. Each carries `w × h` an
 | `cell` | closet | vaults, treasure, oubliettes |
 | `rotunda` | round | shrines, wells |
 
-`ROOM_GEOMETRY` maps each room *function* to the shapes and sizes it may take, so structure follows purpose: a boss gets a 10×8-to-14×11 cavern (always the largest room in the dungeon), a vault is 4×4. Fighting rooms are floored at `COMBAT_FLOOR` (5×4) — genuine floor space for four adventurers plus a monster, which the renderer draws literally.
+`ROOM_GEOMETRY` maps each room *function* to the shapes and sizes it may take, so structure follows purpose: a boss gets a 12×10-to-16×12 cavern — the largest room in the dungeon **by construction**: its smallest footprint (120 tiles) beats the largest any other type can roll (a 12×9 disaster cavern, 108), which the old numbers only managed by luck, a vault is 4×4. Fighting rooms are floored at `COMBAT_FLOOR` (5×4) — genuine floor space for four adventurers plus a monster, which the renderer draws literally.
 
 Placement walks the spine outward, one axis at a time, rejecting any position whose footprint (plus a corridor gap) overlaps a placed room, and steering to keep the map roughly square rather than a 130-tile straight line. Tests enforce: no overlaps, every fighting room ≥ the combat floor, the boss is the biggest room, and the layout's aspect ratio stays under 4:1.
 
-**Connections** carry a `kind`: `door`, `arch`, `secret`, `trapdoor`. Doorways are derived from edge directions and drawn as real gaps in the perimeter walls.
+**Connections** carry a `kind`: `door`, `arch`, `secret`, `stair`, `trapdoor`. Doorways are derived from edge directions and drawn as real gaps in the perimeter walls.
 
 **Trapdoors** are the vertical shortcut: a shaft that skips 2–4 rooms of the spine (never the boss) for a fall. Found ones are a choice — the Craven take them, the Covetous refuse to skip loot, a battered party takes any road to the end; roping down halves the drop. Unfound ones are an accident that costs the full fall. Either way the skipped rooms' loot *and* danger are both forgone.
 

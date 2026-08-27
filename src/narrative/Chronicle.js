@@ -66,6 +66,10 @@ export function snapshotState(sim) {
     equipment: p.members.reduce((s, m) => s + m.equipment.length, 0),
     weaponMods: p.members.reduce((s, m) => s + m.weaponMods.length, 0),
     roomsCleared: sim.roomsCleared,
+    // Which floor the party is standing on. A descent is a state change
+    // the player cares about (everything below is scaled harder), so it
+    // is recorded like any other (rule 7).
+    floor: sim.dungeon?.rooms[sim.path[Math.min(sim.roomIndex, sim.path.length - 1)]]?.floor || 0,
   };
 }
 
@@ -162,6 +166,11 @@ const FIELDS = {
     icon: '⚗️', label: 'weapon coatings', salience: SALIENCE.NOTABLE, threshold: 1,
     up: n => `${n} blade${n > 1 ? 's' : ''} coated at the bench.`,
     down: n => `${n} coating${n > 1 ? 's wear' : ' wears'} off.`,
+  },
+  floor: {
+    icon: '🪜', label: 'floor', salience: SALIENCE.BEAT,
+    up: n => `The party descends ${n === 1 ? 'a floor' : `${n} floors`}: everything below hits harder.`,
+    down: n => `The party climbs back up ${n === 1 ? 'a floor' : `${n} floors`}.`,
   },
   roomsCleared: {
     icon: '🚪', label: 'rooms cleared', salience: SALIENCE.LEDGER,

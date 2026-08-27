@@ -22,9 +22,11 @@ import {
 } from '../src/narrative/Prose.js';
 import {
   composeSupply, composeWound, composeMend, composeProvision,
-  composeTactics, composeDormant,
+  composeTactics, composeDormant, phrasedOptions,
 } from '../src/narrative/Narrator.js';
 import { Simulator } from '../src/sim/Simulator.js';
+import { getRoomOptions } from '../src/encounters/RoomEncounters.js';
+import { FEATURE_ACTIONS } from '../src/world/RoomFeatures.js';
 import { SeededRandom } from '../src/draft/PackDraft.js';
 import { getAllCards, CHARACTER_CARDS, getCard } from '../src/game/Cards.js';
 import { Party, DARK_TOLL } from '../src/agents/Party.js';
@@ -298,6 +300,26 @@ describe('Every line can actually be reached', () => {
     const drilled = composeTactics([TACTICS[0]]);
     assert.ok(drilled, 'so does the drilled line');
     assert.deepEqual(lintLine(drilled), []);
+  });
+
+  test('every option the party can choose has a phrase to say it with', () => {
+    // "The party chose to camp-stair." reached a golden transcript,
+    // because nothing checked that a new option id had writing. A
+    // deliberation naming a raw id is the writing failing silently.
+    const phrased = new Set(phrasedOptions());
+    const missing = new Set();
+    for (let i = 0; i < 30; i++) {
+      const seed = `phrase-${i}`;
+      const pool = new SeededRandom(seed).shuffle(getAllCards()).slice(0, 27);
+      const sim = new Simulator(pool, seed, i % 2 ? 'hard' : 'medium');
+      for (const room of sim.dungeon.rooms) {
+        for (const opt of getRoomOptions(room, sim.party)) {
+          if (!phrased.has(opt.id) && !FEATURE_ACTIONS[opt.id]) missing.add(`${room.type}:${opt.id}`);
+        }
+      }
+    }
+    assert.deepEqual([...missing].sort(), [],
+      `options with no phrase in the writing: ${[...missing].join(', ')}`);
   });
 
   test('the quartermaster line is reachable and in voice', () => {

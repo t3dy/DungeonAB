@@ -54,19 +54,22 @@ describe('The spatial layout', () => {
     }
   });
 
-  test('room footprints never overlap', () => {
+  test('room footprints never overlap on the same floor', () => {
     // Rooms are rectangles now (procgen v3), not grid cells, so cell
     // identity proves nothing — this has to be real intersection math.
+    // Floors stack, so two rooms may share x/y if they are on different
+    // levels — a stairhead sits directly above the room you land in.
     for (const seed of SEEDS) {
       const d = generateDungeon(seed, 'hard', { theme: 'volcanic' });
       for (let i = 0; i < d.rooms.length; i++) {
         for (let j = i + 1; j < d.rooms.length; j++) {
           const a = d.rooms[i];
           const b = d.rooms[j];
+          if ((a.floor || 0) !== (b.floor || 0)) continue;
           const apart = Math.abs(a.x - b.x) * 2 >= a.w + b.w
                      || Math.abs(a.y - b.y) * 2 >= a.h + b.h;
           assert.ok(apart,
-            `${seed}: ${a.type}(${a.w}x${a.h}@${a.x},${a.y}) overlaps ${b.type}(${b.w}x${b.h}@${b.x},${b.y})`);
+            `${seed}: floor ${a.floor || 0}: ${a.type}(${a.w}x${a.h}@${a.x},${a.y}) overlaps ${b.type}(${b.w}x${b.h}@${b.x},${b.y})`);
         }
       }
     }

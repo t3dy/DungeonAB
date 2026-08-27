@@ -122,10 +122,16 @@ function baseRoomOptions(room, party) {
   switch (room.type) {
     case ROOM_TYPES.MONSTER:
     case ROOM_TYPES.BOSS: {
-      const opts = [
-        { id: 'fight', name: 'Fight', desc: 'Steel and teamwork' },
-        { id: 'flee', name: 'Fall Back', desc: 'Retreat and try the fight later, worn down' },
-      ];
+      // Twice is a retreat; a third time is a rout, and the room does
+      // not allow one — whatever is in it is between them and the door.
+      const CORNERED_AT = 2;
+      const opts = [{ id: 'fight', name: 'Fight', desc: 'Steel and teamwork' }];
+      if ((room.fled || 0) < CORNERED_AT) {
+        opts.push({
+          id: 'flee', name: 'Fall Back',
+          desc: `Retreat and try the fight later, worn down: ${2 * ((room.fled || 0) + 1)} damage`,
+        });
+      }
       if (party.hasClass(CLASSES.ROGUE) && !room.monster?.isBoss) {
         opts.push({ id: 'sneak', name: 'Sneak Past', desc: 'The rogue leads a silent detour' });
       }
@@ -219,6 +225,23 @@ function baseRoomOptions(room, party) {
       ];
       if (hasItem(party, 'eq-alembic') && party.materials > 0 && party.supply <= 3) {
         opts.push({ id: 'brew-oil', name: 'Cook Down Lamp Oil', desc: 'A material becomes two marches of light' });
+      }
+      return opts;
+    }
+
+    case ROOM_TYPES.STAIRS: {
+      // The stairhead is the one place in a dungeon where stopping is
+      // sensible: it is behind you if the floor above went badly, and
+      // ahead of you it only gets worse. So the choice here is what to
+      // spend before going down.
+      const opts = [
+        { id: 'descend', name: 'Go Down', desc: 'A long climb by lamplight: 1 supply' },
+      ];
+      if (hasItem(party, 'eq-grapple')) {
+        opts.push({ id: 'rope-down', name: 'Rope Down the Well', desc: 'Straight down the shaft beside the stair: no supply spent' });
+      }
+      if (party.living().some(m => m.health < m.effectiveMax())) {
+        opts.push({ id: 'camp-stair', name: 'Camp at the Stairhead', desc: 'Sleep and eat before the next floor: 2 supply, and something may find you' });
       }
       return opts;
     }
@@ -1029,9 +1052,13 @@ export function resolveRoomAction(room, party, optionId, options = null) {
     }
 
     case 'flee': {
-      // Gradient: you escape, but worn — and the room stays hot
-      party.takeDamage(2);
-      return { success: true, retreated: true, monster: room.monster.name };
+      // Gradient: you escape, but worn — and the room stays hot. Each
+      // retreat from the same room costs more than the last: the thing
+      // in it has seen this before and follows further each time.
+      room.fled = (room.fled || 0) + 1;
+      const cost = 2 * room.fled;
+      party.takeDamage(cost);
+      return { success: true, retreated: true, damage: cost, fled: room.fled, monster: room.monster.name };
     }
 
     /* Traps */
@@ -1275,6 +1302,50 @@ export function resolveRoomAction(room, party, optionId, options = null) {
       party.addScore(5);
       room.cleared = true;
       return { success: true, materials: room.materials || 1 };
+    }
+
+    /* Stairs — the floor below is meaner than this one */
+    case 'descend': {
+      const spent = Math.min(1, party.supply);
+      party.supply -= spent;
+      room.cleared = true;
+      return { success: true, descended: true, supplySpent: spent };
+    }
+
+    case 'rope-down': {
+      room.cleared = true;
+      return {
+        success: true, descended: true, supplySpent: 0,
+        preps: [{ source: 'the Grapple and Line', text: '🪢 The line goes down the shaft beside the stair: the party descends without burning a march of oil.' }],
+      };
+    }
+
+    case 'camp-stair': {
+      // A cold camp is cheaper and nobody finds it (game/Tactics.js)
+      const tac = tacticModifiers(party);
+      const cost = tac.campSupply ? Math.max(1, 2 - tac.campSupply) : 2;
+      const spent = Math.min(cost, party.supply);
+      party.supply -= spent;
+      const CAMP_HEAL = 6;
+      let healed = 0;
+      for (const m of party.living()) {
+        const before = m.health;
+        m.heal(CAMP_HEAL);
+        healed += m.health - before;
+      }
+      // A camp is a fire and a smell of food at the top of a stair that
+      // something else also uses
+      const found = !tac.campWatched && roll() >= 5;
+      let damage = 0;
+      if (found) {
+        damage = 4 + Math.floor(roll() / 2);
+        party.takeDamage(damage);
+      }
+      room.cleared = true;
+      const preps = tac.campWatched
+        ? [{ source: 'Cold Camp', text: `🏕️ No fire and a watch kept: the camp costs ${spent} supply and nothing finds it.` }]
+        : [];
+      return { success: true, descended: true, camped: true, healed: CAMP_HEAL, healedTotal: healed, supplySpent: spent, damage, interrupted: found, preps };
     }
 
     /* Disaster */

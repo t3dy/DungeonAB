@@ -27,6 +27,8 @@ const CAM_BACK = 26;        // how far back the iso eye sits
 const WALL_H = 1.15;        // wall height in world units
 const WALL_T = 0.28;        // wall thickness
 const CORRIDOR_W = 1.7;     // connecting passage width
+/** How far one floor sits below the one above it, in world units. */
+const FLOOR_DROP = 7;
 
 const CLASS_COLORS = {
   fighter: 0xc84c3c,
@@ -240,7 +242,7 @@ export class IsoDungeonRenderer {
 
     rooms.forEach((room, i) => {
       if (room.secret && !room.discovered) return;
-      const { x, z } = this.roomPositions[i];
+      const { x, y: fy, z } = this.roomPositions[i];
       const known = knownRooms.has(i) || room.type === 'boss';
       if (!known) return;
 
@@ -250,7 +252,7 @@ export class IsoDungeonRenderer {
         // The monster holds its end of the room; the party gets the other
         const { mx, mz } = monsterSpot(room, x, z);
         sprite = this.tileSprite(getMonsterTile(room.monster.kind), scale);
-        sprite.position.set(mx, 0.2 + scale / 2, mz);
+        sprite.position.set(mx, fy + 0.2 + scale / 2, mz);
         sprite.userData.sway = true;
 
         // Its nature shows over its head — a readable enemy is a plan
@@ -261,8 +263,8 @@ export class IsoDungeonRenderer {
         badges.forEach((emoji, bi) => {
           const badge = new THREE.Sprite(this.getSpriteMaterial(emoji));
           badge.scale.set(0.42, 0.42, 1);
-          badge.position.set(mx - 0.25 + bi * 0.5, 0.35 + scale, mz);
-          badge.userData.baseY = 0.35 + scale;
+          badge.position.set(mx - 0.25 + bi * 0.5, fy + 0.35 + scale, mz);
+          badge.userData.baseY = fy + 0.35 + scale;
           badge.userData.phase = i * 1.3 + bi;
           badge.userData.sway = true;
           this.occupantGroup.add(badge);
@@ -273,7 +275,7 @@ export class IsoDungeonRenderer {
           // Furniture stands against the far end, out of the walkway
           const { mx, mz } = monsterSpot(room, x, z);
           sprite = this.tileSprite(prop, 0.95);
-          sprite.position.set(mx, 0.66, mz);
+          sprite.position.set(mx, fy + 0.66, mz);
           if (room.cleared) {
             sprite.material = sprite.material.clone();
             sprite.material.opacity = 0.55;
@@ -296,8 +298,8 @@ export class IsoDungeonRenderer {
         const slot = slots[fi];
         if (!tile || !slot) return;
         const fsprite = this.tileSprite(tile, 0.8);
-        fsprite.position.set(slot.mx, 0.58, slot.mz);
-        fsprite.userData.baseY = 0.58;
+        fsprite.position.set(slot.mx, fy + 0.58, slot.mz);
+        fsprite.userData.baseY = fy + 0.58;
         fsprite.userData.phase = i * 1.1 + fi;
         // A brazier flickers; stone does not
         if (fid === 'brazier') fsprite.userData.sway = true;
@@ -307,7 +309,10 @@ export class IsoDungeonRenderer {
   }
 
   roomWorldPos(room) {
-    return { x: room.x * TILE, z: room.y * TILE };
+    // Floors stack: a room two levels down is drawn two drops below the
+    // entrance level, so a descent is something you watch happen rather
+    // than something the story panel tells you about.
+    return { x: room.x * TILE, y: -(room.floor || 0) * FLOOR_DROP, z: room.y * TILE };
   }
 
   /**
@@ -357,12 +362,14 @@ export class IsoDungeonRenderer {
    */
   focusOn(room) {
     if (!room || !this.camera) return;
-    const { x, z } = this.roomWorldPos(room);
+    const { x, y, z } = this.roomWorldPos(room);
     // A big chamber needs the eye pulled back a little to fit
     const { hx, hz } = roomHalf(room);
     const zoomOut = Math.max(0, Math.max(hx, hz) - 3.5) * 0.55;
-    if (!this.camTarget) this.camTarget = new THREE.Vector3(x, 0, z);
-    this.camTarget.set(x, 0, z);
+    // The camera follows the party down: it tracks the floor they stand
+    // on, so the level below is not framed from the ceiling of the one above
+    if (!this.camTarget) this.camTarget = new THREE.Vector3(x, y, z);
+    this.camTarget.set(x, y, z);
     this.camZoom = zoomOut;
   }
 
@@ -384,7 +391,7 @@ export class IsoDungeonRenderer {
     rooms.forEach((room, i) => {
       // Undiscovered secret rooms simply aren't there — that's the point
       if (hidden(room)) return;
-      const { x, z } = this.roomPositions[i];
+      const { x, y: fy, z } = this.roomPositions[i];
       const { hx, hz } = roomHalf(room);
       const w = hx * 2;
       const d = hz * 2;
@@ -409,7 +416,7 @@ export class IsoDungeonRenderer {
       } else {
         floor = new THREE.Mesh(new THREE.BoxGeometry(w, 0.35, d), floorMat);
       }
-      floor.position.set(x, 0, z);
+      floor.position.set(x, fy, z);
       floor.receiveShadow = true;
       this.staticGroup.add(floor);
 
@@ -421,7 +428,7 @@ export class IsoDungeonRenderer {
             new THREE.BoxGeometry(w * 0.22, 0.5, d * 0.22),
             new THREE.MeshStandardMaterial({ color: palette.wall, roughness: 1 })
           );
-          rubble.position.set(x + sx * (hx - w * 0.1), 0.16, z + sz * (hz - d * 0.1));
+          rubble.position.set(x + sx * (hx - w * 0.1), fy + 0.16, z + sz * (hz - d * 0.1));
           rubble.rotation.y = (room.index % 4) * 0.2;
           rubble.castShadow = true;
           this.staticGroup.add(rubble);
@@ -452,8 +459,8 @@ export class IsoDungeonRenderer {
               ? new THREE.Mesh(new THREE.BoxGeometry(segLen, WALL_H, WALL_T), mat)
               : new THREE.Mesh(new THREE.BoxGeometry(WALL_T, WALL_H, segLen), mat);
             const mid = (from + to) / 2;
-            if (side.axis === 'x') seg.position.set(x + mid, WALL_H / 2, z + side.off);
-            else seg.position.set(x + side.off, WALL_H / 2, z + mid);
+            if (side.axis === 'x') seg.position.set(x + mid, fy + WALL_H / 2, z + side.off);
+            else seg.position.set(x + side.off, fy + WALL_H / 2, z + mid);
             seg.castShadow = true;
             this.staticGroup.add(seg);
           }
@@ -464,7 +471,9 @@ export class IsoDungeonRenderer {
     // Corridors: real passages between rooms, running wall to wall.
     // The layout only ever steps along one axis, so they stay straight.
     for (const edge of edgeList) {
-      if (edge.kind === 'trapdoor') continue;
+      // A stair joins two floors, so it is a drop rather than a passage:
+      // it gets its own flight of steps below, not a flat corridor.
+      if (edge.kind === 'trapdoor' || edge.kind === 'stair') continue;
       const ra = rooms[edge.a];
       const rb = rooms[edge.b];
       if (!ra || !rb || hidden(ra) || hidden(rb)) continue;
@@ -484,22 +493,49 @@ export class IsoDungeonRenderer {
         const gap = Math.abs(dx) - ha.hx - hb.hx;
         if (gap <= 0.05) continue;
         corridor = new THREE.Mesh(new THREE.BoxGeometry(gap + 0.4, 0.2, CORRIDOR_W), mat);
-        corridor.position.set(pa.x + Math.sign(dx) * (ha.hx + gap / 2), -0.02, pa.z);
+        corridor.position.set(pa.x + Math.sign(dx) * (ha.hx + gap / 2), pa.y - 0.02, pa.z);
       } else {
         const gap = Math.abs(dz) - ha.hz - hb.hz;
         if (gap <= 0.05) continue;
         corridor = new THREE.Mesh(new THREE.BoxGeometry(CORRIDOR_W, 0.2, gap + 0.4), mat);
-        corridor.position.set(pa.x, -0.02, pa.z + Math.sign(dz) * (ha.hz + gap / 2));
+        corridor.position.set(pa.x, pa.y - 0.02, pa.z + Math.sign(dz) * (ha.hz + gap / 2));
       }
       corridor.receiveShadow = true;
       this.staticGroup.add(corridor);
+    }
+
+    // Stairs: a flight of steps from the stairhead down to the room it
+    // lands in, so the two floors read as one place.
+    for (const edge of edgeList) {
+      if (edge.kind !== 'stair') continue;
+      const ra = rooms[edge.a];
+      const rb = rooms[edge.b];
+      if (!ra || !rb || hidden(ra) || hidden(rb)) continue;
+      const pa = this.roomPositions[edge.a];
+      const pb = this.roomPositions[edge.b];
+      const drop = pa.y - pb.y;
+      if (drop <= 0) continue;
+      const steps = 6;
+      const stepMat = new THREE.MeshStandardMaterial({ color: 0x35322b, roughness: 1 });
+      const half = roomHalf(ra);
+      for (let stp = 0; stp < steps; stp++) {
+        const t = (stp + 0.5) / steps;
+        const step = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.3, 1.1), stepMat);
+        step.position.set(
+          pa.x + (pb.x - pa.x) * t * 0.35 - half.hx * 0.2,
+          pa.y - drop * t,
+          pa.z + (pb.z - pa.z) * t * 0.35 + half.hz * 0.25,
+        );
+        step.receiveShadow = true;
+        this.staticGroup.add(step);
+      }
     }
 
     // Trapdoors: a shaft in the floor of the room that holds them
     for (const td of trapdoors) {
       const room = rooms[td.from];
       if (!room || hidden(room)) continue;
-      const { x, z } = this.roomPositions[td.from];
+      const { x, y: fy, z } = this.roomPositions[td.from];
       const { hx, hz } = roomHalf(room);
       const shaft = new THREE.Mesh(
         new THREE.BoxGeometry(1.5, 0.42, 1.5),
@@ -508,7 +544,7 @@ export class IsoDungeonRenderer {
           color: td.secret ? 0x2e2a24 : 0x07060a, roughness: 1,
         })
       );
-      shaft.position.set(x + hx * 0.45, 0.01, z - hz * 0.45);
+      shaft.position.set(x + hx * 0.45, fy + 0.01, z - hz * 0.45);
       this.staticGroup.add(shaft);
     }
   }
@@ -544,7 +580,7 @@ export class IsoDungeonRenderer {
 
     rooms.forEach((room, i) => {
       if (room.secret && !room.discovered) return;   // still behind the wall
-      const { x, z } = this.roomPositions[i];
+      const { x, y: fy, z } = this.roomPositions[i];
       const isKnown = known.has(i) || room.type === 'boss';
       const icon = isKnown ? room.icon : '❓';
 
@@ -558,7 +594,7 @@ export class IsoDungeonRenderer {
       const scale = room.type === 'boss' ? 1.5 : 1.0;
       sprite.scale.set(scale, scale, 1);
       // Float the label clear of the room's walls
-      const labelY = WALL_H + 0.6;
+      const labelY = fy + WALL_H + 0.6;
       sprite.position.set(x, labelY, z);
       sprite.material = sprite.material.clone();
       sprite.material.opacity = room.cleared && i !== current ? 0.28 : 1;
@@ -571,12 +607,12 @@ export class IsoDungeonRenderer {
   updateParty(state) {
     this.partyGroup.clear();
     const idx = state.currentRoomIndex ?? Math.min(state.roomIndex, state.dungeon.rooms.length - 1);
-    const { x, z } = this.roomPositions[idx] || { x: 0, z: 0 };
+    const { x, y: fy, z } = this.roomPositions[idx] || { x: 0, y: 0, z: 0 };
     const room = state.dungeon.rooms[idx];
 
     // The torch has to light the whole chamber now, not a platform
     const reach = room ? Math.max(roomHalf(room).hx, roomHalf(room).hz) : 4;
-    this.torch.position.set(x, 2.4, z);
+    this.torch.position.set(x, fy + 2.4, z);
     this.torch.distance = Math.max(12, reach * 3.4);
     this.torchBase = 24 + reach * 2.2;
 
@@ -602,8 +638,8 @@ export class IsoDungeonRenderer {
       if (this.atlasReady) {
         // The adventurer, in the flesh (well, in 16 pixels of it)
         const sprite = this.tileSprite(getClassTile(m.class), 0.82);
-        sprite.position.set(mx, 0.72, mz);
-        sprite.userData.baseY = 0.72;
+        sprite.position.set(mx, fy + 0.72, mz);
+        sprite.userData.baseY = fy + 0.72;
         sprite.userData.phase = i * 1.7;
         if (wounded) {
           sprite.material = sprite.material.clone();
@@ -614,15 +650,15 @@ export class IsoDungeonRenderer {
 
         // Class-colored base disc under their feet
         const base = new THREE.Mesh(this.baseGeo, this.baseMats[m.class] || this.baseMats.fighter);
-        base.position.set(mx, 0.24, mz);
+        base.position.set(mx, fy + 0.24, mz);
         base.castShadow = true;
         this.partyGroup.add(base);
       } else {
         // Fallback meeple for the beat before the sheet loads
         const meeple = new THREE.Mesh(this.meepleGeo, this.meepleMats[m.class] || this.meepleMats.fighter);
-        meeple.position.set(mx, 0.55, mz);
+        meeple.position.set(mx, fy + 0.55, mz);
         meeple.castShadow = true;
-        meeple.userData.baseY = 0.55;
+        meeple.userData.baseY = fy + 0.55;
         meeple.userData.phase = i * 1.7;
         this.partyGroup.add(meeple);
       }
@@ -636,7 +672,7 @@ export class IsoDungeonRenderer {
   playEffect(action, roomIndex, element = null) {
     const style = EFFECT_STYLES[action];
     if (!style || !this.roomPositions[roomIndex]) return;
-    const { x, z } = this.roomPositions[roomIndex];
+    const { x, y: fy, z } = this.roomPositions[roomIndex];
 
     // A cast spell glows in its element's color
     const color = (action === 'spell-strike' && ELEMENT_FX_COLORS[element])
@@ -651,7 +687,7 @@ export class IsoDungeonRenderer {
       sprite = new THREE.Sprite(this.glowMaterial(color || '#ffffff').clone());
       sprite.scale.set(1.1, 1.1, 1);
     }
-    sprite.position.set(x, 1.0, z);
+    sprite.position.set(x, fy + 1.0, z);
     this.fxGroup.add(sprite);
     this.effects.push({ sprite, born: this.clock.getElapsedTime(), life: 0.7 });
   }
@@ -686,7 +722,7 @@ export class IsoDungeonRenderer {
     if (this.camTarget) {
       const back = CAM_BACK + (this.camZoom || 0) * 2;
       const want = new THREE.Vector3(
-        this.camTarget.x + back, back * 1.05, this.camTarget.z + back
+        this.camTarget.x + back, this.camTarget.y + back * 1.05, this.camTarget.z + back
       );
       // First frame snaps; after that it eases
       const ease = this.camPlaced ? 0.12 : 1;

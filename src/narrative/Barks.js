@@ -223,6 +223,18 @@ export function getBark(cls, personalities = [], rng = Math.random) {
   return line;
 }
 
+/**
+ * Forget what was said last delve.
+ *
+ * `recentBarks` is module state, so without this the echo of one
+ * delve's lines reaches into the next — and two identically seeded
+ * runs tell different stories, which is exactly what the golden
+ * harness caught (tests/golden.test.js).
+ */
+export function resetBarks() {
+  recentBarks = [];
+}
+
 /** For coverage tests: the raw table. */
 export function getAllBarks() {
   return BARKS;

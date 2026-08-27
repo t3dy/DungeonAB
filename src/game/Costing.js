@@ -91,6 +91,8 @@ export const EFFECT_SCALING = {
 
   /* situational */
   fireTrapSoak: 'situational',
+  // A march saved, but only at a stairhead: once or twice a delve
+  campSupply: 'situational',
   vsUndead: 'situational',
   selfHarm: 'perFight',
   light: 'resource',
@@ -130,6 +132,9 @@ export const FLAG_WORTH = {
   noSelfHarm: 6,
   undeadQuelled: 4,
   revealEthereal: 5,
+  // A stairhead camp is interrupted about a third of the time for 4-7
+  // damage; a watched one never is, once or twice a delve
+  campWatched: 4,
   consumes: -2,
 };
 

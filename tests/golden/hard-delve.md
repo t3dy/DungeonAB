@@ -1,20 +1,20 @@
-# The Chronicle of Silin the Debt, Magister Crucible, Vex Threefingers, Ursula Ironknee
+# The Chronicle of Paracelsus the Lesser, Silin the Debt, Magister Crucible, Vex Threefingers
 
 ## Delve I — the Castle of the Vampire Lord
 
 **Difficulty:** hard · **Depth:** 1 · **Seed:** `golden-hard`
 
-**Who went down:** 🗡️ Silin the Debt (rogue), ⚗️ Magister Crucible (alchemist), 🗡️ Vex Threefingers (rogue), ⚔️ Ursula Ironknee (fighter)
+**Who went down:** ⚗️ Paracelsus the Lesser (alchemist), 🗡️ Silin the Debt (rogue), ⚗️ Magister Crucible (alchemist), 🗡️ Vex Threefingers (rogue)
 
 ### 🌿 Room 1 — materials
 
-A room of herbs, salts, and quicksilver — alchemy materials, free to gather.
+A room of herbs, salts, and quicksilver — alchemy materials, free to gather. Half the ceiling is on the floor, in pieces worth stepping around.
 
-They might have chosen to move on — Magister Crucible made the case: "The Work is a devotion. The explosions are incidental." The party chose to gather the materials.
+They might have chosen to move on, or sift the rubble — Paracelsus the Lesser made the case: "Measure twice, pour once." The party chose to gather the materials.
 
 🌿 The party gathers 2 bundles of alchemy materials.
 
-_🚶 The party passes the side passage by and keeps to the main route._
+_🕳️ Silin the Debt finds a hidden door into the flooded wing. Behind it: a floor that slopes down into standing water. Its rooms join the route._
 
 <details><summary>Ledger</summary>
 
@@ -22,146 +22,74 @@ _🚶 The party passes the side passage by and keeps to the main route._
 - 🌿 2 more alchemical materials in the satchel.
 - 🕯️ 1 march of oil burned.
 - 🚪 1 more room behind them.
+- · 🕳️ A hidden door!
 - · 🌿 Room 1: materials — gather
 
 </details>
 
-### 👹 Room 2 — monster
+### ⚠️ Room 2 — trap
 
-A thrall footman, polite and bloodless holds the room (attack 10, health 22). The party must decide how to get past it. It will not face the cleric: undead take holy damage ×1.5. Shelves sag under books nobody has audited in a century.
+A trap blocks the corridor. The party must disarm it, avoid it, or take the hit. A tripwire runs up the wall to a bell: an alarm trap. Little damage, but the next monster will be warned (+2 attack). A pit takes up a third of the floor. The bottom is not visible.
 
-They might have chosen to stand and fight, or fall back — the Devout called it the right thing to do. The party chose to open with a combat spell.
+They might have chosen to push through and take the hit, or search for a way around — Silin the Debt made the case: "Every door is a suggestion." The party chose to disarm the trap.
 
-🔥 Fireball opens the fight, softening the monster before the first blow. ⚔️ The party kills a thrall footman, polite and bloodless in 1 round, taking 0 damage. 🏛️ Fighting from the aisles: -1 less damage per round on top of the cover. 🔥 The fire takes sagging shelves and does not stop at the monster. The room burns: 3 damage a round while it lasts, the cover burns away with it, and 2 marches of light to burn by. 🛡️ Shields lock along the front rank and the party stops trying to win quickly. A third less damage a round and a quarter less dealt — but packed tight, so anything with a blast radius hurts more. 🛡️ The party closes ranks: 2 less damage a round. ✨ The working holds: +7 damage every round while the fight lasts. 🪙 A thrall footman, polite and bloodless drops the footman's wages: 12 gold.
-
-<details><summary>Ledger</summary>
-
-- 💰 The purse is 12 heavier.
-- 🏅 37 renown earned.
-- 🕯️ 1 more march of oil found.
-- 🏆 1 trophy taken from the dead.
-- 🚪 1 more room behind them.
-- · 👹 Room 2: monster — spell-strike
-
-</details>
-
-### 🌿 Room 3 — materials
-
-A room of herbs, salts, and quicksilver — alchemy materials, free to gather. Half the ceiling is on the floor, in pieces worth stepping around. Somebody stacked supplies here and never came back for them.
-
-They might have chosen to gather the materials, or sift the rubble — the Devout called it the right thing to do. The party chose to move on.
-
-The party moves on to the next room.
+🗝️ The rogue disarms the trap. No damage taken; +20 score.
 
 <details><summary>Ledger</summary>
 
+- 🏅 20 renown earned.
 - 🕯️ 1 march of oil burned.
 - 🚪 1 more room behind them.
-- · 🌿 Room 3: materials — pass-by
+- · ⚠️ Room 2: trap — disarm
 
 </details>
 
-### 👹 Room 4 — monster
-
-A crimson mist that pours under the door holds the room (attack 14, health 19). The party must decide how to get past it. It is ethereal: weapons do only 60% damage unless a cleric blesses the blades. It will not face the cleric: undead take holy damage ×1.5. Pillars break the room into aisles — something to fight behind.
-
-They might have chosen to stand and fight, or sneak past — the Devout called it the right thing to do. The party chose to fall back.
-
-💨 They fall back, paying 2 for the room they do not take.
-
-_🧭 The party takes the side passage; its rooms join the route._
-
-<details><summary>Ledger</summary>
-
-- 🕯️ 1 march of oil burned.
-- ❤️ 2 health taken.
-- 🚪 1 more room behind them.
-- · 👹 Room 4: monster — flee
-
-</details>
-
-### 👹 Room 5 — monster
-
-The same room again. Whatever is in it has had time to think. It is ethereal: weapons do only 60% damage unless a cleric blesses the blades. It will not face the cleric: undead take holy damage ×1.5.
-
-They might have chosen to stand and fight, or fall back — Silin the Debt made the case: "I confess in advance. Saves time." The party chose to sneak past.
-
-🗡️ The rogue leads the party past a crimson mist that pours under the door unseen. No damage taken; +15 score. 💡 Dancing Light revealed the watcher's position: +1 to the sneak roll.
-
-<details><summary>Ledger</summary>
-
-- 🏅 15 renown earned.
-- 🕯️ 1 march of oil burned.
-- 🚪 1 more room behind them.
-- · 👹 Room 4: monster — sneak
-
-</details>
-
-### 👹 Room 6 — monster
-
-A chittering cloud of castle bats holds the room (attack 7, health 15). The party must decide how to get past it. It is a swarm: spell openings hit it ×1.5. A sarcophagus stands against the wall with its lid slightly wrong. Pillars break the room into aisles — something to fight behind.
-
-They might have chosen to stand and fight, or fall back — the Devout called it the right thing to do. The party chose to open with a combat spell.
-
-🔥 Fireball opens the fight; against a swarm the spell hits ×1.5. ⚔️ A chittering cloud of castle bats is dead before the party closes: it never gets a round. 🧱 The party fights from behind a row of squat pillars: 1 less damage per round. 🦇 A chittering cloud of castle bats drops a sheaf of wing-leather: 1 alchemy material.
-
-<details><summary>Ledger</summary>
-
-- 🏅 25 renown earned.
-- 🌿 1 more alchemical materials in the satchel.
-- 🕯️ 1 march of oil burned.
-- 🏆 1 trophy taken from the dead.
-- 🚪 1 more room behind them.
-- · 👹 Room 5: monster — spell-strike
-
-</details>
-
-### 🌿 Room 7 — materials
-
-A room of herbs, salts, and quicksilver — alchemy materials, free to gather. Half the ceiling is on the floor, in pieces worth stepping around.
-
-They might have chosen to move on, or sift the rubble — Magister Crucible made the case: "As above, so below. Mind the fumes between." The party chose to gather the materials.
-
-🌿 The party gathers 2 bundles of alchemy materials.
-
-<details><summary>Ledger</summary>
-
-- 🏅 5 renown earned.
-- 🌿 2 more alchemical materials in the satchel.
-- 🕯️ 1 march of oil burned.
-- 🚪 1 more room behind them.
-- · 🌿 Room 6: materials — gather
-
-</details>
-
-### 🌋 Room 8 — disaster
+### 🌋 Room 3 — disaster
 
 The candles go out: the castle itself attacks the party in the dark. The party must brace together or scatter.
 
-They might have chosen to brace together, or scatter and regroup — the Devout called it the right thing to do. The party chose to sift the rubble.
+They might have chosen to brace together, or sift the rubble — the Reckless did not wait for a vote. The party chose to scatter and regroup.
 
-🪨 The party sifts a fall of rubble: 5 gold, 1 material.
+🌋 The party scatters; 2 members guessed wrong and took 3 damage each.
+
+- ✚ That one leaves a mark on Paracelsus the Lesser. Their ceiling drops to 11 for the rest of the delve. The Reckless do not stop to bind anything, and more of it stays with them. The Reckless do not stop to bind anything, and more of it stays with them.
+- ✚ That one leaves a mark on Magister Crucible. Their ceiling drops to 11 for the rest of the delve. The Reckless do not stop to bind anything, and more of it stays with them. The Reckless do not stop to bind anything, and more of it stays with them.
 
 <details><summary>Ledger</summary>
 
-- 💰 The purse is 5 heavier.
-- 🏅 5 renown earned.
-- 🌿 1 more alchemical materials in the satchel.
 - 🕯️ 1 march of oil burned.
+- ❤️ 6 health taken.
+- ✚ 2 wounds that will not close down here.
 - 🚪 1 more room behind them.
-- · 🌋 Room 7: disaster — sift-rubble
+- · 🌋 Room 3: disaster — scatter
 
 </details>
 
-### ⚗️ Room 9 — lab
+### 💎 Room 4 — vault
 
-An alchemy lab with a working bench. An alchemist with materials can brew or coat weapons here. Somebody stacked supplies here and never came back for them. A brazier burns in its bracket — nobody has been here to feed it, and it burns anyway.
+A hidden vault, stacked with treasure. Vaults always hold something beyond coin.
 
-They might have chosen to move on, or crack the crates open — Magister Crucible made the case: "As above, so below. Mind the fumes between." The party chose to work the lab bench.
+They might have chosen to loot the treasure, or inspect it first — the Reckless were already moving. The party chose to open it with Knock.
 
-⚗️ The alchemist spends 1 material and applies venom coating to Vex Threefingers's weapon: +3 attack.
+🚪 Knock opens the lock at range: 75 gold taken. The noise carries through the dungeon.
 
-_🕯️ The wick is well down the oil. 2 more marches of light, then none._
+<details><summary>Ledger</summary>
+
+- 💰 The purse is 75 heavier.
+- 🏅 75 renown earned.
+- 🕯️ 1 march of oil burned.
+- 🚪 1 more room behind them.
+- · 💎 Room 4: vault — knock-open
+
+</details>
+
+### ⚗️ Room 5 — lab
+
+An alchemy lab with a working bench. An alchemist with materials can brew or coat weapons here. A brazier burns in its bracket — nobody has been here to feed it, and it burns anyway.
+
+They might have chosen to move on — Paracelsus the Lesser made the case: "Add nothing until you know what it does. Then add plenty." The party chose to work the lab bench.
+
+⚗️ The alchemist spends 1 material and applies fire coating to Vex Threefingers's weapon: +2 attack.
 
 <details><summary>Ledger</summary>
 
@@ -170,94 +98,205 @@ _🕯️ The wick is well down the oil. 2 more marches of light, then none._
 - 🕯️ 1 march of oil burned.
 - ⚗️ 1 blade coated at the bench.
 - 🚪 1 more room behind them.
-- · 🕯️ The wick is well down the oil. 2 more marches of light, then none.
-- · ⚗️ Room 8: lab — alchemy
+- · ⚗️ Room 5: lab — alchemy
 
 </details>
 
-### 🕯️ Room 10 — shrine
+### 🌿 Room 6 — materials
 
-A shrine. Resting here heals the party; the gold leaf on the altar could be stripped instead.
+A room of herbs, salts, and quicksilver — alchemy materials, free to gather. Half the ceiling is on the floor, in pieces worth stepping around. Somebody stacked supplies here and never came back for them.
 
-They might have chosen to strip the gold leaf, or move on — the Devout called it the right thing to do. The party chose to rest and heal.
+They might have chosen to gather the materials, or move on — the Reckless settled it by going first. The party chose to crack the crates open.
 
-🕯️ The party rests at the shrine: 9 health healed per member.
-
-_🕯️ The lantern is burning low: oil for 1 more march._
+📦 The party cracks open stacked crates and barrels: 12 gold, 1 material.
 
 <details><summary>Ledger</summary>
 
+- 💰 The purse is 12 heavier.
+- 🏅 12 renown earned.
+- 🌿 1 more alchemical materials in the satchel.
 - 🕯️ 1 march of oil burned.
-- ❤️ 2 health mended.
 - 🚪 1 more room behind them.
-- · 🕯️ The lantern is burning low: oil for 1 more march.
-- · 🕯️ Room 9: shrine — rest
+- · 🌿 Room 6: materials — crack-crates
 
 </details>
 
-### 💰 Room 11 — treasure
+### 🪜 Room 7 — stairs
 
-A treasure chest sits in the room. It may hold gold; it may be a mimic. A silvered mirror leans against the wall, and it shows the room more honestly than the room does.
+The floor ends at a stairwell. Whatever is below has been waiting longer.
 
-They might have chosen to open it with Knock, or loot the treasure — the Devout called it the right thing to do. The party chose to leave it alone.
+They might have chosen to camp at the stairhead first — the Reckless were already moving. The party chose to take the stair down.
 
-🚶 The party leaves the treasure untouched and moves on.
+🪜 The party goes down the stair to the second floor, burning a march of oil on the climb.
+
+_🕯️ The lantern is burning low: oil for 2 more marches._
+
+<details><summary>Ledger</summary>
+
+- 🕯️ 2 marches of oil burned.
+- 🚪 1 more room behind them.
+- · 🕯️ The lantern is burning low: oil for 2 more marches.
+- · 🪜 Room 7: stairs — descend
+
+</details>
+
+### 🌿 Room 8 — materials
+
+A room of herbs, salts, and quicksilver — alchemy materials, free to gather. A gargoyle spout drips something that is not water into a stained channel.
+
+They might have chosen to move on, or harvest the spout — Paracelsus the Lesser made the case: "Shake it and see." The party chose to gather the materials.
+
+🌿 The party gathers 2 bundles of alchemy materials.
 
 _🕯️ The flame stands up, thins, and is gone. The party is out of oil._
 
 <details><summary>Ledger</summary>
 
+- 🏅 5 renown earned.
+- 🌿 2 more alchemical materials in the satchel.
 - 🕯️ 1 march of oil burned.
 - 🚪 1 more room behind them.
+- 🪜 The party descends a floor: everything below hits harder.
 - · 🕯️ The flame stands up, thins, and is gone. The party is out of oil.
-- · 💰 Room 10: treasure — leave-it
+- · 🌿 Room 8: materials — gather
 
 </details>
 
-### 📚 Room 12 — library
+### 🕯️ Room 9 — shrine
 
-A library. The party can study here to learn spells. A brazier burns in its bracket — nobody has been here to feed it, and it burns anyway.
+A shrine. Resting here heals the party; the gold leaf on the altar could be stripped instead. A sarcophagus stands against the wall with its lid slightly wrong.
 
-They might have chosen to study the shelves — the Devout called it the right thing to do. The party chose to move on.
+They might have chosen to rest and heal, or move on — the Reckless did not wait for a vote. The party chose to strip the gold leaf.
 
-The party moves on to the next room.
+⛏️ The party strips 30 gold of leaf from the altar. The next disaster will hit harder for it.
 
-_💡 Dancing Light carries the march instead of oil: none of the 3 damage the dark would have taken._
+_👁️ Borrowed night-sight leads them through whole — none of the usual 3 damage._
+
+<details><summary>Ledger</summary>
+
+- 💰 The purse is 30 heavier.
+- 🏅 30 renown earned.
+- ⛧ The party has taken something the dungeon considers its own. It will remember.
+- 🚪 1 more room behind them.
+- · 👁️ Borrowed night-sight leads them through whole — none of the usual 3 damage.
+- · 🕯️ Room 9: shrine — desecrate
+
+</details>
+
+### 📚 Room 10 — library
+
+A library. The party can study here to learn spells. A brazier burns in its bracket — nobody has been here to feed it, and it burns anyway. Pillars break the room into aisles — something to fight behind.
+
+They might have chosen to study the shelves — the Reckless were already moving. The party chose to move on.
+
+Nothing here needs doing. The party walks on.
+
+_🕳️ Silin the Debt finds a hidden door into the burial wing. Behind it: burial niches, most of them open. Its rooms join the route._
 
 <details><summary>Ledger</summary>
 
 - 🚪 1 more room behind them.
-- · 💡 Dancing Light carries the march instead of oil: none of the 3 damage the dark would have taken.
-- · 📚 Room 11: library — pass-by
+- · 🕳️ A hidden door!
+- · 📚 Room 10: library — pass-by
 
 </details>
 
-### 🐉 Room 13 — boss
+### 👹 Room 11 — monster
 
-The boss chamber. The Vampire Lord, apologizing for the hour waits at its center (attack 22, health 60); killing it clears the dungeon. It is ethereal: weapons do only 60% damage unless a cleric blesses the blades. It will not face the cleric: undead take holy damage ×1.5. Pillars break the room into aisles — something to fight behind.
+A thrall footman, polite and bloodless holds the room (attack 10, health 22). The party must decide how to get past it. It will not face the cleric: undead take holy damage ×1.5. Pillars break the room into aisles — something to fight behind.
 
-They might have chosen to stand and fight, or fall back — the Devout called it the right thing to do. The party chose to open with a combat spell.
+They might have chosen to stand and fight, or fall back — the Reckless settled it by going first. The party chose to fight from behind the pillars.
 
-🔥 Fireball opens the fight, softening the monster before the first blow. ⚔️ The party kills the Vampire Lord, apologizing for the hour in 2 rounds, taking 11 damage. 🧱 The party fights from behind a row of squat pillars: 1 less damage per round. 👻 The monster is ethereal and the party's blows pass through it: weapon damage ×0.6 (no cleric to bless the blades). ❄️ Frost gets into a row of squat pillars and cracks it apart: 2 damage in splinters of cold stone. ❄️ Frost gets into a row of squat pillars and cracks it apart: 2 damage in splinters of cold stone. 🛡️ Shields lock along the front rank and the party stops trying to win quickly. A third less damage a round and a quarter less dealt — but packed tight, so anything with a blast radius hurts more. 🛡️ The party closes ranks: 2 less damage a round. ✨ The working holds: +16 damage every round while the fight lasts. 💢 At half health, the Vampire Lord, apologizing for the hour turns fierce: attack +2 for the rest of the fight. 💚 Mending Word closes Ursula Ironknee's wounds mid-fight: 8 healed in round 1, then 4 a round while it holds. 💍 The Vampire Lord, apologizing for the hour drops the Lord's signet: a trinket (+2 mind), now worn by Vex Threefingers. 📜 Also in the hoard: a scroll of Cause Fear, added to the grimoire.
-
-- ✚ That one leaves a mark on Ursula Ironknee. Their ceiling drops to 12 for the rest of the delve. The Devout tend what the dungeon opens: fewer blows leave a mark that stays.
+🏛️ The party backs into a row of squat pillars and makes the monster come down one aisle at a time: 4 damage as it closes. ⚔️ The party kills a thrall footman, polite and bloodless in 1 round, taking 0 damage. 🛡️ Aegis of Ash goes up before the first blow: 2 less damage every round. 🧱 The party fights from behind a row of squat pillars: 1 less damage per round. 🏛️ Fighting from the aisles: 3 less damage per round on top of the cover. ➖ The party spreads into a line, two forward and two behind. The ordinary shape of a fight, and the one that leaves room to work round the sides. 🪙 A thrall footman, polite and bloodless drops the footman's wages: 12 gold. 💥 The Reckless finish the fight with style: +5 score.
 
 <details><summary>Ledger</summary>
 
-- 🏅 300 renown earned.
+- 💰 The purse is 12 heavier.
+- 🏅 42 renown earned.
 - 🏆 1 trophy taken from the dead.
-- 📜 The grimoire grows by 1.
-- ❤️ 3 health taken.
-- ✚ 1 wound that will not close down here.
-- 🎒 1 piece of kit taken up.
 - 🚪 1 more room behind them.
-- · 🐉 Room 12: boss — spell-strike
+- · 👹 Room 11: monster — fight-from-cover
+
+</details>
+
+### 🕯️ Room 12 — shrine
+
+A shrine. Resting here heals the party; the gold leaf on the altar could be stripped instead.
+
+They might have chosen to rest and heal, or move on — the Reckless settled it by going first. The party chose to strip the gold leaf.
+
+⛏️ The party strips 30 gold of leaf from the altar. The next disaster will hit harder for it.
+
+<details><summary>Ledger</summary>
+
+- 💰 The purse is 30 heavier.
+- 🏅 30 renown earned.
+- 🚪 1 more room behind them.
+- · 🕯️ Room 12: shrine — desecrate
+
+</details>
+
+### ⚠️ Room 13 — trap
+
+A trap blocks the corridor. The party must disarm it, avoid it, or take the hit. A tripwire runs up the wall to a bell: an alarm trap. Little damage, but the next monster will be warned (+2 attack).
+
+They might have chosen to disarm the trap, or search for a way around — the Reckless did not wait for a vote. The party chose to push through and take the hit.
+
+💥 The party pushes through the trap, taking 2 damage. 🔔 The alarm rings through the dungeon: the next monster will attack with +2.
+
+- ✚ 2 wounds on Paracelsus the Lesser, and the ceiling with them: 9, and no more.
+
+<details><summary>Ledger</summary>
+
+- 🔔 An alarm is ringing somewhere below. Whatever comes next knows.
+- ❤️ 2 health taken.
+- ✚ 1 wound that will not close down here.
+- 🚪 1 more room behind them.
+- · ⚠️ Room 13: trap — push-through
+
+</details>
+
+### 💎 Room 14 — vault
+
+A hidden vault, stacked with treasure. Vaults always hold something beyond coin. A sarcophagus stands against the wall with its lid slightly wrong.
+
+They might have chosen to open it with Knock, or loot the treasure — the Reckless were already moving. The party chose to pry the sarcophagus open.
+
+⚰️ The party pries the lid off a stone sarcophagus: 20 gold. ⚰️ The occupant objects: 4 damage before it is put back down.
+
+- ✚ 3 wounds on Paracelsus the Lesser, and the ceiling with them: 7, and no more.
+
+<details><summary>Ledger</summary>
+
+- 💰 The purse is 20 heavier.
+- 🏅 20 renown earned.
+- ❤️ 4 health taken.
+- ✚ 1 wound that will not close down here.
+- 🚪 1 more room behind them.
+- · 💎 Room 14: vault — pry-sarcophagus
+
+</details>
+
+### 🐉 Room 15 — boss
+
+The boss chamber. The Vampire Lord, apologizing for the hour waits at its center (attack 22, health 60); killing it clears the dungeon. It is ethereal: weapons do only 60% damage unless a cleric blesses the blades. It will not face the cleric: undead take holy damage ×1.5. A sarcophagus stands against the wall with its lid slightly wrong. A pit takes up a third of the floor. The bottom is not visible. Pillars break the room into aisles — something to fight behind.
+
+They might have chosen to stand and fight, or fall back — the Reckless settled it by going first. The party chose to pry the sarcophagus open.
+
+⚰️ The party pries the lid off a stone sarcophagus: 20 gold.
+
+<details><summary>Ledger</summary>
+
+- 💰 The purse is 20 heavier.
+- 🏅 220 renown earned.
+- 🚪 1 more room behind them.
+- · 🐉 Room 15: boss — pry-sarcophagus
 - · 🏆 The dungeon is beaten!
 
 </details>
 
 ### 🏆 The way out
 
-the Castle of the Vampire Lord is cleared: the boss is dead and the party walks out. Survivors: Silin the Debt, Magister Crucible, Vex Threefingers, Ursula Ironknee. Rooms cleared: 13. Trophies carried out: 3 (latest: 💍 the Lord's signet).
+the Castle of the Vampire Lord is cleared: the boss is dead and the party walks out. Survivors: Paracelsus the Lesser, Silin the Debt, Magister Crucible, Vex Threefingers. Rooms cleared: 15. Trophies carried out: 1 (latest: 🪙 the footman's wages).
 
-**Rooms cleared:** 13 · **Score:** 417 · **Gold:** 17 · **Trophies:** 3 · **Survivors:** 4
+**Rooms cleared:** 15 · **Score:** 484 · **Gold:** 199 · **Trophies:** 1 · **Survivors:** 4
