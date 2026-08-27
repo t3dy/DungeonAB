@@ -9,6 +9,7 @@
 import { CARD_TYPES, CLASSES } from '../game/Cards.js';
 import { Adventurer, makeTavernVolunteer } from './Adventurer.js';
 import { tacticModifiers } from '../game/Tactics.js';
+import { personalityModifiers } from '../game/Personalities.js';
 
 /**
  * A delving party is four adventurers. Not five, not ten.
@@ -114,6 +115,11 @@ export class Party {
       .filter(c => c.type === CARD_TYPES.PERSONALITY)
       .map(c => c.archetype);
 
+    // A temper decides how readily a blow leaves a scar. Pushed onto the
+    // bodies because they are what takes the damage, and an Adventurer
+    // has no way to ask the party it belongs to.
+    this.applyTemper();
+
     // Auto-assign equipment to best-fit members
     const equipment = pool.filter(c => c.type === CARD_TYPES.EQUIPMENT);
     for (const eq of equipment) {
@@ -158,6 +164,9 @@ export class Party {
       target = living.reduce((a, b) => a.equipment.length <= b.equipment.length ? a : b);
     }
     target.equip(eqCard);
+    // Kit can change how readily its wearer scars, and equipment is
+    // assigned after the temper is first applied
+    if (this.personalities) this.applyTemper();
     return target;
   }
 
@@ -230,6 +239,22 @@ export class Party {
     party.alarmed = !!saved.alarmed;
     party.desecrated = !!saved.desecrated;
     return party;
+  }
+
+  /**
+   * Push the party's temper onto its members. Called at muster and
+   * whenever the roster changes, so a personality drafted late still
+   * reaches the bodies.
+   */
+  applyTemper() {
+    const bias = personalityModifiers(this).wound;
+    for (const m of [...this.members, ...this.reserve]) {
+      // Armour stacks on temper: dwarven mail takes the worst of a blow,
+      // so fewer of them cross the line into a lasting scar
+      const armoured = m.equipment.some(e => e.id === 'eq-chainmail') ? 0.3 : 0;
+      m.woundBias = bias + armoured;
+    }
+    return bias;
   }
 
   living() {
@@ -465,11 +490,15 @@ export class Party {
     }
     this.darkCovered = null;
 
-    for (const m of this.living()) m.takeDamage(DARK_TOLL);
+    // The party's temper decides what the dark costs it: the Bold walk
+    // it like a road, the Craven creep and pay for creeping
+    const temper = personalityModifiers(this);
+    const toll = Math.max(1, DARK_TOLL + temper.dark);
+    for (const m of this.living()) m.takeDamage(toll);
     this.darkMarches = (this.darkMarches || 0) + 1;
     return {
-      kind: 'dark', supply: 0, damage: DARK_TOLL, full: DARK_TOLL,
-      darkMarches: this.darkMarches,
+      kind: 'dark', supply: 0, damage: toll, full: DARK_TOLL,
+      temper: temper.notes, darkMarches: this.darkMarches,
     };
   }
 
@@ -487,7 +516,11 @@ export class Party {
     // Rationing is learned technique, not more oil: the same lamp,
     // trimmed and measured (game/Tactics.js)
     const rationed = tacticModifiers(this).supply;
-    this.supply = Math.max(2, Math.round(marches * share) + rationed);
+    // ...and so does the party's temper: the Craven overpack, the
+    // Cunning ration without being told (game/Personalities.js)
+    const temper = personalityModifiers(this);
+    this.supply = Math.max(2, Math.round(marches * share) + rationed + temper.supply);
+    this.provisionNotes = temper.supplyNotes;
     this.marches = 0;
     return this.supply;
   }

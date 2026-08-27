@@ -89,6 +89,11 @@ export const REACTIONS = {
       damage: 2,
       text: f => `${up(f)} glows and spits where the working lands: 2 damage to whatever is near it.`,
     },
+    void: {
+      id: 'updraft', icon: '🌋',
+      damage: 3, cover: -1,
+      text: f => `The fire finds ${f} and the shaft draws like a chimney: 3 damage in the updraft, and nothing to shelter behind while it roars.`,
+    },
   },
   shock: {
     water: {
@@ -106,6 +111,11 @@ export const REACTIONS = {
       damage: 2, consumes: true,
       text: f => `${up(f)} shivers, flashes and comes apart: 2 damage in flying silver.`,
     },
+    void: {
+      id: 'earthing', icon: '🕳️',
+      monsterAtk: -2, selfHarm: 1,
+      text: f => `The working earths itself down ${f}, and the whole floor jumps: the monster fights off-balance for 2 less, and so does everyone who felt it.`,
+    },
   },
   frost: {
     water: {
@@ -122,6 +132,11 @@ export const REACTIONS = {
       id: 'brittle', icon: '❄️',
       damage: 2,
       text: f => `Frost gets into ${f} and cracks it apart: 2 damage in splinters of cold stone.`,
+    },
+    void: {
+      id: 'rime-bridge', icon: '🧊',
+      cover: 2, selfHarm: 1,
+      text: f => `Frost sheets across ${f} until it will bear weight — a bridge to fight from, and a bad place to slip: 2 cover, 1 damage.`,
     },
   },
   holy: {

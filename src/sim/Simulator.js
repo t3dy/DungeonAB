@@ -10,6 +10,7 @@
 import { generateDungeon, dungeonFromLayout, ROOM_TYPES } from '../world/DungeonGen.js';
 import { Party } from '../agents/Party.js';
 import { activeTactics, dormantTactics } from '../game/Tactics.js';
+import { personalityModifiers } from '../game/Personalities.js';
 import { Chronicle, snapshotState, diffEvents, SALIENCE } from '../narrative/Chronicle.js';
 import { CLASSES } from '../game/Cards.js';
 import {
@@ -20,7 +21,7 @@ import {
   composePredicament, composeDeliberation, composeResolution,
   composeWipe, composeVictory, composeFall,
   composeSecretFound, composeDetour, composeTrapdoor,
-  composeSupply, composeWound, composeDormant, composeTactics,
+  composeSupply, composeWound, composeDormant, composeTactics, composeProvision,
 } from '../narrative/Narrator.js';
 
 export class Simulator {
@@ -80,6 +81,8 @@ export class Simulator {
 
     // Say what the party drilled, and warn about anything drafted that
     // cannot fire — a silently dead card reads as a bug (Tactics.js)
+    const packed = composeProvision(this.party.provisionNotes);
+    if (packed) this.log.push(packed);
     const drilled = composeTactics(activeTactics(this.party));
     if (drilled) this.log.push(drilled);
     for (const idle of dormantTactics(this.party)) {
@@ -235,7 +238,7 @@ export class Simulator {
       falls: [...marchFalls, ...fallen.map(m => composeFall(m))],
       wounds: this.party.members
         .filter(m => m.isAlive() && m.wounds > (woundsBefore.get(m.name) ?? 0))
-        .map(m => composeWound(m)),
+        .map(m => composeWound(m, personalityModifiers(this.party).woundNotes)),
       supply: this.party.supply,
       aside: linger
         ? (linger.cured

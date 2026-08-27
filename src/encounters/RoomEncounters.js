@@ -202,14 +202,24 @@ function baseRoomOptions(room, party) {
       if (party.hasClass(CLASSES.ALCHEMIST) && party.materials > 0) {
         opts.unshift({ id: 'alchemy', name: 'Work the Bench', desc: 'Brew a potion or mod a weapon' });
       }
+      // The alembic turns the bench on the supply clock: a material
+      // cooked down into light. Only worth offering when the lamp
+      // actually needs it, or the party will brew oil it cannot carry.
+      if (hasItem(party, 'eq-alembic') && party.materials > 0 && party.supply <= 3) {
+        opts.unshift({ id: 'brew-oil', name: 'Cook Down Lamp Oil', desc: 'A material becomes two marches of light' });
+      }
       return opts;
     }
 
     case ROOM_TYPES.MATERIALS: {
-      return [
+      const opts = [
         { id: 'gather', name: 'Gather Materials', desc: 'Herbs, salts, quicksilver' },
         { id: 'pass-by', name: 'Leave Them', desc: 'The satchel stays light' },
       ];
+      if (hasItem(party, 'eq-alembic') && party.materials > 0 && party.supply <= 3) {
+        opts.push({ id: 'brew-oil', name: 'Cook Down Lamp Oil', desc: 'A material becomes two marches of light' });
+      }
+      return opts;
     }
 
     case ROOM_TYPES.DISASTER: {
@@ -859,6 +869,17 @@ export function resolveRoomAction(room, party, optionId, options = null) {
       const room_ = foldReactions(reactions);
       if (room_.damage) monster.health = Math.max(1, monster.health - room_.damage);
       if (room_.heal) party.healParty(room_.heal);
+      // A warded buckler turns aside half of what the party sets off;
+      // an athanor charm makes anything they light burn harder
+      if (room_.selfHarm && hasItem(party, 'eq-warded-buckler')) {
+        room_.selfHarm = Math.floor(room_.selfHarm / 2);
+        room_.notes.push({ source: 'the Warded Buckler', text: '🛡️ The prayers on the inside of the buckler turn aside half of what the party set off.' });
+      }
+      if (room_.burn > 0 && hasItem(party, 'eq-athanor-charm')) {
+        room_.burn += 2;
+        room_.notes.push({ source: 'the Athanor Charm', text: '🔥 The athanor charm feeds the blaze: 2 more damage a round while it burns.' });
+      }
+
       // Firewatch: a party that sets the room alight stands clear of it
       if (room_.selfHarm && !tac.noSelfHarm) {
         for (const m of party.living()) m.takeDamage(room_.selfHarm);
@@ -1124,6 +1145,18 @@ export function resolveRoomAction(room, party, optionId, options = null) {
     }
 
     /* Shrine */
+    case 'brew-oil': {
+      // The alchemist's answer to the supply clock: a material cooked
+      // down into light. Ties the bench to the lamp.
+      party.materials -= 1;
+      const gained = party.addSupply(2);
+      room.cleared = true;
+      return {
+        success: true,
+        preps: [{ source: 'the Portable Alembic', text: `⚗️ A material goes into the alembic and comes out as lamp oil: ${gained} more march${gained === 1 ? '' : 'es'} of light.` }],
+      };
+    }
+
     case 'rest': {
       const bonus = party.hasPersonality('pious') ? 4 : 0;
       // Field Surgery: somebody learned to set a break on the road, so a

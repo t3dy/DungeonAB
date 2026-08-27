@@ -96,6 +96,7 @@ export function composeTrapdoor({ outcome, rooms, damage, finder }) {
 /* ------------------------------------------------------------------ */
 
 const OPTION_PHRASES = {
+  'brew-oil': 'cook a material down into lamp oil',
   fight: 'stand and fight',
   flee: 'fall back',
   sneak: 'sneak past',
@@ -385,6 +386,10 @@ export function composeResolution(room, optionId, result, party) {
     case 'gather':
       bits.push(`🌿 The party gathers ${result.materials} bundle${result.materials > 1 ? 's' : ''} of alchemy materials.`);
       break;
+    case 'brew-oil':
+      // The preps carry the numbers; this is the beat itself
+      bits.push('⚗️ The alembic goes on the bench and a bundle of materials becomes light to march by.');
+      break;
     case 'brace':
       bits.push(`🌋 The party braces together and rides it out: ${result.damage} damage taken.`);
       break;
@@ -465,7 +470,13 @@ export function composeSupply(note) {
   if (note.kind === 'dark') {
     const n = Math.max(1, note.darkMarches || 1);
     const line = DARK_LINES[Math.min(n, DARK_LINES.length) - 1];
-    return line(note.damage);
+    // A temper that changed what the dark charges says so the first
+    // time it does, so the player can tell a Craven delve from a Bold
+    // one rather than just reading a different number
+    const temper = n === 1 && note.temper?.length
+      ? ' ' + note.temper.map(t => t.text).join(' ')
+      : '';
+    return line(note.damage) + temper;
   }
   const pool = SUPPLY_LINES[note.kind];
   if (!pool) return null;
@@ -486,17 +497,32 @@ const DEEP_WOUND_LINES = [
 ];
 
 /**
+ * What the party's temper did to the quartermaster's list, said once at
+ * the mouth of the dungeon. Silent when no temper had an opinion.
+ */
+export function composeProvision(notes) {
+  if (!notes || notes.length === 0) return null;
+  return '🕯️ ' + notes.map(n => n.text).join(' ');
+}
+
+/**
  * A newly taken wound, named for the player.
  *
  * Wounds used to happen in silence — the health bar's ceiling quietly
  * dropped and the Chronicle never said why. A mechanic the player cannot
  * see is a mechanic they cannot plan around.
  */
-export function composeWound(member) {
+export function composeWound(member, temperNotes = null) {
   const ceiling = member.effectiveMax ? member.effectiveMax() : member.maxHealth;
-  return member.wounds > 1
+  const line = member.wounds > 1
     ? pick(DEEP_WOUND_LINES)(member.name, ceiling, member.wounds)
     : pick(WOUND_LINES)(member.name, ceiling);
+  // The temper that changed how readily this party scars says so on the
+  // first wound of the delve, and then stops explaining itself
+  if (temperNotes?.length && member.wounds === 1) {
+    return `${line} ${temperNotes.map(t => t.text).join(' ')}`;
+  }
+  return line;
 }
 
 /**

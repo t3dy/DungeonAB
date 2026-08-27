@@ -25,6 +25,7 @@ export class Adventurer {
     this.maxHealth = card.stats.health;
     // Scars carried through the delve (see takeDamage)
     this.wounds = 0;
+    this.woundBias = 0;      // set by the party's temper (Party.applyTemper)
     this.health = card.stats.health;
     this.baseAttack = card.stats.attack;
     this.baseDefense = card.stats.defense;
@@ -75,8 +76,12 @@ export class Adventurer {
     const wasAbove = this.health > this.woundFloor();
     this.health = Math.max(0, this.health - amount);
     if (this.health <= 0) { this.alive = false; return; }
-    // Crossing a quarter of your body's worth in one blow scars
-    if (wasAbove && amount >= this.maxHealth * WOUND_THRESHOLD) this.wounds++;
+    // Crossing a quarter of your body's worth in one blow scars — and
+    // the party's temper decides how far that quarter stretches: the
+    // Devout tend what opens, the Reckless never stop to bind anything
+    // (game/Personalities.js)
+    const bar = this.maxHealth * WOUND_THRESHOLD * (1 + (this.woundBias || 0));
+    if (wasAbove && amount >= bar) this.wounds++;
   }
 
   /** The lowest a wounded ceiling can fall — never below a third. */
