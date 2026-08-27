@@ -80,7 +80,7 @@ export const FEATURES = {
     tile: { col: 6, row: 8 },
     rooms: ['monster', 'corridor', 'disaster', 'materials'],
     weight: 1.5, tags: ['hazard'],
-    tell: 'A boulder sits at the top of a slope, held by very little.',
+    tell: 'A boulder sits at the top of a slope, held by a wedge of rotten timber.',
   },
   sarcophagus: {
     id: 'sarcophagus', name: 'a stone sarcophagus', icon: '⚰️',

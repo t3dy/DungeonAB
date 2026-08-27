@@ -67,3 +67,9 @@ tests/                   ← Node test runner suites
 11. **A comparison that cannot fail is worse than no test**: fixtures must sit in a regime
    where the arms could differ. `tests/helpers.js` `armsDiffer` refuses saturated totals,
    the `max(1, …)` damage floor, and differences inside the noise.
+12. **Writing is gated on accuracy, not just existence**: a line must state the number the
+   mechanic applied and invent none (`narrative/Prose.js`), no line may repeat itself through
+   a delve, card text and room tells pass a house-style lint, and every writable beat must
+   appear in a real seeded transcript. `tests/prose.test.js` is the gate.
+   *Why it is a rule:* Aegis of Ash read "blunts the first blow in each fight" while the
+   resolver warded every round, and a player who believed the card drafted it wrong.

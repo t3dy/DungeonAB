@@ -72,7 +72,7 @@ export const REACTIONS = {
     wood: {
       id: 'blaze', icon: '🔥',
       burn: 3, cover: -1, light: 2, consumes: true,
-      text: f => `The fire takes ${f} and does not stop at the monster. The room burns: 3 damage a round while it lasts, the cover burns away with it, and there is light to march by.`,
+      text: f => `The fire takes ${f} and does not stop at the monster. The room burns: 3 damage a round while it lasts, the cover burns away with it, and 2 marches of light to burn by.`,
     },
     water: {
       id: 'steam', icon: '♨️',
@@ -82,7 +82,7 @@ export const REACTIONS = {
     flame: {
       id: 'flare', icon: '💥',
       damage: 6, light: 1, consumes: true,
-      text: f => `${up(f)} takes the working like a bellows and erupts: 6 damage, and the flare throws light down the passage. It burns its fuel doing it — the bracket is cold afterwards.`,
+      text: f => `${up(f)} takes the working like a bellows and erupts: 6 damage, and the flare throws a march of light down the passage. It burns its fuel doing it — the bracket is cold afterwards.`,
     },
     metal: {
       id: 'searing', icon: '🌡️',
@@ -114,7 +114,7 @@ export const REACTIONS = {
     void: {
       id: 'earthing', icon: '🕳️',
       monsterAtk: -2, selfHarm: 1,
-      text: f => `The working earths itself down ${f}, and the whole floor jumps: the monster fights off-balance for 2 less, and so does everyone who felt it.`,
+      text: f => `The working earths itself down ${f}, and the whole floor jumps: the monster fights off-balance for 2 less, and everyone who felt it takes 1.`,
     },
   },
   frost: {
@@ -126,7 +126,7 @@ export const REACTIONS = {
     flame: {
       id: 'douse', icon: '💨',
       cover: 1, light: -2, consumes: true,
-      text: f => `The working puts ${f} out. Smoke to fight behind, and that much less light to march by.`,
+      text: f => `The working puts ${f} out. Smoke to fight behind, and 2 marches of light gone with it.`,
     },
     stone: {
       id: 'brittle', icon: '❄️',
@@ -148,7 +148,7 @@ export const REACTIONS = {
     glass: {
       id: 'kindled-glass', icon: '🪞',
       revealEthereal: true, damage: 2,
-      text: f => `${up(f)} catches the light and throws it everywhere at once: nothing in the room can hide behind being half-there.`,
+      text: f => `${up(f)} catches the light and throws it everywhere at once: 2 damage, and nothing in the room can hide behind being half-there.`,
     },
     water: {
       id: 'blessing', icon: '⛲',

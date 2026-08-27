@@ -122,7 +122,7 @@ export const TACTICS = [
   {
     id: 'tac-firewatch', name: 'Firewatch', icon: '🧯', branch: 'room', tier: 2,
     capability: 'room', requires: 'tac-improvised',
-    text: 'A party that sets the room alight knows where the fire will go: it takes nothing back from its own reactions, and a flame trap holds no surprises either.',
+    text: 'A party that sets the room alight knows where the fire will go: it takes nothing back from its own reactions, holds 1 more of the room as cover, and reads a flame trap for 3 less damage.',
     // "No self-harm from reactions" alone was too narrow a trigger --
     // measured, the branch was actively worse than not taking it (56.9%
     // against 66.6% orphaned), which makes it a trap card rather than a
