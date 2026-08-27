@@ -15,7 +15,7 @@ import { Chronicle, snapshotState, diffEvents, SALIENCE } from '../narrative/Chr
 import { CLASSES } from '../game/Cards.js';
 import {
   getRoomOptions, decideRoomAction, resolveRoomAction,
-  detectSecretDoor, decideDetour, detectTrapdoor, decideTrapdoor,
+  detectSecretDoor, decideDetour, wingAppeal, detectTrapdoor, decideTrapdoor,
 } from '../encounters/RoomEncounters.js';
 import {
   composePredicament, composeDeliberation, composeResolution,
@@ -273,9 +273,13 @@ export class Simulator {
         // Unnoticed secrets stay secret — the branch may be found on a retreat pass
       } else {
         branch.consumed = true;
-        const going = decideDetour(this.party);
+        const going = decideDetour(this.party, undefined, branch.wing);
         if (going) this.path.splice(this.roomIndex + 1, 0, ...branch.rooms);
-        this.lastNarration.aside = [this.lastNarration.aside, composeDetour(going, branch)].filter(Boolean).join(' ');
+        const appeal = wingAppeal(this.party, branch.wing);
+        this.lastNarration.aside = [
+          this.lastNarration.aside,
+          composeDetour(going, branch, going ? appeal.advocate : null),
+        ].filter(Boolean).join(' ');
       }
     }
 

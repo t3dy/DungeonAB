@@ -12,7 +12,9 @@ import {
 } from '../src/world/DungeonGen.js';
 
 const ROOM_SHAPES_LIST = Object.values(ROOM_SHAPES);
-import { detectSecretDoor, decideDetour } from '../src/encounters/RoomEncounters.js';
+import {
+  detectSecretDoor, decideDetour, decideRoomAction, wingAppeal,
+} from '../src/encounters/RoomEncounters.js';
 import { Simulator } from '../src/sim/Simulator.js';
 import { Party } from '../src/agents/Party.js';
 import { CHARACTER_CARDS, PERSONALITY_CARDS, CLASSES } from '../src/game/Cards.js';
@@ -21,6 +23,9 @@ const fighter = CHARACTER_CARDS.find(c => c.class === CLASSES.FIGHTER);
 const rogue = CHARACTER_CARDS.find(c => c.class === CLASSES.ROGUE);
 const greedy = PERSONALITY_CARDS.find(c => c.archetype === 'greedy');
 const craven = PERSONALITY_CARDS.find(c => c.archetype === 'craven');
+const scholar = PERSONALITY_CARDS.find(c => c.archetype === 'scholarly');
+const reckless = PERSONALITY_CARDS.find(c => c.archetype === 'reckless');
+const alchemist = CHARACTER_CARDS.find(c => c.class === CLASSES.ALCHEMIST);
 
 const SEEDS = ['pg-1', 'pg-2', 'pg-3', 'pg-4', 'pg-5', 'pg-6', 'pg-7', 'pg-8'];
 
@@ -187,6 +192,53 @@ describe('Secret doors and detours', () => {
     // Greedy threshold is 7 whole, 4 battered: a roll of 5 splits them
     assert.equal(decideDetour(whole, 5), true, 'whole, greed wins');
     assert.equal(decideDetour(battered, 5), false, 'battered, wounds argue for the door');
+  });
+
+  test('a wing is chosen for what is in it', () => {
+    // A wing has a theme and a payoff. A party that cannot see either is
+    // choosing between two anonymous side passages, which is the
+    // reactions failure over again: content the decision layer cannot
+    // read does not exist.
+    const bookish = new Party([fighter, scholar]);
+    const plain = new Party([fighter]);
+    // The archive is worth 4 to the Scholarly: a roll that splits them
+    assert.equal(decideDetour(bookish, 8, 'archive'), true, 'the shelves are the point');
+    assert.equal(decideDetour(plain, 8, 'archive'), false, 'to anyone else it is more dungeon');
+
+    const brewer = new Party([alchemist]);
+    assert.ok(wingAppeal(brewer, 'works').weight > wingAppeal(plain, 'works').weight,
+      'the alchemist wants the bench');
+    assert.ok(wingAppeal(plain, 'sump').weight < 0, 'nobody volunteers for the flooded wing');
+
+    // And the party says who wanted it, or the reason is invisible
+    assert.ok(wingAppeal(bookish, 'archive').advocate, 'somebody argued for it, by name');
+  });
+
+  test('the stairhead reads how much the party has left', () => {
+    // Two thousand rolls an arm, because this is a weighted pick and one
+    // decision proves nothing.
+    const campRate = (hpShare, supply, extra = []) => {
+      const party = new Party([fighter, rogue, ...extra]);
+      party.supply = supply;
+      for (const m of party.members) m.health = Math.max(1, Math.round(m.maxHealth * hpShare));
+      const room = { type: ROOM_TYPES.STAIRS, descendsTo: 1, w: 5, h: 5, features: [] };
+      let camps = 0;
+      for (let i = 0; i < 2000; i++) if (decideRoomAction({ ...room }, party) === 'camp-stair') camps++;
+      return camps / 2000;
+    };
+
+    const fresh = campRate(0.95, 8);
+    const battered = campRate(0.3, 8);
+    assert.ok(battered - fresh > 0.4,
+      `a battered party stops and a fresh one does not (${(battered * 100).toFixed(0)}% vs ${(fresh * 100).toFixed(0)}%)`);
+
+    const dry = campRate(0.3, 1);
+    assert.ok(dry < battered - 0.1,
+      `camping without oil to spare is worse than pressing on (${(dry * 100).toFixed(0)}% vs ${(battered * 100).toFixed(0)}%)`);
+
+    const bold = campRate(0.3, 8, [reckless]);
+    assert.ok(bold < battered - 0.1,
+      `the Reckless argue against stopping (${(bold * 100).toFixed(0)}% vs ${(battered * 100).toFixed(0)}%)`);
   });
 
   test('a greedy party with a rogue eventually walks a branch', () => {

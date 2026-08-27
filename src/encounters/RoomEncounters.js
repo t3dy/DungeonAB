@@ -263,15 +263,15 @@ function baseRoomOptions(room, party) {
 /* ------------------------------------------------------------------ */
 
 const PERSONALITY_WEIGHTS = {
-  brave: { fight: 3, 'push-through': 2, brace: 2, flee: -2, 'leave-it': -1 },
-  cunning: { sneak: 3, disarm: 3, bribe: 2, inspect: 2, 'spell-bypass': 2, fight: -1 },
+  brave: { fight: 3, 'push-through': 2, brace: 2, flee: -2, 'leave-it': -1, 'camp-stair': -1 },
+  cunning: { sneak: 3, disarm: 3, bribe: 2, inspect: 2, 'spell-bypass': 2, fight: -1, 'rope-down': 2 },
   // Monsters always drop (Drops.js), so to the Covetous every fight
   // is a payday — and sneaking past one is leaving money on the floor
-  greedy: { loot: 4, desecrate: 2, gather: 2, fight: 1, sneak: -1, 'leave-it': -3, bribe: -2 },
+  greedy: { loot: 4, desecrate: 2, gather: 2, fight: 1, sneak: -1, 'leave-it': -3, bribe: -2, 'camp-stair': -1 },
   scholarly: { study: 3, 'deep-study': 3, 'spell-strike': 2, 'spell-bypass': 2 },
-  pious: { rest: 3, 'turn-undead': 3, desecrate: -5 },
-  reckless: { fight: 2, 'push-through': 3, loot: 2, inspect: -2, 'search-around': -2 },
-  craven: { flee: 3, sneak: 2, disarm: 2, 'search-around': 2, inspect: 1, scatter: 2, fight: -2, 'push-through': -2, brace: -1, 'cause-fear': 3, 'smoke-bomb': 2, 'knock-open': 1 },
+  pious: { rest: 3, 'turn-undead': 3, desecrate: -5, 'camp-stair': 2 },
+  reckless: { fight: 2, 'push-through': 3, loot: 2, inspect: -2, 'search-around': -2, 'camp-stair': -3, descend: 2 },
+  craven: { flee: 3, sneak: 2, disarm: 2, 'search-around': 2, inspect: 1, scatter: 2, fight: -2, 'push-through': -2, brace: -1, 'cause-fear': 3, 'smoke-bomb': 2, 'knock-open': 1, 'camp-stair': 3 },
 };
 
 /* Preparation-gated options are attractive to those who'd use them */
@@ -367,6 +367,26 @@ export function decideRoomAction(room, party) {
     // The monster's nature argues for and against certain plans
     if (nature[opt.id]) w += nature[opt.id];
     if (opt.id === 'rest' && party.totalHealth() / party.totalMaxHealth() < 0.6) w += 3;
+
+    // The stairhead. A party decides whether to stop by how much it has
+    // left, not by temperament alone — without this the choice was a
+    // coin flip and a party at 20% health walked down as often as a
+    // party at 95%, which is a decision layer that cannot see the
+    // mechanic (the reactions lesson again).
+    if (opt.id === 'camp-stair') {
+      const share = party.totalHealth() / party.totalMaxHealth();
+      if (share < 0.5) w += 5;
+      else if (share < 0.75) w += 2;
+      else w -= 2;                            // barely scratched: not worth the oil
+      // Camping burns oil, and camping without oil to spare is how a
+      // party ends up marching the next floor in the dark. Cold Camp
+      // halves the bill, so it does not fear the lamp the same way.
+      const camped = tacticModifiers(party);
+      if (party.supply <= (camped.campSupply ? 2 : 4)) w -= 4;
+    }
+    // A rope down the shaft costs nothing at all, so it wins on the
+    // oil unless somebody wants the stop
+    if (opt.id === 'rope-down') w += party.supply <= 3 ? 3 : 1.5;
     if (opt.id === 'fight' && party.totalHealth() / party.totalMaxHealth() < 0.3) w -= 2;
     if (opt.id === 'flee' && party.totalHealth() / party.totalMaxHealth() < 0.3) w += 2;
     if (opt.id === 'study') w += 1;                         // Spells are score
@@ -593,7 +613,47 @@ export function decideTrapdoor(party, rollValue = roll()) {
  * Does the party take the side passage? The Covetous smell gold; the
  * Craven wants no part of optional danger. Pure — pass the roll.
  */
-export function decideDetour(party, rollValue = roll()) {
+/**
+ * What a party wants out of each wing (world/DungeonGen.js WINGS).
+ *
+ * A wing has a theme and a payoff, and a party that cannot see either
+ * is choosing between two anonymous side passages. The Covetous walk
+ * toward coin, the Scholarly toward books, an alchemist toward a
+ * workshop — and nobody volunteers for the flooded wing.
+ *
+ * Returns { weight, advocate } — the advocate is a whole clause, so
+ * the writing can print it as its own sentence.
+ */
+export function wingAppeal(party, wing) {
+  if (!wing) return { weight: 0, advocate: null };
+  const has = a => party.hasPersonality(a);
+  const cls = c => party.hasClass(c);
+  switch (wing) {
+    case 'crypt':
+      if (has('greedy')) return { weight: 3, advocate: 'the Covetous wanted what gets buried with people' };
+      if (has('pious')) return { weight: 2, advocate: 'the Devout did not like leaving the dead untended' };
+      return { weight: 0, advocate: null };
+    case 'works':
+      if (cls(CLASSES.ALCHEMIST)) return { weight: 4, advocate: 'the alchemist wanted the bench' };
+      if (has('scholarly')) return { weight: 2, advocate: 'the Scholarly wanted to see what was being made down there' };
+      return { weight: 0, advocate: null };
+    case 'archive':
+      if (has('scholarly')) return { weight: 4, advocate: 'the Scholarly wanted the shelves' };
+      if (cls(CLASSES.WIZARD)) return { weight: 3, advocate: 'the wizard reads everything, on principle' };
+      return { weight: 0, advocate: null };
+    case 'barracks':
+      if (has('greedy')) return { weight: 3, advocate: 'the Covetous wanted the weapon rack' };
+      if (has('brave')) return { weight: 2, advocate: 'the Bold wanted whatever was garrisoned there' };
+      return { weight: 0, advocate: null };
+    case 'sump':
+      // Nobody wants the flooded wing. It pays, and it is still wet.
+      return { weight: has('greedy') ? 1 : -2, advocate: null };
+    default:
+      return { weight: 0, advocate: null };
+  }
+}
+
+export function decideDetour(party, rollValue = roll(), wing = null) {
   let w = 4;   // idle curiosity baseline
   if (party.hasPersonality('greedy')) w += 3;
   if (party.hasPersonality('scholarly')) w += 2;
@@ -601,6 +661,8 @@ export function decideDetour(party, rollValue = roll()) {
   if (party.hasPersonality('craven')) w -= 3;
   // Battered parties press for the exit
   if (party.totalHealth() / party.totalMaxHealth() < 0.35) w -= 3;
+  // ...and what is down there is part of the argument
+  w += wingAppeal(party, wing).weight;
   return rollValue < w;
 }
 

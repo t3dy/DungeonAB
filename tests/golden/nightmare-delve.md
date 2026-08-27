@@ -134,7 +134,7 @@ They might have chosen to take the stair down — the Scholarly wanted the knowl
 
 🪜 The party ropes down the shaft beside the stair and lands on the second floor. 🪢 The line goes down the shaft beside the stair: the party descends without burning a march of oil.
 
-_🕯️ The last of the oil goes. From here the party walks in the dark. 🚶 The party looks into the burial wing — burial niches, most of them open and keeps to the main route._
+_🕯️ The last of the oil goes. From here the party walks in the dark. 🚶 The party looks into the burial wing (burial niches, most of them open) and keeps to the main route._
 
 <details><summary>Ledger</summary>
 

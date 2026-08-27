@@ -74,12 +74,20 @@ export function composeSecretFound(party, wing = null) {
   return `🕳️ ${finder} finds a hidden door into ${wing?.name || 'a side passage'}.${behind} Its rooms join the route.`;
 }
 
-export function composeDetour(taken, wing = null) {
+export function composeDetour(taken, wing = null, advocate = null) {
   const name = wing?.name || 'the side passage';
   const tell = wing?.tell ? ` — ${wing.tell}` : '';
-  return taken
-    ? `🧭 The party turns off into ${name}${tell}. Its rooms join the route.`
-    : `🚶 The party looks into ${name}${tell} and keeps to the main route.`;
+  // Who wanted it, when somebody in particular did (RoomEncounters
+  // wingAppeal): a detour with a reason reads as a decision
+  const aside = wing?.tell ? ` (${wing.tell})` : '';
+  if (!taken) return `🚶 The party looks into ${name}${aside} and keeps to the main route.`;
+  // With a reason, the reason leads and the tell stands down: an
+  // advocate usually names the same thing the tell describes, and
+  // printing both says the weapon rack twice.
+  if (advocate) {
+    return `🧭 ${advocate[0].toUpperCase()}${advocate.slice(1)}: the party turns off into ${name}. Its rooms join the route.`;
+  }
+  return `🧭 The party turns off into ${name}${tell}. Its rooms join the route.`;
 }
 
 /**
