@@ -631,6 +631,15 @@ export function resolveRoomAction(room, party, optionId, options = null) {
       // The room fights too: cover blunts every round, a mirror robs
       // the ethereal of its advantage (world/RoomFeatures.js)
       const roomMods = featureModifiers(room);
+      // A blessed mace consecrates as it swings: whatever the room was
+      // going to let out of its sarcophagus stays where it is
+      if (roomMods.undeadRisk && hasItem(party, 'eq-blessed-mace')) {
+        roomMods.undeadRisk = false;
+        roomMods.notes.push({
+          feature: 'sarcophagus',
+          text: '🔨 The Blessed Mace sanctifies the room between swings: whatever was stirring in the stone settles.',
+        });
+      }
       const cover = (roomMods.cover || 0) + (options?.extraCover || 0);
       const mirrorInHand = hasItem(party, 'eq-silvered-mirror');
       const blessed = party.hasClass(CLASSES.CLERIC) || roomMods.revealEthereal
@@ -756,7 +765,11 @@ export function resolveRoomAction(room, party, optionId, options = null) {
         preps.push(claimed);
         // The venomous leave something behind, win or no win
         if (monster.trait === 'venomous') {
-          if (party.hasClass(CLASSES.CLERIC)) {
+          if (hasItem(party, 'eq-cursed-blade')) {
+            // Whoever carries the adder's blade has been living with
+            // venom for a while. The party takes none of it.
+            preps.push({ source: 'the Blade of the Adder', text: '🐍 The Blade of the Adder has taught its bearer what venom tastes like: the party shrugs this off.' });
+          } else if (party.hasClass(CLASSES.CLERIC)) {
             preps.push({ source: 'the cleric', text: '🐍 The monster was venomous, but the cleric cures the poison before it can act.' });
           } else {
             party.poisonLinger = (party.poisonLinger || 0) + 2;

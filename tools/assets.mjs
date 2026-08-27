@@ -46,7 +46,35 @@ function reach(card) {
   if (card.archetype && STANCES[card.archetype]) hooks.push('attrition stance');
   if (card.use === 'heal') hooks.push('mid-fight mending');
   if (SRC.includes(`'${card.id}'`)) hooks.push('named by a mechanic');
+
+  // A character participates through its CLASS, which every system
+  // reads -- calling one "inert" because no mechanic names it by id is
+  // a heuristic artifact, and a tool that cries wolf gets ignored. What
+  // is worth asking about a character is whether its *stat line* has
+  // anything to do with the systems: mind now drives spell power, and a
+  // trait is a hook a mechanic can hang off.
+  if (card.type === CARD_TYPES.CHARACTER) {
+    hooks.push(`class:${card.class}`);
+    if ((card.stats?.mind ?? 0) >= 6) hooks.push('mind scales workings');
+    if (card.trait) hooks.push('trait');
+  }
   return hooks;
+}
+
+/**
+ * The question worth asking about classes: does each one have a reason
+ * to exist under the current mechanics, beyond being a stat line?
+ */
+function classCoverage() {
+  const rows = {};
+  for (const card of getAllCards()) {
+    if (card.type !== CARD_TYPES.CHARACTER) continue;
+    rows[card.class] ??= { count: 0, named: false, mind: 0 };
+    rows[card.class].count++;
+    rows[card.class].mind = Math.max(rows[card.class].mind, card.stats?.mind ?? 0);
+    if (SRC.includes(`CLASSES.${card.class.toUpperCase()}`)) rows[card.class].named = true;
+  }
+  return rows;
 }
 
 export function auditAssets() {
@@ -79,6 +107,12 @@ function main() {
     const pct = ((dead.length / rows.length) * 100).toFixed(0);
     console.log(`${type.padEnd(12)} ${String(rows.length).padStart(3)} cards · ${String(dead.length).padStart(2)} inert (${pct}%)`);
     for (const r of dead) console.log(`   · ${r.card.name}`);
+  }
+
+  console.log('\nClass coverage — what each class is for:');
+  for (const [cls, r] of Object.entries(classCoverage())) {
+    const flag = r.named ? 'read by mechanics' : '⚠ no mechanic asks for it';
+    console.log(`  ${cls.padEnd(10)} ${String(r.count).padStart(2)} cards · best mind ${r.mind} · ${flag}`);
   }
 
   console.log('\nElement coverage — what answers each matter:');

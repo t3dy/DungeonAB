@@ -634,6 +634,11 @@ function endGame(state) {
     outcome: { victory: state.victory, score: state.party.score, depth: state.depth },
   });
 
+  // The saga goes on the shelf at the end of EVERY delve, not only when
+  // the campaign closes. A player who shuts the tab in town used to lose
+  // the whole story, which is the same silence problem one layer up.
+  saveChronicle();
+
   if (state.victory && !appState.campaign.over) {
     showTown(state);
   } else {
@@ -649,6 +654,14 @@ function showTown(state) {
   const campaign = appState.campaign;
   const result = appState.simulator.getRunResult();
   const display = document.getElementById('gameover-display');
+
+  // The chronicle is safe on the shelf before anything in town happens
+  if (appState.sagaId) {
+    const saga = chronicles.get(appState.sagaId);
+    if (saga) {
+      showToast('📜', `The chronicle is kept — delve ${saga.delves} written down.`);
+    }
+  }
 
   // The interlude joins the chronicle
   appendStory({

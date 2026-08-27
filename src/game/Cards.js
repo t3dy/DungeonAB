@@ -73,7 +73,7 @@ export const CHARACTER_CARDS = [
 export const EQUIPMENT_CARDS = [
   { id: 'eq-tower-shield', type: CARD_TYPES.EQUIPMENT, name: 'Tower Shield', icon: '🛡️', slot: 'armor', bonus: { defense: 3 }, bestFor: CLASSES.FIGHTER, text: 'A wall with a handle.' },
   { id: 'eq-greatsword', type: CARD_TYPES.EQUIPMENT, name: 'Greatsword of the Vault', icon: '🗡️', slot: 'weapon', bonus: { attack: 3 }, bestFor: CLASSES.FIGHTER, text: 'Found in a vault. Wants to go back.' },
-  { id: 'eq-blessed-mace', type: CARD_TYPES.EQUIPMENT, name: 'Blessed Mace', icon: '🔨', slot: 'weapon', bonus: { attack: 2, mind: 1 }, bestFor: CLASSES.CLERIC, text: 'Persuasion, sanctified.' },
+  { id: 'eq-blessed-mace', type: CARD_TYPES.EQUIPMENT, name: 'Blessed Mace', icon: '🔨', slot: 'weapon', bonus: { attack: 2, mind: 1 }, bestFor: CLASSES.CLERIC, text: 'Persuasion, sanctified. Consecrates a room as it swings: nothing climbs out of the sarcophagus while it is in hand.' },
   { id: 'eq-grimoire', type: CARD_TYPES.EQUIPMENT, name: 'Grimoire of Low Whispers', icon: '📖', slot: 'focus', bonus: { mind: 3 }, bestFor: CLASSES.WIZARD, text: 'The margins argue with the text.' },
   { id: 'eq-lockpicks', type: CARD_TYPES.EQUIPMENT, name: 'Masterwork Lockpicks', icon: '🗝️', slot: 'tool', bonus: { mind: 2 }, bestFor: CLASSES.ROGUE, text: 'Every door is a suggestion.' },
   { id: 'eq-alembic', type: CARD_TYPES.EQUIPMENT, name: 'Portable Alembic', icon: '⚗️', slot: 'tool', bonus: { mind: 2 }, bestFor: CLASSES.ALCHEMIST, text: 'A lab that fits in a satchel. Labs found in the dungeon work better, and a material can be cooked down into two marches of lamp oil.' },
@@ -159,7 +159,7 @@ export const EQUIPMENT_CARDS = [
   {
     id: 'eq-cursed-blade', type: CARD_TYPES.EQUIPMENT, name: 'Blade of the Adder', icon: '🐍',
     slot: 'weapon', bonus: { attack: 4, defense: -2 }, bestFor: CLASSES.FIGHTER, cursed: true,
-    text: 'It whispers where to cut. It is usually right. It never says about what.',
+    text: 'It whispers where to cut. It is usually right. It never says about what. Its bearer has lived with venom long enough that the party shrugs off the venomous.',
   },
   {
     id: 'eq-haunted-armor', type: CARD_TYPES.EQUIPMENT, name: 'Haunted Armor', icon: '👻',

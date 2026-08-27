@@ -67,6 +67,18 @@ takes the worst of a blow. Nothing here needed inventing, only noticing.
 *and* pack more oil. The Covetous will not leave a room unsearched even
 blind, and it costs them.
 
+## Zero is the wrong target
+
+Some cards should stay plain. A Greatsword that is simply a very good
+sword is a fine card, and a pool where every single item has a system
+hook is exhausting to read and impossible to balance. The audit currently
+reports five inert cards and that is a reasonable resting place — plain
+weapons and two situational workings.
+
+What matters is that inertness is a **choice** somebody made, not a
+thing that happened while nobody was looking. The nine personalities were
+not a choice.
+
 ## Afterwards
 
 - Re-measure. Every asset pass so far has moved the difficulty curve

@@ -889,3 +889,110 @@ skill — knowing when a conditional card is a bomb and when it is a blank
 — which is the most transferable kind of card-game judgement there is.
 
 Curve held at 99.4 / 87.9 / 70.8 / 45.0.
+
+---
+
+## 13. Nothing silent, and the shelf it is kept on (2026-08-27)
+
+Two goals in one pass: **no state change goes unreported**, and the
+record of a delve becomes a document that can be saved, read later, and
+continued by the same party.
+
+### The audit that found real bugs, not gaps
+
+We built a runtime silence audit — snapshot the whole run state every
+tick, diff it, and ask whether anything the player could read that tick
+mentioned the change. It found two bugs, not stylistic gaps:
+
+| | silent |
+|---|---|
+| wounds | **47%** |
+| a hero dying | **it happened, and the Chronicle said nothing** |
+
+Neither was a missing line. The roster was snapshotted *after*
+`restStep()`, which burns the lamp and lets the dark take health and
+leave scars — so anyone the march killed was already filtered out before
+the comparison ran. Hoisting the snapshot fixed it, and immediately
+introduced a worse regression that an existing test caught: **36 of 40
+wipes lost their fall line**, because march deaths were now being
+classified after the room resolved and so swallowed everyone the room had
+killed.
+
+**NARR:** Two bugs in a row, in ten lines of code, both of them silence.
+That is the argument for not solving this with discipline.
+
+### So the guarantee is structural
+
+`tick()` now wraps its body and diffs on every exit path — including the
+half-dozen early returns for wipes, venom and the dark. A mechanic cannot
+dodge the record by returning early, because it does not control the
+exit. A field with no writing still produces an event with a fallback
+line rather than vanishing, which is what makes silence *impossible*
+rather than merely discouraged.
+
+**TCG:** And two layers, because "nothing silent" and "readable" pull
+against each other. The **ledger** records everything. The **prose** stays
+curated — the earlier lesson holds, six identical "the dark takes
+nothing" lines buried the beats that mattered — so every event carries a
+salience and only beats reach the story. A ledger nobody has to remember
+to write, plus prose somebody curated, answers both halves.
+
+### The saga
+
+A chronicle spans a campaign, not a delve. The same party descending
+again appends a chapter, so the document reads as one thing: Delve I,
+Delve II, and the scars carried between. It saves to localStorage after
+*every* delve (not just at the end — a player who shut the tab in town
+used to lose the story, the same silence problem one layer up), exports
+as JSON to keep or hand on, and renders as Markdown to simply read.
+
+Two more silent failures surfaced building it:
+
+- Serialising kit **by id** quietly lost anything the draft pool has
+  never heard of. A scroll from a library is `found-sp-fear-1`, a dead
+  adventurer's buckle is `found-buckle`; neither resolves, and both
+  vanished on load. Cards are stored whole now.
+- A **wiped party could be sent down again**, producing a delve that
+  ended on its first tick and appended an empty chapter. Resume now
+  reports who is left: *"0 still standing · 1 in reserve — this party can
+  delve again"*, or names the party that did not come back and offers the
+  story instead.
+
+### The asset pass
+
+**NARR:** Then we asked which cards were written for a game that no
+longer exists, and the answer was worse than expected: **all nine
+personalities touched none of the mechanics added this session.** They
+had opinions about monsters and none at all about walking in the dark or
+carrying a scar to the throne — which is now most of what a delve is.
+
+Nobody had done anything wrong. There was no moment in the workflow that
+asked the question.
+
+Every temper now has a stance on the two clocks. The Bold walk the dark
+like a road they know. The Craven creep and pay for creeping, but packed
+spare oil nobody is laughing about now. The Devout tend what the dungeon
+opens; the Reckless never stop to bind anything. Four idle items got a
+job the fiction already implied — an alembic that cooks a material down
+into lamp oil, mail that takes the worst of a blow, a buckler that turns
+aside half of what the party sets off, a charm that feeds a blaze.
+
+**TCG:** And the tooling caught itself being dishonest. The first audit
+called fifteen character cards "inert" because no mechanic named them by
+id — but a character participates through its *class*, which every system
+reads. A tool that cries wolf gets ignored, so it now reports class
+coverage instead. Honest count: 26 inert became 5, and those five are
+plain weapons that should stay plain.
+
+### What went into the environment
+
+Per the brief, three things outlive this session: **CLAUDE.md rules 7–9**
+(no state change is silent; a mechanic ships with its writing and its
+record; run the asset pass when a mechanic lands), **`tests/silence.test.js`**
+as a gate that fails if a field can move unreported, and
+**`ASSET_REVIEW.md`** with `npm run assets` as its work-list.
+
+**NARR:** The rule worth carrying is the small one: *a mechanic the
+player cannot see is a mechanic they cannot plan around* — and a bug the
+tests cannot see is a bug that ships. Both were true here, in the same
+ten lines.
