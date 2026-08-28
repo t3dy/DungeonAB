@@ -18,7 +18,9 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { getAllCards, CARD_TYPES } from '../src/game/Cards.js';
+import { getAllCards, CARD_TYPES, CHARACTER_CARDS, CLASSES } from '../src/game/Cards.js';
+import { Simulator } from '../src/sim/Simulator.js';
+import { SeededRandom } from '../src/draft/PackDraft.js';
 import { MATTER, hasReaction, REACTIVE_ELEMENTS } from '../src/world/Reactions.js';
 import { STANCES } from '../src/game/Personalities.js';
 
@@ -97,6 +99,83 @@ export function auditAssets() {
   return report;
 }
 
+/**
+ * Does a card's promise ever actually happen?
+ *
+ * "Inert" above is a static question: does any mechanic read this card?
+ * The sharper one is dynamic — hand the card to a party, send them
+ * down, and see whether the thing the card says it does ever appears in
+ * what the player reads. A card that reaches a mechanic in the source
+ * and never fires in play is the same failure as a beat with no
+ * transcript (tools/census.mjs), one card down.
+ *
+ * Stat-only cards (a shield that is +3 defence and nothing else) have
+ * nothing to say and are excluded rather than flagged: their promise is
+ * the number on the card, which the roster already shows.
+ */
+const PROMISE = /:|when |against |before |every |each |instead|no longer|so a |and the /i;
+
+/** How an archetype refers to itself in the prose (game/Personalities.js). */
+const ARCHETYPE_VOICE = {
+  brave: 'the Bold', cunning: 'the Cunning', greedy: 'the Covetous',
+  scholarly: 'the Scholarly', pious: 'the Devout', reckless: 'the Reckless',
+  craven: 'the Craven',
+};
+const archetypeVoice = a => ARCHETYPE_VOICE[a] || null;
+
+export function firingRates(delves = 30) {
+  // A fixed spine of a party, so the only thing that changes between
+  // arms is the card under test
+  const base = [
+    CHARACTER_CARDS.find(c => c.class === CLASSES.FIGHTER),
+    CHARACTER_CARDS.find(c => c.class === CLASSES.CLERIC),
+    CHARACTER_CARDS.find(c => c.class === CLASSES.WIZARD),
+    CHARACTER_CARDS.find(c => c.class === CLASSES.ROGUE),
+  ].filter(Boolean);
+
+  const real = Math.random;
+  const stream = new SeededRandom('asset-firing');
+  Math.random = () => stream.next();
+  const rows = [];
+  try {
+    for (const card of getAllCards()) {
+      if (card.type === CARD_TYPES.CHARACTER) continue;      // always present by definition
+      // Only cards that promise something beyond a stat line
+      if (!PROMISE.test(card.text || '')) continue;
+      let met = 0;
+      for (let i = 0; i < delves; i++) {
+        const seed = `firing-${card.id}-${i}`;
+        const sim = new Simulator([...base, card], seed, i % 2 ? 'hard' : 'medium');
+        let guard = 0;
+        const lines = [];
+        while (!sim.gameOver && guard++ < 300) {
+          sim.tick();
+          const n = sim.lastNarration;
+          if (n) lines.push(n.resolution, n.aside);
+          // A prep names its card in `source` and often not in its
+          // text — the greatsword's line says "the greatsword", not
+          // "the Greatsword of the Vault" — so matching the prose alone
+          // read three live cards as dead.
+          for (const prep of sim.lastResult?.preps || []) lines.push(prep.source, prep.text);
+        }
+        lines.push(...sim.log);
+        // A personality speaks as its archetype ("the Cunning trimmed
+        // the wick"), never as its own name — most of them are *called*
+        // their archetype, so only the odd one out looked dead. That is
+        // a naming artifact, not a silent card, and a tool that cries
+        // wolf gets ignored.
+        const names = [card.name];
+        if (card.archetype) names.push(archetypeVoice(card.archetype));
+        if (lines.some(l => l && names.some(n => n && l.includes(n)))) met++;
+      }
+      rows.push({ card, rate: met / delves });
+    }
+  } finally {
+    Math.random = real;
+  }
+  return rows.sort((a, b) => a.rate - b.rate);
+}
+
 function main() {
   const { byType, inert, matterGaps } = auditAssets();
   const total = Object.values(byType).reduce((s, r) => s + r.length, 0);
@@ -125,6 +204,19 @@ function main() {
     console.log(`\n⚠ ${matterGaps.length} matter(s) no element touches: ${matterGaps.map(g => g.matter).join(', ')}`);
   }
   console.log(`\n${inert.length} of ${total} cards touch nothing added since they were written.`);
+
+  /* ---- and how often each promise is actually kept ----------------- */
+  const FLOOR = 0.1;
+  const firing = firingRates();
+  const cold = firing.filter(r => r.rate < FLOOR);
+  console.log(`\nPromises kept — how often a drafted card's own writing shows up (${firing.length} cards that promise something):\n`);
+  for (const r of firing.slice(0, 14)) {
+    console.log(`  ${r.card.name.padEnd(28)} ${(r.rate * 100).toFixed(0).padStart(4)}% of delves${r.rate < FLOOR ? '  ⚠' : ''}`);
+  }
+  if (firing.length > 14) console.log(`  … ${firing.length - 14} more, all above ${(firing[14].rate * 100).toFixed(0)}%`);
+  console.log(cold.length
+    ? `\n${cold.length} card${cold.length === 1 ? '' : 's'} whose writing the player almost never sees: ${cold.map(r => r.card.name).join(', ')}`
+    : '\nEvery card that promises something keeps it in at least one delve in ten.');
 }
 
 if (process.argv[1] && process.argv[1].endsWith('assets.mjs')) main();

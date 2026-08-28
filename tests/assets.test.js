@@ -13,7 +13,7 @@
 
 import { strict as assert } from 'assert';
 import { STANCES, STANCED, personalityModifiers } from '../src/game/Personalities.js';
-import { auditAssets } from '../tools/assets.mjs';
+import { auditAssets, firingRates } from '../tools/assets.mjs';
 import { MATTER, hasReaction, REACTIVE_ELEMENTS } from '../src/world/Reactions.js';
 import { Party, DARK_TOLL } from '../src/agents/Party.js';
 import { Adventurer } from '../src/agents/Adventurer.js';
@@ -178,6 +178,25 @@ describe('The drift audit is honest about what it finds', () => {
     assert.ok(Object.keys(report.byType).length >= 4, 'it sees every card type');
     assert.ok(Array.isArray(report.inert));
     assert.deepEqual(report.matterGaps, [], 'and nothing is unanswered right now');
+  });
+});
+
+describe('A card that promises something keeps it', () => {
+  test('every promise fires in at least one delve in ten', () => {
+    // "Inert" is a static question: does any mechanic read this card?
+    // The sharper one is dynamic — hand the card to a party, send them
+    // down, and see whether what the card says it does ever reaches
+    // what the player reads. Eyes of the Mouse fired every time and was
+    // never named for it, so a player who drafted it could not tell it
+    // was working.
+    //
+    // Stat-only cards are excluded by the tool: their promise is the
+    // number on the card, which the roster already shows.
+    const cold = firingRates(20)
+      .filter(r => r.rate < 0.1)
+      .map(r => `${r.card.name} (${(r.rate * 100).toFixed(0)}%)`);
+    assert.deepEqual(cold, [],
+      `cards whose writing the player almost never sees: ${cold.join(', ')}`);
   });
 });
 

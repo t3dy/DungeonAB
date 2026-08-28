@@ -170,7 +170,7 @@ They might have chosen to rest and heal, or move on — the Reckless did not wai
 
 ⛏️ The party strips 30 gold of leaf from the altar. The next disaster will hit harder for it.
 
-_👁️ Borrowed night-sight leads them through whole — none of the usual 3 damage._
+_👁️ Eyes of the Mouse leads them through whole — none of the usual 3 damage._
 
 <details><summary>Ledger</summary>
 
@@ -178,7 +178,7 @@ _👁️ Borrowed night-sight leads them through whole — none of the usual 3 d
 - 🏅 30 renown earned.
 - ⛧ The party has taken something the dungeon considers its own. It will remember.
 - 🚪 1 more room behind them.
-- · 👁️ Borrowed night-sight leads them through whole — none of the usual 3 damage.
+- · 👁️ Eyes of the Mouse leads them through whole — none of the usual 3 damage.
 - · 🕯️ Room 9: shrine — desecrate
 
 </details>

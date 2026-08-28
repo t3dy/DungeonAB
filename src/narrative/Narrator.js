@@ -567,9 +567,9 @@ const SUPPLY_LINES = {
     (name, full) => `🪶 ${name} means the floor never tells them what they hit. Nothing does: ${full} damage avoided.`,
   ],
   'dark-seen': [
-    full => `👁️ The dark is no trouble to eyes that know it: the party walks on, ${full} damage unpaid.`,
-    full => `👁️ Someone in the party reads the black like a page, and the march costs nothing.`,
-    full => `👁️ Borrowed night-sight leads them through whole — none of the usual ${full} damage.`,
+    (name, full) => `👁️ ${name} makes the dark no trouble: the party walks on, ${full} damage unpaid.`,
+    (name, full) => `👁️ ${name} reads the black like a page, and the march costs nothing.`,
+    (name, full) => `👁️ ${name} leads them through whole — none of the usual ${full} damage.`,
   ],
 };
 
@@ -601,10 +601,9 @@ export function composeSupply(note) {
   }
   const pool = SUPPLY_LINES[note.kind];
   if (!pool) return null;
-  if (note.kind === 'conjured' || note.kind === 'sure-footed') {
+  if (note.kind === 'conjured' || note.kind === 'sure-footed' || note.kind === 'dark-seen') {
     return pick(pool)(note.source, note.full);
   }
-  if (note.kind === 'dark-seen') return pick(pool)(note.full);
   return pick(pool)(note.supply);
 }
 

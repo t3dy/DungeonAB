@@ -1272,3 +1272,43 @@ The same sweep turned up an older flake of exactly this shape:
 fight against a single fight, and returned 11 rounds against 10 about
 once in twelve runs. Twenty-five fights an arm, compared as means
 through `armsDiffer`, and it stops lying in both directions.
+
+
+## 17. Promises kept — the asset audit's second question (2026-08-27)
+
+**TCG:** `npm run assets` has always asked a static question: does any
+mechanic read this card? Every card passed. The sharper question is
+dynamic — hand the card to a party, send them down thirty times, and
+see whether the thing the card *says it does* ever reaches what the
+player reads.
+
+Five cards came back at zero. Three were the tool's fault and worth
+recording, because they are the shape of mistake this kind of
+instrument makes:
+
+- **The Greatsword, the Bandolier and the Quicksilver Daggers** all
+  fire constantly. Their prep lines name them in `source` and not in
+  the prose — the greatsword's line says "the greatsword", not "the
+  Greatsword of the Vault" — so a text-only matcher read three live
+  cards as dead.
+- **The Tinkerer** looked dead because a personality speaks as its
+  *archetype*, and most personality cards are named after theirs. The
+  Tinkerer is the odd one out, so it was the only one that looked
+  silent. A tool that cries wolf gets ignored.
+
+**NARR:** And one was real. **Eyes of the Mouse** covers the dark toll
+every single march, and its three lines are *"The dark is no trouble to
+eyes that know it"*, *"Someone in the party reads the black like a
+page"*, *"Borrowed night-sight leads them through whole"*. Not one of
+them names the card. Feather Step, which does the same job by a
+different route, has always said which working carried the party
+through. So a player who drafted Eyes of the Mouse read three lines
+about night-sight and had no way to know they were reading about their
+own pick — the card was mechanically alive and narratively invisible.
+
+Zero to 83% of delves, from naming it.
+
+This is the same lesson as the boss unleash one section up, from the
+other end: there, a mechanic ran with no line at all; here, the lines
+existed and credited nobody. Both are only visible if you ask how often
+a thing is *read*, rather than whether it *exists*.

@@ -56,6 +56,11 @@ tests/                   ← Node test runner suites
 9. **When a mechanic lands, run the asset pass**: ask which existing cards, classes and
    personalities should now interact with it, and redesign the ones written for a game that no
    longer exists. Mechanics drift ahead of assets otherwise. See `ASSET_REVIEW.md`.
+   `npm run assets` asks two questions: does any mechanic *read* this card (static), and does
+   the thing the card promises ever *reach the player* (dynamic, measured over real delves).
+   `tests/assets.test.js` gates the second at one delve in ten.
+   *Why the second question exists:* Eyes of the Mouse fired on every dark march and its
+   three lines never named it, so a player who drafted it could not tell it was working.
 10. **Balance is measured, not judged**: the curve is 99/88/71/45 and every mechanic or
    asset change moves it. `npm run calibrate` reports the drift and `--write` searches for
    new constants; `npm run bench` regenerates `MINING_REPORT.md`, which stamps the

@@ -503,8 +503,13 @@ export class Party {
         : null;
     }
     if (this.canSeeInDark()) {
+      // Name the working that saved them. Feather Step's lines have
+      // always said which card carried the party through the dark and
+      // these did not, so a player who drafted Eyes of the Mouse could
+      // not tell it was doing anything (tools/assets.mjs firing rates).
+      const seen = this.grimoire.find(sp => sp.id === 'sp-eyes');
       return announce('dark-seen')
-        ? { kind: 'dark-seen', supply: 0, full: DARK_TOLL }
+        ? { kind: 'dark-seen', supply: 0, full: DARK_TOLL, source: seen?.name || 'night-sight' }
         : null;
     }
     this.darkCovered = null;
