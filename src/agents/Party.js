@@ -126,6 +126,10 @@ export class Party {
       this.assignEquipment(eq);
     }
 
+    // Kit nobody is carrying right now — displaced by an outfitting
+    // swap, or bought in town and not yet handed to anybody
+    this.pack = [];
+
     // The lantern's reserve, spent on the march (see restStep)
     this.supply = STARTING_SUPPLY;
     this.marches = 0;
@@ -170,6 +174,122 @@ export class Party {
     return target;
   }
 
+  /* ---------------------------------------------------------------- */
+  /* Outfitting — the player's hand on the kit                        */
+  /* ---------------------------------------------------------------- */
+
+  /**
+   * Move a piece of equipment to a named member.
+   *
+   * The draft assigns kit by best fit, which is a sensible default and
+   * not a decision. This is the decision: the player can put the Tower
+   * Shield on whoever is holding the door. A member carries one piece
+   * per slot, so moving a weapon onto someone who has one hands theirs
+   * back to the pack rather than silently stacking.
+   *
+   * Returns { moved, from, to, displaced } or null if nothing moved.
+   */
+  equipTo(cardId, memberName) {
+    const target = [...this.members, ...this.reserve].find(m => m.name === memberName);
+    if (!target) return null;
+    let from = null;
+    let card = null;
+    for (const m of [...this.members, ...this.reserve]) {
+      const at = m.equipment.findIndex(e => e.id === cardId);
+      if (at >= 0) { from = m; card = m.equipment[at]; break; }
+    }
+    // Not on anybody: it may be in the pack
+    if (!card) {
+      const at = this.pack.findIndex(e => e.id === cardId);
+      if (at < 0) return null;
+      card = this.pack[at];
+    }
+    if (from === target) return { moved: card, from: target, to: target, displaced: null };
+
+    // The slot it wants, freed on the way in
+    let displaced = null;
+    if (card.slot) {
+      const clash = target.equipment.findIndex(e => e.slot === card.slot);
+      if (clash >= 0) displaced = target.equipment.splice(clash, 1)[0];
+    }
+    if (from) from.equipment = from.equipment.filter(e => e.id !== cardId);
+    else this.pack = this.pack.filter(e => e.id !== cardId);
+    target.equip(card);
+    // A displaced piece goes back to whoever gave this one up, if they
+    // have the slot free; otherwise it waits in the pack
+    if (displaced) {
+      const free = from && !from.equipment.some(e => e.slot === displaced.slot);
+      if (free) from.equip(displaced);
+      else this.pack.push(displaced);
+    }
+    this.applyTemper();
+    return { moved: card, from, to: target, displaced };
+  }
+
+  /** Take a piece off and leave it with the pack. */
+  unequip(cardId) {
+    for (const m of [...this.members, ...this.reserve]) {
+      const at = m.equipment.findIndex(e => e.id === cardId);
+      if (at >= 0) {
+        const [card] = m.equipment.splice(at, 1);
+        this.pack.push(card);
+        this.applyTemper();
+        return card;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Say who prepares a working.
+   *
+   * A grimoire is the party's, but somebody has to have studied the
+   * thing. The named caster's mind sets the working's power, so putting
+   * Fireball in the wizard's hands is worth more than leaving it with
+   * the fighter — and it is a decision the player can now make.
+   */
+  assignCaster(spellId, memberName) {
+    const spell = this.grimoire.find(s => s.id === spellId);
+    if (!spell) return null;
+    if (!memberName) { delete spell.casterUid; delete spell.casterName; return spell; }
+    const caster = this.members.find(m => m.name === memberName || m.uid === memberName);
+    if (!caster) return null;
+    // Held by the body, not by the name: renaming a caster must not
+    // quietly hand their working back to the party (tests/outfitting).
+    spell.casterUid = caster.uid;
+    spell.casterName = caster.name;
+    return spell;
+  }
+
+  /** Who prepares this working, if anybody living does. */
+  casterOf(spell) {
+    if (!spell?.casterUid) return null;
+    return this.living().find(m => m.uid === spell.casterUid) || null;
+  }
+
+  /**
+   * Rename a member and keep everything that pointed at them pointing
+   * at them — the grimoire's display names, chiefly.
+   */
+  renameMember(member, name) {
+    if (!member) return null;
+    const renamed = member.rename(name);
+    for (const spell of this.grimoire) {
+      if (spell.casterUid === member.uid) spell.casterName = renamed;
+    }
+    return renamed;
+  }
+
+  /**
+   * The mind that powers a working: its named caster while they live,
+   * the sharpest mind in the party otherwise. A dead caster must not
+   * quietly turn the grimoire off.
+   */
+  mindFor(spell) {
+    const caster = this.casterOf(spell);
+    return caster ? caster.mind : this.bestMind();
+  }
+
   /**
    * The whole band, saveable.
    *
@@ -191,6 +311,7 @@ export class Party {
       score: this.score,
       materials: this.materials,
       potions: this.potions.map(x => ({ ...x })),
+      pack: this.pack.map(e => ({ ...e })),
       supply: this.supply,
       spellsLearned: this.spellsLearned,
       poisonLinger: this.poisonLinger || 0,
@@ -233,6 +354,7 @@ export class Party {
     party.score = saved.score || 0;
     party.materials = saved.materials || 0;
     party.potions = (saved.potions || []).map(x => ({ ...x }));
+    party.pack = (saved.pack || []).map(rehydrate).filter(Boolean);
     party.supply = saved.supply ?? party.supply;
     party.spellsLearned = saved.spellsLearned || 0;
     party.poisonLinger = saved.poisonLinger || 0;
@@ -617,7 +739,7 @@ export class Party {
     // why every spell in the game measured 15-20 win points behind an
     // equipment card (DESIGN_DIALOGUE.md §8).
     const hasWizard = this.hasClass(CLASSES.WIZARD);
-    const power = spell.power + Math.floor(this.bestMind() / 2) + (hasWizard ? 2 : 0);
+    const power = spell.power + Math.floor(this.mindFor(spell) / 2) + (hasWizard ? 2 : 0);
     const burns = spell.source === 'found';
     if (burns) {
       this.grimoire.splice(idx, 1);      // a sealed scroll is one cast

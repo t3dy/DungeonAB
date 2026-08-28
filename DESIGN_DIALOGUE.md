@@ -1377,3 +1377,53 @@ The tool prints its own band now, and refuses to let a number be read
 as signal until it clears it. A measurement instrument that does not
 report its noise is how a design session spends an hour tuning a
 constant that was never moving.
+
+
+## 19. The muster, and a shop worth visiting (2026-08-28)
+
+**NARR:** Two requests in one note: *let the party spend money at shops
+in town*, and *let the player assign what they drafted to particular
+characters, rename them, write a backstory*. The second is the one that
+changes the game, because until now the draft handed kit out by best
+fit and that was the end of the player's involvement with their own
+party.
+
+### Assignment has to be worth something
+
+**TCG:** Moving the Tower Shield is easy to build and easy to make
+meaningless. The question is whether *who holds a thing* has any
+mechanical weight, and for equipment it plainly does — the wearer's
+stats are what the fight reads. For **spells** it did not: power came
+from `bestMind()`, the sharpest mind in the party, wherever the book
+happened to be.
+
+So a working now has a **caster**, and its power comes from that
+character's mind. Handing Fireball to the fighter is a real mistake you
+can make, which is what makes handing it to the wizard a real decision.
+A dead caster falls back to the sharpest survivor rather than turning
+the working off — a party should not lose its grimoire because the
+wizard died in room three.
+
+### The test found the bug a rename would have caused
+
+The caster was stored as a *name*, and the outfitting screen also lets
+you rename people. `tests/outfitting` caught it on the first run:
+rename the wizard, and their working silently reverted to the party's
+best mind. Bodies have a `uid` now, and the name is only what gets
+printed.
+
+### The shop had to be priced, not invented
+
+**TCG:** `game/Costing.js` already scores every card, so the shop reads
+its prices off the model rather than a hand-written table — a new card
+in the pool is priced by what it actually does, without anybody
+remembering to add a line. But the model's totals span 2.5 to 60,
+because a per-round effect is worth twelve times a one-shot, and a flat
+multiple asked **388 gold for Fireball and 22 for the lockpicks**.
+
+The fix was to price it against the town rather than against the model:
+instrumented, a party comes out of a delve with a median of 67 gold, a
+hire costs 42, a full heal about 7. Kit at 35–140 makes a town visit
+worth exactly one purchase, which is a decision. Buying stays a worse
+deal than drafting on purpose — the draft is the game, and the shop is
+the consolation for a draft that went badly.

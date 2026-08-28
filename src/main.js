@@ -7,6 +7,7 @@ import { PackDraft } from './draft/PackDraft.js';
 import { DraftUI } from './ui/DraftUI.js';
 import { DungeonRenderer } from './ui/DungeonRenderer.js';
 import { IsoDungeonRenderer } from './ui/IsoDungeonRenderer.js';
+import { renderOutfitting } from './ui/OutfitUI.js';
 import { Campaign, TOWN_PRICES } from './game/Campaign.js';
 import { PARTY_CAP } from './agents/Party.js';
 import { composeTownInterlude } from './narrative/Narrator.js';
@@ -400,7 +401,35 @@ function startDelve({ pool, difficulty, seed, condition, hexTarget, hexCondition
     showToast(laid.icon, `Your hex — ${laid.name} — settles over ${victim?.name || 'a rival'}'s run.`, 'boss');
   }
 
-  beginDelve(appState.campaign.nextDelve());
+  // The muster: kit is dealt out by best fit, and this is where the
+  // player overrules that, says who prepares which working, and names
+  // their own (ui/OutfitUI.js). Skippable in one click, and reachable
+  // again from town before every delve after this one.
+  showMuster(appState.campaign, '⛏️ March on the Dungeon', () => {
+    beginDelve(appState.campaign.nextDelve());
+  });
+}
+
+/**
+ * The outfitting screen, over the same panel the town uses.
+ */
+function showMuster(campaign, doneLabel, onDone) {
+  const display = document.getElementById('gameover-display');
+  display.innerHTML = '';
+  const body = document.createElement('div');
+  display.appendChild(body);
+  renderOutfitting(body, campaign.party, {
+    doneLabel,
+    onChange: () => {
+      if (appState.simulator) updateUI(appState.simulator.getState());
+    },
+    onDone: () => {
+      display.classList.remove('active');
+      display.innerHTML = '';
+      onDone();
+    },
+  });
+  display.classList.add('active');
 }
 
 /**
@@ -800,6 +829,48 @@ function showTown(state) {
         render();
       },
       `font-size:0.82rem;padding:0.6rem;background:#26200f;color:#e0c88a;`,
+    );
+
+    // The quartermaster: a shelf of three, priced by what each card
+    // actually does (Campaign.shopPrice) and gone once bought
+    const offers = campaign.shopOffers();
+    if (offers.length > 0) {
+      const shopLabel = document.createElement('div');
+      shopLabel.style.cssText = 'margin-top:1rem;color:#887755;font-size:0.8rem;';
+      shopLabel.textContent = '🏪 The quartermaster — what the road down is selling:';
+      display.appendChild(shopLabel);
+
+      for (const offer of offers) {
+        const c = offer.card;
+        const kind = c.type === 'spell' ? 'a working for the grimoire' : `${c.slot || 'trinket'}`;
+        btn(
+          `${c.icon} ${c.name} (${kind}) — ${offer.price}g`,
+          gold >= offer.price,
+          () => {
+            const sale = campaign.buyFromShop(c.id);
+            if (sale) {
+              showToast(c.icon, sale.wearer
+                ? `${sale.card.name} bought, and handed to ${sale.wearer.name}.`
+                : `${sale.card.name} bought and copied into the grimoire.`, 'room');
+            }
+            render();
+          },
+          'font-size:0.82rem;padding:0.6rem;background:#1b2119;color:#a8c8a0;',
+        );
+      }
+    }
+
+    // ...and the muster, so a purchase can be put in the right hands
+    btn(
+      '🎒 The Muster — kit, workings, and who they are',
+      true,
+      () => {
+        showMuster(campaign, '🏘️ Back to Town', () => {
+          display.classList.add('active');
+          render();
+        });
+      },
+      'margin-top:0.8rem;font-size:0.86rem;padding:0.65rem;background:#22201a;color:#d8c9a3;',
     );
 
     btn(

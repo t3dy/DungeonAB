@@ -13,13 +13,32 @@ import { CLASSES } from '../game/Cards.js';
 export const WOUND_THRESHOLD = 0.25;
 export const WOUND_COST = 2;
 
+/**
+ * A stable handle for one body in the party.
+ *
+ * Not the card id — a party can hold two Sister Benedictas — and not
+ * the name, because the player may rename anybody at any time, and a
+ * working assigned to "Melchior" must not come unstuck the moment its
+ * caster is renamed. Counted per session; saves carry it.
+ */
+let nextUid = 1;
+
 export class Adventurer {
   constructor(card) {
+    this.uid = `adv-${nextUid++}`;
     this.id = card.id;
     this.name = card.name;
+    this.cardName = card.name;      // what the card called them, before any rename
     this.class = card.class;
     this.icon = card.icon;
     this.trait = card.trait || '';
+
+    // Who the player says this is. A drafted card arrives with a name
+    // and a trait line; the player may keep them, rename the character,
+    // or write their own history. Both travel with the party through
+    // saves and both are read back in the saga (narrative/Chronicle.js).
+    this.givenName = null;      // set only when the player renames
+    this.backstory = '';
 
     // Base stats from the card
     this.maxHealth = card.stats.health;
@@ -121,17 +140,38 @@ export class Adventurer {
    */
   toJSON() {
     return {
-      id: this.id, name: this.name,
+      uid: this.uid, id: this.id, name: this.name,
+      givenName: this.givenName, backstory: this.backstory,
       health: this.health, wounds: this.wounds, alive: this.alive,
       equipment: this.equipment.map(e => ({ ...e })),
       weaponMods: this.weaponMods.map(w => ({ ...w })),
     };
   }
 
+  /**
+   * The player renames a character. An empty name gives the card's own
+   * name back rather than leaving a nameless adventurer in the roster.
+   */
+  rename(name) {
+    const trimmed = String(name || '').trim().slice(0, 40);
+    this.givenName = trimmed || null;
+    this.name = trimmed || this.cardName;
+    return this.name;
+  }
+
+  /** A line the player wrote about who this is. */
+  setBackstory(text) {
+    this.backstory = String(text || '').trim().slice(0, 400);
+    return this.backstory;
+  }
+
   /** Restore onto a freshly built Adventurer. */
   restore(saved, lookup = () => null) {
     if (!saved) return this;
+    this.uid = saved.uid || this.uid;
     this.name = saved.name ?? this.name;
+    this.givenName = saved.givenName ?? null;
+    this.backstory = saved.backstory || '';
     this.health = Math.min(this.maxHealth, saved.health ?? this.health);
     this.wounds = saved.wounds ?? 0;
     this.alive = saved.alive !== false;

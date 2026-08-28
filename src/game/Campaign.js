@@ -11,7 +11,8 @@
 import { Party } from '../agents/Party.js';
 import { Simulator } from '../sim/Simulator.js';
 import { SeededRandom } from '../draft/PackDraft.js';
-import { CHARACTER_CARDS } from '../game/Cards.js';
+import { CHARACTER_CARDS, EQUIPMENT_CARDS, SPELL_CARDS } from '../game/Cards.js';
+import { costCard } from '../game/Costing.js';
 
 export const TOWN_PRICES = {
   healPerHp: 2,     // gold per missing health point
@@ -19,7 +20,33 @@ export const TOWN_PRICES = {
   piousDiscount: 0.75, // temples like the Devout
   forge: 20,        // the smith's fee, before depth
   forgeMod: { name: "smith's edge", attack: 2 }, // what sharpening buys
+  // What the quartermaster charges, mapped off what a card is worth.
+  // Priced against the rest of the town: a party leaves a delve with a
+  // median of 67 gold, a hire asks 42, and a full heal is about 7
+  // because wounds do not mend for coin. So kit runs 35-140 and a town
+  // visit buys roughly one thing.
+  //
+  // Not a flat multiple of the cost model: its totals run 2.5 to 60,
+  // because a per-round effect is worth twelve times a one-shot, and a
+  // flat markup priced Fireball at 388 gold and the lockpicks at 22.
+  // The curve compresses that into a range a purse can reach.
+  shopBase: 35,
+  shopPerWorth: 1.8,
 };
+
+/**
+ * What the quartermaster asks for a piece of kit.
+ *
+ * Priced off the cost model rather than by hand, so a shop stocking a
+ * new card charges for what the card actually does (game/Costing.js) —
+ * and deepens with the campaign, because a shop this far down is the
+ * only shop there is.
+ */
+export function shopPrice(card, depth = 1) {
+  const worth = Math.max(1, costCard(card).total);
+  const price = TOWN_PRICES.shopBase + worth * TOWN_PRICES.shopPerWorth;
+  return Math.round(price * (1 + 0.12 * (depth - 1)));
+}
 
 /** The gold a recruit asks for, by their worth and how deep you are. */
 export function hireCost(card, depth = 1) {
@@ -114,6 +141,63 @@ export class Campaign {
     this.party.gold -= TOWN_PRICES.potion;
     this.party.potions.push({ kind: 'healing-draught', heal: 6 });
     return true;
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* The quartermaster — a shop with a stock, not a vending machine    */
+  /* ---------------------------------------------------------------- */
+
+  /**
+   * Three pieces of kit for sale, priced by what they do and how deep
+   * the campaign has gone. Deterministic per (seed, depth) and stable
+   * across re-renders, and it never offers what the party already
+   * carries: a second Tower Shield is not a shop, it is a bug.
+   */
+  shopOffers() {
+    if (this._shopDepth !== this.depth) {
+      const rng = new SeededRandom(`${this.seed}-shop-${this.depth}`);
+      const held = new Set([
+        ...this.party.members.flatMap(m => m.equipment.map(e => e.id)),
+        ...this.party.reserve.flatMap(m => m.equipment.map(e => e.id)),
+        ...this.party.pack.map(e => e.id),
+        ...this.party.grimoire.map(s => s.id),
+      ]);
+      const stock = [...EQUIPMENT_CARDS, ...SPELL_CARDS]
+        .filter(c => !held.has(c.id) && !c.cursed);
+      this._shopOffers = rng.shuffle(stock).slice(0, 3).map(card => ({
+        card,
+        price: shopPrice(card, Math.max(1, this.depth)),
+      }));
+      this._shopDepth = this.depth;
+    }
+    return this._shopOffers.filter(o => o);
+  }
+
+  /**
+   * Buy one. Equipment goes to a named member if the caller says so,
+   * and to best fit otherwise; a working joins the grimoire. Returns
+   * { card, price, wearer } or null when the purse says no.
+   */
+  buyFromShop(cardId, memberName = null) {
+    const offers = this.shopOffers();
+    const offer = offers.find(o => o.card.id === cardId);
+    if (!offer || this.party.gold < offer.price) return null;
+
+    this.party.gold -= offer.price;
+    const card = { ...offer.card };
+    let wearer = null;
+    if (card.type === 'spell') {
+      this.party.grimoire.push({ ...card, source: 'bought' });
+    } else if (memberName) {
+      this.party.pack.push(card);
+      wearer = this.party.equipTo(card.id, memberName)?.to || null;
+      if (!wearer) wearer = this.party.assignEquipment(card);
+    } else {
+      wearer = this.party.assignEquipment(card);
+    }
+    const at = this._shopOffers.findIndex(o => o && o.card.id === cardId);
+    this._shopOffers[at] = null;      // sold: the shop had one
+    return { card, price: offer.price, wearer };
   }
 
   /* ---------------------------------------------------------------- */
