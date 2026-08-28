@@ -114,26 +114,29 @@ export const ROOM_SHAPES = {
  * monster all fit with room to swing (Party.PARTY_CAP).
  */
 const ROOM_GEOMETRY = {
-  entrance:  [{ shape: 'chamber', min: [5, 5], max: [6, 6] }, { shape: 'hall', min: [7, 4], max: [9, 4] }],
-  corridor:  [{ shape: 'passage', min: [6, 2], max: [10, 3] }, { shape: 'hall', min: [7, 3], max: [9, 4] }],
-  monster:   [{ shape: 'chamber', min: [5, 5], max: [7, 7] }, { shape: 'cavern', min: [7, 5], max: [10, 8] }, { shape: 'hall', min: [8, 4], max: [11, 5] }],
-  trap:      [{ shape: 'passage', min: [6, 3], max: [9, 3] }, { shape: 'chamber', min: [5, 4], max: [6, 5] }],
-  treasure:  [{ shape: 'cell', min: [4, 4], max: [5, 5] }, { shape: 'chamber', min: [5, 5], max: [6, 6] }],
-  library:   [{ shape: 'hall', min: [8, 5], max: [12, 6] }, { shape: 'chamber', min: [6, 6], max: [8, 8] }],
-  shrine:    [{ shape: 'rotunda', min: [6, 6], max: [8, 8] }, { shape: 'chamber', min: [5, 5], max: [6, 6] }],
-  lab:       [{ shape: 'chamber', min: [6, 5], max: [8, 7] }, { shape: 'hall', min: [8, 4], max: [10, 5] }],
-  materials: [{ shape: 'cavern', min: [6, 5], max: [9, 7] }, { shape: 'cell', min: [4, 4], max: [5, 5] }],
-  disaster:  [{ shape: 'cavern', min: [8, 6], max: [12, 9] }, { shape: 'hall', min: [9, 4], max: [12, 5] }],
+  entrance:  [{ shape: 'chamber', min: [7, 7], max: [9, 9] }, { shape: 'hall', min: [10, 6], max: [12, 6] }],
+  // A corridor stays tight on purpose: it is the room where a column is
+  // the only thing that fits, and formations mean nothing if every room
+  // is a ballroom (agents/Formation.js `fits`).
+  corridor:  [{ shape: 'passage', min: [7, 2], max: [12, 3] }, { shape: 'hall', min: [9, 4], max: [12, 5] }],
+  monster:   [{ shape: 'chamber', min: [8, 8], max: [11, 11] }, { shape: 'cavern', min: [11, 8], max: [15, 12] }, { shape: 'hall', min: [12, 6], max: [16, 8] }],
+  trap:      [{ shape: 'passage', min: [8, 3], max: [12, 4] }, { shape: 'chamber', min: [8, 6], max: [10, 8] }],
+  treasure:  [{ shape: 'cell', min: [5, 5], max: [7, 7] }, { shape: 'chamber', min: [8, 7], max: [10, 9] }],
+  library:   [{ shape: 'hall', min: [12, 7], max: [16, 8] }, { shape: 'chamber', min: [9, 9], max: [12, 12] }],
+  shrine:    [{ shape: 'rotunda', min: [9, 9], max: [12, 12] }, { shape: 'chamber', min: [8, 8], max: [10, 10] }],
+  lab:       [{ shape: 'chamber', min: [9, 8], max: [12, 10] }, { shape: 'hall', min: [12, 6], max: [14, 7] }],
+  materials: [{ shape: 'cavern', min: [9, 8], max: [13, 10] }, { shape: 'cell', min: [6, 5], max: [7, 7] }],
+  disaster:  [{ shape: 'cavern', min: [12, 9], max: [16, 13] }, { shape: 'hall', min: [13, 6], max: [16, 8] }],
   // The throne room is the biggest room in the dungeon by construction,
   // not by luck: its smallest footprint (120 tiles) beats the largest
   // any other type can roll (a 12x9 disaster cavern, 108).
-  boss:      [{ shape: 'cavern', min: [12, 10], max: [16, 12] }, { shape: 'hall', min: [14, 9], max: [18, 10] }],
-  vault:     [{ shape: 'cell', min: [4, 4], max: [5, 5] }],
-  stairs:    [{ shape: 'cell', min: [4, 4], max: [5, 5] }, { shape: 'rotunda', min: [5, 5], max: [6, 6] }],
+  boss:      [{ shape: 'cavern', min: [17, 14], max: [22, 17] }, { shape: 'hall', min: [20, 12], max: [24, 14] }],
+  vault:     [{ shape: 'cell', min: [6, 6], max: [8, 8] }],
+  stairs:    [{ shape: 'cell', min: [6, 6], max: [8, 8] }, { shape: 'rotunda', min: [7, 7], max: [9, 9] }],
 };
 
 /** The smallest floor a fight can happen on without feeling like a hallway. */
-export const COMBAT_FLOOR = { w: 5, h: 4 };
+export const COMBAT_FLOOR = { w: 7, h: 6 };
 
 /**
  * Roll a room's footprint. Orientation flips w/h half the time, so
@@ -749,8 +752,8 @@ export const DUNGEON_THEMES = {
 export const STAT_SCALE = {
   easy: 0.9,
   medium: 1.19,
-  hard: 1.45,
-  nightmare: 1.97,
+  hard: 1.44,
+  nightmare: 1.83,
 };
 
 /* ------------------------------------------------------------------ */

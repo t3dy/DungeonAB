@@ -101,28 +101,30 @@ export function wallSpans(length, doorCount) {
  * Deterministic: the same room always furnishes the same way.
  */
 export function featureSlots(room, x = 0, z = 0, count = 0) {
+  if (count <= 0) return [];
   const { hx, hz } = roomHalf(room);
   const { axis } = roomAxis(room);
-  const inset = 0.75;
-  // Along the short walls, offset back toward the party's end so the
-  // furniture frames the fight instead of standing in it
+  const inset = 0.9;
+  // Furniture lines the walls and the corners, leaving the middle for
+  // the ranks and the monster's end (partySlots / monsterSpot). Rooms
+  // hold up to five pieces now, so the ring has to be generated rather
+  // than listed: sides first, then corners, then the back wall.
   const lateral = Math.max(0.6, (axis === 'x' ? hz : hx) - inset);
   const depth = Math.max(0.6, (axis === 'x' ? hx : hz) - inset);
+  const along = axis === 'x'
+    ? (d, l) => ({ mx: x + depth * d, mz: z + lateral * l })
+    : (d, l) => ({ mx: x + lateral * l, mz: z + depth * d });
 
-  const candidates = axis === 'x'
-    ? [
-        { mx: x - depth * 0.15, mz: z - lateral },
-        { mx: x - depth * 0.15, mz: z + lateral },
-        { mx: x - depth * 0.8, mz: z - lateral * 0.55 },
-        { mx: x - depth * 0.8, mz: z + lateral * 0.55 },
-      ]
-    : [
-        { mx: x - lateral, mz: z - depth * 0.15 },
-        { mx: x + lateral, mz: z - depth * 0.15 },
-        { mx: x - lateral * 0.55, mz: z - depth * 0.8 },
-        { mx: x + lateral * 0.55, mz: z - depth * 0.8 },
-      ];
-  return candidates.slice(0, Math.max(0, count));
+  // Down-axis positions from the party's end toward the monster's, and
+  // the two walls either side of them, alternating so a room with three
+  // pieces does not stack them all on one side
+  const ring = [
+    along(-0.15, -1), along(-0.15, 1),      // midway, against both walls
+    along(-0.85, -0.95), along(-0.85, 0.95), // the corners behind the party
+    along(0.5, -1), along(0.5, 1),           // forward, still against the walls
+    along(0.9, -0.5), along(0.9, 0.5),       // the monster's end
+  ];
+  return ring.slice(0, Math.min(count, ring.length));
 }
 
 /**

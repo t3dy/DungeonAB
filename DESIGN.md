@@ -168,7 +168,7 @@ takes light away. The grimoire, the room and the lantern are one economy.
 
 ## Tactics — a skill tree gated by capability
 
-Thirteen tactics on four branches. The design rule: **a tactic is gated by
+Fifteen tactics on four branches. The design rule: **a tactic is gated by
 what a party can DO, not by what class it is.** Every class swings at
 something, so anyone benefits from Flanking; anything with a working in
 the grimoire benefits from Concentration. A card that read "fighters
@@ -182,6 +182,7 @@ character cards for that.
 | 🧠 **The Working** | Concentration — a working holds at *full* force | Widening — every combat spell becomes an area working |
 | ⏱️ **The Working** | Quickening — one more cast a room | Ward-Weaving — 2 less damage a round per spell loosed |
 | 🔧 **The Room** | Improvised Arms — +5 to any opening made from the furniture | Firewatch — no self-harm from your own reactions, and flame traps hold no surprises |
+| 🤜 **The Room** | Shove — any class can put a monster onto the spikes, into the pit, the fire or the crack, 2 harder | Pinning — 2 more damage again from anything the room does to a monster the party put there |
 | 🕯️ **The March** | Rationing — one more march of light | Field Surgery — two wounds close at every shrine, not only in town |
 | 🏕️ **The March** | Rationing | Cold Camp — a stairhead camp costs one supply instead of two, and nothing climbs the stair into it |
 
@@ -336,7 +337,9 @@ Rooms are **rectangles in tile space, not graph dots**. Each carries `w × h` an
 | `cell` | closet | vaults, treasure, oubliettes |
 | `rotunda` | round | shrines, wells |
 
-`ROOM_GEOMETRY` maps each room *function* to the shapes and sizes it may take, so structure follows purpose: a boss gets a 12×10-to-16×12 cavern — the largest room in the dungeon **by construction**: its smallest footprint (120 tiles) beats the largest any other type can roll (a 12×9 disaster cavern, 108), which the old numbers only managed by luck, a vault is 4×4. Fighting rooms are floored at `COMBAT_FLOOR` (5×4) — genuine floor space for four adventurers plus a monster, which the renderer draws literally.
+`ROOM_GEOMETRY` maps each room *function* to the shapes and sizes it may take, so structure follows purpose: a boss gets a 17×14-to-22×17 cavern — the largest room in the dungeon **by construction**, since its smallest footprint beats the largest any other type can roll — and a vault is a 6×6 closet. Fighting rooms are floored at `COMBAT_FLOOR` (7×6).
+
+**Rooms are half again as big as they were.** A fight is four adventurers in two ranks, a monster holding the far end, and furniture along the walls; at the old sizes that was a scrum on a doormat, and the camera drew each adventurer as six pixels. Chambers where fights happen now run 64–180 tiles, the camera frames the room the party is standing in rather than a fixed slab of dungeon, and **corridors stayed narrow on purpose** — a passage is the room where a column is the only formation that fits, and formations mean nothing if every room is a ballroom.
 
 Placement walks the spine outward, one axis at a time, rejecting any position whose footprint (plus a corridor gap) overlaps a placed room, and steering to keep the map roughly square rather than a 130-tile straight line. Tests enforce: no overlaps, every fighting room ≥ the combat floor, the boss is the biggest room, and the layout's aspect ratio stays under 4:1.
 
@@ -353,8 +356,15 @@ anvil, shelves, mirror**. Each is drawn with art already on the Kenney
 sheet, so the catalog was designed around tiles that exist rather than
 tiles we'd need.
 
+A room holds up to **five** pieces of furniture now, not three — the ceiling rises with the floor (`featureCapacity`), and the slots are generated around the real perimeter so a big cavern reads as a place with things in it rather than an empty warehouse.
+
 Features do three jobs:
 
+0. **Hazards you can put a monster into.** A pit, a bed of rusted floor
+   spikes, a crack across the floor, a lit brazier: the room is armed,
+   and the party can drive something onto it for a large opener
+   (11–21 damage, against a combat spell's eight-plus-sustain). This is
+   what the tactics tree's **Shove** is for — see below.
 1. **Passive modifiers.** Pillars, rubble and crates give **cover**
    (−1 incoming damage each, capped at 2 — furniture is not a
    fortress). A **mirror** negates the ethereal ×0.6 penalty exactly as

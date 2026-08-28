@@ -38,7 +38,9 @@ export const CASES = [
   // Chosen to end in a wipe: the set has to freeze a defeat as well as
   // victories, or the endings, the fall lines and the trophies-lost
   // writing are never exercised by a golden at all.
-  { name: 'nightmare-delve', seed: 'golden-fall', difficulty: 'nightmare' },
+  // Re-picked when rooms got bigger and the hazards got teeth: the old
+  // seed started winning, and three victories freeze no defeat at all.
+  { name: 'nightmare-delve', seed: 'golden-fall-1', difficulty: 'nightmare' },
 ];
 
 /**

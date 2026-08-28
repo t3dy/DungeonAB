@@ -95,7 +95,16 @@ function main() {
     process.exit(1);
   }
 
-  console.log(`Measuring on ${opts.difficulty}, ${opts.n} delves an arm.\n`);
+  // What this sample can and cannot resolve. Two arms of n delves at a
+  // win rate near p have a 95% band of 1.96*sqrt(2p(1-p)/n) on the
+  // difference — at the default 500 that is about six points, which is
+  // wide enough to read a dead card as a good one. Pinning measured
+  // +7.0, -2.0, +4.8, +0.2 and +3.8 on five consecutive 500-delve runs
+  // before a 2500-delve pair settled it at about +3.
+  const band = 1.96 * Math.sqrt(2 * 0.25 / opts.n) * 100;
+  console.log(`Measuring on ${opts.difficulty}, ${opts.n} delves an arm.`);
+  console.log(`Anything inside ±${band.toFixed(1)} points is noise at this sample`
+    + (band > 4 ? ' — raise it with --n for a conditional card.\n' : '.\n'));
   console.log('card                          win %   contribution   model');
   for (const id of ids) {
     const r = measureCard(id, opts);
@@ -107,7 +116,8 @@ function main() {
     );
   }
   console.log(`\nbaseline (no card): ${winRate([], opts).toFixed(1)}%`);
-  console.log('Contribution is the number that decides. The model column only screens.');
+  console.log(`Contribution is the number that decides, when it clears ±${band.toFixed(1)}.`);
+  console.log('The model column only screens.');
 }
 
 if (process.argv[1] && process.argv[1].endsWith('card.mjs')) main();

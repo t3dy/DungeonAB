@@ -152,6 +152,8 @@ const OPTION_PHRASES = {
   'camp-stair': 'camp at the stairhead first',
   // Using the room itself (world/RoomFeatures.js FEATURE_ACTIONS)
   'shove-into-pit': 'shove it into the pit',
+  'shove-onto-spikes': 'put it onto the floor spikes',
+  'shove-into-chasm': 'put it down the crack in the floor',
   'topple-boulder': 'topple the boulder onto it',
   'shove-into-brazier': 'shove it into the brazier',
   'drop-portcullis': 'drop the portcullis on it',
@@ -281,6 +283,10 @@ function composeFeatureUse(optionId, result) {
     switch (optionId) {
       case 'shove-into-pit':
         return `${icon} The party shoves the monster into ${name}: ${dealt} damage, and it has to climb back out.`;
+      case 'shove-onto-spikes':
+        return `${icon} The party drives the monster back onto ${name}: ${dealt} damage, and it has to pull itself off them.`;
+      case 'shove-into-chasm':
+        return `${icon} The party works the monster to the edge and puts it into ${name}: ${dealt} damage on the way down.`;
       case 'topple-boulder':
         return `${icon} The party topples ${name} down the slope onto the monster: ${dealt} damage.`;
       case 'shove-into-brazier':

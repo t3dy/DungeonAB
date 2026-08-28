@@ -126,6 +126,20 @@ export const FEATURES = {
     weight: 2, tags: ['study', 'flammable'],
     tell: 'Shelves sag under books nobody has audited in a century.',
   },
+  spikes: {
+    id: 'spikes', name: 'a bed of rusted floor spikes', icon: '🔻',
+    // No tile on the sheet for these: the renderer draws the icon as a
+    // marker instead (SpriteAtlas.getFeatureTile returns null)
+    rooms: ['monster', 'boss', 'trap', 'corridor'],
+    weight: 2, tags: ['hazard', 'sharp'],
+    tell: 'A bed of rusted spikes stands out of the floor, most of them still upright.',
+  },
+  chasm: {
+    id: 'chasm', name: 'a crack across the floor', icon: '🌑',
+    rooms: ['monster', 'boss', 'disaster', 'corridor'],
+    weight: 1.4, tags: ['hazard', 'deep'],
+    tell: 'A crack runs the width of the room, wide enough to matter and too wide to jump twice.',
+  },
   mirror: {
     id: 'mirror', name: 'a tall silvered mirror', icon: '🪞',
     tile: { col: 5, row: 8 },
@@ -139,8 +153,8 @@ export const FEATURES = {
 /**
  * Interactions: the extra options a feature offers, and what unlocks
  * them. A gate is any of `cls` (a living class), `item` (a drafted
- * equipment id), or `spell` (a grimoire id) — any one is enough to get
- * the option at all.
+ * equipment id), `spell` (a grimoire id), or `tactic` (drilled
+ * technique) — any one is enough to get the option at all.
  *
  * **Tools upgrade, they don't merely unlock.** A fighter can shove a
  * monster into a pit with their hands; a party with the Grapple and
@@ -155,15 +169,40 @@ export const FEATURES = {
  *
  * `openerDamage` interactions happen in a fight: use the room against
  * the monster, then swing. Everything else is a standalone action.
+ *
+ * **A hazard is not a nudge.** The first cut priced a shove into a pit
+ * at 5 damage, against a combat spell that opens for eight and keeps
+ * half of that every round after — so the room was always the worse
+ * plan, and measured, the tactic that opened hazards to everyone was
+ * worth *minus* 3.8 win points: it spent the party's opening on the
+ * weaker option. Putting a monster onto spikes now hits like the spell
+ * it competes with. See `npm run card tac-shove`.
  */
 export const FEATURE_ACTIONS = {
   'shove-into-pit': {
     feature: 'pit', name: 'Shove It In', desc: 'Put the pit between you and it',
-    gates: [{ cls: CLASSES.FIGHTER }, { item: 'eq-grapple' }],
-    fightOnly: true, openerDamage: 5,
+    gates: [{ cls: CLASSES.FIGHTER }, { tactic: 'tac-shove' }, { item: 'eq-grapple' }],
+    fightOnly: true, openerDamage: 11,
     // Roped and braced, you can put your weight into it and not follow
-    tool: { openerDamage: 12 },
+    tool: { openerDamage: 18 },
     weights: { reckless: 3, brave: 2, cunning: 2 },
+  },
+  'shove-onto-spikes': {
+    feature: 'spikes', name: 'Put It On the Spikes', desc: 'The floor is already armed',
+    gates: [{ cls: CLASSES.FIGHTER }, { tactic: 'tac-shove' }, { item: 'eq-tower-shield' }],
+    fightOnly: true, openerDamage: 12,
+    // A shield is a shovel for people: you drive it back rather than
+    // wrestle it, and you are not the one who ends up on the spikes
+    tool: { openerDamage: 19 },
+    weights: { reckless: 3, brave: 2, cunning: 1.5 },
+  },
+  'shove-into-chasm': {
+    feature: 'chasm', name: 'Put It In the Crack', desc: 'The floor already opened once',
+    gates: [{ cls: CLASSES.FIGHTER }, { tactic: 'tac-shove' }, { item: 'eq-grapple' }],
+    fightOnly: true, openerDamage: 13,
+    // Roped, the party can commit its whole weight and still stop
+    tool: { openerDamage: 21 },
+    weights: { reckless: 3, cunning: 2, craven: 1.5 },
   },
   'topple-boulder': {
     feature: 'boulder', name: 'Topple the Boulder', desc: 'Gravity does the first round',
@@ -175,10 +214,10 @@ export const FEATURE_ACTIONS = {
   },
   'shove-into-brazier': {
     feature: 'brazier', name: 'Shove It Into the Fire', desc: 'The brazier is right there',
-    gates: [{ cls: CLASSES.FIGHTER }, { item: 'eq-tinderbox' }, { spell: 'sp-kindle' }],
-    fightOnly: true, openerDamage: 4, element: 'fire',
+    gates: [{ cls: CLASSES.FIGHTER }, { tactic: 'tac-shove' }, { item: 'eq-tinderbox' }, { spell: 'sp-kindle' }],
+    fightOnly: true, openerDamage: 10, element: 'fire',
     // With an accelerant the brazier stops being a brazier
-    tool: { openerDamage: 11 },
+    tool: { openerDamage: 16 },
     weights: { reckless: 2.5, cunning: 1 },
   },
   'drop-portcullis': {
@@ -264,13 +303,22 @@ export const FEATURE_ACTIONS = {
 /* Generation                                                          */
 /* ------------------------------------------------------------------ */
 
-/** How many features a room of this size can hold without clutter. */
+/**
+ * How many features a room of this size can hold without clutter.
+ *
+ * Rooms got half again as big so that four adventurers, a monster and
+ * the furniture are all genuinely standing somewhere. Three pieces in a
+ * fifteen-by-twelve cavern is an empty warehouse, so the ceiling rises
+ * with the floor: a big chamber is a place with things in it.
+ */
 export function featureCapacity(room) {
   const area = (room.w || 4) * (room.h || 4);
   if (area < 18) return 0;          // a cell is furniture enough
   if (area < 32) return 1;
   if (area < 56) return 2;
-  return 3;
+  if (area < 90) return 3;
+  if (area < 140) return 4;
+  return 5;
 }
 
 /**
@@ -350,6 +398,10 @@ function gateOpen(gate, party, has) {
   if (gate.cls) return party.hasClass(gate.cls);
   if (gate.item) return has.item(gate.item);
   if (gate.spell) return has.spell(gate.spell);
+  // Training is the fourth key to the architecture. A drilled party
+  // does not need a fighter or a rope to put something in a hole: it
+  // has practised putting things in holes (game/Tactics.js).
+  if (gate.tactic) return !!has.tactic?.(gate.tactic);
   return false;
 }
 

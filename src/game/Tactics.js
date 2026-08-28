@@ -120,6 +120,26 @@ export const TACTICS = [
     effect: { featureOpener: 5 },
   },
   {
+    id: 'tac-shove', name: 'Shove', icon: '🤜', branch: 'room', tier: 1,
+    capability: 'attack',
+    text: 'Drilled to put a thing where the room wants it: any of them can shove a monster onto the spikes, into the pit, into the fire, or down the crack, and it goes in 2 harder.',
+    // A key AND a number. As a pure key it measured -0.3 +/- 2.8 over
+    // 2500 delves an arm -- worth nothing, because a party with a
+    // fighter could already shove and one without rarely met a hazard
+    // it wanted. That is the same result the feature-tools A/B got when
+    // the tools only unlocked: presence is not value here.
+    effect: { hazardShoves: true, hazardDamage: 2 },
+  },
+  {
+    id: 'tac-pinning', name: 'Pinning', icon: '📌', branch: 'room', tier: 2,
+    capability: 'attack', requires: 'tac-shove',
+    text: 'The shove becomes a place to hold it: 2 more damage from anything the room does to a monster the party put there.',
+    // Measured at 3 this was worth +7.0 win points -- three times any
+    // other tier two -- because hazard openers got big in the same pass
+    // and this multiplied all of them. The Rationing lesson, again.
+    effect: { hazardDamage: 2 },
+  },
+  {
     id: 'tac-firewatch', name: 'Firewatch', icon: '🧯', branch: 'room', tier: 2,
     capability: 'room', requires: 'tac-improvised',
     text: 'A party that sets the room alight knows where the fire will go: it takes nothing back from its own reactions, holds 1 more of the room as cover, and reads a flame trap for 3 less damage.',
@@ -230,8 +250,9 @@ export function tacticModifiers(party) {
   const mods = {
     flankDamage: 0, flankMin: 99, cover: 0, monsterAtk: 0, vsArmored: 0,
     extraCast: 0, wardPerCast: 0, featureOpener: 0, supply: 0, mendAtShrine: 0,
-    fireTrapSoak: 0, campSupply: 0,
+    fireTrapSoak: 0, campSupply: 0, hazardDamage: 0,
     sustainFull: false, allSpellsArea: false, noSelfHarm: false, campWatched: false,
+    hazardShoves: false,
     live: [],
   };
   for (const t of activeTactics(party)) {
@@ -249,7 +270,9 @@ export function tacticModifiers(party) {
     mods.mendAtShrine += e.mendAtShrine || 0;
     mods.fireTrapSoak += e.fireTrapSoak || 0;
     mods.campSupply += e.campSupply || 0;
+    mods.hazardDamage += e.hazardDamage || 0;
     if (e.campWatched) mods.campWatched = true;
+    if (e.hazardShoves) mods.hazardShoves = true;
     if (e.sustainFull) mods.sustainFull = true;
     if (e.allSpellsArea) mods.allSpellsArea = true;
     if (e.noSelfHarm) mods.noSelfHarm = true;

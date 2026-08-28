@@ -23,6 +23,7 @@ import { composePredicament, composeDeliberation, composeResolution } from '../s
 import { getFeatureTile } from '../src/ui/SpriteAtlas.js';
 import { featureSlots, roomHalf, partySlots, monsterSpot } from '../src/ui/RoomLayout.js';
 import { validateCard } from '../src/game/CardPacks.js';
+import { getTactic } from '../src/game/Tactics.js';
 import { Party, PARTY_CAP } from '../src/agents/Party.js';
 import {
   CHARACTER_CARDS, EQUIPMENT_CARDS, SPELL_CARDS, PERSONALITY_CARDS, CLASSES, getCard,
@@ -57,12 +58,22 @@ describe('The feature catalog is honest about the game around it', () => {
     }
   });
 
-  test('every feature is drawable with art already on the sheet', () => {
+  test('every feature is drawable — a tile if the sheet has one, its emoji if not', () => {
+    // The rule used to be "art already on the sheet", which meant a
+    // hazard nobody had drawn could not exist. A feature the player
+    // cannot see is one they cannot plan around, so the renderer falls
+    // back to the feature's own icon as a place marker
+    // (IsoDungeonRenderer.emojiSprite) and the catalog is free to grow.
     for (const id of FEATURE_IDS) {
       const tile = getFeatureTile(id);
-      assert.ok(tile, `${id} has a tile in the atlas`);
-      assert.ok(tile.col >= 0 && tile.col < 12 && tile.row >= 0 && tile.row < 11,
-        `${id}'s tile is inside the sheet`);
+      if (tile) {
+        assert.ok(tile.col >= 0 && tile.col < 12 && tile.row >= 0 && tile.row < 11,
+          `${id}'s tile is inside the sheet`);
+      } else {
+        const icon = getFeature(id)?.icon;
+        assert.ok(icon && [...icon].length <= 2,
+          `${id} has no tile, so it needs an emoji marker (got ${JSON.stringify(icon)})`);
+      }
     }
   });
 
@@ -99,11 +110,34 @@ describe('Every interaction is reachable, and reachable by a card', () => {
           const card = getCard(gate.spell);
           assert.ok(card, `${id} gate spell ${gate.spell} is a real card`);
           assert.equal(card.type, 'spell');
+        } else if (gate.tactic) {
+          // Training is the fourth key: a drilled party opens the
+          // architecture without the class or the tool (game/Tactics.js)
+          assert.ok(getTactic(gate.tactic), `${id} gate tactic ${gate.tactic} is a real tactic`);
         } else {
           assert.fail(`${id} has an empty gate`);
         }
       }
     }
+  });
+
+  test('the hazards open to training, not only to muscle and rope', () => {
+    // A party of four casters used to walk past every pit in the
+    // dungeon. Shove is a card, so the architecture is draftable.
+    const hazards = ['shove-into-pit', 'shove-onto-spikes', 'shove-into-chasm', 'shove-into-brazier'];
+    for (const id of hazards) {
+      assert.ok(FEATURE_ACTIONS[id], `${id} exists`);
+      assert.ok(FEATURE_ACTIONS[id].gates.some(g => g.tactic === 'tac-shove'),
+        `${id} opens to Shove`);
+    }
+    const room = furnished(ROOM_TYPES.MONSTER, ['pit', 'spikes']);
+    const casters = new Party([wizard, cleric]);
+    assert.equal(getFeatureOptions(room, casters).length, 0, 'untrained, the floor is scenery');
+
+    const drilled = new Party([wizard, cleric, getCard('tac-shove')]);
+    const opened = getFeatureOptions(room, drilled).map(o => o.id).sort();
+    assert.deepEqual(opened, ['shove-into-pit', 'shove-onto-spikes'],
+      'drilled, both hazards are weapons');
   });
 
   test('at least one gate on every action is a draftable card, not just a class', () => {
@@ -287,9 +321,18 @@ describe('Using the room changes the fight', () => {
 
 describe('Furnishing rooms', () => {
   test('capacity follows floor space — a closet holds nothing', () => {
-    assert.equal(featureCapacity({ w: 4, h: 4 }), 0);
+    assert.equal(featureCapacity({ w: 4, h: 4 }), 0, 'a closet is furniture enough');
     assert.ok(featureCapacity({ w: 6, h: 5 }) >= 1);
-    assert.equal(featureCapacity({ w: 12, h: 9 }), 3);
+    // The ceiling rises with the floor: three pieces in a big cavern is
+    // an empty warehouse, and rooms are half again as big now
+    assert.equal(featureCapacity({ w: 9, h: 8 }), 3, 'a fighting chamber holds three');
+    assert.equal(featureCapacity({ w: 12, h: 9 }), 4);
+    assert.equal(featureCapacity({ w: 16, h: 12 }), 5, 'a boss cavern holds five');
+    // ...and it is a ceiling, not a quota: the roll still leaves rooms bare
+    const rng = new SeededRandom('capacity');
+    const rolled = Array.from({ length: 40 }, () =>
+      rollFeatures({ type: ROOM_TYPES.MONSTER, w: 16, h: 12 }, rng).length);
+    assert.ok(Math.min(...rolled) < 5, 'not every big room is full');
   });
 
   test('rolled features suit the room and never repeat', () => {
@@ -333,13 +376,16 @@ describe('Furnishing rooms', () => {
 
 describe('Furniture is drawn clear of the fight', () => {
   test('features stand inside the room and off the party and monster', () => {
-    for (const [w, h] of [[9, 8], [6, 5], [12, 6], [5, 11]]) {
-      const room = { type: ROOM_TYPES.MONSTER, w, h, shape: 'chamber', features: ['pillars', 'brazier', 'pit'] };
+    // Every shape a fight can happen in, furnished to the new ceiling of
+    // five — a room that holds more furniture has more chances to stand
+    // a pillar on somebody's head.
+    for (const [w, h] of [[9, 8], [6, 5], [12, 6], [5, 11], [15, 12], [11, 11], [16, 8]]) {
+      const room = { type: ROOM_TYPES.MONSTER, w, h, shape: 'chamber', features: ['pillars', 'brazier', 'pit', 'spikes', 'crates'] };
       const { hx, hz } = roomHalf(room);
-      const slots = featureSlots(room, 0, 0, 3);
+      const slots = featureSlots(room, 0, 0, 5);
       const party = partySlots(room, 0, 0, PARTY_CAP, true);
       const mob = monsterSpot(room, 0, 0);
-      assert.equal(slots.length, 3);
+      assert.equal(slots.length, 5);
       for (const s of slots) {
         assert.ok(Math.abs(s.mx) <= hx && Math.abs(s.mz) <= hz,
           `${w}x${h}: furniture at ${s.mx.toFixed(1)},${s.mz.toFixed(1)} is inside the room`);

@@ -1312,3 +1312,68 @@ This is the same lesson as the boss unleash one section up, from the
 other end: there, a mechanic ran with no line at all; here, the lines
 existed and credited nobody. Both are only visible if you ask how often
 a thing is *read*, rather than whether it *exists*.
+
+
+## 18. Room enough to fight in (2026-08-28)
+
+**NARR:** The note that started this: *"I want the rooms to be bigger
+and more detailed, so as to really enable positional combat with a team
+of four PCs and various monsters challenging them."* Formations shipped
+two sessions ago and they were doing arithmetic in a broom cupboard —
+a "chamber" was five by five, which is four adventurers, a monster and
+a pillar standing on each other's feet.
+
+Rooms are half again as big now (fighting chambers 64–180 tiles, a boss
+cavern up to 22×17), they hold five pieces of furniture rather than
+three, and **corridors stayed exactly as narrow as they were**. That
+last part is the design: a passage is the room where the column is the
+only thing that fits, and if every room is a ballroom then no formation
+is a decision.
+
+The camera had to move with them. At the old fixed view, four
+adventurers in a twelve-by-twelve chamber drew as six pixels each — the
+picture stopped showing the thing the mechanics had started caring
+about. It frames the room the party is standing in now.
+
+### Emoji as place markers
+
+The feature catalog had a hard rule — *every feature is drawn with art
+already on the sheet* — which quietly meant **the game could only grow
+hazards somebody had already drawn**. The rule is now "every feature is
+drawable": a tile where the sheet has one, the feature's own emoji as a
+marker where it does not. That is what let the floor spikes (🔻) and the
+chasm (🌑) exist this afternoon instead of next month.
+
+### A key is not worth a card
+
+**TCG:** Shove — *any class can put a monster into a hazard* — is
+exactly the card the note asked for, and as a pure key it measured
+**−0.3 ± 2.8 over 2500 delves an arm**: worth nothing. A party with a
+fighter could already shove; a party without one rarely met a hazard it
+wanted. That is the same answer the feature-tools A/B gave when the
+tools only unlocked, and it is worth stating as a rule: **in this game,
+presence is not value.** Shove keeps the key and gains a number (+2 to
+hazard openers), and lands at about +2.3 — the band the other roots
+live in.
+
+Chasing that number turned up the deeper problem. A shove into a pit
+was priced at **5 damage** against a combat spell that opens for eight
+and keeps half of that every round after, so the room was always the
+worse plan — and the tactic that opened hazards to everyone was worth
+*minus* four win points, because it spent the party's opening on the
+weaker option. A hazard is not a nudge. Putting something onto spikes
+hits like the spell it competes with now (11–21), and the curve was
+re-swept twice around it.
+
+### The instrument was lying by six points
+
+**NARR:** Pinning measured +7.0, then −2.0, then +4.8, +0.2, +3.8 on
+five consecutive runs of `npm run card`. The card had not changed; the
+default sample of 500 delves an arm carries a 95% band of about **six
+points**, which is wider than every tactic in the game. Two runs at
+2500 settled it at roughly +3.
+
+The tool prints its own band now, and refuses to let a number be read
+as signal until it clears it. A measurement instrument that does not
+report its noise is how a design session spends an hour tuning a
+constant that was never moving.
