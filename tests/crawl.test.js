@@ -17,11 +17,17 @@ const wizard = CHARACTER_CARDS.find(c => c.class === 'wizard');
 const alchemist = CHARACTER_CARDS.find(c => c.class === 'alchemist');
 
 describe('Party assembly', () => {
-  test('characters become the roster; party size is whatever was drafted', () => {
+  test('characters become the roster, capped at four; the rest are reserve', () => {
     const small = new Party([fighter, cleric]);
     assert.equal(small.members.length, 2);
-    const big = new Party([fighter, cleric, rogue, wizard, alchemist]);
-    assert.equal(big.members.length, 5);
+    assert.equal(small.reserve.length, 0);
+
+    // Five classes cannot all march — the cap forces a choice, which
+    // is the point of it (AUDIT.md D1)
+    const overfull = new Party([fighter, cleric, rogue, wizard, alchemist]);
+    assert.equal(overfull.members.length, 4);
+    assert.equal(overfull.reserve.length, 1);
+    assert.ok(!overfull.hasClass('alchemist'), 'the fifth pick waits in town');
   });
 
   test('an empty draft gets Pip the Tavern Volunteer (no dead runs)', () => {
@@ -49,16 +55,34 @@ describe('Party assembly', () => {
     assert.equal(w.health, w.maxHealth, 'wizard untouched behind the line');
   });
 
-  test('wizards make the grimoire reusable; scrolls burn without one', () => {
+  test('prepared workings persist and recharge; found scrolls burn', () => {
     const bolt = SPELL_CARDS.find(s => s.use === 'combat');
-    const noWiz = new Party([fighter, bolt]);
-    noWiz.castSpell('combat');
-    assert.equal(noWiz.grimoire.length, 0, 'scroll burned');
 
-    const withWiz = new Party([wizard, bolt]);
-    const cast = withWiz.castSpell('combat');
-    assert.equal(withWiz.grimoire.length, 1, 'wizard keeps the spell');
-    assert.ok(cast.effectivePower > bolt.power, 'wizard amplifies');
+    // A drafted spell is a prepared working: it stays in the grimoire,
+    // but it is spent for the room once cast
+    const party = new Party([fighter, bolt]);
+    assert.ok(party.castSpell('combat'), 'the first cast works');
+    assert.equal(party.grimoire.length, 1, 'a drafted card is not consumed');
+    assert.equal(party.castSpell('combat'), null, 'but it is spent for this room');
+    party.restStep();
+    assert.ok(party.castSpell('combat'), 'and ready again on the march');
+
+    // A sealed scroll out of a hoard is one cast and gone
+    const scrolled = new Party([fighter]);
+    scrolled.grimoire.push({ ...bolt, id: 'found-bolt', source: 'found' });
+    assert.ok(scrolled.castSpell('combat'));
+    assert.equal(scrolled.grimoire.length, 0, 'the scroll burned');
+  });
+
+  test('mind buys spell power, and a wizard amplifies on top', () => {
+    const bolt = SPELL_CARDS.find(s => s.use === 'combat');
+    const brawn = new Party([fighter, bolt]);
+    const arcane = new Party([wizard, bolt]);
+    const plain = brawn.castSpell('combat');
+    const amped = arcane.castSpell('combat');
+    assert.ok(plain.effectivePower >= bolt.power, 'mind never subtracts');
+    assert.ok(amped.effectivePower > plain.effectivePower,
+      `the wizard's mind and amplification tell (${amped.effectivePower} > ${plain.effectivePower})`);
   });
 
   test('alchemy needs an alchemist and materials', () => {
@@ -193,16 +217,12 @@ describe('The full crawl', () => {
     assert.ok(composePredicament({ type: ROOM_TYPES.MONSTER }).length > 30);
   });
 
-  test('every class dies in its own voice', () => {
+  test('a death is reported plainly: name and class', () => {
     for (const cls of ['fighter', 'cleric', 'wizard', 'rogue', 'alchemist']) {
-      const lines = new Set();
-      for (let i = 0; i < 24; i++) {
-        const text = composeFall({ name: 'Testa the Doomed', class: cls });
-        assert.ok(text.includes('Testa the Doomed falls'), `${cls}: the fallen are named`);
-        assert.ok(text.length > 60, `${cls}: a death is a real sentence`);
-        lines.add(text);
-      }
-      assert.ok(lines.size >= 2, `${cls}: more than one way to go`);
+      const text = composeFall({ name: 'Testa the Doomed', class: cls });
+      assert.ok(text.includes('Testa the Doomed falls'), `${cls}: the fallen are named`);
+      assert.ok(text.includes(cls), `${cls}: the class is stated`);
+      assert.ok(text.length > 40, `${cls}: a death is a full sentence`);
     }
   });
 

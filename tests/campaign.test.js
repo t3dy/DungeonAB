@@ -30,11 +30,19 @@ describe('Depth scaling', () => {
   });
 
   test('deeper dungeons pay better', () => {
-    // Same seed, same rng draws — gold differs only by the depth multiplier
-    const shallow = generateDungeon('gold-test', 'medium', { theme: 'delve', depth: 1 });
-    const deep = generateDungeon('gold-test', 'medium', { theme: 'delve', depth: 3 });
-    const sGold = shallow.rooms.filter(r => r.gold).map(r => r.gold);
-    const dGold = deep.rooms.filter(r => r.gold).map(r => r.gold);
+    // Depth changes the shape of the delve as well as its multiplier —
+    // a deep dungeon has a third floor, so the same seed does not make
+    // the same draws. Measure the haul across seeds instead (rule 11).
+    const hoard = depth => {
+      let gold = 0;
+      for (let i = 0; i < 24; i++) {
+        const d = generateDungeon(`gold-test-${i}`, 'medium', { theme: 'delve', depth });
+        gold += d.rooms.reduce((s, r) => s + (r.gold || 0), 0);
+      }
+      return gold / 24;
+    };
+    const sGold = [hoard(1)];
+    const dGold = [hoard(3)];
     if (sGold.length && dGold.length) {
       assert.ok(dGold[0] > sGold[0], `treasure scales (${dGold[0]} > ${sGold[0]})`);
     }

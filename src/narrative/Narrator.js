@@ -1,213 +1,214 @@
 /**
- * Narrator — the party's tale, told room by room
+ * Narrator — the party's log, told room by room
  *
  * Three beats per room (adapted from SnakeAB's proven pattern):
- *   1. Predicament — what the room holds
- *   2. Deliberation — who argued for what, and why the party chose
- *   3. Resolution — how it went, in gold, blood, and glory
+ *   1. Predicament — what the room holds, stated plainly
+ *   2. Deliberation — the options, who argued, what was chosen
+ *   3. Resolution — what happened, with the numbers
+ *
+ * House style: descriptive, not literary. Say who did what and what
+ * it cost — "the fighter strikes the goblin" — and let the numbers
+ * carry the drama. Barks (spoken dialogue) are the one exception.
  */
 
 import { ROOM_TYPES } from '../world/DungeonGen.js';
 import { CLASSES } from '../game/Cards.js';
 import { getBark } from './Barks.js';
-
-function pick(arr) {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
+import { roomFeatures, getFeature, FEATURE_ACTIONS } from '../world/RoomFeatures.js';
 
 /* ------------------------------------------------------------------ */
 /* Predicaments per room type                                          */
 /* ------------------------------------------------------------------ */
 
-/* Themed arrivals — the dungeon introduces itself at the door */
+/* Themed arrivals — what this dungeon is, stated at the door */
 const THEME_ENTRANCES = {
-  delve: [
-    'The dungeon door stands open, which is never a good sign. Cold air breathes up from below, smelling of wet stone and old ambition.',
-    'Torchlight ends three steps past the threshold. Somewhere below, something drips in a rhythm that is almost, but not quite, patient.',
-  ],
-  crypt: [
-    'The Ancient Crypt. The lintel is carved with names, and the names are carved with claw marks. Down the party goes, past generations of the politely furious dead.',
-    'Grave-cold rolls up the crypt stairs to meet them. Somewhere below, stone lids are not staying put.',
-  ],
-  volcanic: [
-    'The Cinder Galleries breathe out heat like a sleeping forge. The walls glow faintly at the seams, and the floor is warm through good boots.',
-    'Down into the mountain\'s throat. The air shimmers, the torches are redundant, and something below is keeping the fires fed.',
-  ],
-  library: [
-    'The Drowned Athenaeum. Water-stained shelves climb out of sight, and the silence has the specific weight of a librarian\'s attention.',
-    'Past the flooded card catalogue and down. Every book in the dark is closed. The party tries not to think about what opens them.',
-  ],
-  madlab: [
-    'The Mad Alchemist\'s Dungeon. The welcome mat is a chalk circle, half-scrubbed. The smell is sulfur, roses, and a third thing nobody names aloud.',
-    'Glassware glints in the dark below — miles of it, still bubbling. The experiments did not stop when the alchemist did.',
-  ],
-  castle: [
-    'The Castle of the Vampire Lord. The doors open themselves, the candles are already lit, and somewhere above, someone is very glad you\'ve come.',
-    'The portcullis rises without a hand on the winch. Every window is curtained against a sun that set hours ago. The party is expected.',
-  ],
-  bogcellar: [
-    'The Root Cellar of the Bog Witch. The stairs are slick, the shelves go down farther than cellars should, and every jar turns to watch.',
-    'Down past the hanging herbs and into the earth-smell. Something on the third shelf is knocking, politely, from the inside.',
-  ],
-  icecaverns: [
-    'The Ice Caverns of the Mad Pyromancer. The walls are glass-smooth where they melted and refroze, and warm air breathes up from below like the mountain has a fever.',
-    'Ice underfoot, scorch marks overhead. The physics of this place gave notice long ago and were not replaced.',
-  ],
+  delve: 'The party enters the Old Delve: rats, skeletons, and goblin toll-gangs between here and the boss.',
+  crypt: 'The party enters the Ancient Crypt. Most monsters here are undead — holy damage and a cleric\'s turning work well.',
+  volcanic: 'The party enters the Cinder Galleries. Fire traps hit harder here, and most monsters resist fire but hate frost.',
+  library: 'The party enters the Drowned Athenaeum. Extra libraries to study in; several of its monsters burn easily.',
+  madlab: 'The party enters the Mad Alchemist\'s Dungeon. A lab is guaranteed, materials are common, and much of what lives here is venomous.',
+  castle: 'The party enters the Castle of the Vampire Lord. Treasure is plentiful; most of the household is undead or ethereal.',
+  bogcellar: 'The party enters the Root Cellar of the Bog Witch. Poison traps and venomous monsters, with a stillroom lab guaranteed.',
+  icecaverns: 'The party enters the Ice Caverns of the Mad Pyromancer. Disasters are frequent, and fire and frost weaknesses run through everything.',
 };
 
-/* Themed hazards — each dungeon's disasters are its own (procgen v2:
-   the DISASTER room reads by theme) */
+/* Themed disasters — what actually goes wrong, per dungeon */
 const THEME_DISASTERS = {
-  castle: [
-    'The candles gutter all at once, and the darkness that follows has weight and direction. The castle is feeding.',
-    'Every mirror in the corridor turns to face the party. There are more mirrors than there were.',
-  ],
-  bogcellar: [
-    'A shelf lets go — a hundred jars at once, and not everything that spills stays spilled. The cellar floor begins to digest.',
-    'The roots in the walls flex, and the ceiling of packed earth sags like a held breath about to end.',
-  ],
-  icecaverns: [
-    'A vein of old fire meets a wall of older ice. The steam blast is instant, scalding, and very impressed with itself.',
-    'The ceiling thaws in one groaning sheet. What refreezes will refreeze sharp; what falls, falls now.',
-  ],
-  volcanic: [
-    'The mountain clears its throat. Lava finds a new opinion about which passages should exist.',
-    'A cinder squall rolls up the gallery, and the party breathes through wet cloth and profanity.',
-  ],
-  crypt: [
-    'Every lid in the corridor shifts at once — one knuckle\'s width. The dead are politely making room for more.',
-    'The barrow-damp thickens until the torches burn blue. Something below is exhaling.',
-  ],
-  library: [
-    'The stacks lean in. A shelf-quake rains folios, and some of them land arguing.',
-    'The flood rises a hand\'s width in a minute, and the books scream quietly the way wet paper does.',
-  ],
-  madlab: [
-    'Something upstream of the drains achieves criticality. The color of the light has no name and wants one.',
-    'A retort the size of a wardrobe cracks, and the room\'s weather becomes chemical.',
-  ],
+  castle: 'The candles go out: the castle itself attacks the party in the dark.',
+  bogcellar: 'A shelf of jars breaks over the party; what spills is corrosive and moving.',
+  icecaverns: 'A fire vent meets the cavern ice: a scalding steam blast fills the room.',
+  volcanic: 'Lava surges into the passage; the party must get clear before it closes the way.',
+  crypt: 'The tomb lids open at once and the dead press in from every side.',
+  library: 'The stacks collapse and the floodwater rises; falling shelves and water both do damage.',
+  madlab: 'An unattended reaction runs out of control and fills the room with caustic vapor.',
 };
 
 const PREDICAMENTS = {
-  entrance: THEME_ENTRANCES.delve,
-  corridor: [
-    'A long corridor, scarred by the claws and cart-wheels of every expedition that came before. Most of them came back. Most.',
-    'The passage narrows until the fighters walk sideways and the wizard complains about the acoustics.',
+  entrance: ['The party gathers at the dungeon entrance and starts down.'],
+  corridor: ['A connecting corridor. Nothing blocks the way; the party moves through.'],
+  stairs: [
+    'A stair cut into the rock, going down. Cold air comes up it.',
+    'The floor ends at a stairwell. Whatever is below has been waiting longer.',
+    'Steps down, worn in the middle by traffic that stopped a long time ago.',
   ],
-  monster: [
-    'Something is waiting in this room, and it has heard you coming since the entrance hall.',
-    'Eyes in the dark — the reflective kind, the patient kind. The room smells of den.',
-  ],
-  trap: [
-    'The floor here is too clean. Nothing in a dungeon is clean by accident.',
-    'The rogue holds up a fist. Everyone stops. There — a seam in the flagstones, thin as a lie.',
-  ],
-  treasure: [
-    'A chest squats in the lamplight, brass-bound and altogether too inviting. The last hands to touch it left in a hurry, or not at all.',
-    'Coins spill from a split sack across the floor — the classic bait, arranged by someone who understands adventurers deeply.',
-  ],
-  library: [
-    'Shelves climb into the dark, sagging under grimoires, ledgers, and one book that is very clearly breathing.',
-    'A library, miraculously dry. The dust here is a hundred years deep and lettered in three dead languages.',
-  ],
-  shrine: [
-    'A small shrine glows at the corridor\'s elbow — candles that no one lights, burning anyway. The stone floor is warm here.',
-    'An altar of some patient, forgiving god. The kneeling-groove in the stone is deep; many desperate parties came this way.',
-  ],
-  lab: [
-    'An alchemist\'s laboratory, abandoned mid-experiment: the alembic still holds something green, and the notes end mid-sentence.',
-    'Benches of glassware, a cold athanor, jars labeled in a hurried hand — a working lab, waiting for working hands.',
-  ],
-  materials: [
-    'Herbs hang from the ceiling in dusty bundles; salts and quicksilver sit in labeled jars. A gatherer\'s dream, a satchel\'s burden.',
-    'The room is thick with dried simples and mineral blooms — everything a bench-worker could want, free for the pocketing.',
-  ],
-  disaster: [
-    'The ceiling groans. Dust sifts down in slow curtains. The dungeon is about to have an opinion.',
-    'Water is coming in somewhere — fast, cold, and rising past the ankle before anyone finishes swearing.',
-  ],
-  boss: [
-    'The final chamber. The air itself is heavier here, and the thing at its center has been expecting visitors far better armed than you.',
-    'Every dungeon keeps its worst for last. The door swings wide on the proof.',
-  ],
-  vault: [
-    'A vault. Someone sealed this room and walled over the seal, which raises exactly one question: from which side?',
-    'The hidden room is small, dry, and stacked to the beams. Whoever hoarded this never came back for it. The dungeon knows why.',
-    'Coin-shine in the dark — a vault, untouched since its owner\'s luck ran out somewhere between here and daylight.',
-  ],
+  monster: ['A monster holds the room. The party must decide how to get past it.'],
+  trap: ['A trap blocks the corridor. The party must disarm it, avoid it, or take the hit.'],
+  treasure: ['A treasure chest sits in the room. It may hold gold; it may be a mimic.'],
+  library: ['A library. The party can study here to learn spells.'],
+  shrine: ['A shrine. Resting here heals the party; the gold leaf on the altar could be stripped instead.'],
+  lab: ['An alchemy lab with a working bench. An alchemist with materials can brew or coat weapons here.'],
+  materials: ['A room of herbs, salts, and quicksilver — alchemy materials, free to gather.'],
+  disaster: ['The dungeon itself turns hostile. The party must brace together or scatter.'],
+  boss: ['The boss chamber. Killing what waits here clears the dungeon.'],
+  vault: ['A hidden vault, stacked with treasure. Vaults always hold something beyond coin.'],
 };
 
 /* ------------------------------------------------------------------ */
 /* Asides — side passages and secret doors (procgen v2)                */
 /* ------------------------------------------------------------------ */
 
-const SECRET_FOUND = [
-  '🕳️ {finder} taps the wall and the wall answers wrong — hollow. A seam, a catch, and a door that was never meant to be found swings inward.',
-  '🕳️ {finder} stops mid-stride: the dust on this stretch of floor has been disturbed from the *inside*. A hidden door gives under one shoulder.',
-  '🕳️ A draft where no draft should be. {finder} follows it to a false stone, and the dungeon reluctantly shows its hidden room.',
-];
-
-const DETOUR_TAKEN = [
-  '🧭 A side passage breathes cold air across the party\'s torches, and curiosity wins the vote.',
-  '🧭 There is a way that is forward and a way that is *interesting*. The party takes the interesting one.',
-];
-
-const DETOUR_SKIPPED = [
-  '🚶 A side passage yawns to one side. The party looks at it, looks at each other, and keeps marching.',
-  '🚶 Somewhere down that branching corridor is either treasure or teeth. The party elects not to find out which.',
-];
-
-export function composeSecretFound(party) {
+export function composeSecretFound(party, wing = null) {
   const rogue = party.living().find(m => m.class === CLASSES.ROGUE);
   const finder = rogue ? rogue.name : (party.living()[0]?.name || 'Someone');
-  return pick(SECRET_FOUND).replace('{finder}', finder);
+  const behind = wing?.tell ? ` Behind it: ${wing.tell}.` : '';
+  return `🕳️ ${finder} finds a hidden door into ${wing?.name || 'a side passage'}.${behind} Its rooms join the route.`;
 }
 
-export function composeDetour(taken) {
-  return pick(taken ? DETOUR_TAKEN : DETOUR_SKIPPED);
+export function composeDetour(taken, wing = null, advocate = null) {
+  const name = wing?.name || 'the side passage';
+  const tell = wing?.tell ? ` — ${wing.tell}` : '';
+  // Who wanted it, when somebody in particular did (RoomEncounters
+  // wingAppeal): a detour with a reason reads as a decision
+  const aside = wing?.tell ? ` (${wing.tell})` : '';
+  if (!taken) return `🚶 The party looks into ${name}${aside} and keeps to the main route.`;
+  // With a reason, the reason leads and the tell stands down: an
+  // advocate usually names the same thing the tell describes, and
+  // printing both says the weapon rack twice.
+  if (advocate) {
+    return `🧭 ${advocate[0].toUpperCase()}${advocate.slice(1)}: the party turns off into ${name}. Its rooms join the route.`;
+  }
+  return `🧭 The party turns off into ${name}${tell}. Its rooms join the route.`;
+}
+
+/**
+ * A shaft in the floor. Three outcomes, all reported plainly: found
+ * and climbed, found and refused, or blundered into.
+ */
+export function composeTrapdoor({ outcome, rooms, damage, floors = 0, finder }) {
+  // A shaft that goes through the floor lands the party a level down,
+  // past the stair; one that does not is a shortcut along this one.
+  const landing = floors > 0 ? ` on ${floorName(floors)}` : '';
+  if (outcome === 'descend') {
+    return `🕳️ ${finder} finds a trapdoor in the floor. The party ropes down the shaft and lands${landing}, skipping ${rooms} room${rooms === 1 ? '' : 's'} ahead and taking ${damage} damage.`;
+  }
+  if (outcome === 'refused') {
+    return `🕳️ ${finder} finds a trapdoor in the floor. The party leaves it shut: the rooms it skips hold loot as well as danger.`;
+  }
+  if (outcome === 'fell') {
+    return `🕳️ The floor gives way — a hidden trapdoor. The party lands${landing || ' further down the same level'}, ${rooms} room${rooms === 1 ? '' : 's'} past where they were, taking ${damage} damage, and the rooms between go unlooted.`;
+  }
+  return '';
 }
 
 /* ------------------------------------------------------------------ */
-/* Deliberation — the party argues in character                        */
+/* Deliberation — options, advocate, choice                            */
 /* ------------------------------------------------------------------ */
+
+/** For the writing gate: every option id the prose knows how to name. */
+export function phrasedOptions() {
+  return Object.keys(OPTION_PHRASES);
+}
 
 const OPTION_PHRASES = {
-  fight: 'draw steel and settle it',
-  flee: 'fall back and live to try again',
-  sneak: 'follow the rogue the quiet way',
-  'turn-undead': 'let the cleric\'s light do the arguing',
-  bribe: 'pay the toll like honest travelers',
-  'spell-strike': 'open with the grimoire',
-  disarm: 'trust the rogue\'s fingers',
-  'push-through': 'grit teeth and push through',
-  'search-around': 'find another way',
-  'spell-bypass': 'let magic solve it',
-  loot: 'take everything that glitters',
-  inspect: 'poke it with a stick first, as tradition demands',
-  'leave-it': 'walk away from the shine',
-  study: 'raid the shelves for spells',
-  'deep-study': 'let the wizard open the sealed texts',
-  rest: 'kneel and take the shrine\'s mercy',
-  desecrate: 'pry the gold leaf off the altar',
-  'pass-by': 'keep marching',
-  proceed: 'press on',
-  alchemy: 'set the alchemist to the bench',
-  gather: 'fill the satchel',
-  brace: 'lock shields and endure',
-  scatter: 'scatter and pray',
-  'knock-open': 'open it from across the room, loudly',
-  'cause-fear': 'break the thing\'s nerve before it can use its teeth',
-  'smoke-bomb': 'let the alchemist spring it from a safe distance',
+  'brew-oil': 'cook a material down into lamp oil',
+  fight: 'stand and fight',
+  flee: 'fall back',
+  sneak: 'sneak past',
+  'turn-undead': 'turn the undead',
+  bribe: 'pay the toll',
+  'spell-strike': 'open with a combat spell',
+  disarm: 'disarm the trap',
+  'push-through': 'push through and take the hit',
+  'search-around': 'search for a way around',
+  'spell-bypass': 'bypass it with a utility spell',
+  loot: 'loot the treasure',
+  inspect: 'inspect it first',
+  'leave-it': 'leave it alone',
+  study: 'study the shelves',
+  'deep-study': 'read the sealed texts',
+  rest: 'rest and heal',
+  desecrate: 'strip the gold leaf',
+  'pass-by': 'move on',
+  proceed: 'move on',
+  alchemy: 'work the lab bench',
+  gather: 'gather the materials',
+  brace: 'brace together',
+  scatter: 'scatter and regroup',
+  'knock-open': 'open it with Knock',
+  'cause-fear': 'cast Cause Fear',
+  'smoke-bomb': 'spring it with a smoke bomb',
+  descend: 'take the stair down',
+  'rope-down': 'rope down the shaft beside it',
+  'camp-stair': 'camp at the stairhead first',
+  // Using the room itself (world/RoomFeatures.js FEATURE_ACTIONS)
+  'shove-into-pit': 'shove it into the pit',
+  'topple-boulder': 'topple the boulder onto it',
+  'shove-into-brazier': 'shove it into the brazier',
+  'drop-portcullis': 'drop the portcullis on it',
+  'fight-from-cover': 'fight from behind the pillars',
+  'pry-sarcophagus': 'pry the sarcophagus open',
+  'bless-the-font': 'bless the font and drink',
+  'fill-waterskins': 'fill the waterskins',
+  'harvest-spout': 'harvest the spout',
+  'sift-rubble': 'sift the rubble',
+  'crack-crates': 'crack the crates open',
+  'work-the-anvil': 'put an edge back on at the anvil',
+  'strip-the-shelves': 'strip the shelves',
 };
 
+/**
+ * Who argued for it, when no class advocate speaks up. One line per
+ * archetype meant a party of one temper printed the same sentence in
+ * every room it entered — a delve of six identical deliberations, which
+ * tests/prose.js counts as a repetition and a reader counts as a stuck
+ * record. Several each, so the same party argues in different words.
+ */
 const ARCHETYPE_VOICES = {
-  brave: 'the Bold blood in the party carried the vote',
-  cunning: 'the Cunning heads prevailed, as they usually do',
-  greedy: 'the Covetous streak would not be argued down',
-  scholarly: 'the Scholarly bent won out — knowledge is the only treasure that walks out on its own legs',
-  pious: 'the Devout among them spoke, quietly, and that settled it',
-  reckless: 'the Reckless howled loudest, and the Reckless got their way',
-  craven: 'the Craven voice had already counted the exits, and the counting was persuasive',
+  brave: [
+    'the Bold voted to meet it head-on',
+    'the Bold saw no reason to be careful about it',
+    'the Bold wanted it settled here',
+  ],
+  cunning: [
+    'the Cunning picked the safer angle',
+    'the Cunning looked for the way that costs least',
+    'the Cunning had already worked out the odds',
+  ],
+  greedy: [
+    'the Covetous wanted the payout',
+    'the Covetous counted what was in the room first',
+    'the Covetous refused to leave anything behind',
+  ],
+  scholarly: [
+    'the Scholarly wanted the knowledge',
+    'the Scholarly wanted a closer look before anything else',
+    'the Scholarly argued from what the books say about this',
+  ],
+  pious: [
+    'the Devout called it the right thing to do',
+    'the Devout said the god would want it this way',
+    'the Devout would not hear of the other options',
+  ],
+  reckless: [
+    'the Reckless did not wait for a vote',
+    'the Reckless were already moving',
+    'the Reckless settled it by going first',
+  ],
+  craven: [
+    'the Craven pushed for the safest option',
+    'the Craven wanted no part of the alternative',
+    'the Craven argued for whatever kept a door behind them',
+  ],
 };
 
 const CLASS_ADVOCATES = {
@@ -242,207 +243,283 @@ export function composeDeliberation(chosenId, options, party) {
   } else {
     for (const archetype of party.personalities) {
       if (ARCHETYPE_VOICES[archetype]) {
-        voice = ARCHETYPE_VOICES[archetype];
+        voice = pick(ARCHETYPE_VOICES[archetype]);
         break;
       }
     }
   }
-  if (!voice) voice = 'instinct and tired feet decided';
+  if (!voice) voice = 'nobody argued';
 
   // A quoted bark carries its own terminal punctuation; adding a
   // period after the closing quote doubles it
   const sep = voice.endsWith('"') ? '' : '.';
 
   if (rejected.length === 0) {
-    return `There was only one road: the party chose to ${chosenPhrase}.`;
+    return `There was only one option: the party chose to ${chosenPhrase}.`;
   }
   const rejectedText = rejected.length === 2 ? `${rejected[0]}, or ${rejected[1]}` : rejected[0];
-  return `They might have chosen to ${rejectedText} — but ${voice}${sep} The party chose to ${chosenPhrase}.`;
+  return `They might have chosen to ${rejectedText} — ${voice}${sep} The party chose to ${chosenPhrase}.`;
 }
 
 /* ------------------------------------------------------------------ */
-/* Resolutions                                                         */
+/* Resolutions — what happened, with the numbers                       */
 /* ------------------------------------------------------------------ */
+
+/**
+ * Using the room: what the furniture did, with the number. Fight
+ * openers report the damage and then hand off to the ordinary fight
+ * lines; resource uses report what came out of the room.
+ */
+function composeFeatureUse(optionId, result) {
+  const action = FEATURE_ACTIONS[optionId];
+  const feature = getFeature(action.feature);
+  const icon = feature?.icon || '🧱';
+  const name = feature?.name || 'the furniture';
+
+  if (action.fightOnly) {
+    const dealt = result.featureDamage ?? action.openerDamage;
+    switch (optionId) {
+      case 'shove-into-pit':
+        return `${icon} The party shoves the monster into ${name}: ${dealt} damage, and it has to climb back out.`;
+      case 'topple-boulder':
+        return `${icon} The party topples ${name} down the slope onto the monster: ${dealt} damage.`;
+      case 'shove-into-brazier':
+        return `${icon} The party drives the monster into ${name}: ${dealt} fire damage.`;
+      case 'drop-portcullis':
+        return `${icon} The winch lets go and ${name} comes down across the monster: ${dealt} damage.`;
+      case 'fight-from-cover':
+        return `${icon} The party backs into ${name} and makes the monster come down one aisle at a time: ${dealt} damage as it closes.`;
+      default:
+        return `${icon} The party turns ${name} against the monster: ${dealt} damage.`;
+    }
+  }
+
+  const parts = [];
+  if (optionId === 'pry-sarcophagus') parts.push(`${icon} The party pries the lid off ${name}`);
+  else if (optionId === 'bless-the-font') parts.push(`${icon} The cleric says the words over ${name} and the party drinks`);
+  else if (optionId === 'fill-waterskins') parts.push(`${icon} The party fills its waterskins at ${name}`);
+  else if (optionId === 'harvest-spout') parts.push(`${icon} The alchemist bottles what drips from ${name}`);
+  else if (optionId === 'sift-rubble') parts.push(`${icon} The party sifts ${name}`);
+  else if (optionId === 'crack-crates') parts.push(`${icon} The party cracks open ${name}`);
+  else if (optionId === 'work-the-anvil') parts.push(`${icon} The party works ${name}`);
+  else if (optionId === 'strip-the-shelves') parts.push(`${icon} The wizard strips ${name}`);
+  else parts.push(`${icon} The party uses ${name}`);
+
+  const gains = [];
+  if (result.gold) gains.push(`${result.gold} gold`);
+  if (result.materials) gains.push(`${result.materials} material${result.materials === 1 ? '' : 's'}`);
+  if (result.healed) gains.push(`${result.healed} health healed`);
+  if (result.spell) gains.push(`a scroll of ${result.spell} for the grimoire`);
+  if (result.weaponMod) gains.push(`${result.weaponMod.name} on ${result.weaponMod.target}'s weapon (+${result.weaponMod.attack} attack)`);
+  if (result.curedLinger) gains.push('the lingering venom flushed out');
+
+  return `${parts[0]}: ${gains.length ? gains.join(', ') : 'nothing worth carrying'}.`;
+}
+
+/**
+ * How a fight ended.
+ *
+ * A monster can die to the openers -- thrown knives, a loosed working,
+ * the room itself -- before a single round is fought. "kills it in 0
+ * rounds" reads as a bug rather than a rout, which is what it is. Found
+ * by reading a golden diff.
+ */
+function killLine(result) {
+  if (!result.rounds) {
+    return `⚔️ ${capitalize(result.monster)} is dead before the party closes: it never gets a round.`;
+  }
+  return `⚔️ The party kills ${result.monster} in ${result.rounds} round${result.rounds === 1 ? '' : 's'}, taking ${result.damage} damage.`;
+}
+
+/**
+ * Floors have names in the party's mouth, not indices. The generator
+ * counts from zero; the writing counts from the door.
+ */
+const FLOOR_NAMES = ['the entrance level', 'the second floor', 'the third floor', 'the fourth floor'];
+export function floorName(floor) {
+  return FLOOR_NAMES[floor] || 'the floor below';
+}
+
+/**
+ * The plain walk between one room and the next. This used to be a
+ * single sentence, which meant a long dungeon printed it ten times
+ * (tests/prose.js finds exactly that).
+ */
+const PROCEED_LINES = [
+  'The party moves on to the next room.',
+  'Nothing here needs doing. The party walks on.',
+  'The party crosses the room and takes the far door.',
+  'There is nothing to fight and nothing to take. The party keeps going.',
+  'The party files through and leaves the room behind.',
+];
 
 export function composeResolution(room, optionId, result, party) {
   const bits = [];
+
+  // The room's furniture, used (world/RoomFeatures.js)
+  if (FEATURE_ACTIONS[optionId]) {
+    bits.push(composeFeatureUse(optionId, result));
+    const action = FEATURE_ACTIONS[optionId];
+    if (action.fightOnly) {
+      // Then the fight itself, on the ordinary lines
+      bits.push(result.success
+        ? (result.rounds === 0
+            ? `⚔️ ${capitalize(result.monster)} is finished before it can strike back.`
+            : killLine(result))
+        : `☠️ Even so, ${result.monster} beats the party down.`);
+    }
+    for (const prep of result.preps || []) bits.push(prep.text);
+    return bits.join(' ');
+  }
 
   switch (optionId) {
     case 'fight': {
       const leadAction = result.itemActions?.find(a => a.opening || a.vsUndead || a.summonAttack);
       if (leadAction) {
-        bits.push(`🪄 ${leadAction.member}'s ${leadAction.item} answers first — ${leadAction.name}.`);
+        const detail = leadAction.opening
+          ? `${leadAction.opening}${leadAction.vsUndead && room.monster?.undead ? ` (+${leadAction.vsUndead} vs undead)` : ''} damage before round one`
+          : leadAction.summonAttack
+            ? `a summon adding ${leadAction.summonAttack} attack each round`
+            : 'its effect';
+        bits.push(`🪄 ${leadAction.member} uses the ${leadAction.item} — ${leadAction.name}: ${detail}.`);
       }
       if (result.success && result.rounds === 0) {
-        bits.push(`⚔️ ${capitalize(result.monster)} is over before it begins. The party steps around what's left.`);
+        bits.push(`⚔️ ${capitalize(result.monster)} is killed before it can strike back. The party takes no damage.`);
+      } else if (result.success) {
+        bits.push(killLine(result));
       } else {
-        const roundsWord = `${result.rounds} bloody round${result.rounds === 1 ? '' : 's'}`;
-        bits.push(result.success
-          ? pick([
-              `⚔️ ${capitalize(result.monster)} falls after ${roundsWord}. The party stands, breathing hard, in possession of the field.`,
-              `⚔️ It takes ${roundsWord} and costs ${result.damage} health in bruises and worse, but ${result.monster} will trouble no one again.`,
-              `⚔️ ${roundsWord[0].toUpperCase() + roundsWord.slice(1)}, and then a silence with ${result.monster} at the bottom of it. The party wins the argument.`,
-              `⚔️ Steel does what diplomacy couldn't. ${capitalize(result.monster)} is down, and the room changes ownership.`,
-            ])
-          : pick([
-              `☠️ ${capitalize(result.monster)} was too much. The line broke, and the dungeon collected its due.`,
-              `☠️ The party gave everything it had, and ${result.monster} took the rest. The dungeon is very good at arithmetic.`,
-            ]));
+        bits.push(`☠️ ${capitalize(result.monster)} is too strong: the party is beaten down over ${result.rounds} round${result.rounds === 1 ? '' : 's'}.`);
       }
       break;
     }
     case 'spell-strike': {
       if (!result.spell) {
-        bits.push('🔥 The grimoire is bare, so steel must do the whole job.');
+        bits.push('🔥 No combat spell was available, so the party fights with weapons alone.');
       } else if (result.spellEdge === 'weak') {
-        bits.push(`🔥 The caster reads the thing and reaches for ${result.spell} — chosen precisely, because this one hates ${result.spellElement}. It lands like an argument won in advance.`);
+        bits.push(`🔥 The caster opens with ${result.spell}, chosen precisely for the monster's ${result.spellElement} weakness: spell damage ×1.5.`);
       } else if (result.spellEdge === 'swarm') {
-        bits.push(`🔥 ${result.spell} tears through the packed bodies — a swarm is mostly targets.`);
+        bits.push(`🔥 ${result.spell} opens the fight; against a swarm the spell hits ×1.5.`);
       } else if (result.spellEdge === 'resisted') {
-        bits.push(`🔥 ${result.spell} lands, and the thing shrugs off half of it. The caster files that away for next time.`);
+        bits.push(`🔥 ${result.spell} opens the fight, but the monster resists the element: spell damage ×0.5.`);
       } else {
-        bits.push(`🔥 ${result.spell} lights the room before a blade is drawn — the fight that follows is short and one-sided.`);
+        bits.push(`🔥 ${result.spell} opens the fight, softening the monster before the first blow.`);
       }
-      if (result.success) bits.push('The room is won.');
+      if (result.success && result.rounds !== undefined) {
+        bits.push(killLine(result));
+      } else if (!result.success) {
+        bits.push(`☠️ Even softened, ${result.monster} beats the party down.`);
+      }
       break;
     }
     case 'sneak':
       bits.push(result.success
-        ? pick([
-            `🗡️ Single file, breath held, past ${result.monster} — it never knew its luck.`,
-            `🗡️ The rogue's route works: over the fallen lintel, behind ${result.monster}, gone. Nobody exhales until the next room.`,
-          ])
-        : pick([
-            `🗡️ A loose stone turns underfoot. ${capitalize(result.monster)} gets one good swipe in before the party scrambles clear.`,
-            `🗡️ Halfway past, someone's buckle sings against stone. ${capitalize(result.monster)} charges; the party pays the toll in bruises.`,
-          ]));
+        ? `🗡️ The rogue leads the party past ${result.monster} unseen. No damage taken; +15 score.`
+        : `🗡️ The sneak fails: ${result.monster} notices and lands a blow before the party scrambles clear.`);
       break;
     case 'turn-undead':
       bits.push(result.success
-        ? '✨ The holy symbol blazes. The dead remember, briefly, that they are dead — and act accordingly.'
-        : '✨ The light flickers and fails. Bones do not always listen, and these had opinions.');
+        ? `✨ The cleric turns the undead: ${result.monster} crumbles. +30 score.`
+        : `✨ The turning fails: ${result.monster} attacks while the cleric recovers.`);
       break;
     case 'bribe':
-      bits.push(`💰 Fifteen gold changes hands. ${capitalize(result.monster)} counts it twice and waves the party through with something like professional respect.`);
+      bits.push(`💰 The party pays ${result.goldSpent || 15} gold and ${result.monster} lets them pass. No fight.`);
       break;
     case 'cause-fear':
-      bits.push(pick([
-        `😱 ${result.spell || 'Cause Fear'} lands like a cold hand on the neck. ${capitalize(result.monster)} remembers an appointment elsewhere, urgently.`,
-        `😱 One syllable of dread, and ${result.monster} discovers it was never paid enough for this. The room empties at speed.`,
-      ]));
+      bits.push(`😱 ${result.spell || 'Cause Fear'} routs ${result.monster}: the room clears without a fight. +20 score.`);
       break;
     case 'smoke-bomb':
-      bits.push(pick([
-        '⚗️ The alchemist lobs a smoking vial from thirty feet, and the trap spends its violence on fog. A material well spent.',
-        '⚗️ One concoction, one long arc, one very dead trap. The alchemist accepts the applause with a small bow.',
-      ]));
+      bits.push('⚗️ The alchemist spends 1 material on a smoke concoction and springs the trap from a safe distance. No damage taken.');
       break;
     case 'knock-open':
       bits.push(result.wasMimic
-        ? `🚪 ${result.spell} slams the lid open from across the room — and TEETH snap shut on empty air. The mimic sulks; the party collects ${result.gold} gold at arm's length.${result.consumed ? ' The scroll burns.' : ''}`
-        : `🚪 ${result.spell} booms through the chamber and the lock surrenders at range. ${result.gold} gold, no surprises${result.consumed ? '; the scroll burns' : ''} — though everything below now knows precisely where you are.`);
+        ? `🚪 ${result.spell} opens the chest from across the room — it was a mimic, and it springs at nothing. ${result.gold} gold taken safely.${result.consumed ? ' The scroll is consumed.' : ''}`
+        : `🚪 ${result.spell} opens the lock at range: ${result.gold} gold taken.${result.consumed ? ' The scroll is consumed.' : ''} The noise carries through the dungeon.`);
       break;
     case 'flee':
-      bits.push(pick([
-        '💨 The party falls back in good order — mostly. The dungeon keeps the room, for now.',
-        '💨 Retreat, regroup, pretend it was tactics. The room stays hostile behind them.',
-      ]));
+      // A party can flee the same room repeatedly, so the retreat has to
+      // read differently each time or the Chronicle stutters
+      bits.push(pick(RETREAT_LINES)(result.fled || 1, result.damage ?? 2));
       break;
     case 'disarm':
       bits.push(result.success
-        ? pick([
-            '🗝️ A click, a held breath, a slack wire. The rogue pockets the trigger pin as a souvenir.',
-            '🗝️ Three pins, one prayer, no explosion. The rogue takes a bow nobody asked for.',
-            '🗝️ The mechanism surrenders quietly, the way good work makes things do.',
-          ])
-        : pick([
-            '🗝️ Almost. The mechanism spends itself with a crack, and someone limps for the next few rooms.',
-            '🗝️ The wire was a decoy; the real trigger was the floor. The rogue apologizes from the far wall.',
-          ]));
+        ? '🗝️ The rogue disarms the trap. No damage taken; +20 score.'
+        : '🗝️ The disarm fails: the trap springs for half damage.');
       break;
     case 'push-through':
-      bits.push(pick([
-        `💥 Straight through — it costs ${result.damage} health and nobody's pride survives, but the corridor is behind them.`,
-        `💥 Heads down, teeth gritted: ${result.damage} health buys the far side of the room.${result.spotted ? ' The Craven called the tripwire, which is why it was only that much.' : ''}`,
-      ]));
+      bits.push(`💥 The party pushes through the trap, taking ${result.damage} damage.${result.spotted ? ' The Craven spotted the tripwire first: 1 less damage.' : ''}`);
       break;
     case 'loot':
       bits.push(result.mimic
-        ? pick([
-            `🦷 The chest has TEETH. After a horrible interval it is persuaded to be furniture again — ${result.gold} gold richer, several nerves poorer.`,
-            `🦷 The lid comes up and so does the tongue. When it's over there are ${result.gold} gold and a new shared silence about chests.`,
-          ])
-        : pick([
-            `💰 ${result.gold} gold, honest and heavy. The bags sing on the walk out.`,
-            `💰 ${result.gold} gold counted twice, because counting it once felt too good to trust.`,
-            `💰 The hoard is real: ${result.gold} gold, no teeth, no curse anyone's noticed yet.`,
-          ]));
+        ? `🦷 The chest is a mimic. It bites for 5 damage before the party kills it, recovering ${result.gold} gold.`
+        : `💰 The party loots the chest: ${result.gold} gold.`);
       break;
     case 'inspect':
-      bits.push(pick([
-        `🔍 Poked, prodded, pronounced safe. ${result.gold} gold, collected with dignity intact.`,
-        `🔍 Ten careful minutes and a stick sacrificed to science: ${result.gold} gold, no surprises.`,
-      ]));
+      bits.push(`🔍 The party checks for mimics and curses first, then takes ${result.gold} gold safely.`);
       break;
     case 'leave-it':
-      bits.push(pick([
-        '🚶 The party walks away from free gold. Somewhere, a mimic sighs.',
-        '🚶 Gold left gleaming in the dark. Restraint, or superstition — the ledger doesn\'t care which.',
-      ]));
+      bits.push('🚶 The party leaves the treasure untouched and moves on.');
       break;
     case 'study':
-      bits.push(pick([
-        `📚 ${result.learned} new working${result.learned > 1 ? 's' : ''} copied into the grimoire by candle stub. The stacks keep their silence.`,
-        `📚 Dust, patience, and ${result.learned} working${result.learned > 1 ? 's' : ''} the dungeon's last owners won't be needing.`,
-      ]));
+      bits.push(`📚 The party studies the shelves and learns ${result.learned} spell${result.learned > 1 ? 's' : ''}.`);
       break;
     case 'deep-study':
       bits.push(result.success
-        ? '🔏 The sealed text opens for the wizard and, crucially, closes again. The party is two workings richer and only slightly haunted.'
-        : '🔏 The book bites back. The wizard is thrown across the room trailing smoke and vindication.');
+        ? '🔏 The wizard reads the sealed texts: 2 spells learned, including a forbidden working. +50 score.'
+        : '🔏 The sealed text backfires: the wizard takes 4 damage and learns nothing.');
       break;
     case 'rest':
-      bits.push(pick([
-        `🕯️ Candles, quiet, and ${result.healed} health apiece. The god of small mercies does steady work.`,
-        `🕯️ The party kneels badly and means it anyway. ${result.healed} health apiece, no questions asked.`,
-        `🕯️ Warm stone, old wax, ${result.healed} health returned. Whoever keeps this shrine keeps it well.`,
-      ]));
+      bits.push(`🕯️ The party rests at the shrine: ${result.healed} health healed per member.`);
       break;
     case 'desecrate':
-      bits.push('⛏️ Thirty gold in scraped-off leaf. The silence afterward has a texture to it. The dungeon takes notes.');
+      bits.push('⛏️ The party strips 30 gold of leaf from the altar. The next disaster will hit harder for it.');
       break;
     case 'alchemy': {
       const a = result.alchemy;
       if (!a) {
-        bits.push('⚗️ The bench is willing but the satchel is empty — no materials, no miracles.');
+        bits.push('⚗️ The bench is usable but the satchel is empty: no materials, nothing brewed.');
       } else if (a.type === 'potion') {
-        bits.push(`⚗️ Glass sings, something turns gold at the bottom of the flask: a healing draught${a.doubled ? ' — two, in fact; Perenelle works in doubles' : ''}, corked and pocketed.`);
+        bits.push(`⚗️ The alchemist spends 1 material and brews a healing draught (heals 6)${a.doubled ? ' — two, in fact; Perenelle works in doubles' : ''}.`);
       } else {
-        bits.push(`⚗️ The alchemist paints ${a.mod.name} down the edge of ${a.target}'s weapon. It hisses. Everyone takes one respectful step back.`);
+        bits.push(`⚗️ The alchemist spends 1 material and applies ${a.mod.name} to ${a.target}'s weapon: +${a.mod.attack} attack.`);
       }
       break;
     }
-    case 'gather': {
-      const coda = party.hasClass(CLASSES.ALCHEMIST)
-        ? 'The alchemist hums approvingly at everything.'
-        : 'Nobody is sure what half of it does, but weight is weight.';
-      bits.push(`🌿 ${result.materials} bundle${result.materials > 1 ? 's' : ''} of herbs and salts go into the satchel. ${coda}`);
+    case 'gather':
+      bits.push(`🌿 The party gathers ${result.materials} bundle${result.materials > 1 ? 's' : ''} of alchemy materials.`);
       break;
-    }
+    case 'brew-oil':
+      // The preps carry the numbers; this is the beat itself
+      bits.push('⚗️ The alembic goes on the bench and a bundle of materials becomes light to march by.');
+      break;
     case 'brace':
-      bits.push(`🌋 Shields up, heads down — the dungeon does its worst (${result.damage} damage's worth) and the party is still there when the dust settles.`);
+      bits.push(`🌋 The party braces together and rides it out: ${result.damage} damage taken.`);
       break;
     case 'scatter':
       bits.push(result.success
-        ? '🌋 Everyone runs their own way and nearly everyone guesses right. The regrouping is sheepish but intact.'
-        : `🌋 Scattering was a theory. ${result.hurt} of the party guessed wrong, and the bruises will remember.`);
+        ? '🌋 The party scatters; nearly everyone finds cover. Minimal damage.'
+        : `🌋 The party scatters; ${result.hurt} member${result.hurt === 1 ? '' : 's'} guessed wrong and took 3 damage each.`);
       break;
+    /* Stairs down — the floor below is meaner than this one */
+    case 'descend':
+      bits.push(`\u{1FA9C} The party goes down the stair to ${floorName(room.descendsTo)}, ${result.supplySpent === 1 ? 'burning a march of oil on the climb' : 'and the lamp is already out'}.`);
+      break;
+    case 'rope-down':
+      bits.push(`\u{1FA9C} The party ropes down the shaft beside the stair and lands on ${floorName(room.descendsTo)}.`);
+      break;
+    case 'camp-stair': {
+      const set = result.mended ? ` A night off their feet sets one of ${result.mended}'s wounds.` : '';
+      bits.push(result.interrupted
+        ? `\u{1F3D5}\uFE0F The party makes camp at the stairhead and something climbs the stair into it: ${result.healed} healed each, ${result.damage} damage taken, and ${floorName(room.descendsTo)} still to go.${set}`
+        : `\u{1F3D5}\uFE0F The party makes camp at the stairhead and eats before the climb: ${result.healed} healed each, then down to ${floorName(room.descendsTo)}.${set}`);
+      break;
+    }
+
     default:
-      bits.push('The party presses on, deeper and down.');
+      bits.push(pick(PROCEED_LINES));
   }
 
-  // Preparation pays, and the chronicle says so by name (the FTL
-  // lesson: the encounter must notice how you came equipped)
+  // Preparation pays, and the log says so by name (the FTL lesson:
+  // the encounter must notice how you came equipped)
   for (const prep of result.preps || []) {
     bits.push(prep.text);
   }
@@ -451,132 +528,294 @@ export function composeResolution(room, optionId, result, party) {
 }
 
 /* ------------------------------------------------------------------ */
-/* Falls — a hero's death is a beat, not a footnote                    */
+/* Falls — a hero's death is reported by name                          */
 /* ------------------------------------------------------------------ */
 
-const DEATH_LINES = {
-  [CLASSES.FIGHTER]: [
-    '— shield still up, the door held one last time.',
-    '— facing the thing, which was always the plan.',
-    '— and the back rank learns, all at once, what the front rank was for.',
+/* ------------------------------------------------------------------ */
+/* Attrition — the two clocks, reported as they tick                   */
+/* ------------------------------------------------------------------ */
+
+/*
+ * House style, same as everywhere else in this file: say what happened
+ * and what it cost. No flourishes standing in for information — a line
+ * the player cannot act on is a line that should not be here.
+ *
+ * Variety matters more for these than for room writing, because a delve
+ * fires them five or six times. The dark in particular escalates: the
+ * first benighted march reads differently from the fourth, so a long
+ * walk in the dark tells a story instead of repeating a sentence.
+ */
+const SUPPLY_LINES = {
+  low: [
+    n => `🕯️ The lantern is burning low: oil for ${n} more ${n === 1 ? 'march' : 'marches'}.`,
+    n => `🕯️ The wick is well down the oil. ${n} more ${n === 1 ? 'march' : 'marches'} of light, then none.`,
+    n => `🕯️ Someone checks the reservoir and does not like the answer: oil for ${n} more ${n === 1 ? 'march' : 'marches'}.`,
   ],
-  [CLASSES.CLERIC]: [
-    '— mid-blessing, the lantern light going out last of all.',
-    '— hands still warm from a mending that wasn\'t their own.',
-    '— and whatever was listening to their prayers hears the silence.',
+  guttered: [
+    () => '🕯️ The last of the oil goes. From here the party walks in the dark.',
+    () => '🕯️ The flame stands up, thins, and is gone. The party is out of oil.',
+    () => '🕯️ The lantern dies with the party still under the hill. No more light to carry.',
   ],
-  [CLASSES.WIZARD]: [
-    '— the unfinished syllable hanging in the air like smoke.',
-    '— annotating the fatal error to the very end.',
-    '— and the grimoire is suddenly just a book.',
+  conjured: [
+    (name, full) => `💡 ${name} carries the march instead of oil: none of the ${full} damage the dark would have taken.`,
+    (name, full) => `💡 No oil left, so ${name} does the work — light enough to walk by, and ${full} damage nobody pays.`,
+    (name, full) => `💡 ${name} kindles in the empty air and the party walks on seeing. The dark takes nothing.`,
   ],
-  [CLASSES.ROGUE]: [
-    '— two steps short of a shadow that would have held them.',
-    '— and everyone\'s spare coin, it is later discovered, goes with them.',
-    '— having checked everything in the room for traps except the obvious.',
+  'sure-footed': [
+    (name, full) => `🪶 ${name} takes the party's weight off the floor: they walk the dark without walking into it, and pay none of the usual ${full}.`,
+    (name, full) => `🪶 No light, but no stumbling either — ${name} carries them through blind and whole, ${full} damage unpaid.`,
+    (name, full) => `🪶 ${name} means the floor never tells them what they hit. Nothing does: ${full} damage avoided.`,
   ],
-  [CLASSES.ALCHEMIST]: [
-    '— the satchel breaking open in a small, private rainbow.',
-    '— mid-measurement. The reaction, at least, completes.',
-    '— leaving notes that end, as their master\'s always did, mid-sentence.',
+  'dark-seen': [
+    (name, full) => `👁️ ${name} makes the dark no trouble: the party walks on, ${full} damage unpaid.`,
+    (name, full) => `👁️ ${name} reads the black like a page, and the march costs nothing.`,
+    (name, full) => `👁️ ${name} leads them through whole — none of the usual ${full} damage.`,
   ],
 };
 
-const DEATH_CODAS = [
-  'The party does not stop. Stopping is for the surface.',
-  'Someone closes their eyes for them. There is no time for more.',
-  'The delve grows quieter by exactly one voice.',
-  'What can be carried of theirs is carried on. The rest is mourned at marching pace.',
+/* The dark gets worse the longer it lasts — the player should feel the
+ * clock running, not read the same sentence four times. */
+const DARK_LINES = [
+  d => `🌑 The party gropes through the dark and pays for it: ${d} damage to everyone.`,
+  d => `🌑 Another march by touch alone. Walls, edges, and things underfoot take ${d} from each of them.`,
+  d => `🌑 The dark is telling now. Everyone is bleeding somewhere they cannot see: ${d} damage each.`,
+  d => `🌑 They have stopped calling it a march. ${d} damage to everyone, again, and the hill goes on.`,
 ];
 
 /**
- * A fallen hero's line in the chronicle: their class writes the
- * death, the party writes the grief.
+ * One march's worth of the supply clock, as prose.
+ * Takes the data note from Party.burnSupply.
  */
+export function composeSupply(note) {
+  if (!note) return null;
+  if (note.kind === 'dark') {
+    const n = Math.max(1, note.darkMarches || 1);
+    const line = DARK_LINES[Math.min(n, DARK_LINES.length) - 1];
+    // A temper that changed what the dark charges says so the first
+    // time it does, so the player can tell a Craven delve from a Bold
+    // one rather than just reading a different number
+    const temper = n === 1 && note.temper?.length
+      ? ' ' + note.temper.map(t => t.text).join(' ')
+      : '';
+    return line(note.damage) + temper;
+  }
+  const pool = SUPPLY_LINES[note.kind];
+  if (!pool) return null;
+  if (note.kind === 'conjured' || note.kind === 'sure-footed' || note.kind === 'dark-seen') {
+    return pick(pool)(note.source, note.full);
+  }
+  return pick(pool)(note.supply);
+}
+
+const WOUND_LINES = [
+  (n, c) => `✚ ${n} takes a wound that will not close down here. Healing can bring them back to ${c}, no further, until town.`,
+  (n, c) => `✚ That one leaves a mark on ${n}. Their ceiling drops to ${c} for the rest of the delve.`,
+  (n, c) => `✚ ${n} is opened up badly enough that the delve will keep it: ${c} is as whole as they get until town.`,
+];
+
+const DEEP_WOUND_LINES = [
+  (n, c, w) => `✚ ${n} is wounded again — ${w} scars now, and nothing can heal them past ${c} before town.`,
+  (n, c, w) => `✚ ${w} wounds on ${n}, and the ceiling with them: ${c}, and no more.`,
+];
+
+/**
+ * What the party's temper did to the quartermaster's list, said once at
+ * the mouth of the dungeon. Silent when no temper had an opinion.
+ */
+export function composeProvision(notes) {
+  if (!notes || notes.length === 0) return null;
+  return '🕯️ ' + notes.map(n => n.text).join(' ');
+}
+
+/**
+ * A newly taken wound, named for the player.
+ *
+ * Wounds used to happen in silence — the health bar's ceiling quietly
+ * dropped and the Chronicle never said why. A mechanic the player cannot
+ * see is a mechanic they cannot plan around.
+ */
+export function composeWound(member, temperNotes = null) {
+  const ceiling = member.effectiveMax ? member.effectiveMax() : member.maxHealth;
+  const line = member.wounds > 1
+    ? pick(DEEP_WOUND_LINES)(member.name, ceiling, member.wounds)
+    : pick(WOUND_LINES)(member.name, ceiling);
+  // The temper that changed how readily this party scars says so on the
+  // first wound of the delve, and then stops explaining itself
+  if (temperNotes?.length && member.wounds === 1) {
+    return `${line} ${temperNotes.map(t => t.text).join(' ')}`;
+  }
+  return line;
+}
+
+/**
+ * The surgeon's bill, reported when town clears the delve's scars.
+ */
+export function composeMend(mended) {
+  if (!mended || mended.wounds === 0) return null;
+  const who = mended.names.length === 1
+    ? mended.names[0]
+    : `${mended.names.slice(0, -1).join(', ')} and ${mended.names[mended.names.length - 1]}`;
+  return `✚ The town surgeon sets what the march only bandaged: ${mended.wounds} wound${mended.wounds === 1 ? '' : 's'} closed on ${who}, and full health is theirs again.`;
+}
+
+/**
+ * A drafted tactic that is doing nothing, and why.
+ *
+ * The tree's whole design is that a tier-two card is a blank without
+ * its root — which is only a fair decision if the player is *told*.
+ * A silently dead card reads as a bug.
+ */
+export function composeDormant(entry) {
+  if (!entry) return null;
+  const { tactic, reason, missing, capability } = entry;
+  if (reason === 'requires') {
+    return `${tactic.icon} ${tactic.name} is drafted but idle: it grows out of ${missing.name}, and nobody in this party has learned that.`;
+  }
+  const need = {
+    cast: 'a working in the grimoire to use it on',
+    attack: 'somebody still standing',
+  }[capability] || 'something this party does not have';
+  return `${tactic.icon} ${tactic.name} is drafted but idle: it wants ${need}.`;
+}
+
+/** The technique the party actually brought, named once at the start. */
+export function composeTactics(live) {
+  if (!live || live.length === 0) return null;
+  const names = live.map(t => `${t.icon} ${t.name}`).join(', ');
+  return `The party has drilled: ${names}.`;
+}
+
 export function composeFall(member) {
-  const lines = DEATH_LINES[member.class] || DEATH_LINES[CLASSES.FIGHTER];
-  return `☠️ ${member.name} falls ${pick(lines)} ${pick(DEATH_CODAS)}`;
+  return `☠️ ${member.name} falls. The party's ${member.class} is dead; the survivors march on.`;
 }
 
 /* ------------------------------------------------------------------ */
 /* Endings                                                             */
 /* ------------------------------------------------------------------ */
 
-const WIPE_EPITAPHS = [
-  'The dungeon goes quiet again, the way it always does. The next party will find good gear, lightly used, and a warning nobody will heed.',
-  'They were brave, or greedy, or both — the dungeon does not distinguish and does not care. The torches burn down. The dark files its claim.',
-  'Above ground, the tavern keeps their tab open a decent interval, then wipes the slate. The dungeon keeps better records.',
-  'No one sees them fall who lives to say so. The story ends the way the honest ones do: mid-sentence, underground.',
-];
+/**
+ * The spoils, reported at the ending: how many trophies, and the
+ * latest claimed (on a victory that is usually the boss's).
+ */
+function trophyLine(party, victory) {
+  const trophies = party.trophies || [];
+  if (trophies.length === 0) return '';
+  const latest = trophies[trophies.length - 1];
+  return victory
+    ? ` Trophies carried out: ${trophies.length} (latest: ${latest.icon} ${latest.name}).`
+    : ` Trophies lost with them: ${trophies.length} (latest: ${latest.icon} ${latest.name}).`;
+}
 
-const VICTORY_CODAS = [
-  'Up the long stair and out into weather — sunlight, absurd and wonderful, on faces that have earned it. The tavern will not believe a word, and every word is true.',
-  'The boss\'s hoard divides beautifully. Someone proposes retirement. Everyone laughs. They will all be back within the month.',
-  'They come up singing something unprintable and out of tune, and the town forgives it instantly, because look what they\'re carrying.',
-  'The last door closes behind them and becomes, in the telling, three times as heavy and guarded by twice as much. Every victory improves with altitude.',
-];
+export function composeWipe(party, roomsCleared, theme = null) {
+  const fallen = party.members.map(m => m.name).join(', ');
+  const where = theme ? ` in ${theme.name}` : '';
+  return `The party is wiped out${where}. The dead: ${fallen}. Rooms cleared: ${roomsCleared}.${trophyLine(party, false)}`;
+}
+
+export function composeVictory(party, roomsCleared, theme = null) {
+  const survivors = party.living().map(m => m.name).join(', ');
+  const where = theme ? `${theme.name} is cleared` : 'The dungeon is cleared';
+  return `${where}: the boss is dead and the party walks out. Survivors: ${survivors}. Rooms cleared: ${roomsCleared}.${trophyLine(party, true)}`;
+}
 
 /* ------------------------------------------------------------------ */
 /* The town between — campaign interludes                              */
 /* ------------------------------------------------------------------ */
 
-const TOWN_INTERLUDES = [
-  'The town takes the party in the way towns do: ale first, questions later, prices adjusted for visible wounds. Somewhere below, the next dungeon is already rearranging itself.',
-  'Lamplight, real bread, a bed that is not stone. The innkeeper chalks the party\'s tab with professional optimism — heroes flush with dungeon gold rarely haggle.',
-  'The temple takes donations, the apothecary takes more, and by morning the whole town knows what came crawling out of the dark with full pockets.',
+export function composeTownInterlude(party, depth) {
+  return `The party returns to town after depth ${depth}. Healing, potions, recruits, and the smith are all paid for in gold. The next dungeon waits at depth ${depth + 1}, and it will be harder: stronger monsters, deadlier traps, richer hoards.`;
+}
+
+/* ------------------------------------------------------------------ */
+/* Predicament composition                                             */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Coming back to a room the party already ran from.
+ *
+ * A retreat leaves the room hostile and the party walks back into it,
+ * so a stubborn or a craven band can meet the same monster half a dozen
+ * times. Repeating the room's first-sight description each time reads
+ * as a stuck record; these say what is actually different, which is
+ * that everyone involved has met before.
+ */
+const RETREAT_LINES = [
+  (n, dmg) => (n > 1
+    ? `💨 They back out again and it follows further this time: ${dmg} damage on the way.`
+    : `💨 The party retreats, taking ${dmg} damage on the way out. The room stays hostile; they will have to try it again.`),
+  (n, dmg) => (n > 1
+    ? `💨 Out through the same door a second time, ${dmg} damage the toll. There is no third.`
+    : `💨 The party gives ground, ${dmg} damage on the way out, and the room keeps what it was holding.`),
+  (n, dmg) => (n > 1
+    ? `💨 Another retreat, and it costs ${dmg} this time. The room is winning this by attrition.`
+    : `💨 They fall back, paying ${dmg} for the room they do not take.`),
 ];
 
-export function composeTownInterlude(party, depth) {
-  const line = pick(TOWN_INTERLUDES);
-  const next = `Rumor already speaks of what waits at depth ${depth + 1}, and rumor sounds impressed.`;
-  return `${line} ${next}`;
-}
+const RETURN_LINES = [
+  n => `They are back. ${n === 2 ? 'The room has not improved.' : `This is the ${n}${n === 3 ? 'rd' : 'th'} time, and it knows them now.`}`,
+  n => `The same room again${n > 3 ? ', and the party is running out of ways to describe it' : ''}. Whatever is in it has had time to think.`,
+  n => `Back through the same door, for the ${n === 2 ? 'second' : n === 3 ? 'third' : `${n}th`} time. Nothing here has forgotten them.`,
+];
 
 export function composePredicament(room, theme = null) {
+  // A return visit gets its own opening rather than the room's
+  // first-sight description over again
+  // A room the party has already backed out of twice does not offer a
+  // third exit: the fight is happening (RoomEncounters, CORNERED_AT)
+  if (room?.fled >= 2 && !room.cleared) {
+    return `They are back, and there is no backing out this time: ${room.monster?.name || 'it'} is between them and the door.`
+      + monsterTells(room.monster);
+  }
+  if (room?.visits > 1 && !room.cleared) {
+    return pick(RETURN_LINES)(room.visits) + monsterTells(room.monster);
+  }
   if (room.type === ROOM_TYPES.ENTRANCE && theme && THEME_ENTRANCES[theme.id]) {
-    return pick(THEME_ENTRANCES[theme.id]);
+    return THEME_ENTRANCES[theme.id];
   }
-  // Each theme's disasters are its own brand of trouble
+  // Each theme's disasters are its own kind of trouble
   if (room.type === ROOM_TYPES.DISASTER && theme && THEME_DISASTERS[theme.id]) {
-    return pick(THEME_DISASTERS[theme.id]);
+    return `${THEME_DISASTERS[theme.id]} The party must brace together or scatter.`;
   }
-  // Name the foe when we have one — a boss earns a dramatic entrance,
-  // a monster a specific one. (The generic pools remain the fallback.)
-  if (room.type === ROOM_TYPES.BOSS && room.monster) {
-    return pick([
-      `The final chamber. ${capitalize(room.monster.name)} waits at its heart, and it has been expecting visitors far better armed than you.`,
-      `Every dungeon keeps its worst for last. The door swings wide on ${room.monster.name}.`,
-      `${capitalize(room.monster.name)} fills the last room the way weather fills a sky. There is no going around this one.`,
-    ]) + monsterTells(room.monster);
-  }
-  if (room.type === ROOM_TYPES.MONSTER && room.monster) {
-    return pick([
-      `${capitalize(room.monster.name)} holds the room, and it heard the party coming since the entrance hall.`,
-      `The room is not empty: ${room.monster.name}, between the party and the way down.`,
-      `${capitalize(room.monster.name)} rises out of the dark. The smell of it arrives first.`,
-    ]) + monsterTells(room.monster);
+  // Name the foe when we have one, with its numbers when we have them
+  if ((room.type === ROOM_TYPES.BOSS || room.type === ROOM_TYPES.MONSTER) && room.monster) {
+    const m = room.monster;
+    const stats = m.attack != null && m.health != null ? ` (attack ${m.attack}, health ${m.health})` : '';
+    const lead = room.type === ROOM_TYPES.BOSS
+      ? `The boss chamber. ${capitalize(m.name)} waits at its center${stats}; killing it clears the dungeon.`
+      : `${capitalize(m.name)} holds the room${stats}. The party must decide how to get past it.`;
+    return lead + monsterTells(m) + featureTells(room);
   }
   if (room.type === ROOM_TYPES.TRAP && room.trapType && TRAP_TELLS[room.trapType]) {
-    return `${pick(PREDICAMENTS.trap)} ${TRAP_TELLS[room.trapType]}`;
+    return `${pick(PREDICAMENTS.trap)} ${TRAP_TELLS[room.trapType]}${featureTells(room)}`;
   }
   const pool = PREDICAMENTS[room.type] || PREDICAMENTS.corridor;
-  return pick(pool);
+  return pick(pool) + featureTells(room);
 }
 
-/* The room gives away a monster's nature, to those who read rooms */
+/**
+ * What the room is furnished with, named so the player can see why an
+ * option exists. Each feature states its own tell (RoomFeatures).
+ */
+function featureTells(room) {
+  const features = roomFeatures(room);
+  if (features.length === 0) return '';
+  return ' ' + features.map(f => f.tell).join(' ');
+}
+
+/* The monster's nature, stated as facts the party can plan around */
 const TRAIT_TELLS = {
-  armored: 'Plate, chitin, or worse — blows here will have to mean it.',
-  ethereal: 'The torchlight passes through it in places light shouldn\'t go.',
-  venomous: 'Something drips from it, and the moss dies where the drips land.',
-  swarm: 'It is not one thing. It was never one thing.',
-  slow: 'It is slow, and entirely unbothered about it.',
+  armored: 'Plate and chitin cover it: the party\'s blows do 2 less damage each round.',
+  ethereal: 'It is ethereal: weapons do only 60% damage unless a cleric blesses the blades.',
+  venomous: 'It is venomous: even a won fight leaves poison working, unless a cleric cures it.',
+  swarm: 'It is a swarm: spell openings hit it ×1.5.',
+  slow: 'It is slow: the party strikes first and takes no damage in round one.',
 };
 
 const WEAK_TELLS = {
-  fire: 'It keeps well clear of the torches.',
-  frost: 'It flinches from the cold draft off the deeper halls.',
-  shock: 'Every hair and fiber of it stands on end near the wizard.',
-  holy: 'It will not look at the cleric.',
+  fire: 'It keeps clear of the torches: weak to fire (fire damage ×1.5).',
+  frost: 'It flinches from the cold: weak to frost (frost damage ×1.5).',
+  shock: 'Its hairs stand on end: weak to shock (shock damage ×1.5).',
+  holy: 'It will not face the cleric: undead take holy damage ×1.5.',
 };
 
 function monsterTells(monster) {
@@ -589,21 +828,13 @@ function monsterTells(monster) {
 
 /* And a trap's kind shows, to those who look down */
 const TRAP_TELLS = {
-  fire: 'Scorch marks fan out from a seam in the floor like a dark flower.',
-  poison: 'A ring of dead beetles surrounds one tile, arranged like a warning diagram.',
-  alarm: 'A tripwire runs up the wall to something that looks, disappointingly, like a bell.',
+  fire: 'Scorch marks fan out from a seam in the floor: a fire trap. A frost spell can blunt it.',
+  poison: 'Dead beetles ring one tile: a poison trap. Light damage now, lingering venom later unless a cleric cures it.',
+  alarm: 'A tripwire runs up the wall to a bell: an alarm trap. Little damage, but the next monster will be warned (+2 attack).',
 };
 
-export function composeWipe(party, roomsCleared, theme = null) {
-  const fallen = party.members.map(m => m.name).join(', ');
-  const where = theme ? ` in ${theme.name}` : '';
-  return `${pick(WIPE_EPITAPHS)} Here ended${where}: ${fallen}. Rooms conquered: ${roomsCleared}.`;
-}
-
-export function composeVictory(party, roomsCleared, theme = null) {
-  const survivors = party.living().map(m => m.name).join(', ');
-  const where = theme ? ` of ${theme.name}` : '';
-  return `${pick(VICTORY_CODAS)} Walked out${where}: ${survivors}. Rooms conquered: ${roomsCleared}.`;
+function pick(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
 }
 
 function capitalize(s) {

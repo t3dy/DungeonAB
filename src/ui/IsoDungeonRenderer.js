@@ -1,20 +1,35 @@
 /**
  * IsoDungeonRenderer — the delve in torchlit isometric 3D
  *
- * Adapted from SnakeAB's proven IsoRenderer. Rooms are stone
- * platforms laid out on the dungeon's winding descent, joined by
- * narrow walkways. The party is a cluster of class-colored meeples
- * under a traveling torchlight. Rooms ahead hide behind ❓ until
- * the party draws near; the boss chamber broods in red.
+ * Adapted from SnakeAB's proven IsoRenderer, rebuilt for procgen v3:
+ * rooms are drawn at the footprint DungeonGen gave them — halls long,
+ * caverns ragged, rotundas round, vaults cramped — walled around the
+ * perimeter with a doorway wherever a passage arrives, and joined by
+ * corridors of real width. Trapdoors show as shafts in the floor.
+ *
+ * The party stands *inside* the room in marching order (fighters
+ * front), spaced about a tile apart, squaring up against a monster
+ * that holds the far end of the chamber.
  *
  * Renders synchronously on every game tick (hidden-tab safe) and
  * continuously via rAF when visible (torch flicker, meeple bob).
  */
 
 import * as THREE from 'three';
-import { ATLAS, FX_TILES, getClassTile, getMonsterTile, getRoomProp } from './SpriteAtlas.js';
+import { ATLAS, FX_TILES, getClassTile, getMonsterTile, getRoomProp, getFeatureTile } from './SpriteAtlas.js';
+import {
+  TILE, DOOR_W, roomHalf, roomAxis, monsterSpot, partySlots, wallSpans, doorMap,
+  featureSlots,
+} from './RoomLayout.js';
 
-const SPACING = 3.2;   // World units between room centers
+const VIEW_HALF = 11;       // half-height of the view, in world units (~2 rooms)
+const CAM_BACK = 26;        // how far back the iso eye sits
+const WALL_H = 1.15;        // wall height in world units
+const WALL_T = 0.28;        // wall thickness
+const CORRIDOR_W = 1.7;     // connecting passage width
+/** How far one floor sits below the one above it, in world units. */
+const FLOOR_DROP = 7;
+
 const CLASS_COLORS = {
   fighter: 0xc84c3c,
   cleric: 0xe8d48a,
@@ -69,9 +84,10 @@ export class IsoDungeonRenderer {
 
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(0x0a0805);
-    // Fog must start beyond the camera's distance to the scene
-    // (~37 units) or it eats the whole dungeon
-    this.scene.fog = new THREE.Fog(0x0a0805, 44, 110);
+    // The camera sits ~26 units back and rides with the party, so fog
+    // starts past the current chamber and swallows the far dungeon —
+    // which is what a torch in the dark actually does
+    this.scene.fog = new THREE.Fog(0x0a0805, 34, 78);
 
     // Cold ambient + hemisphere skylight + moonlight from the shaft
     this.scene.add(new THREE.AmbientLight(0xaab4d0, 1.1));
@@ -146,18 +162,25 @@ export class IsoDungeonRenderer {
 
     this.resize(rooms);
 
-    // Discovery changes the map: found secret rooms surface.
-    // The theme colors the stone.
+    // Discovery changes the map: found secret rooms surface. The theme
+    // colors the stone. Footprints are part of the key — a resized or
+    // reshaped room has to be rebuilt, not just repainted.
     const themeId = state.dungeon.theme?.id || 'delve';
-    const key = themeId + '|' + rooms.map(r => `${r.type}${r.secret && !r.discovered ? '?' : ''}`).join(',');
+    const key = themeId + '|' + rooms
+      .map(r => `${r.type}${r.w}x${r.h}${r.shape}${r.secret && !r.discovered ? '?' : ''}`)
+      .join(',');
     if (this.builtKey !== key) {
-      this.buildDungeon(rooms, state.dungeon.edges, themeId);
+      this.buildDungeon(rooms, state.dungeon.edges, themeId, state.dungeon.trapdoors || []);
       this.builtKey = key;
     }
 
     this.updateIcons(state);
     this.updateOccupants(state);
     this.updateParty(state);
+
+    // The camera rides with the party
+    const idx = state.currentRoomIndex ?? Math.min(state.roomIndex, rooms.length - 1);
+    this.focusOn(rooms[idx]);
     this.animateFrame();
   }
 
@@ -219,15 +242,17 @@ export class IsoDungeonRenderer {
 
     rooms.forEach((room, i) => {
       if (room.secret && !room.discovered) return;
-      const { x, z } = this.roomPositions[i];
+      const { x, y: fy, z } = this.roomPositions[i];
       const known = knownRooms.has(i) || room.type === 'boss';
       if (!known) return;
 
       let sprite = null;
       if ((room.type === 'monster' || room.type === 'boss') && room.monster && !room.cleared) {
         const scale = room.type === 'boss' ? 1.7 : 1.05;
+        // The monster holds its end of the room; the party gets the other
+        const { mx, mz } = monsterSpot(room, x, z);
         sprite = this.tileSprite(getMonsterTile(room.monster.kind), scale);
-        sprite.position.set(x, 0.2 + scale / 2, z);
+        sprite.position.set(mx, fy + 0.2 + scale / 2, mz);
         sprite.userData.sway = true;
 
         // Its nature shows over its head — a readable enemy is a plan
@@ -238,8 +263,8 @@ export class IsoDungeonRenderer {
         badges.forEach((emoji, bi) => {
           const badge = new THREE.Sprite(this.getSpriteMaterial(emoji));
           badge.scale.set(0.42, 0.42, 1);
-          badge.position.set(x - 0.25 + bi * 0.5, 0.35 + scale, z);
-          badge.userData.baseY = 0.35 + scale;
+          badge.position.set(mx - 0.25 + bi * 0.5, fy + 0.35 + scale, mz);
+          badge.userData.baseY = fy + 0.35 + scale;
           badge.userData.phase = i * 1.3 + bi;
           badge.userData.sway = true;
           this.occupantGroup.add(badge);
@@ -247,8 +272,10 @@ export class IsoDungeonRenderer {
       } else {
         const prop = getRoomProp(room);
         if (prop) {
+          // Furniture stands against the far end, out of the walkway
+          const { mx, mz } = monsterSpot(room, x, z);
           sprite = this.tileSprite(prop, 0.95);
-          sprite.position.set(x, 0.66, z);
+          sprite.position.set(mx, fy + 0.66, mz);
           if (room.cleared) {
             sprite.material = sprite.material.clone();
             sprite.material.opacity = 0.55;
@@ -260,60 +287,114 @@ export class IsoDungeonRenderer {
         sprite.userData.phase = i * 2.3;
         this.occupantGroup.add(sprite);
       }
+
+      // The room's furniture: pillars, braziers, a sarcophagus against
+      // the wall (world/RoomFeatures.js). Drawn along the edges so the
+      // party's ranks and the monster's end stay clear.
+      const features = room.features || [];
+      const slots = featureSlots(room, x, z, features.length);
+      features.forEach((fid, fi) => {
+        const tile = getFeatureTile(fid);
+        const slot = slots[fi];
+        if (!tile || !slot) return;
+        const fsprite = this.tileSprite(tile, 0.8);
+        fsprite.position.set(slot.mx, fy + 0.58, slot.mz);
+        fsprite.userData.baseY = fy + 0.58;
+        fsprite.userData.phase = i * 1.1 + fi;
+        // A brazier flickers; stone does not
+        if (fid === 'brazier') fsprite.userData.sway = true;
+        this.occupantGroup.add(fsprite);
+      });
     });
   }
 
   roomWorldPos(room) {
-    return { x: room.x * SPACING, z: room.y * SPACING };
+    // Floors stack: a room two levels down is drawn two drops below the
+    // entrance level, so a descent is something you watch happen rather
+    // than something the story panel tells you about.
+    return { x: room.x * TILE, y: -(room.floor || 0) * FLOOR_DROP, z: room.y * TILE };
   }
 
+  /**
+   * The dungeon's true bounds in world space — room footprints, not
+   * just their centers, or the widest cavern gets clipped off-frame.
+   */
+  bounds(rooms) {
+    let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
+    for (const room of rooms) {
+      const { x, z } = this.roomWorldPos(room);
+      const { hx, hz } = roomHalf(room);
+      minX = Math.min(minX, x - hx); maxX = Math.max(maxX, x + hx);
+      minZ = Math.min(minZ, z - hz); maxZ = Math.max(maxZ, z + hz);
+    }
+    return { minX, maxX, minZ, maxZ, cx: (minX + maxX) / 2, cz: (minZ + maxZ) / 2 };
+  }
+
+  /**
+   * The camera frames the party's surroundings, not the whole map —
+   * a dungeon-wide view shrinks a chamber to a smudge, and the point
+   * of real rooms is seeing four adventurers stand in one. The
+   * minimap and the 2D floorplan carry the overview.
+   */
   resize(rooms) {
     const w = this.canvas.clientWidth || 500;
     const h = this.canvas.clientHeight || 420;
-    if (this.lastW === w && this.lastH === h && this.camera && this.builtKey) return;
+    if (this.lastW === w && this.lastH === h && this.camera) return;
     this.lastW = w;
     this.lastH = h;
     this.renderer.setSize(w, h, false);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 
-    const xs = rooms.map(r => r.x * SPACING);
-    const zs = rooms.map(r => r.y * SPACING);
-    const cx = (Math.min(...xs) + Math.max(...xs)) / 2;
-    const cz = (Math.min(...zs) + Math.max(...zs)) / 2;
-
-    // Fit the frustum to the dungeon's projected footprint: in an
-    // iso view the map's diagonal projects to roughly 0.72× its
-    // world size vertically
-    const spread = Math.max(
-      Math.max(...xs) - Math.min(...xs),
-      Math.max(...zs) - Math.min(...zs)
-    );
-    const vertHalf = Math.max(8, spread * 0.42 + 4);
-
+    // Roughly two rooms and their corridors, top to bottom
     const aspect = w / h;
+    const vertHalf = VIEW_HALF;
     this.camera = new THREE.OrthographicCamera(
-      -vertHalf * aspect, vertHalf * aspect, vertHalf, -vertHalf, 0.1, 300
+      -vertHalf * aspect, vertHalf * aspect, vertHalf, -vertHalf, 0.1, 400
     );
-    this.camera.position.set(cx + 20, 24, cz + 20);
-    this.camera.lookAt(cx, 0, cz);
+    this.camera.position.set(CAM_BACK, CAM_BACK * 1.05, CAM_BACK);
+    this.camera.lookAt(0, 0, 0);
+    this.camTarget = new THREE.Vector3(0, 0, 0);
   }
 
-  buildDungeon(rooms, edges = null, themeId = 'delve') {
+  /**
+   * Point the camera at a room. Called every tick; the actual move is
+   * eased in animateFrame so the party glides between chambers.
+   */
+  focusOn(room) {
+    if (!room || !this.camera) return;
+    const { x, y, z } = this.roomWorldPos(room);
+    // A big chamber needs the eye pulled back a little to fit
+    const { hx, hz } = roomHalf(room);
+    const zoomOut = Math.max(0, Math.max(hx, hz) - 3.5) * 0.55;
+    // The camera follows the party down: it tracks the floor they stand
+    // on, so the level below is not framed from the ceiling of the one above
+    if (!this.camTarget) this.camTarget = new THREE.Vector3(x, y, z);
+    this.camTarget.set(x, y, z);
+    this.camZoom = zoomOut;
+  }
+
+  buildDungeon(rooms, edges = null, themeId = 'delve', trapdoors = []) {
     this.staticGroup.clear();
     this.roomPositions = rooms.map(r => this.roomWorldPos(r));
 
     const palette = THEME_PALETTES[themeId] || DEFAULT_PALETTE;
+    this.palette = palette;
     this.scene.background = new THREE.Color(palette.bg);
-    this.scene.fog = new THREE.Fog(palette.bg, 44, 110);
+    this.scene.fog = new THREE.Fog(palette.bg, 34, 78);
 
-    const platGeo = new THREE.BoxGeometry(2.4, 0.35, 2.4);
-    const bossGeo = new THREE.BoxGeometry(3.1, 0.5, 3.1);
     const hidden = room => room.secret && !room.discovered;
+    const edgeList = edges || rooms.slice(1).map((_, i) => ({ a: i, b: i + 1, kind: 'door' }));
+    const doors = doorMap(rooms, edgeList, hidden);
+    const wallMat = new THREE.MeshStandardMaterial({ color: palette.wall, roughness: 1 });
+    const secretWallMat = new THREE.MeshStandardMaterial({ color: palette.wall, roughness: 1 });
 
     rooms.forEach((room, i) => {
       // Undiscovered secret rooms simply aren't there — that's the point
       if (hidden(room)) return;
-      const { x, z } = this.roomPositions[i];
+      const { x, y: fy, z } = this.roomPositions[i];
+      const { hx, hz } = roomHalf(room);
+      const w = hx * 2;
+      const d = hz * 2;
 
       // Theme-tinted stone with hand-laid shade variance; vaults gleam
       const shade = ((room.index * 7) % 5 - 2) * 0.02;
@@ -322,49 +403,149 @@ export class IsoDungeonRenderer {
         : palette.plat;
       const c = new THREE.Color(base);
       c.offsetHSL(0, 0, shade);
+      const floorMat = new THREE.MeshStandardMaterial({ color: c, roughness: 0.95 });
 
-      const plat = new THREE.Mesh(
-        room.type === 'boss' ? bossGeo : platGeo,
-        new THREE.MeshStandardMaterial({ color: c, roughness: 0.95 })
-      );
-      plat.position.set(x, 0, z);
-      plat.receiveShadow = true;
-      this.staticGroup.add(plat);
+      // The floor takes the room's shape: rotundas are round, caverns
+      // ragged, everything else the honest rectangle of its footprint
+      let floor;
+      if (room.shape === 'rotunda') {
+        floor = new THREE.Mesh(
+          new THREE.CylinderGeometry(Math.min(hx, hz), Math.min(hx, hz) * 1.02, 0.35, 24),
+          floorMat
+        );
+      } else {
+        floor = new THREE.Mesh(new THREE.BoxGeometry(w, 0.35, d), floorMat);
+      }
+      floor.position.set(x, fy, z);
+      floor.receiveShadow = true;
+      this.staticGroup.add(floor);
 
-      // Low walls on two sides give chambers depth
-      const wallMat = new THREE.MeshStandardMaterial({ color: palette.wall, roughness: 1 });
-      const wall1 = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.7, 0.2), wallMat);
-      wall1.position.set(x, 0.5, z - 1.15);
-      wall1.castShadow = true;
-      this.staticGroup.add(wall1);
-      const wall2 = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.7, 2.4), wallMat);
-      wall2.position.set(x - 1.15, 0.5, z);
-      wall2.castShadow = true;
-      this.staticGroup.add(wall2);
+      // A cavern's edges break up: slabs of fallen rock at the corners
+      if (room.shape === 'cavern') {
+        for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
+          if ((room.index + sx + sz) % 2 !== 0) continue;
+          const rubble = new THREE.Mesh(
+            new THREE.BoxGeometry(w * 0.22, 0.5, d * 0.22),
+            new THREE.MeshStandardMaterial({ color: palette.wall, roughness: 1 })
+          );
+          rubble.position.set(x + sx * (hx - w * 0.1), fy + 0.16, z + sz * (hz - d * 0.1));
+          rubble.rotation.y = (room.index % 4) * 0.2;
+          rubble.castShadow = true;
+          this.staticGroup.add(rubble);
+        }
+      }
+
+      // Walls around the perimeter, with a gap wherever a passage
+      // meets this room. Rotundas stay open — a ring of pillars would
+      // be nice but the colonnade reads worse than the clean circle.
+      if (room.shape !== 'rotunda') {
+        const sides = [
+          { name: 'north', axis: 'x', len: w, off: -hz },
+          { name: 'south', axis: 'x', len: w, off: hz },
+          { name: 'west', axis: 'z', len: d, off: -hx },
+          { name: 'east', axis: 'z', len: d, off: hx },
+        ];
+        const myDoors = doors.get(i) || [];
+        for (const side of sides) {
+          const sideDoors = myDoors.filter(dr => dr.side === side.name);
+          // A secret door is a blank wall until it's found; the room
+          // beyond is hidden anyway, so only revealed ones open up
+          const spans = wallSpans(side.len, sideDoors.length);
+          for (const [from, to] of spans) {
+            const segLen = to - from;
+            if (segLen <= 0.05) continue;
+            const mat = sideDoors.some(dr => dr.secret) ? secretWallMat : wallMat;
+            const seg = side.axis === 'x'
+              ? new THREE.Mesh(new THREE.BoxGeometry(segLen, WALL_H, WALL_T), mat)
+              : new THREE.Mesh(new THREE.BoxGeometry(WALL_T, WALL_H, segLen), mat);
+            const mid = (from + to) / 2;
+            if (side.axis === 'x') seg.position.set(x + mid, fy + WALL_H / 2, z + side.off);
+            else seg.position.set(x + side.off, fy + WALL_H / 2, z + mid);
+            seg.castShadow = true;
+            this.staticGroup.add(seg);
+          }
+        }
+      }
     });
 
-    // Walkways along the dungeon's edges (spine + discovered branches)
-    const edgeList = edges || rooms.slice(1).map((_, i) => ({ a: i, b: i + 1 }));
+    // Corridors: real passages between rooms, running wall to wall.
+    // The layout only ever steps along one axis, so they stay straight.
     for (const edge of edgeList) {
+      // A stair joins two floors, so it is a drop rather than a passage:
+      // it gets its own flight of steps below, not a flat corridor.
+      if (edge.kind === 'trapdoor' || edge.kind === 'stair') continue;
       const ra = rooms[edge.a];
       const rb = rooms[edge.b];
       if (!ra || !rb || hidden(ra) || hidden(rb)) continue;
       const pa = this.roomPositions[edge.a];
       const pb = this.roomPositions[edge.b];
+      const ha = roomHalf(ra);
+      const hb = roomHalf(rb);
       const dx = pb.x - pa.x;
       const dz = pb.z - pa.z;
-      const len = Math.sqrt(dx * dx + dz * dz);
-      const bridge = new THREE.Mesh(
-        new THREE.BoxGeometry(len, 0.18, 0.8),
+      const mat = new THREE.MeshStandardMaterial({
+        // A revealed secret passage keeps a furtive, darker look
+        color: edge.secret ? 0x2a2620 : 0x3d3a33, roughness: 1,
+      });
+
+      let corridor;
+      if (Math.abs(dx) >= Math.abs(dz)) {
+        const gap = Math.abs(dx) - ha.hx - hb.hx;
+        if (gap <= 0.05) continue;
+        corridor = new THREE.Mesh(new THREE.BoxGeometry(gap + 0.4, 0.2, CORRIDOR_W), mat);
+        corridor.position.set(pa.x + Math.sign(dx) * (ha.hx + gap / 2), pa.y - 0.02, pa.z);
+      } else {
+        const gap = Math.abs(dz) - ha.hz - hb.hz;
+        if (gap <= 0.05) continue;
+        corridor = new THREE.Mesh(new THREE.BoxGeometry(CORRIDOR_W, 0.2, gap + 0.4), mat);
+        corridor.position.set(pa.x, pa.y - 0.02, pa.z + Math.sign(dz) * (ha.hz + gap / 2));
+      }
+      corridor.receiveShadow = true;
+      this.staticGroup.add(corridor);
+    }
+
+    // Stairs: a flight of steps from the stairhead down to the room it
+    // lands in, so the two floors read as one place.
+    for (const edge of edgeList) {
+      if (edge.kind !== 'stair') continue;
+      const ra = rooms[edge.a];
+      const rb = rooms[edge.b];
+      if (!ra || !rb || hidden(ra) || hidden(rb)) continue;
+      const pa = this.roomPositions[edge.a];
+      const pb = this.roomPositions[edge.b];
+      const drop = pa.y - pb.y;
+      if (drop <= 0) continue;
+      const steps = 6;
+      const stepMat = new THREE.MeshStandardMaterial({ color: 0x35322b, roughness: 1 });
+      const half = roomHalf(ra);
+      for (let stp = 0; stp < steps; stp++) {
+        const t = (stp + 0.5) / steps;
+        const step = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.3, 1.1), stepMat);
+        step.position.set(
+          pa.x + (pb.x - pa.x) * t * 0.35 - half.hx * 0.2,
+          pa.y - drop * t,
+          pa.z + (pb.z - pa.z) * t * 0.35 + half.hz * 0.25,
+        );
+        step.receiveShadow = true;
+        this.staticGroup.add(step);
+      }
+    }
+
+    // Trapdoors: a shaft in the floor of the room that holds them
+    for (const td of trapdoors) {
+      const room = rooms[td.from];
+      if (!room || hidden(room)) continue;
+      const { x, y: fy, z } = this.roomPositions[td.from];
+      const { hx, hz } = roomHalf(room);
+      const shaft = new THREE.Mesh(
+        new THREE.BoxGeometry(1.5, 0.42, 1.5),
         new THREE.MeshStandardMaterial({
-          // A revealed secret passage keeps a furtive, darker look
-          color: edge.secret ? 0x2a2620 : 0x3d3a33, roughness: 1,
+          // Hidden shafts read as rubble; found ones as a black hole
+          color: td.secret ? 0x2e2a24 : 0x07060a, roughness: 1,
         })
       );
-      bridge.position.set(pa.x + dx / 2, -0.02, pa.z + dz / 2);
-      bridge.rotation.y = -Math.atan2(dz, dx);
-      bridge.receiveShadow = true;
-      this.staticGroup.add(bridge);
+      shaft.position.set(x + hx * 0.45, fy + 0.01, z - hz * 0.45);
+      this.staticGroup.add(shaft);
     }
   }
 
@@ -399,7 +580,7 @@ export class IsoDungeonRenderer {
 
     rooms.forEach((room, i) => {
       if (room.secret && !room.discovered) return;   // still behind the wall
-      const { x, z } = this.roomPositions[i];
+      const { x, y: fy, z } = this.roomPositions[i];
       const isKnown = known.has(i) || room.type === 'boss';
       const icon = isKnown ? room.icon : '❓';
 
@@ -412,10 +593,12 @@ export class IsoDungeonRenderer {
       const sprite = new THREE.Sprite(this.getSpriteMaterial(icon));
       const scale = room.type === 'boss' ? 1.5 : 1.0;
       sprite.scale.set(scale, scale, 1);
-      sprite.position.set(x, 1.35, z);
+      // Float the label clear of the room's walls
+      const labelY = fy + WALL_H + 0.6;
+      sprite.position.set(x, labelY, z);
       sprite.material = sprite.material.clone();
       sprite.material.opacity = room.cleared && i !== current ? 0.28 : 1;
-      sprite.userData.baseY = 1.35;
+      sprite.userData.baseY = labelY;
       sprite.userData.phase = i;
       this.iconGroup.add(sprite);
     });
@@ -424,34 +607,39 @@ export class IsoDungeonRenderer {
   updateParty(state) {
     this.partyGroup.clear();
     const idx = state.currentRoomIndex ?? Math.min(state.roomIndex, state.dungeon.rooms.length - 1);
-    const { x, z } = this.roomPositions[idx] || { x: 0, z: 0 };
-
-    // Torch travels with the party
-    this.torch.position.set(x, 2.2, z);
-
-    // A monster in an uncleared room holds the platform's center; the
-    // party crowds the near edge, squaring up to it
+    const { x, y: fy, z } = this.roomPositions[idx] || { x: 0, y: 0, z: 0 };
     const room = state.dungeon.rooms[idx];
+
+    // The torch has to light the whole chamber now, not a platform
+    const reach = room ? Math.max(roomHalf(room).hx, roomHalf(room).hz) : 4;
+    this.torch.position.set(x, fy + 2.4, z);
+    this.torch.distance = Math.max(12, reach * 3.4);
+    this.torchBase = 24 + reach * 2.2;
+
     const facingMonster = room && room.monster && !room.cleared &&
       (room.type === 'monster' || room.type === 'boss');
-    const cx = facingMonster ? x - 0.75 : x;
-    const cz = facingMonster ? z + 0.75 : z;
 
-    const living = state.party.members.filter(m => m.alive);
+    // Fighters to the front rank; the fragile behind them
+    const living = state.party.members
+      .filter(m => m.alive)
+      .slice()
+      .sort((a, b) => (a.class === 'fighter' ? -1 : 0) - (b.class === 'fighter' ? -1 : 0));
     const n = living.length;
+    // Stand them the way they are actually fighting: the formation the
+    // party chose is on the state, and the drawing agrees with the maths
+    const slots = room
+      ? partySlots(room, x, z, n, facingMonster, state?.party?.formation || 'line')
+      : living.map(() => ({ mx: x, mz: z }));
+
     living.forEach((m, i) => {
-      // Ring formation (tighter when squaring up)
-      const angle = (i / Math.max(1, n)) * Math.PI * 2;
-      const r = n > 1 ? Math.min(facingMonster ? 0.5 : 0.75, 0.28 + n * 0.05) : 0;
-      const mx = cx + Math.cos(angle) * r;
-      const mz = cz + Math.sin(angle) * r;
+      const { mx, mz } = slots[i];
       const wounded = m.health / m.maxHealth <= 0.35;
 
       if (this.atlasReady) {
         // The adventurer, in the flesh (well, in 16 pixels of it)
         const sprite = this.tileSprite(getClassTile(m.class), 0.82);
-        sprite.position.set(mx, 0.72, mz);
-        sprite.userData.baseY = 0.72;
+        sprite.position.set(mx, fy + 0.72, mz);
+        sprite.userData.baseY = fy + 0.72;
         sprite.userData.phase = i * 1.7;
         if (wounded) {
           sprite.material = sprite.material.clone();
@@ -462,15 +650,15 @@ export class IsoDungeonRenderer {
 
         // Class-colored base disc under their feet
         const base = new THREE.Mesh(this.baseGeo, this.baseMats[m.class] || this.baseMats.fighter);
-        base.position.set(mx, 0.24, mz);
+        base.position.set(mx, fy + 0.24, mz);
         base.castShadow = true;
         this.partyGroup.add(base);
       } else {
         // Fallback meeple for the beat before the sheet loads
         const meeple = new THREE.Mesh(this.meepleGeo, this.meepleMats[m.class] || this.meepleMats.fighter);
-        meeple.position.set(mx, 0.55, mz);
+        meeple.position.set(mx, fy + 0.55, mz);
         meeple.castShadow = true;
-        meeple.userData.baseY = 0.55;
+        meeple.userData.baseY = fy + 0.55;
         meeple.userData.phase = i * 1.7;
         this.partyGroup.add(meeple);
       }
@@ -484,7 +672,7 @@ export class IsoDungeonRenderer {
   playEffect(action, roomIndex, element = null) {
     const style = EFFECT_STYLES[action];
     if (!style || !this.roomPositions[roomIndex]) return;
-    const { x, z } = this.roomPositions[roomIndex];
+    const { x, y: fy, z } = this.roomPositions[roomIndex];
 
     // A cast spell glows in its element's color
     const color = (action === 'spell-strike' && ELEMENT_FX_COLORS[element])
@@ -499,7 +687,7 @@ export class IsoDungeonRenderer {
       sprite = new THREE.Sprite(this.glowMaterial(color || '#ffffff').clone());
       sprite.scale.set(1.1, 1.1, 1);
     }
-    sprite.position.set(x, 1.0, z);
+    sprite.position.set(x, fy + 1.0, z);
     this.fxGroup.add(sprite);
     this.effects.push({ sprite, born: this.clock.getElapsedTime(), life: 0.7 });
   }
@@ -530,8 +718,32 @@ export class IsoDungeonRenderer {
     if (!this.camera) return;
     const t = this.clock.getElapsedTime();
 
+    // Glide the camera to the room the party is in
+    if (this.camTarget) {
+      const back = CAM_BACK + (this.camZoom || 0) * 2;
+      const want = new THREE.Vector3(
+        this.camTarget.x + back, this.camTarget.y + back * 1.05, this.camTarget.z + back
+      );
+      // First frame snaps; after that it eases
+      const ease = this.camPlaced ? 0.12 : 1;
+      this.camPlaced = true;
+      this.camera.position.lerp(want, ease);
+      if (!this.camLook) this.camLook = this.camTarget.clone();
+      this.camLook.lerp(this.camTarget, ease);
+      this.camera.lookAt(this.camLook);
+      const zoom = VIEW_HALF + (this.camZoom || 0);
+      const aspect = (this.lastW || 500) / (this.lastH || 420);
+      this.camera.top = zoom;
+      this.camera.bottom = -zoom;
+      this.camera.left = -zoom * aspect;
+      this.camera.right = zoom * aspect;
+      this.camera.updateProjectionMatrix();
+    }
+
     // Torch flicker
-    this.torch.intensity = 26 + Math.sin(t * 9) * 3 + Math.sin(t * 23) * 2;
+    // Bigger chambers need a brighter torch to read at all
+    const torchBase = this.torchBase || 26;
+    this.torch.intensity = torchBase + Math.sin(t * 9) * 3 + Math.sin(t * 23) * 2;
 
     // Icon bob
     for (const s of this.iconGroup.children) {

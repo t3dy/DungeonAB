@@ -110,6 +110,32 @@ const PROP_TILES = {
   entrance: { col: 10, row: 3 },       // the door down
 };
 
+/**
+ * Room features — the furniture inside a chamber (world/RoomFeatures).
+ * Every one is art already on the Kenney sheet: no new assets, which
+ * is why the feature catalog was designed around what these tiles
+ * actually depict.
+ */
+const FEATURE_TILES = {
+  pillars: { col: 6, row: 0 },       // squat stone column
+  rubble: { col: 0, row: 1 },        // broken stone and gravel
+  crates: { col: 1, row: 6 },        // stacked crate
+  brazier: { col: 5, row: 2 },       // flame in a bracket
+  pit: { col: 9, row: 0 },           // dark opening in the floor
+  boulder: { col: 6, row: 8 },       // loose round stone
+  sarcophagus: { col: 6, row: 4 },   // stone slab coffin
+  font: { col: 8, row: 2 },          // basin holding liquid
+  spout: { col: 8, row: 1 },         // gargoyle head, pouring
+  portcullis: { col: 5, row: 3 },    // barred gate
+  anvil: { col: 2, row: 6 },         // the smith's anvil
+  shelves: { col: 3, row: 6 },       // sagging wooden shelves
+  mirror: { col: 5, row: 8 },        // framed silvered glass
+};
+
+export function getFeatureTile(featureId) {
+  return FEATURE_TILES[featureId] || null;
+}
+
 /* Effect sprites drawn from the sheet (procedural glows cover the rest) */
 export const FX_TILES = {
   slash: { col: 2, row: 5 },           // white melee slashes
@@ -158,6 +184,7 @@ export function getAllMappedTiles() {
     ...Object.values(CLASS_TILES),
     ...Object.values(MONSTER_TILES),
     ...Object.values(PROP_TILES),
+    ...Object.values(FEATURE_TILES),
     ...Object.values(FX_TILES),
     MONSTER_FALLBACK,
   ];

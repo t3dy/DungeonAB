@@ -15,6 +15,7 @@ import { registerPack } from '../game/CardPacks.js';
 import { registerTheme } from '../world/DungeonGen.js';
 import { registerMonsterTiles } from '../ui/SpriteAtlas.js';
 import { registerNatures } from '../game/Bestiary.js';
+import { registerDrops } from '../game/Drops.js';
 
 export const ALCHEMY_PACK = {
   id: 'alchemy-17c',
@@ -127,5 +128,13 @@ export function installAlchemyPack({ enabled = true } = {}) {
     'winged-wingless': { trait: 'swarm' },
     'rebis': { trait: 'armored' },                          // crowned twice, mailed twice
     'philosophers-dragon': { resist: ['fire'], weak: ['frost'] },
+  });
+  registerDrops({
+    'green-lion': { effect: 'coating', name: 'green vitriol', icon: '🦁', mod: { name: 'green vitriol', attack: 2, venom: true }, text: 'Its bite distills to green vitriol. What dissolves the sun does not hesitate at flesh.' },
+    'ouroboros': { effect: 'potion', name: 'the shed of the ouroboros', icon: '🐍', potion: { kind: 'ouroboros-shed', heal: 8 }, text: 'It sheds as it dies, as it always does. The shed skin, steeped, turns endings back into beginnings.' },
+    'caput-corvi': { effect: 'materials', name: 'nigredo feathers', icon: '🐦‍⬛', count: 2, text: 'Feathers black past black: the nigredo itself. Every great work begins with exactly this.' },
+    'winged-wingless': { effect: 'trinket', name: 'the settled feather', icon: '🕊️', bonus: { mind: 1 }, text: 'One feather, from whichever bird was right. Held, it makes both sides of any argument audible.' },
+    'rebis': { effect: 'trinket', name: 'the double crown', icon: '👑', bonus: { attack: 1, mind: 1 }, text: 'Both crowns, fused where the two heads met. Wearing it, the head does two kinds of thinking at once.' },
+    'philosophers-dragon': { effect: 'coating', name: 'the dragon\'s mercury', icon: '🐉', mod: { name: 'burning mercury', attack: 3, element: 'fire' }, text: 'What it kept swallowing, tail after tail: quicksilver that burns. On a blade it is an unfair argument.' },
   });
 }

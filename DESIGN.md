@@ -17,7 +17,8 @@ A **narrative dungeon-crawling autobattler**. The player drafts a party MTG-styl
 ### Design Pillars
 
 1. **The Draft Is the Game** — Every meaningful player decision happens at the table. Pack picks are agonizing: take the second fighter, or the fireball the wizard across the table clearly wants?
-2. **Party = Whatever You Drafted** — No fixed party size. Five characters and no gear? A mob of unarmed heroes. Two characters buried in spells and equipment? A small elite. Both are viable, both tell different stories.
+2. **Party = Which Four You Drafted** *(revised 2026-07-15)* — A party is **four adventurers**, so the question is never *how many* bodies but *which four*, and what kit the other twenty picks win. Four fighters and a pile of steel? A wall. A cleric, a rogue, a wizard and a mule of scrolls? A toolkit. Both are viable, both tell different stories.
+   *This pillar previously promised unlimited party size ("five characters and no gear… two buried in spells… both viable"). Measurement killed it: a body outvalued any item at every difficulty, so "draft every character" dominated and the draft solved itself (AUDIT.md D1 — five bare bodies won 100% of medium runs; the fully-kitted elite duo won 55%). The cap restores the tension the pillar was reaching for, by making composition and kit the axes instead of headcount.*
 3. **Personality-Driven Party AI** — Personality archetypes bias group decisions (from RPG Auto-Battler Concept: the same archetype expresses differently per class — a Reckless fighter charges, a Reckless wizard overchannels).
 4. **Boss Monster Lessons** (from Megabase feedback analysis): guaranteed coverage in packs (never a "no good pick" pack), gradient outcomes over binary ones, catch-up drama built into the dungeon.
 
@@ -32,13 +33,14 @@ A **narrative dungeon-crawling autobattler**. The player drafts a party MTG-styl
 - Total: 24 picks per drafter → the player's pool is their party + kit.
 
 ### Card Types (one pick = one card of any type)
-- **Character** — a named adventurer of one of 5 classes: **Fighter, Cleric, Wizard, Rogue, Alchemist**. Party size = number of characters drafted (minimum 1 enforced by pack coverage).
+- **Character** — a named adventurer of one of 5 classes: **Fighter, Cleric, Wizard, Rogue, Alchemist**. **A party is four** (`Party.PARTY_CAP`): the first four in draft order march, and any beyond that wait in town as the **reserve**, free to call up when someone dies. The cap replaced "draft every body," which measured as the dominant line (AUDIT.md D1: five bare bodies won 100% of medium runs) and solved the draft.
 - **Equipment** — auto-assigned to the best-fit member (fighters get shields, rogues get lockpicks); class-agnostic pieces exist.
-- **Spell** — party-wide magic. Wizards amplify spell power; anyone can carry a scroll.
+- **Spell** — party-wide magic in a shared grimoire. A **drafted** working is *prepared*: reusable run-long, spent once per room. A scroll **found** in the dungeon *burns* on use. Power is `power + ⌊best mind ÷ 2⌋`, +2 more with a wizard present; a loosed combat working keeps half its force every round for the rest of the fight, and in the boss chamber the party looses every working it has. See **The Grimoire** below.
+- **Tactic** — learned technique, gated by **capability rather than class** and arranged in a small skill tree. See **Tactics** below.
 - **Personality** — archetypes that bias the whole party's decisions (The Bold, The Cunning, The Covetous, The Scholarly, The Devout, The Reckless).
 
 ### Pack Construction (guaranteed coverage)
-Every pack contains: 2–3 characters, 2–3 equipment, 2 spells, 1 personality. This guarantees a drafter can always build a legal party (Boss Monster lesson: no dead packs).
+Every pack contains: **2 characters, 3 equipment, 2 spells, 1 personality, 1 tactic**. Two characters is the coverage floor — enough that no draft is dead, few enough that a four-strong party isn't force-fed adventurers it can never field (at 3/pack the mining harness measured ~5 wasted picks per draft). With the cap, 20 of a drafter's 24 picks are kit, which is where the format's decisions now live.
 
 ### AI Drafters
 Each AI seat has a **draft persona** (e.g. "Warlord" prioritizes fighters+weapons, "Archmage" hoards spells, "Guildmaster" balances). AI picks by need-weighted scoring: class gaps, kit synergies, personality fit — with a small chaos factor so drafts differ. The player sees what neighbors picked trickle back in later packs (signal reading, like real MTG).
@@ -54,20 +56,362 @@ Each AI seat has a **draft persona** (e.g. "Warlord" prioritizes fighters+weapon
   - **Rogue** — disarms traps, picks locks, scouts ahead, finds hidden treasure.
   - **Alchemist** — at **lab rooms**, brews potions and applies **weapon mods** from materials gathered in the dungeon.
 - Equipment assigns automatically to best-fit members (draft decides the pool, the party sorts itself).
-- Spells are a shared grimoire; casting uses them per-run (scrolls) unless a wizard is present to make them repeatable.
+- Spells are a shared grimoire — see **The Grimoire** for the prepared/found split, mind scaling, sustain, and the boss unleash.
 - Personalities apply party-wide, expressed per class (Megabase RPG Auto-Battler Concept).
+
+---
+
+## The Grimoire
+
+Every character is costed at exactly **30** points
+(`health + 2·attack + 2·defense + mind`) against a documented cap of 34,
+so a wizard and a fighter are genuinely competing for the same one of
+four party slots. Before this the pool was silently uncosted — fighters
+ran 36–40, wizards 22–26 — and that alone was most of why the arcane
+package lost (DESIGN_DIALOGUE.md §8). Two invariant tests hold the line.
+
+Four rules govern magic:
+
+1. **Prepared vs found.** A spell you *drafted* is prepared: it comes
+   back every room, but each working can only be cast once before the
+   party moves on. A scroll *found* in the dungeon burns on use. A pick
+   spent on a spell buys a permanent capability, the way a pick spent on
+   a weapon always did.
+2. **Mind pays.** Effective power is `power + ⌊best mind ÷ 2⌋`, +2 more
+   if a wizard is in the party — so the stat the wizard is built around
+   finally has a payout, and a high-minded character improves every
+   working the party holds.
+3. **A working holds.** A loosed spell keeps `SPELL_SUSTAIN_SHARE` (0.5)
+   of its force **every round for the rest of the fight** — a combat
+   working goes on biting, a healing working goes on mending. A healing
+   working also fires **mid-fight**, the moment a companion drops below
+   40%, and is tried before a potion because the working comes back next
+   room and the potion does not. (Healing used to be applied *after* the
+   fight and gated on the party surviving it, so the one situation it was
+   drafted for was the one situation it could never fire in: 87% of runs
+   by a heal-heavy party ended with the party dead and a working still
+   prepared.) This is the shape Aegis of Ash always had,
+   and it is what lets spells scale with fight length the way a weapon
+   bonus does. Measured: without it, three combat spells lost 33 win
+   points to three equipment cards on hard, and *all* of that gap was
+   the boss chamber.
+4. **At the throne, nothing is held back.** Ordinary rooms ration the
+   grimoire — one working, two with a wizard. Against a **boss**, every
+   prepared combat working goes off. So a grimoire is a reserve you spend
+   down toward the throne: one spell is a tool, three are a plan.
+
+**The grimoire is front-loaded; the armoury is linear.** This is the
+format's central kit decision, and it is measured rather than asserted
+(DESIGN_DIALOGUE.md §9). Because ordinary rooms ration the grimoire to
+one or two casts, only the first few workings pay full value:
+
+| Held | Spells | Equipment |
+|---|---|---|
+| 0–4 | ~79–86% wins (flat) | 47–59% (climbing) |
+| 5–8 | 71–79% (sagging) | 60–75% (climbing) |
+| 9+ | **55.5%** | **80.0%** |
+
+Two or three workings is one of the strongest things early picks can buy;
+nine is a hoarder's mistake, and it is the error that defines the
+Archmage drafter persona. Note the corollary for analysis: **per-card
+improvement-when-drafted is confounded for a hoarded card type**, because
+a card's win-rate-when-present averages over the pools that contain it.
+Every individual spell reads as a −12 card purely from the company it
+keeps. `MINING_REPORT.md` prints both curves under *Kit-count win curves*
+so the caveat travels with the instrument.
+
+**Utility** workings are paid for by **Attrition** (below) rather than by
+rules 3 and 4, which are damage-and-mending rules. Once the march itself
+costs something, a card that makes the march safer has a job: Dancing
+Light and Eyes of the Mouse went from the two worst cards in the game
+(−15.4 and −13.2 improvement-when-drafted) to two of the best (+6.3 and
++7.4) without either card's power being touched (DESIGN_DIALOGUE.md §10).
+
+---
+
+## The Room as a Participant — element × feature reactions
+
+A fireball loosed in a room stacked with crates should not politely
+strike only the monster. Every room feature is made of something
+(`Reactions.MATTER`), every spell carries an element, and the pairing
+does what a player would guess — which is the design rule: **no reaction
+should need a rules lookup.**
+
+|  | 🪵 wood | 💧 water | 🔥 flame | 🪨 stone | ⚙️ metal | 🪞 glass |
+|---|---|---|---|---|---|---|
+| 🔥 **fire** | **blaze** — burns every round, cover burns away, light to march by | **steam** — monster half-blind, fog is cover, party scalded | **flare** — 6 damage, spends the fuel | — | searing | — |
+| ⚡ **shock** | — | **conduction** — 7 damage, and the party is on the same floor | — | — | **arc** — 4 damage | shiver |
+| ❄️ **frost** | — | **glaze** — monster cannot keep its feet, nor quite can the party | **douse** — smoke for cover, and that much less light | brittle | — | — |
+| 🌟 **holy** | — | **blessing** — the party drinks | — | **consecrate** — nothing rises from the sarcophagus | — | reveals the ethereal |
+
+Two rules govern the table:
+
+1. **A reaction is a trade, not a bonus.** Burning the crates costs their
+   cover; dousing the brazier costs the light; electrifying the floor
+   hurts whoever is standing on it. A test enforces this — any reaction
+   whose gain crosses a threshold must give something back.
+2. **Only an area working reaches the furniture.** A bolt is a bolt.
+   Firebolt does not set the room alight; **Fireball**, **Hoarfrost**,
+   **Dawnbreak**, Chain Lightning, Kindle and Shatter do.
+
+Reactions cross into the other systems rather than sitting beside them:
+a blaze is light, so it **feeds the supply clock**, and a doused brazier
+takes light away. The grimoire, the room and the lantern are one economy.
+
+> **Content the decision layer cannot see does not exist.** The party
+> weights `spell-strike` up when it is holding a working the room will
+> answer. Before that, 55% of fight rooms held something reactive and a
+> reaction fired in 15% of them; after, 30%. The cards were never
+> underpowered, they were under-noticed (DESIGN_DIALOGUE.md §11).
+
+---
+
+## Tactics — a skill tree gated by capability
+
+Thirteen tactics on four branches. The design rule: **a tactic is gated by
+what a party can DO, not by what class it is.** Every class swings at
+something, so anyone benefits from Flanking; anything with a working in
+the grimoire benefits from Concentration. A card that read "fighters
+only" would collapse into the class it names, and the draft already has
+character cards for that.
+
+| Branch | Root | Branch card |
+|---|---|---|
+| ⚔️ **The Line** | Flanking — +1 a round with the numbers | Encirclement — +3 a round, and the thing in the middle swings 2 weaker |
+| 🛡️ **The Line** | Shield Wall — 1 less damage a round | Focused Fire — +1 a round, +4 against armour |
+| 🧠 **The Working** | Concentration — a working holds at *full* force | Widening — every combat spell becomes an area working |
+| ⏱️ **The Working** | Quickening — one more cast a room | Ward-Weaving — 2 less damage a round per spell loosed |
+| 🔧 **The Room** | Improvised Arms — +5 to any opening made from the furniture | Firewatch — no self-harm from your own reactions, and flame traps hold no surprises |
+| 🕯️ **The March** | Rationing — one more march of light | Field Surgery — two wounds close at every shrine, not only in town |
+| 🏕️ **The March** | Rationing | Cold Camp — a stairhead camp costs one supply instead of two, and nothing climbs the stair into it |
+
+**The tree is the decision.** A tier-two tactic is a **blank** without its
+root, which makes tactics the first card type where a pick's value
+depends on a pick you already made. Measured on hard: an orphaned branch
+card is worth 11.8% against a 10.6% baseline, a root alone about 15%, and
+a completed Line branch **22.0%** — beating two unrelated roots at 17.4%.
+
+Branches are deliberately stronger than roots. A root is a safe pick that
+always works; a branch is a conditional one that can be a blank, so it
+has to pay more or nobody would complete a tree. The first cut had this
+backwards and the tree created no decision at all
+(DESIGN_DIALOGUE.md §12).
+
+> **An idle tactic says why.** A silently dead card reads as a bug, so
+> the party panel shows it dashed with its reason: *"Field Surgery is
+> drafted but idle: it grows out of Rationing, and nobody in this party
+> has learned that."*
+
+A tactic is knowledge: drafting the same one twice is drafting it once.
+
+---
+
+## Positional Combat — where the party stands
+
+The room decides what shapes are available; the party chooses from
+those. Rooms have carried `w`, `h` and a shape since procgen v3 and no
+mechanic read them until now.
+
+| Formation | Needs | The trade |
+|---|---|---|
+| ⏸️ **Column** | anything | One blade forward, one thing able to reach it: ~45% less damage a round, and only the front rank swinging. The only shape a passage allows. |
+| ➖ **Line** | 4 wide | The ordinary shape, and one of two that leave room to flank. |
+| 🛡️ **Shield Wall** | 4 wide | 30% less taken, 25% less dealt — and packed tight, so a blast catches everyone. |
+| 🔺 **Wedge** | 5 wide, 30 tiles | 20% more dealt, 30% more taken, three swinging instead of two. |
+| 🌐 **Loose Order** | 6 wide, 48 tiles | A little less given and taken, and only half of any blast reaches the party. |
+
+**Modifiers are proportional, not flat.** Incoming runs ~5 a round and a
+party's swing ~20, so flat numbers made defence a 40% gain for a 10%
+cost and Shield Wall strictly dominated a plain Line — the baseline
+formation was the worst thing to stand in (DESIGN_DIALOGUE.md §14).
+
+> **Against a killable monster, offence is defence.** A wedge takes more
+> damage per round and less damage per *fight*, because it ends sooner.
+> That is the trade, and it is why totals cannot be used to measure a
+> formation's mitigation.
+
+Flanking is a spatial idea: only a line and a wedge leave room to work
+round the sides, so the Flanking branch of the tactics tree needs one of
+them. A room with no geometry takes the ordinary line.
+
+---
+
+## Attrition — what the march costs
+
+A dungeon crawl is a war of attrition or it is a boss-rush with scenery.
+This game was the second thing until measured and fixed: a party used to
+arrive at the throne holding **90% of its health pool after ten rooms**,
+which made the whole delve a formality and every card that protected the
+march a dead card (DESIGN_DIALOGUE.md §10). Two clocks now run.
+
+**Supply — the lamp burns down.** Every march spends a unit of oil. Run
+dry and the party walks in the dark, taking `DARK_TOLL` (3) damage each
+march. Provisioning is scaled to the walk ahead, not fixed, and
+`SUPPLY_COVERAGE` sets how much of it each difficulty covers — easy is
+never benighted, nightmare walks the last third dark. The counterplay is
+all cards that already existed:
+
+| Answer | What it does |
+|---|---|
+| 🏮 Everburning Lantern | Sips: burns oil every *other* march |
+| 💡 Dancing Light | Once dry, carries one march for free |
+| 👁️ Eyes of the Mouse | Reads the dark; the toll is never paid |
+
+The first answer to the dark is close to mandatory and the second is
+nearly redundant — the shape of a format staple, and the draft AI prices
+it that way.
+
+**Wounds — not everything mends on the march.** A blow worth a quarter of
+a body (`WOUND_THRESHOLD`) leaves a scar. Each wound costs
+`WOUND_COST` (2) off the ceiling healing can reach, never below a third
+of the body, and **only town clears them**. Damage therefore accumulates
+across a delve instead of washing out between rooms; the health bar
+hatches the part that can no longer be reached.
+
+Together these took health-entering-the-throne from 90% of pool to 55%,
+and levelled the card economy: average improvement-when-drafted by type
+is now within two points across all four types, where this line of work
+began with equipment at +14 and spells at −19.
+
+> **Difficulty lives in two constants now.** `STAT_SCALE` sharpens the
+> monsters; `SUPPLY_COVERAGE` decides how much of the walk is dark.
+> Tune one, look at the other.
 
 ---
 
 ## The Dungeon
 
 ### Generation (layered, per Procedural Dungeon Design Tips)
-1. Seeded room graph: 10–14 rooms, entrance → boss, 1–2 branches with optional loot rooms.
-2. Room types (from The Alchemist's Dungeon + classic crawl): **entrance, corridor, monster, trap, treasure, library, shrine, lab, materials, disaster, boss**.
-3. Guarantees: ≥1 lab if any drafter took an alchemist (soft), ≥1 library, ≥1 shrine; boss always terminal.
+1. Seeded room graph: entrance → boss across **two or three floors**, with **1–2 wings** hanging off the spine.
+2. Room types (from The Alchemist's Dungeon + classic crawl): **entrance, corridor, monster, trap, treasure, library, shrine, lab, materials, disaster, stairs, boss**.
+3. Guarantees: ≥1 lab if any drafter took an alchemist (soft), ≥1 library, ≥1 shrine; boss always terminal, and always on the bottom floor.
+
+### Floors — the dungeon goes down
+A dungeon used to be one spine of eight to eleven rooms with a couple of
+two-room stubs off it: a corridor with alcoves. It has floors now.
+
+- **Two floors, three once the campaign is at depth 3.** Floor count is
+  how far the party has dug, not a coin flip — a random third floor made
+  early delves twice as long as the oil the party can carry, and the
+  lamp rather than the monsters decided the run.
+- **Each floor is meaner**: `floorScale(f) = STAT_SCALE[difficulty] × (1 + 0.18f)`,
+  applied to every monster made on that floor, guarantees included.
+- **Each floor ends at a stair** (`ROOM_TYPES.STAIRS`), and the stair is
+  the one place in a dungeon where stopping is sensible. Its options are
+  about what to spend before going down: **go down** (1 supply for the
+  long climb), **rope down the shaft** beside it (the Grapple and Line,
+  no supply), or **camp at the stairhead** (2 supply, 6 healed each, and
+  a chance something climbs the stair into the camp).
+- **Trapdoors now drop a floor.** A shaft that lands on the same level
+  is a hole to nowhere; the generator aims each one at the floor below,
+  which skips the stair as well as the rooms between.
+- **The renderer stacks them.** `roomWorldPos` carries a y drop of 7
+  world units per floor, stair edges are drawn as a flight of steps
+  rather than a corridor, and the camera tracks the floor the party is
+  standing on. The 2D floorplan draws the current floor and labels it.
+- **A descent is recorded**: `floor` is a Chronicle field with BEAT
+  salience, so the saga says the party went down and everything below
+  hits harder (rule 7).
+
+### Wings — the side passages
+A branch used to be one or two rooms of a random type. A **wing** is a
+2–4 room themed detour with a payoff at the end, so taking it is a
+choice about what the party wants rather than whether it wants more
+dungeon. Five wings — the **burial**, **workshop**, **archive**,
+**barracks** and **flooded** wings — each with a body pool and a payoff
+room; a secret wing always ends in a vault. The wing's name and its
+`tell` are in the writing when the party finds the door, so "the party
+takes the side passage" became "the party turns off into the flooded
+wing — a floor that slopes down into standing water".
+
+### Structure (procgen v3 — rooms with footprints)
+Rooms are **rectangles in tile space, not graph dots**. Each carries `w × h` and a `shape`:
+
+| Shape | Reads as | Typical use |
+|---|---|---|
+| `chamber` | squarish room | the standard fighting room |
+| `hall` | long rectangle | processionals, libraries |
+| `cavern` | big and ragged (broken corners) | disasters, materials, boss lairs |
+| `passage` | narrow connector | corridors, trap runs |
+| `cell` | closet | vaults, treasure, oubliettes |
+| `rotunda` | round | shrines, wells |
+
+`ROOM_GEOMETRY` maps each room *function* to the shapes and sizes it may take, so structure follows purpose: a boss gets a 12×10-to-16×12 cavern — the largest room in the dungeon **by construction**: its smallest footprint (120 tiles) beats the largest any other type can roll (a 12×9 disaster cavern, 108), which the old numbers only managed by luck, a vault is 4×4. Fighting rooms are floored at `COMBAT_FLOOR` (5×4) — genuine floor space for four adventurers plus a monster, which the renderer draws literally.
+
+Placement walks the spine outward, one axis at a time, rejecting any position whose footprint (plus a corridor gap) overlaps a placed room, and steering to keep the map roughly square rather than a 130-tile straight line. Tests enforce: no overlaps, every fighting room ≥ the combat floor, the boss is the biggest room, and the layout's aspect ratio stays under 4:1.
+
+**Connections** carry a `kind`: `door`, `arch`, `secret`, `stair`, `trapdoor`. Doorways are derived from edge directions and drawn as real gaps in the perimeter walls.
+
+**Trapdoors** are the vertical shortcut: a shaft that skips 2–4 rooms of the spine (never the boss) for a fall. Found ones are a choice — the Craven take them, the Covetous refuse to skip loot, a battered party takes any road to the end; roping down halves the drop. Unfound ones are an accident that costs the full fall. Either way the skipped rooms' loot *and* danger are both forgone.
+
+### Room Features (what's *in* a chamber)
+A room is no longer one type and one decision. Every room big enough to
+hold furniture (≥18 tiles; a vault-sized cell holds none) is furnished
+from `world/RoomFeatures.js` — up to three of: **pillars, rubble,
+crates, brazier, pit, boulder, sarcophagus, font, spout, portcullis,
+anvil, shelves, mirror**. Each is drawn with art already on the Kenney
+sheet, so the catalog was designed around tiles that exist rather than
+tiles we'd need.
+
+Features do three jobs:
+
+1. **Passive modifiers.** Pillars, rubble and crates give **cover**
+   (−1 incoming damage each, capped at 2 — furniture is not a
+   fortress). A **mirror** negates the ethereal ×0.6 penalty exactly as
+   a cleric does. A **font** douses fire; a **sarcophagus** is a risk
+   carried into the fight.
+2. **Interactions.** Thirteen extra options, each gated by a class *or*
+   a drafted card. In a fight the furniture is a weapon (shove the
+   monster into the pit, drop the portcullis on it, topple the boulder)
+   and the opener damages the monster before the first blow, exactly as
+   `spell-strike` does. Outside a fight it's a resource (pry the
+   sarcophagus, harvest the spout, work the anvil, strip the shelves).
+3. **Writing.** Every feature states its own `tell` in the predicament,
+   so the player can see why an option exists, and every interaction
+   reports what it did with the number.
+
+**Tools upgrade; they don't merely unlock.** A fighter can shove
+something into a pit barehanded for 5; a party holding the Grapple and
+Line does it for 12. This rule exists because the first cut gated on
+presence alone and a controlled A/B measured the new tools as
+*redundant* — a four-class party already opened eleven of thirteen
+interactions, so the cards were worth only their stat lines. A few
+interactions are **tool-only**: an anvil without hammer, file and flux
+is a heavy table.
+
+#### Feature cards (2026-07-15)
+Seven tools, three workings and two personalities exist to exploit the
+architecture. Measured against an equal-bonus plain card over 500
+seeded delves on hard, six of seven tools are worth **+1.8 to +3.8 win
+points** (the Ironwood Prybar also +44 score). The **Silvered
+Hand-Mirror** is the format's first true hate card: roughly neutral in
+general and **+38 win points in the Castle of the Vampire Lord**, where
+an ethereal household meets a party with no cleric.
+
+| Card | Feature hook |
+|---|---|
+| Ironwood Prybar | sarcophagi, crates, rubble — opens them cleanly and quietly |
+| Grapple and Line | pits (shove without following), and shafts |
+| Alchemist's Tinderbox | braziers, and anything flammable |
+| Winch Hook | portcullis chains — drops the whole gate at once |
+| Field Smith's Kit | the anvil (tool-only): a permanent +3 attack edge |
+| Great Waterskin | fonts and spouts; flushes lingering venom |
+| Silvered Hand-Mirror | carries the mirror's ethereal-reveal with the party |
+| Shatter | boulders and pillars — drops the slope, not one stone |
+| Kindle | lights a brazier at range |
+| Purify the Font | a font, said over, for double the healing |
+| The Tinkerer / The Vandal | reuse `cunning` / `reckless`; reach for the furniture |
+
+The three new *spells* measure at −19 to −21 IWD, in the same band as
+every other spell in the pool (Knock −24, Dancing Light −22, Firebolt
+−20). They are not uniquely bad — they inherit the format's standing
+spell problem, which remains the top balance target
+(`DESIGN_DIALOGUE.md` §6-7).
 
 ### Room Encounters (personality-weighted party decisions, SnakeAB engine adapted)
-- **Monster** — fight / flee / sneak past (rogue) / turn undead (cleric) / parley (mind check).
+- **Monster** — fight / flee / sneak past (rogue) / turn undead (cleric) / parley (mind check). Every *defeated* monster leaves a signature drop (`game/Drops.js`, the Bestiary's companion table): a trinket, weapon coating, potion, materials, scroll, or coin, each with its own chronicle line. Kinds without an entry fall back by trait, then to a generic trophy — nothing drops nothing. Fleeing, sneaking, and bribing claim no corpse and no drop.
+  - **The trophy case**: every claim is remembered on the party (`party.trophies`, with provenance) and persists across campaign depths. It surfaces in the HUD (count + hover inventory), the town ledger, the campaign's final page (a trophy-case section — victories show what came up, wipes show what the dark took back), the endings' writing (the finest trophy is named), and the onscreen event feed (a `trophy` tick event).
+  - **Drops bend decisions**: the Covetous weight `fight` up and `sneak` down — every kill pays out now — and the greedy barks know it.
 - **Trap** — rogue disarms; brave parties push through; scholarly parties study it.
 - **Treasure** — loot (greedy lingers, risks mimics), inspect first (cunning), leave cursed gold (devout).
 - **Library** — learn a random spell (scholarly learns 2); wizards read the dangerous books.
@@ -78,7 +422,9 @@ Each AI seat has a **draft persona** (e.g. "Warlord" prioritizes fighters+weapon
 - **Boss** — the run's climax; all drafted synergies fire.
 
 ### Narration
-SnakeAB's three-beat Narrator adapted to a party voice: predicament → the party's deliberation (who argued for what, by class and personality) → resolution. Story panel + narrated endings (party wipes name their killer; victories sing).
+SnakeAB's three-beat Narrator adapted to a party voice: predicament → the party's deliberation (who argued for what, by class and personality) → resolution. Story panel + narrated endings.
+
+**House style (2026-07): descriptive, not literary.** The narration reports what happens — who acts, what it costs, with the numbers stated ("The party kills the goblin toll-gang in 2 rounds, taking 4 damage"). Mechanics facts appear in the text (multipliers, bonuses, damage): the story panel doubles as the combat log. Barks (spoken character dialogue) are the one place voice and flavor live; item card text may carry flavor, but it stays off the story panel.
 
 ---
 

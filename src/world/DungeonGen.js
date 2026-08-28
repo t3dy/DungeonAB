@@ -11,6 +11,7 @@
 import { SeededRandom } from '../draft/PackDraft.js';
 import { getCondition } from '../game/Conditions.js';
 import { applyNature } from '../game/Bestiary.js';
+import { rollFeatures } from './RoomFeatures.js';
 
 export const ROOM_TYPES = {
   ENTRANCE: 'entrance',
@@ -25,12 +26,133 @@ export const ROOM_TYPES = {
   DISASTER: 'disaster',
   BOSS: 'boss',
   VAULT: 'vault',   // the rich room behind the secret door
+  STAIRS: 'stairs', // down to the next floor — the only way but the fall
 };
+
+/**
+ * How many floors a dungeon has, and how long each one's spine runs.
+ *
+ * A dungeon used to be one spine of eight to eleven rooms with a couple
+ * of two-room stubs off it. That reads as a corridor with alcoves, not
+ * as a place — and the trapdoors already in the floor were shortcuts
+ * *along* it rather than down through it, which is a strange thing for
+ * a hole to be.
+ *
+ * Floors give the trapdoor something true to do and give depth somewhere
+ * to live: each one is meaner than the last, and the boss waits at the
+ * bottom.
+ */
+export const FLOOR_SPINE = { min: 3, max: 4 };
+export const MAX_FLOORS = 3;
+
+/**
+ * Wings — the side passages off the spine.
+ *
+ * A branch used to be one or two rooms of a random type: an alcove
+ * with loot in it. A wing is a short themed detour with a payoff at
+ * the end, so the choice to take it is a choice about what the party
+ * wants (materials, books, coin) and not just whether it wants two
+ * more rooms of dungeon.
+ *
+ * `body` is the pool the middle rooms draw from; `payoff` is the last
+ * room when the wing is open. A secret wing always ends in a vault —
+ * whoever hid the door meant to hide what is behind it.
+ */
+export const WINGS = {
+  crypt: {
+    id: 'crypt', name: 'the burial wing',
+    tell: 'burial niches, most of them open',
+    body: ['monster', 'trap', 'shrine'],
+    payoff: 'treasure',
+  },
+  works: {
+    id: 'works', name: 'the workshop wing',
+    tell: 'cold furnaces and racked glassware',
+    body: ['materials', 'lab', 'trap'],
+    payoff: 'materials',
+  },
+  archive: {
+    id: 'archive', name: 'the archive wing',
+    tell: 'shelving stacked to the ceiling, half of it collapsed',
+    body: ['library', 'trap', 'monster'],
+    payoff: 'library',
+  },
+  barracks: {
+    id: 'barracks', name: 'the barracks wing',
+    tell: 'bunkrooms and a picked-over weapon rack',
+    body: ['monster', 'monster', 'corridor'],
+    payoff: 'treasure',
+  },
+  sump: {
+    id: 'sump', name: 'the flooded wing',
+    tell: 'a floor that slopes down into standing water',
+    body: ['disaster', 'monster', 'trap'],
+    payoff: 'treasure',
+  },
+};
+
+/**
+ * Room shapes (procgen v3) — a dungeon is not a corridor of identical
+ * cells. Each shape is a footprint the renderer draws literally and
+ * the fiction reads off: a hall is long, a cavern is wide and ragged,
+ * a cell is a closet. Sizes are in tiles; one tile is roughly one
+ * adventurer's floor space, so a 5×5 chamber genuinely holds a fight.
+ */
+export const ROOM_SHAPES = {
+  CHAMBER: 'chamber',     // squarish, the standard fighting room
+  HALL: 'hall',           // long rectangle: processionals, libraries
+  CAVERN: 'cavern',       // big and ragged: corners cut off
+  PASSAGE: 'passage',     // narrow connector, fights are cramped here
+  CELL: 'cell',           // small square: closets, vaults, oubliettes
+  ROTUNDA: 'rotunda',     // round: shrines, wells
+};
+
+/**
+ * Per-function geometry: what shapes a room of this type can take, and
+ * how big. `min`/`max` are tile extents (w × h before orientation).
+ * Combat rooms are floored at 5×4 so a capped party of four plus a
+ * monster all fit with room to swing (Party.PARTY_CAP).
+ */
+const ROOM_GEOMETRY = {
+  entrance:  [{ shape: 'chamber', min: [5, 5], max: [6, 6] }, { shape: 'hall', min: [7, 4], max: [9, 4] }],
+  corridor:  [{ shape: 'passage', min: [6, 2], max: [10, 3] }, { shape: 'hall', min: [7, 3], max: [9, 4] }],
+  monster:   [{ shape: 'chamber', min: [5, 5], max: [7, 7] }, { shape: 'cavern', min: [7, 5], max: [10, 8] }, { shape: 'hall', min: [8, 4], max: [11, 5] }],
+  trap:      [{ shape: 'passage', min: [6, 3], max: [9, 3] }, { shape: 'chamber', min: [5, 4], max: [6, 5] }],
+  treasure:  [{ shape: 'cell', min: [4, 4], max: [5, 5] }, { shape: 'chamber', min: [5, 5], max: [6, 6] }],
+  library:   [{ shape: 'hall', min: [8, 5], max: [12, 6] }, { shape: 'chamber', min: [6, 6], max: [8, 8] }],
+  shrine:    [{ shape: 'rotunda', min: [6, 6], max: [8, 8] }, { shape: 'chamber', min: [5, 5], max: [6, 6] }],
+  lab:       [{ shape: 'chamber', min: [6, 5], max: [8, 7] }, { shape: 'hall', min: [8, 4], max: [10, 5] }],
+  materials: [{ shape: 'cavern', min: [6, 5], max: [9, 7] }, { shape: 'cell', min: [4, 4], max: [5, 5] }],
+  disaster:  [{ shape: 'cavern', min: [8, 6], max: [12, 9] }, { shape: 'hall', min: [9, 4], max: [12, 5] }],
+  // The throne room is the biggest room in the dungeon by construction,
+  // not by luck: its smallest footprint (120 tiles) beats the largest
+  // any other type can roll (a 12x9 disaster cavern, 108).
+  boss:      [{ shape: 'cavern', min: [12, 10], max: [16, 12] }, { shape: 'hall', min: [14, 9], max: [18, 10] }],
+  vault:     [{ shape: 'cell', min: [4, 4], max: [5, 5] }],
+  stairs:    [{ shape: 'cell', min: [4, 4], max: [5, 5] }, { shape: 'rotunda', min: [5, 5], max: [6, 6] }],
+};
+
+/** The smallest floor a fight can happen on without feeling like a hallway. */
+export const COMBAT_FLOOR = { w: 5, h: 4 };
+
+/**
+ * Roll a room's footprint. Orientation flips w/h half the time, so
+ * halls run both ways and the map doesn't comb in one direction.
+ */
+function rollGeometry(type, rng) {
+  const options = ROOM_GEOMETRY[type] || ROOM_GEOMETRY.corridor;
+  const pick = options[Math.floor(rng.next() * options.length)];
+  let w = pick.min[0] + Math.floor(rng.next() * (pick.max[0] - pick.min[0] + 1));
+  let h = pick.min[1] + Math.floor(rng.next() * (pick.max[1] - pick.min[1] + 1));
+  if (rng.next() < 0.5) [w, h] = [h, w];
+  return { w, h, shape: pick.shape };
+}
 
 const ROOM_ICONS = {
   entrance: '🚪', corridor: '⬛', monster: '👹', trap: '⚠️',
   treasure: '💰', library: '📚', shrine: '🕯️', lab: '⚗️',
   materials: '🌿', disaster: '🌋', boss: '🐉', vault: '💎',
+  stairs: '🪜',
 };
 
 /**
@@ -63,9 +185,12 @@ export class Dungeon {
     // Spatial layout (procgen v2, per the Spelunky critical-path
     // pattern in Shaker/Togelius/Nelson ch.3):
     this.spine = layout.spine || rooms.map((_, i) => i);   // the guaranteed path, entrance→boss
-    this.edges = layout.edges                              // [{a, b, secret}] between room indexes
-      || rooms.slice(1).map((_, i) => ({ a: i, b: i + 1, secret: false }));
+    this.edges = layout.edges                              // [{a, b, secret, kind}] between room indexes
+      || rooms.slice(1).map((_, i) => ({ a: i, b: i + 1, secret: false, kind: 'door' }));
     this.branches = layout.branches || [];                 // [{junction, rooms:[idx], secret, consumed}]
+    // Vertical shortcuts: a shaft in the floor that skips ahead down
+    // the spine for a fall. [{from, to, secret, consumed}]
+    this.trapdoors = layout.trapdoors || [];
   }
   getRoom(index) {
     return this.rooms[index] || null;
@@ -77,6 +202,70 @@ export class Dungeon {
   branchAt(roomIndex) {
     return this.branches.find(b => b.junction === roomIndex && !b.consumed) || null;
   }
+  /** The unconsumed trapdoor in this room's floor, if any. */
+  trapdoorAt(roomIndex) {
+    return this.trapdoors.find(t => t.from === roomIndex && !t.consumed) || null;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Spatial layout — rectangles that don't overlap                      */
+/* ------------------------------------------------------------------ */
+
+/** Do two rooms' footprints (plus a gap) collide? */
+function overlaps(a, b, gap = 2) {
+  return Math.abs(a.x - b.x) * 2 < a.w + b.w + gap
+      && Math.abs(a.y - b.y) * 2 < a.h + b.h + gap;
+}
+
+const DIRS = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+
+/**
+ * Place `room` adjacent to `from` in tile space: walk out along a
+ * direction by both half-extents plus a corridor gap, and keep the
+ * first placement that touches nothing already standing. Rooms carry
+ * x/y as their CENTER in tiles (floats), so variable footprints tile
+ * the plane without a grid to fight.
+ * Returns the direction used, or null if the room could not be placed.
+ */
+function placeAdjacent(room, from, placed, rng, preferred = null) {
+  const dirs = preferred ? [preferred, ...rng.shuffle(DIRS)] : rng.shuffle(DIRS);
+  // Two rooms on different floors share no air, so they may sit on the
+  // same map coordinates. Without this every floor would have to find
+  // fresh ground and the map would sprawl sideways instead of down.
+  const sameFloor = placed.filter(r => (r.floor || 0) === (room.floor || 0));
+  for (const dir of dirs) {
+    for (const gap of [2, 3, 5]) {
+      const [dx, dy] = dir;
+      room.x = from.x + dx * ((from.w + room.w) / 2 + gap);
+      room.y = from.y + dy * ((from.h + room.h) / 2 + gap);
+      if (!sameFloor.some(p => overlaps(room, p))) return dir;
+    }
+  }
+  return null;
+}
+
+/**
+ * Which way should the dungeon grow next? A straight line of rooms is
+ * neither a dungeon nor renderable, so the walk turns to keep its
+ * footprint roughly square: whichever axis is currently shorter gets
+ * extended, with enough randomness that no two seeds snake alike.
+ */
+function nextHeading(placed, rng, heading) {
+  const xs = placed.map(r => r.x);
+  const ys = placed.map(r => r.y);
+  const spanX = Math.max(...xs) - Math.min(...xs);
+  const spanY = Math.max(...ys) - Math.min(...ys);
+
+  // Rooms are big, so a few unbroken steps run the map off the screen.
+  // Once the footprint is clearly lopsided the turn is not optional:
+  // grow the shorter axis, no dice involved.
+  const lopsided = Math.abs(spanX - spanY) > 8;
+  if (lopsided) return spanX > spanY ? [0, 1] : [1, 0];
+
+  // Otherwise keep the course sometimes, so corridors have runs
+  if (heading && rng.next() < 0.4) return heading;
+  return rng.next() < 0.5 ? [1, 0] : [0, 1];
 }
 
 /**
@@ -115,103 +304,180 @@ export function generateDungeon(seed, difficulty = 'medium', opts = {}) {
   // Difficulty sharpens the monsters themselves, not just the map
   const statScale = STAT_SCALE[difficulty] || 1;
 
-  const spineLength = 8 + Math.floor(rng.next() * 4); // 8-11 rooms between entrance and boss
+  // A dungeon is several floors deep, and each is meaner than the one
+  // above it: the same statScale, stepped up per floor, so descending is
+  // felt rather than merely announced. Deeper campaigns dig further.
+  // Floors are how far the campaign has dug, not a coin flip: two to
+  // start with, three once the party is delving deep. A random third
+  // floor made early delves twice as long as the supply the party can
+  // carry, and the lamp — not the monsters — decided the run.
+  const floorCount = Math.min(MAX_FLOORS, 2 + (depth >= 3 ? 1 : 0));
+  const floorScale = f => statScale * (1 + f * 0.18);
+
   const rooms = [];
-
   rooms.push(makeRoom(0, ROOM_TYPES.ENTRANCE, rng, theme, depth, statScale, condition));
+  rooms[0].floor = 0;
 
-  for (let i = 1; i <= spineLength; i++) {
-    const type = weightedPick(rng, weights);
-    rooms.push(makeRoom(i, type, rng, theme, depth, statScale, condition));
+  for (let f = 0; f < floorCount; f++) {
+    const runLength = FLOOR_SPINE.min
+      + Math.floor(rng.next() * (FLOOR_SPINE.max - FLOOR_SPINE.min + 1));
+    for (let i = 0; i < runLength; i++) {
+      const type = weightedPick(rng, weights);
+      const room = makeRoom(rooms.length, type, rng, theme, depth, floorScale(f), condition);
+      room.floor = f;
+      rooms.push(room);
+    }
+    // Every floor but the last ends at a stair down
+    if (f < floorCount - 1) {
+      const stair = makeRoom(rooms.length, ROOM_TYPES.STAIRS, rng, theme, depth, floorScale(f), condition);
+      stair.floor = f;
+      stair.descendsTo = f + 1;
+      rooms.push(stair);
+    }
   }
 
   // Guarantees: at least one library and one shrine; a lab if wanted.
   // Themes add their own identity guarantees on top.
-  ensureRoomType(rooms, ROOM_TYPES.LIBRARY, rng, theme, depth, statScale, condition, weights, theme.minLibraries || 1);
-  ensureRoomType(rooms, ROOM_TYPES.SHRINE, rng, theme, depth, statScale, condition, weights);
+  ensureRoomType(rooms, ROOM_TYPES.LIBRARY, rng, theme, depth, floorScale, condition, weights, theme.minLibraries || 1);
+  ensureRoomType(rooms, ROOM_TYPES.SHRINE, rng, theme, depth, floorScale, condition, weights);
   if (opts.wantLab || theme.alwaysLab) {
-    ensureRoomType(rooms, ROOM_TYPES.LAB, rng, theme, depth, statScale, condition, weights);
+    ensureRoomType(rooms, ROOM_TYPES.LAB, rng, theme, depth, floorScale, condition, weights);
     // A lab without materials is glassware and regret
-    ensureRoomType(rooms, ROOM_TYPES.MATERIALS, rng, theme, depth, statScale, condition, weights, 1);
+    ensureRoomType(rooms, ROOM_TYPES.MATERIALS, rng, theme, depth, floorScale, condition, weights, 1);
   }
 
-  rooms.push(makeRoom(rooms.length, ROOM_TYPES.BOSS, rng, theme, depth, statScale, condition));
+  const boss = makeRoom(rooms.length, ROOM_TYPES.BOSS, rng, theme, depth, floorScale(floorCount - 1), condition);
+  boss.floor = floorCount - 1;
+  rooms.push(boss);
 
-  /* ---- Spatial layout (procgen v2) ---------------------------------- */
+  /* ---- Spatial layout (procgen v3: footprints, not cells) ----------- */
 
-  // The spine winds down the grid (the guaranteed critical path)
-  const occupied = new Set();
-  let x = 0;
-  let y = 0;
-  for (const room of rooms) {
-    room.x = x;
-    room.y = y;
-    occupied.add(`${x},${y}`);
-    if (rng.next() < 0.5) x += 1; else y += 1;
+  // The spine winds down and right, each chamber set far enough from
+  // the last to leave a corridor between them. Direction persists a
+  // little, so the dungeon reads as passages and turns rather than a
+  // random scatter.
+  rooms[0].x = 0;
+  rooms[0].y = 0;
+  const placed = [rooms[0]];
+  let heading = [1, 0];
+  for (let i = 1; i < rooms.length; i++) {
+    const room = rooms[i];
+    const prev = rooms[i - 1];
+    if (room.floor !== prev.floor) {
+      // A stair lands you underneath where you came down, which is what
+      // a stair does. The new floor grows from there on its own ground.
+      room.x = prev.x;
+      room.y = prev.y;
+      placed.push(room);
+      heading = [1, 0];
+      continue;
+    }
+    heading = nextHeading(placed.filter(r => r.floor === room.floor), rng, heading);
+    const dir = placeAdjacent(room, prev, placed, rng, heading);
+    if (dir) heading = dir;
+    placed.push(room);
   }
 
   const spine = rooms.map((_, i) => i);
-  const edges = rooms.slice(1).map((_, i) => ({ a: i, b: i + 1, secret: false }));
+  const edges = rooms.slice(1).map((_, i) => ({
+    a: i, b: i + 1, secret: false,
+    kind: rooms[i].floor !== rooms[i + 1].floor ? 'stair' : 'door',
+  }));
   const branches = [];
+
+  // Furnish the spine: pillars to fight behind, a brazier to shove
+  // things into, a sarcophagus nobody should open (RoomFeatures).
+  // Footprint decides how much fits, so this runs after the layout.
+  for (const room of rooms) room.features = rollFeatures(room, rng, theme);
 
   // Branches: optional side rooms off the spine. Roughly half are
   // secret — a hidden door the rogue or the scholar might notice,
   // with a vault (NetHack-style riches) at the end.
-  const branchCount = 1 + Math.floor(rng.next() * 2);   // 1-2 branches
-  const BRANCH_TYPES = [
-    ROOM_TYPES.TREASURE, ROOM_TYPES.MATERIALS, ROOM_TYPES.MONSTER, ROOM_TYPES.LIBRARY,
-  ];
-  const DIRS = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+  const wingCount = 1 + Math.floor(rng.next() * 2);   // 1-2 wings
+  const wingIds = Object.keys(WINGS);
 
-  for (let b = 0; b < branchCount; b++) {
+  for (let b = 0; b < wingCount; b++) {
     // A junction mid-spine (never the entrance or the boss)
     const junction = 1 + Math.floor(rng.next() * (spine.length - 2));
-    const jRoom = rooms[junction];
-
-    // Find a free cell next to the junction
-    const dirs = rng.shuffle(DIRS);
-    const dir = dirs.find(([dx, dy]) => !occupied.has(`${jRoom.x + dx},${jRoom.y + dy}`));
-    if (!dir) continue; // boxed in; the dungeon keeps its secret
+    const wing = WINGS[wingIds[Math.floor(rng.next() * wingIds.length)]];
 
     const secret = rng.next() < 0.5;
-    const chainLen = 1 + Math.floor(rng.next() * 2);    // 1-2 rooms deep
+    const chainLen = 2 + Math.floor(rng.next() * 3);    // 2-4 rooms deep
     const branchRooms = [];
-    let px = jRoom.x;
-    let py = jRoom.y;
+    let prev = rooms[junction];
     let prevIdx = junction;
+    let heading = null;
+    // A wing hangs off its junction, so it sits on that room's floor
+    // and is scaled by it: a wing off the bottom floor is a bottom-floor
+    // wing, not a soft one grafted onto deep stone.
+    const wingFloor = rooms[junction].floor || 0;
 
     for (let i = 0; i < chainLen; i++) {
-      const nx = px + dir[0];
-      const ny = py + dir[1];
-      if (occupied.has(`${nx},${ny}`)) break;
-
-      // The last room of a secret branch is the vault
+      // The last room is the payoff: a vault if the door was hidden
       const isLast = i === chainLen - 1;
-      const type = secret && isLast
-        ? ROOM_TYPES.VAULT
-        : BRANCH_TYPES[Math.floor(rng.next() * BRANCH_TYPES.length)];
+      const type = isLast
+        ? (secret ? ROOM_TYPES.VAULT : wing.payoff)
+        : wing.body[Math.floor(rng.next() * wing.body.length)];
 
-      const room = makeRoom(rooms.length, type, rng, theme, depth, statScale, condition);
-      room.x = nx;
-      room.y = ny;
+      const room = makeRoom(rooms.length, type, rng, theme, depth, floorScale(wingFloor), condition);
+      room.floor = wingFloor;
+      const dir = placeAdjacent(room, prev, placed, rng, heading);
+      if (!dir) break;    // boxed in; the dungeon keeps its secret
+      heading = dir;
       room.secret = secret;
       room.discovered = !secret;   // secret rooms start unknown
+      room.wing = wing.id;
+      room.features = rollFeatures(room, rng, theme);
       rooms.push(room);
-      occupied.add(`${nx},${ny}`);
+      placed.push(room);
 
-      edges.push({ a: prevIdx, b: room.index, secret: secret && i === 0 });
+      edges.push({
+        a: prevIdx, b: room.index,
+        secret: secret && i === 0,
+        kind: secret && i === 0 ? 'secret' : 'arch',
+      });
       branchRooms.push(room.index);
       prevIdx = room.index;
-      px = nx;
-      py = ny;
+      prev = room;
     }
 
     if (branchRooms.length > 0) {
-      branches.push({ junction, rooms: branchRooms, secret, consumed: false });
+      branches.push({
+        junction, rooms: branchRooms, secret, consumed: false,
+        wing: wing.id, name: wing.name, tell: wing.tell,
+      });
     }
   }
 
-  return new Dungeon(rooms, theme, condition, { spine, edges, branches });
+  /* ---- Trapdoors: the shaft in the floor ---------------------------- */
+  // A hole in the floor drops you through the floor. Now that the
+  // dungeon has floors, a trapdoor lands on the one below and skips the
+  // stair — and the rooms between, their loot and their danger both.
+  // Half are hidden under rubble; those the party can blunder into.
+  const trapdoors = [];
+  const trapdoorCount = rng.next() < 0.65 ? 1 : 0;
+  for (let t = 0; t < trapdoorCount; t++) {
+    // Never past the boss: the boss is always fought, never skipped
+    const lastSpine = spine.length - 1;
+    const from = 1 + Math.floor(rng.next() * Math.max(1, Math.floor(lastSpine * 0.6)));
+    const fromFloor = rooms[from].floor || 0;
+    // The first room below this one that the shaft could reach. A shaft
+    // that lands on the same floor is a hole to nowhere.
+    const below = rooms.findIndex((r, i) => i > from && i <= lastSpine - 1 && (r.floor || 0) > fromFloor);
+    const to = below > from + 1
+      ? below + Math.floor(rng.next() * 2)   // the landing room, or the one past it
+      : Math.min(from + 2 + Math.floor(rng.next() * 3), lastSpine - 1);
+    if (to <= from + 1 || to > lastSpine - 1) continue;
+    trapdoors.push({
+      from, to,
+      secret: rng.next() < 0.5,
+      fall: 3 + Math.floor(rng.next() * 3) + (depth - 1),
+      consumed: false,
+    });
+    edges.push({ a: from, b: to, secret: false, kind: 'trapdoor' });
+  }
+
+  return new Dungeon(rooms, theme, condition, { spine, edges, branches, trapdoors });
 }
 
 /**
@@ -220,11 +486,11 @@ export function generateDungeon(seed, difficulty = 'medium', opts = {}) {
  * of other guaranteed types)
  */
 const PROTECTED_TYPES = new Set([
-  ROOM_TYPES.ENTRANCE, ROOM_TYPES.BOSS,
+  ROOM_TYPES.ENTRANCE, ROOM_TYPES.BOSS, ROOM_TYPES.STAIRS,
   ROOM_TYPES.LIBRARY, ROOM_TYPES.SHRINE, ROOM_TYPES.LAB, ROOM_TYPES.MATERIALS,
 ]);
 
-function ensureRoomType(rooms, type, rng, theme, depth, statScale, condition, weights, minCount = 1) {
+function ensureRoomType(rooms, type, rng, theme, depth, floorScale, condition, weights, minCount = 1) {
   const have = rooms.filter(r => r.type === type).length;
   let need = minCount - have;
 
@@ -242,20 +508,30 @@ function ensureRoomType(rooms, type, rng, theme, depth, statScale, condition, we
     }
     const convertible = candidates.filter(r => r.type === worstType);
     const target = rng.pick(convertible);
-    const replacement = makeRoom(target.index, type, rng, theme, depth, statScale, condition);
-    replacement.x = target.x;
-    replacement.y = target.y;
+    // Conversion happens before the layout pass, so the replacement
+    // brings its own footprint (a shrine is shaped like a shrine, not
+    // like the corridor it replaced) and gets placed with everything else
+    const replacement = makeRoom(target.index, type, rng, theme, depth, floorScale(target.floor || 0), condition);
+    // A guarantee swaps what a room is, never where it is: the floor it
+    // sits on (and the scaling that floor carries) comes with it.
+    replacement.floor = target.floor;
     rooms[rooms.indexOf(target)] = replacement;
     need--;
   }
 }
 
 function makeRoom(index, type, rng, theme, depth = 1, statScale = 1, condition = {}) {
+  const geometry = rollGeometry(type, rng);
   const room = {
     index,
     type,
     icon: ROOM_ICONS[type] || '⬛',
     cleared: false,
+    // Footprint in tiles (procgen v3). x/y (the center) are assigned
+    // by the layout pass once every room's size is known.
+    w: geometry.w,
+    h: geometry.h,
+    shape: geometry.shape,
   };
 
   // Per-type payloads. Depth is the campaign's whetstone: deeper
@@ -452,13 +728,29 @@ export const DUNGEON_THEMES = {
 
 /**
  * Difficulty multiplier on monster stats — easy dungeons pull their
- * punches, nightmare dungeons do not
+ * punches, nightmare dungeons do not.
+ *
+ * Recalibrated twice. First (2026-07-15) after the arcane fixes
+ * (uniform character costing, prepared spells, mind scaling, the
+ * wizard's second cast) made parties materially stronger: medium had
+ * drifted to 99% wins. Again after sustained workings and the boss
+ * unleash (RoomEncounters.SPELL_SUSTAIN_SHARE), which pushed hard from
+ * 69% to 76%. Both times the target is the same curve the party cap
+ * earned — roughly 88% medium, 71% hard, 45% nightmare — so that a
+ * balance fix never silently doubles as a difficulty cut.
+ *
+ * The third sweep (attrition: the supply clock and wounds) went the
+ * other way — the march itself now costs a party 45% of its health pool
+ * on the way to the throne where it used to cost 10%, so the monsters
+ * had to give some of that back. Difficulty lives in two places now,
+ * and this constant is only one of them: see Party.SUPPLY_COVERAGE for
+ * how much of the walk each difficulty spends in the dark.
  */
 export const STAT_SCALE = {
-  easy: 0.85,
-  medium: 1.0,
-  hard: 1.3,
-  nightmare: 1.7,
+  easy: 0.9,
+  medium: 1.19,
+  hard: 1.45,
+  nightmare: 1.97,
 };
 
 /* ------------------------------------------------------------------ */
@@ -476,16 +768,32 @@ export function serializeDungeon(dungeon) {
     conditionId: dungeon.condition?.id || 'none',
     rooms: dungeon.rooms.map(r => ({
       index: r.index, type: r.type, x: r.x, y: r.y,
+      // Footprint travels with the layout, or a replayed dungeon would
+      // be a different dungeon (procgen v3)
+      w: r.w, h: r.h, shape: r.shape,
+      ...(r.features?.length ? { features: [...r.features] } : {}),
+      // Which floor the room is on, and where a stair goes. Without
+      // these a replayed dungeon flattens: every room on floor 0, the
+      // footprints overlapping, and no descent to record (rule 7).
+      floor: r.floor || 0,
+      ...(r.descendsTo !== undefined ? { descendsTo: r.descendsTo } : {}),
+      // A wing's identity is in its writing, so it has to survive the
+      // archive or a replayed detour is an anonymous side passage
+      ...(r.wing ? { wing: r.wing } : {}),
       secret: !!r.secret,
       ...(r.monster ? { monster: { ...r.monster } } : {}),
       ...(r.gold !== undefined ? { gold: r.gold } : {}),
       ...(r.mimicChance !== undefined ? { mimicChance: r.mimicChance } : {}),
       ...(r.trapDamage !== undefined ? { trapDamage: r.trapDamage } : {}),
+      // Trap kind decides what springing it costs — without it every
+      // archived trap replayed as a generic spike pit (audit A3)
+      ...(r.trapType !== undefined ? { trapType: r.trapType } : {}),
       ...(r.materials !== undefined ? { materials: r.materials } : {}),
     })),
     spine: [...dungeon.spine],
     edges: dungeon.edges.map(e => ({ ...e })),
     branches: dungeon.branches.map(b => ({ ...b, rooms: [...b.rooms], consumed: false })),
+    trapdoors: dungeon.trapdoors.map(t => ({ ...t, consumed: false })),
   };
 }
 
@@ -501,13 +809,24 @@ export function dungeonFromLayout(layout) {
     icon: ROOM_ICONS[r.type] || '⬛',
     cleared: false,
     discovered: !r.secret,
+    // Layouts archived before procgen v3 have no footprint; give them
+    // their type's smallest one so old designs still draw and still fight
+    ...(r.w ? {} : geometryFallback(r.type)),
+    features: [...(r.features || [])],
     ...(r.monster ? { monster: { ...r.monster } } : {}),
   }));
   return new Dungeon(rooms, theme, condition, {
     spine: [...layout.spine],
-    edges: layout.edges.map(e => ({ ...e })),
+    edges: layout.edges.map(e => ({ ...e, kind: e.kind || (e.secret ? 'secret' : 'door') })),
     branches: layout.branches.map(b => ({ ...b, rooms: [...b.rooms], consumed: false })),
+    trapdoors: (layout.trapdoors || []).map(t => ({ ...t, consumed: false })),
   });
+}
+
+/** The smallest legal footprint for a room type (pre-v3 layouts). */
+export function geometryFallback(type) {
+  const spec = (ROOM_GEOMETRY[type] || ROOM_GEOMETRY.corridor)[0];
+  return { w: spec.min[0], h: spec.min[1], shape: spec.shape };
 }
 
 /**
@@ -515,13 +834,16 @@ export function dungeonFromLayout(layout) {
  * theme-appropriate, no RNG needed.
  */
 export function defaultPayloadFor(type, theme, isBoss = false) {
-  if (type === ROOM_TYPES.MONSTER) return { monster: applyNature({ ...theme.monsters[0] }) };
-  if (type === ROOM_TYPES.BOSS) return { monster: applyNature({ ...theme.bosses[0], isBoss: true }) };
-  if (type === ROOM_TYPES.TREASURE) return { gold: 35, mimicChance: 0.18 };
-  if (type === ROOM_TYPES.VAULT) return { gold: 100, mimicChance: 0.28 };
-  if (type === ROOM_TYPES.TRAP) return { trapDamage: 5, trapType: (theme.trapTypes || ['spike'])[0] };
-  if (type === ROOM_TYPES.MATERIALS) return { materials: 2 };
-  return {};
+  // A retyped room takes its new function's footprint too — a boss
+  // chamber is not the size of the corridor it used to be
+  const geo = geometryFallback(type);
+  if (type === ROOM_TYPES.MONSTER) return { ...geo, monster: applyNature({ ...theme.monsters[0] }) };
+  if (type === ROOM_TYPES.BOSS) return { ...geo, monster: applyNature({ ...theme.bosses[0], isBoss: true }) };
+  if (type === ROOM_TYPES.TREASURE) return { ...geo, gold: 35, mimicChance: 0.18 };
+  if (type === ROOM_TYPES.VAULT) return { ...geo, gold: 100, mimicChance: 0.28 };
+  if (type === ROOM_TYPES.TRAP) return { ...geo, trapDamage: 5, trapType: (theme.trapTypes || ['spike'])[0] };
+  if (type === ROOM_TYPES.MATERIALS) return { ...geo, materials: 2 };
+  return geo;
 }
 
 /**

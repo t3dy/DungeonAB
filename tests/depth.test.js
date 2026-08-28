@@ -39,13 +39,30 @@ describe('The Bestiary', () => {
 
 describe('Traits change the fight', () => {
   test('the slow strike last: a free first round', () => {
-    // Against an unkillable wall, 12 rounds run; slow costs it round 1
-    const wall = trait => ({ type: ROOM_TYPES.MONSTER, monster: { name: 'the wall', attack: 6, health: 9999, trait } });
-    const partyA = new Party([fighters[0], fighters[1], fighters[2]]);
-    const partyB = new Party([fighters[0], fighters[1], fighters[2]]);
-    const fast = resolveRoomAction(wall(undefined), partyA, 'fight');
-    const slow = resolveRoomAction(wall('slow'), partyB, 'fight');
-    assert.ok(slow.damage < fast.damage, `slow bites later (${slow.damage} < ${fast.damage})`);
+    // Against an unkillable wall the fight runs all 12 rounds, and slow
+    // costs it round one.
+    //
+    // Formation is pinned and the arms are averaged over trials. The
+    // party now picks where it stands per fight (agents/Formation.js),
+    // and a wedge takes a third more damage than a column -- so a single
+    // run of each arm was comparing the trait against the dice.
+    const wall = trait => ({
+      type: ROOM_TYPES.MONSTER,
+      monster: { name: 'the wall', attack: 7, health: 9999, trait },
+    });
+    const four = () => fighters.slice(0, 4).map(c => ({ ...c }));
+    const mean = trait => {
+      let total = 0;
+      const runs = 20;
+      for (let i = 0; i < runs; i++) {
+        const r = resolveRoomAction(wall(trait), new Party(four()), 'fight', { formation: 'line' });
+        total += r.damage;
+      }
+      return total / runs;
+    };
+    const fast = mean(undefined);
+    const slow = mean('slow');
+    assert.ok(slow < fast, `slow bites later (${slow.toFixed(1)} < ${fast.toFixed(1)})`);
   });
 
   test('the ethereal ignore steel — unless a cleric gives it conviction', () => {

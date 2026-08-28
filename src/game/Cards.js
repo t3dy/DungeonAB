@@ -7,11 +7,21 @@
  * scholarly one.
  */
 
+/* Tactic cards are defined in Tactics.js, beside the tree that gives
+ * them meaning, and re-exported here so the draft pool stays one list.
+ * Tactics.js deliberately does NOT import back from this file -- see the
+ * note on TACTIC_TYPE there. */
+import { TACTIC_CARDS } from './Tactics.js';
+export { TACTIC_CARDS };
+
 export const CARD_TYPES = {
   CHARACTER: 'character',
   EQUIPMENT: 'equipment',
   SPELL: 'spell',
   PERSONALITY: 'personality',
+  // Learned technique, gated by what a party can do rather than by
+  // class, and arranged in a small skill tree (game/Tactics.js)
+  TACTIC: 'tactic',
 };
 
 export const CLASSES = {
@@ -28,30 +38,30 @@ export const CLASSES = {
 
 export const CHARACTER_CARDS = [
   // Fighters — front line, high health, taunt
-  { id: 'char-brand', type: CARD_TYPES.CHARACTER, class: CLASSES.FIGHTER, name: 'Brand of the Broken Shield', icon: '⚔️', stats: { health: 18, attack: 5, defense: 4, mind: 2 }, trait: 'Holds the door: takes hits meant for the back rank.' },
-  { id: 'char-ursula', type: CARD_TYPES.CHARACTER, class: CLASSES.FIGHTER, name: 'Ursula Ironknee', icon: '⚔️', stats: { health: 20, attack: 4, defense: 5, mind: 2 }, trait: 'Unmovable. Refuses to fall while anyone stands behind her.' },
-  { id: 'char-kestrel', type: CARD_TYPES.CHARACTER, class: CLASSES.FIGHTER, name: 'Kestrel Quickblade', icon: '⚔️', stats: { health: 15, attack: 6, defense: 3, mind: 3 }, trait: 'Strikes first in every fight.' },
+  { id: 'char-brand', type: CARD_TYPES.CHARACTER, class: CLASSES.FIGHTER, name: 'Brand of the Broken Shield', icon: '⚔️', stats: { health: 14, attack: 4, defense: 3, mind: 2 }, trait: 'Holds the door: takes hits meant for the back rank.' },
+  { id: 'char-ursula', type: CARD_TYPES.CHARACTER, class: CLASSES.FIGHTER, name: 'Ursula Ironknee', icon: '⚔️', stats: { health: 14, attack: 3, defense: 4, mind: 2 }, trait: 'Unmovable. Refuses to fall while anyone stands behind her.' },
+  { id: 'char-kestrel', type: CARD_TYPES.CHARACTER, class: CLASSES.FIGHTER, name: 'Kestrel Quickblade', icon: '⚔️', stats: { health: 13, attack: 5, defense: 2, mind: 3 }, trait: 'Strikes first in every fight.' },
 
   // Clerics — healing, undead turning
-  { id: 'char-benedicta', type: CARD_TYPES.CHARACTER, class: CLASSES.CLERIC, name: 'Sister Benedicta', icon: '✨', stats: { health: 13, attack: 2, defense: 3, mind: 5 }, trait: 'Mends wounds between rooms; turns the restless dead.' },
+  { id: 'char-benedicta', type: CARD_TYPES.CHARACTER, class: CLASSES.CLERIC, name: 'Sister Benedicta', icon: '✨', stats: { health: 14, attack: 2, defense: 3, mind: 6 }, trait: 'Mends wounds between rooms; turns the restless dead.' },
   { id: 'char-oswald', type: CARD_TYPES.CHARACTER, class: CLASSES.CLERIC, name: 'Brother Oswald of the Lantern', icon: '✨', stats: { health: 14, attack: 3, defense: 3, mind: 4 }, trait: 'His lantern light steadies the whole party\'s nerve.' },
 
   // Wizards — spell power, fragile
-  { id: 'char-melchior', type: CARD_TYPES.CHARACTER, class: CLASSES.WIZARD, name: 'Melchior the Moth-Eaten', icon: '🔮', stats: { health: 9, attack: 2, defense: 1, mind: 7 }, trait: 'Doubles the power of any spell the party casts.' },
-  { id: 'char-sylvane', type: CARD_TYPES.CHARACTER, class: CLASSES.WIZARD, name: 'Sylvane of the Nine Candles', icon: '🔮', stats: { health: 10, attack: 3, defense: 2, mind: 6 }, trait: 'Reads sealed doors and cursed scripts aloud, safely. Usually.' },
+  { id: 'char-melchior', type: CARD_TYPES.CHARACTER, class: CLASSES.WIZARD, name: 'Melchior the Moth-Eaten', icon: '🔮', stats: { health: 12, attack: 2, defense: 3, mind: 8 }, trait: 'Doubles the power of any spell the party casts.' },
+  { id: 'char-sylvane', type: CARD_TYPES.CHARACTER, class: CLASSES.WIZARD, name: 'Sylvane of the Nine Candles', icon: '🔮', stats: { health: 11, attack: 3, defense: 3, mind: 7 }, trait: 'Reads sealed doors and cursed scripts aloud, safely. Usually.' },
 
   // Rogues — traps, locks, scouting, treasure
-  { id: 'char-vex', type: CARD_TYPES.CHARACTER, class: CLASSES.ROGUE, name: 'Vex Threefingers', icon: '🗡️', stats: { health: 11, attack: 4, defense: 2, mind: 5 }, trait: 'Disarms traps and picks locks; finds the hidden coin.' },
-  { id: 'char-mouse', type: CARD_TYPES.CHARACTER, class: CLASSES.ROGUE, name: 'The Mouse', icon: '🗡️', stats: { health: 10, attack: 5, defense: 2, mind: 4 }, trait: 'Scouts one room ahead. Nobody has ever seen The Mouse first.' },
+  { id: 'char-vex', type: CARD_TYPES.CHARACTER, class: CLASSES.ROGUE, name: 'Vex Threefingers', icon: '🗡️', stats: { health: 12, attack: 4, defense: 2, mind: 6 }, trait: 'Disarms traps and picks locks; finds the hidden coin.' },
+  { id: 'char-mouse', type: CARD_TYPES.CHARACTER, class: CLASSES.ROGUE, name: 'The Mouse', icon: '🗡️', stats: { health: 11, attack: 5, defense: 2, mind: 5 }, trait: 'Scouts one room ahead. Nobody has ever seen The Mouse first.' },
 
   // Alchemists — potions, weapon mods, labs
-  { id: 'char-paracelsus', type: CARD_TYPES.CHARACTER, class: CLASSES.ALCHEMIST, name: 'Paracelsus the Lesser', icon: '⚗️', stats: { health: 12, attack: 3, defense: 2, mind: 6 }, trait: 'Brews potions and mods weapons at any lab bench he finds.' },
-  { id: 'char-perenelle', type: CARD_TYPES.CHARACTER, class: CLASSES.ALCHEMIST, name: 'Perenelle of the Green Lion', icon: '⚗️', stats: { health: 11, attack: 2, defense: 3, mind: 6 }, trait: 'Distills two potions from every lab instead of one.' },
+  { id: 'char-paracelsus', type: CARD_TYPES.CHARACTER, class: CLASSES.ALCHEMIST, name: 'Paracelsus the Lesser', icon: '⚗️', stats: { health: 13, attack: 3, defense: 2, mind: 7 }, trait: 'Brews potions and mods weapons at any lab bench he finds.' },
+  { id: 'char-perenelle', type: CARD_TYPES.CHARACTER, class: CLASSES.ALCHEMIST, name: 'Perenelle of the Green Lion', icon: '⚗️', stats: { health: 12, attack: 2, defense: 3, mind: 8 }, trait: 'Distills two potions from every lab instead of one.' },
 
   // Second wave — one more face per class, for wider tables
-  { id: 'char-gunnhild', type: CARD_TYPES.CHARACTER, class: CLASSES.FIGHTER, name: 'Gunnhild Half-Door', icon: '⚔️', stats: { health: 17, attack: 5, defense: 5, mind: 1 }, trait: 'Got her name blocking one. Has never explained which half.' },
-  { id: 'char-ash', type: CARD_TYPES.CHARACTER, class: CLASSES.CLERIC, name: 'Canoness Ash', icon: '✨', stats: { health: 12, attack: 3, defense: 2, mind: 6 }, trait: 'Buried three orders of her own sisters. The dead listen when she talks.' },
-  { id: 'char-yarrow', type: CARD_TYPES.CHARACTER, class: CLASSES.WIZARD, name: 'Old Yarrow', icon: '🔮', stats: { health: 11, attack: 2, defense: 2, mind: 6 }, trait: 'Forgot more magic than most learn. Occasionally remembers it mid-fight.' },
+  { id: 'char-gunnhild', type: CARD_TYPES.CHARACTER, class: CLASSES.FIGHTER, name: 'Gunnhild Half-Door', icon: '⚔️', stats: { health: 13, attack: 4, defense: 4, mind: 1 }, trait: 'Got her name blocking one. Has never explained which half.' },
+  { id: 'char-ash', type: CARD_TYPES.CHARACTER, class: CLASSES.CLERIC, name: 'Canoness Ash', icon: '✨', stats: { health: 13, attack: 3, defense: 3, mind: 5 }, trait: 'Buried three orders of her own sisters. The dead listen when she talks.' },
+  { id: 'char-yarrow', type: CARD_TYPES.CHARACTER, class: CLASSES.WIZARD, name: 'Old Yarrow', icon: '🔮', stats: { health: 13, attack: 2, defense: 2, mind: 9 }, trait: 'Forgot more magic than most learn. Occasionally remembers it mid-fight.' },
   { id: 'char-silin', type: CARD_TYPES.CHARACTER, class: CLASSES.ROGUE, name: 'Silin the Debt', icon: '🗡️', stats: { health: 12, attack: 4, defense: 3, mind: 4 }, trait: 'Owes everyone. Pays in doors opened and knives thrown.' },
   { id: 'char-crucible', type: CARD_TYPES.CHARACTER, class: CLASSES.ALCHEMIST, name: 'Magister Crucible', icon: '⚗️', stats: { health: 13, attack: 3, defense: 3, mind: 5 }, trait: 'Expelled from three academies. Each explosion taught him something.' },
 ];
@@ -62,18 +72,18 @@ export const CHARACTER_CARDS = [
 
 export const EQUIPMENT_CARDS = [
   { id: 'eq-tower-shield', type: CARD_TYPES.EQUIPMENT, name: 'Tower Shield', icon: '🛡️', slot: 'armor', bonus: { defense: 3 }, bestFor: CLASSES.FIGHTER, text: 'A wall with a handle.' },
-  { id: 'eq-greatsword', type: CARD_TYPES.EQUIPMENT, name: 'Greatsword of the Vault', icon: '🗡️', slot: 'weapon', bonus: { attack: 3 }, bestFor: CLASSES.FIGHTER, text: 'Found in a vault. Wants to go back.' },
-  { id: 'eq-blessed-mace', type: CARD_TYPES.EQUIPMENT, name: 'Blessed Mace', icon: '🔨', slot: 'weapon', bonus: { attack: 2, mind: 1 }, bestFor: CLASSES.CLERIC, text: 'Persuasion, sanctified.' },
+  { id: 'eq-greatsword', type: CARD_TYPES.EQUIPMENT, name: 'Greatsword of the Vault', icon: '🗡️', slot: 'weapon', bonus: { attack: 3 }, bestFor: CLASSES.FIGHTER, text: 'Found in a vault. Wants to go back. Long enough to take a whole swarm at once: 3 more damage a round against anything that comes in numbers.' },
+  { id: 'eq-blessed-mace', type: CARD_TYPES.EQUIPMENT, name: 'Blessed Mace', icon: '🔨', slot: 'weapon', bonus: { attack: 2, mind: 1 }, bestFor: CLASSES.CLERIC, text: 'Persuasion, sanctified. Consecrates a room as it swings: nothing climbs out of the sarcophagus while it is in hand.' },
   { id: 'eq-grimoire', type: CARD_TYPES.EQUIPMENT, name: 'Grimoire of Low Whispers', icon: '📖', slot: 'focus', bonus: { mind: 3 }, bestFor: CLASSES.WIZARD, text: 'The margins argue with the text.' },
   { id: 'eq-lockpicks', type: CARD_TYPES.EQUIPMENT, name: 'Masterwork Lockpicks', icon: '🗝️', slot: 'tool', bonus: { mind: 2 }, bestFor: CLASSES.ROGUE, text: 'Every door is a suggestion.' },
-  { id: 'eq-alembic', type: CARD_TYPES.EQUIPMENT, name: 'Portable Alembic', icon: '⚗️', slot: 'tool', bonus: { mind: 2 }, bestFor: CLASSES.ALCHEMIST, text: 'A lab that fits in a satchel. Labs found in the dungeon work better.' },
-  { id: 'eq-chainmail', type: CARD_TYPES.EQUIPMENT, name: 'Dwarven Chainmail', icon: '🥋', slot: 'armor', bonus: { defense: 2 }, bestFor: null, text: 'Fits anyone brave enough to wear it.' },
+  { id: 'eq-alembic', type: CARD_TYPES.EQUIPMENT, name: 'Portable Alembic', icon: '⚗️', slot: 'tool', bonus: { mind: 2 }, bestFor: CLASSES.ALCHEMIST, text: 'A lab that fits in a satchel. Labs found in the dungeon work better, and a material can be cooked down into two marches of lamp oil.' },
+  { id: 'eq-chainmail', type: CARD_TYPES.EQUIPMENT, name: 'Dwarven Chainmail', icon: '🥋', slot: 'armor', bonus: { defense: 2 }, bestFor: null, text: 'Fits anyone brave enough to wear it. Takes the worst of a blow, so fewer of them leave a lasting scar.' },
   { id: 'eq-boots', type: CARD_TYPES.EQUIPMENT, name: 'Boots of the Quiet Step', icon: '👢', slot: 'boots', bonus: { defense: 1, mind: 1 }, bestFor: CLASSES.ROGUE, text: 'The floorboards never learn your name.' },
-  { id: 'eq-lantern', type: CARD_TYPES.EQUIPMENT, name: 'Everburning Lantern', icon: '🏮', slot: 'tool', bonus: { mind: 1, defense: 1 }, bestFor: CLASSES.CLERIC, text: 'Reveals hazards one room ahead.' },
-  { id: 'eq-throwing-knives', type: CARD_TYPES.EQUIPMENT, name: 'Bandolier of Knives', icon: '🔪', slot: 'weapon', bonus: { attack: 2 }, bestFor: CLASSES.ROGUE, text: 'Six answers to most questions.' },
-  { id: 'eq-warded-buckler', type: CARD_TYPES.EQUIPMENT, name: 'Warded Buckler', icon: '🛡️', slot: 'armor', bonus: { defense: 2, mind: 1 }, bestFor: CLASSES.CLERIC, text: 'The prayers are etched on the inside, where they matter.' },
-  { id: 'eq-quicksilver-daggers', type: CARD_TYPES.EQUIPMENT, name: 'Quicksilver Daggers', icon: '🗡️', slot: 'weapon', bonus: { attack: 3 }, bestFor: CLASSES.ROGUE, text: 'They land before the argument starts.' },
-  { id: 'eq-athanor-charm', type: CARD_TYPES.EQUIPMENT, name: 'Athanor Charm', icon: '🔥', slot: 'tool', bonus: { mind: 2 }, bestFor: CLASSES.ALCHEMIST, text: 'A furnace in miniature, always exactly warm enough.' },
+  { id: 'eq-lantern', type: CARD_TYPES.EQUIPMENT, name: 'Everburning Lantern', icon: '🏮', slot: 'tool', bonus: { mind: 1, defense: 1 }, bestFor: CLASSES.CLERIC, text: 'Reveals hazards one room ahead, and sips its oil: the party burns supply every other march instead of every one.' },
+  { id: 'eq-throwing-knives', type: CARD_TYPES.EQUIPMENT, name: 'Bandolier of Knives', icon: '🔪', slot: 'weapon', bonus: { attack: 2 }, bestFor: CLASSES.ROGUE, text: 'Six answers to most questions, and they arrive before the asking: 4 damage thrown before the first round.' },
+  { id: 'eq-warded-buckler', type: CARD_TYPES.EQUIPMENT, name: 'Warded Buckler', icon: '🛡️', slot: 'armor', bonus: { defense: 2, mind: 1 }, bestFor: CLASSES.CLERIC, text: 'The prayers are etched on the inside, where they matter. Whatever the party sets off in a room, half of it does not come back on them.' },
+  { id: 'eq-quicksilver-daggers', type: CARD_TYPES.EQUIPMENT, name: 'Quicksilver Daggers', icon: '🗡️', slot: 'weapon', bonus: { attack: 3 }, bestFor: CLASSES.ROGUE, text: 'They land before the argument starts: the party takes no damage in the first round of a fight.' },
+  { id: 'eq-athanor-charm', type: CARD_TYPES.EQUIPMENT, name: 'Athanor Charm', icon: '🔥', slot: 'tool', bonus: { mind: 2 }, bestFor: CLASSES.ALCHEMIST, text: 'A furnace in miniature, always exactly warm enough. Anything the party sets alight burns 2 harder for the rest of the fight.' },
 
   // Class-keyed items: the same item is a different miracle in
   // different hands. (Megabase: a wand gives a fighter a fireball;
@@ -103,12 +113,53 @@ export const EQUIPMENT_CARDS = [
     },
   },
 
+  // Room-feature tools: gear whose value is the architecture, not the
+  // stat line. A prybar is +1 attack and a key to every sarcophagus,
+  // crate and rubble pile in the dungeon; a grapple turns any pit into
+  // a weapon. These are the cards that make a furnished room worth
+  // reading before you pick (see world/RoomFeatures.js FEATURE_ACTIONS).
+  {
+    id: 'eq-prybar', type: CARD_TYPES.EQUIPMENT, name: 'Ironwood Prybar', icon: '🪝',
+    slot: 'tool', bonus: { attack: 1, defense: 1 }, bestFor: CLASSES.FIGHTER,
+    text: 'Opens sarcophagi, crates and rubble. Doubles as an argument.',
+  },
+  {
+    id: 'eq-grapple', type: CARD_TYPES.EQUIPMENT, name: 'Grapple and Line', icon: '🪢',
+    slot: 'tool', bonus: { mind: 1, defense: 1 }, bestFor: CLASSES.ROGUE,
+    text: 'Forty feet of good rope. Pits become options; a shaft becomes a stairway.',
+  },
+  {
+    id: 'eq-tinderbox', type: CARD_TYPES.EQUIPMENT, name: 'Alchemist\'s Tinderbox', icon: '🔥',
+    slot: 'tool', bonus: { attack: 1, mind: 1 }, bestFor: CLASSES.ALCHEMIST,
+    text: 'Lights braziers, shelves, and anything else the room has generously left flammable.',
+  },
+  {
+    id: 'eq-winch-hook', type: CARD_TYPES.EQUIPMENT, name: 'Winch Hook', icon: '⚓',
+    slot: 'tool', bonus: { attack: 2 }, bestFor: CLASSES.ROGUE,
+    text: 'For chains, cranks and portcullises. Whatever the dungeon raised can be dropped.',
+  },
+  {
+    id: 'eq-smiths-kit', type: CARD_TYPES.EQUIPMENT, name: 'Field Smith\'s Kit', icon: '🔨',
+    slot: 'tool', bonus: { attack: 1, defense: 1 }, bestFor: CLASSES.FIGHTER,
+    text: 'Hammer, file, flux. Useless in a corridor; worth a sword at an anvil.',
+  },
+  {
+    id: 'eq-waterskin', type: CARD_TYPES.EQUIPMENT, name: 'Great Waterskin', icon: '🫗',
+    slot: 'tool', bonus: { defense: 1, mind: 1 }, bestFor: null,
+    text: 'Holds four days. Wounds get washed, venom gets flushed, fonts get emptied.',
+  },
+  {
+    id: 'eq-silvered-mirror', type: CARD_TYPES.EQUIPMENT, name: 'Silvered Hand-Mirror', icon: '🪞',
+    slot: 'focus', bonus: { mind: 2 }, bestFor: CLASSES.CLERIC,
+    text: 'Shows what is standing there rather than what wants to be seen.',
+  },
+
   // Trap cards: cursed gear with hidden upsides. They look like
   // mistakes in the pack and play like gambles at the table.
   {
     id: 'eq-cursed-blade', type: CARD_TYPES.EQUIPMENT, name: 'Blade of the Adder', icon: '🐍',
     slot: 'weapon', bonus: { attack: 4, defense: -2 }, bestFor: CLASSES.FIGHTER, cursed: true,
-    text: 'It whispers where to cut. It is usually right. It never says about what.',
+    text: 'It whispers where to cut. It is usually right. It never says about what. Its bearer has lived with venom long enough that the party shrugs off the venomous.',
   },
   {
     id: 'eq-haunted-armor', type: CARD_TYPES.EQUIPMENT, name: 'Haunted Armor', icon: '👻',
@@ -129,19 +180,28 @@ export const EQUIPMENT_CARDS = [
 /* ------------------------------------------------------------------ */
 
 export const SPELL_CARDS = [
-  { id: 'sp-firebolt', type: CARD_TYPES.SPELL, name: 'Firebolt', icon: '🔥', school: 'evocation', element: 'fire', power: 4, use: 'combat', text: 'Opens combat with 4 damage before blades are drawn.' },
-  { id: 'sp-mend', type: CARD_TYPES.SPELL, name: 'Mending Word', icon: '💚', school: 'restoration', power: 5, use: 'heal', text: 'Restores 5 health to the most wounded companion.' },
+  { id: 'sp-firebolt', type: CARD_TYPES.SPELL, name: 'Firebolt', icon: '🔥', school: 'evocation', element: 'fire', power: 4, use: 'combat', text: 'Opens combat with 4 damage before blades are drawn, and goes on burning while the fight lasts.' },
+  { id: 'sp-mend', type: CARD_TYPES.SPELL, name: 'Mending Word', icon: '💚', school: 'restoration', power: 5, use: 'heal', text: 'Restores 5 health to the most wounded companion the moment the fight turns against them, then keeps mending while it holds.' },
   { id: 'sp-knock', type: CARD_TYPES.SPELL, name: 'Knock', icon: '🚪', school: 'transmutation', power: 3, use: 'utility', text: 'Opens any lock. Loudly.' },
-  { id: 'sp-shield', type: CARD_TYPES.SPELL, name: 'Aegis of Ash', icon: '🛡️', school: 'abjuration', power: 3, use: 'combat', text: 'Blunts the first blow in each fight.' },
-  { id: 'sp-light', type: CARD_TYPES.SPELL, name: 'Dancing Light', icon: '💡', school: 'evocation', power: 2, use: 'utility', text: 'Reveals traps and ambushes in the next room.' },
+  { id: 'sp-shield', type: CARD_TYPES.SPELL, name: 'Aegis of Ash', icon: '🛡️', school: 'abjuration', power: 3, use: 'combat', text: 'Blunts every blow of the fight, not just the first.' },
+  { id: 'sp-light', type: CARD_TYPES.SPELL, name: 'Dancing Light', icon: '💡', school: 'evocation', power: 2, use: 'utility', text: 'Reveals traps and ambushes in the next room — and once the oil is gone, carries the party through a march of dark for free.' },
   { id: 'sp-fear', type: CARD_TYPES.SPELL, name: 'Cause Fear', icon: '😱', school: 'necromancy', power: 4, use: 'combat', text: 'Weak monsters flee before the fight begins.' },
-  { id: 'sp-chain', type: CARD_TYPES.SPELL, name: 'Chain Lightning', icon: '⚡', school: 'evocation', element: 'shock', power: 5, use: 'combat', text: 'Arcs from foe to foe until it runs out of foes or enthusiasm.' },
+  { id: 'sp-chain', type: CARD_TYPES.SPELL, name: 'Chain Lightning', icon: '⚡', school: 'evocation', element: 'shock', power: 5, use: 'combat', aoe: true, text: 'Arcs from foe to foe until it runs out of foes or enthusiasm — and through anything wet or metal on the way.' },
   { id: 'sp-frost', type: CARD_TYPES.SPELL, name: 'Frost Lance', icon: '❄️', school: 'evocation', element: 'frost', power: 5, use: 'combat', text: 'Cold, precise, and deeply personal.' },
-  { id: 'sp-sunder', type: CARD_TYPES.SPELL, name: 'Sunder', icon: '💢', school: 'transmutation', power: 4, use: 'combat', text: 'Armor remembers being ore. This spell reminds it.' },
+  { id: 'sp-sunder', type: CARD_TYPES.SPELL, name: 'Sunder', icon: '💢', school: 'transmutation', power: 4, use: 'combat', text: 'Armor remembers being ore. This spell reminds it, and plate stops turning blows for the rest of the fight.' },
   { id: 'sp-radiance', type: CARD_TYPES.SPELL, name: 'Radiant Lance', icon: '🌟', school: 'theurgy', element: 'holy', power: 4, use: 'combat', text: 'A line of noon driven through whatever the dark is wearing.' },
-  { id: 'sp-balm', type: CARD_TYPES.SPELL, name: 'Balm of Hours', icon: '🌾', school: 'restoration', power: 6, use: 'heal', text: 'Borrows healing from a quieter week and spends it now.' },
-  { id: 'sp-eyes', type: CARD_TYPES.SPELL, name: 'Eyes of the Mouse', icon: '👁️', school: 'divination', power: 2, use: 'utility', text: 'See what the small and cautious see. It is a lot.' },
-  { id: 'sp-feather', type: CARD_TYPES.SPELL, name: 'Feather Step', icon: '🪶', school: 'transmutation', power: 3, use: 'utility', text: 'The floor agrees to pretend nobody is on it.' },
+  { id: 'sp-balm', type: CARD_TYPES.SPELL, name: 'Balm of Hours', icon: '🌾', school: 'restoration', power: 6, use: 'heal', text: 'Borrows healing from a quieter week and spends it mid-fight, then goes on spending.' },
+  { id: 'sp-eyes', type: CARD_TYPES.SPELL, name: 'Eyes of the Mouse', icon: '👁️', school: 'divination', power: 2, use: 'utility', text: 'See what the small and cautious see. It is a lot, and it is just as much in the dark: the party never pays what the dark charges.' },
+  { id: 'sp-feather', type: CARD_TYPES.SPELL, name: 'Feather Step', icon: '🪶', school: 'transmutation', power: 3, use: 'utility', text: 'The floor agrees to pretend nobody is on it: 3 less damage from anything underfoot, and no stumbling in the dark.' },
+
+  // Workings that read the room: each one turns a piece of a furnished
+  // chamber into a weapon or a resource (world/RoomFeatures.js)
+  { id: 'sp-shatter', type: CARD_TYPES.SPELL, name: 'Shatter', icon: '🪨', school: 'transmutation', element: 'frost', power: 4, use: 'combat', aoe: true, text: 'Stone remembers being loose, and cold reminds it. Pillars, boulders and bad ceilings all listen.' },
+  { id: 'sp-kindle', type: CARD_TYPES.SPELL, name: 'Kindle', icon: '🕯️', school: 'evocation', element: 'fire', power: 3, use: 'combat', aoe: true, text: 'Lights any fire in the room from across it — braziers, crates, shelves, and whatever is standing near one.' },
+  { id: 'sp-fireball', type: CARD_TYPES.SPELL, name: 'Fireball', icon: '🔥', school: 'evocation', element: 'fire', power: 5, use: 'combat', aoe: true, text: 'It does not stop at the monster. Whatever else in the room will burn, burns.' },
+  { id: 'sp-hoarfrost', type: CARD_TYPES.SPELL, name: 'Hoarfrost', icon: '🧊', school: 'evocation', element: 'frost', power: 4, use: 'combat', aoe: true, text: 'The cold goes everywhere at once: into the water, into the fire, into the cracks in the stone.' },
+  { id: 'sp-dawnbreak', type: CARD_TYPES.SPELL, name: 'Dawnbreak', icon: '🌟', school: 'theurgy', element: 'holy', power: 4, use: 'combat', aoe: true, text: 'Noon, indoors, all at once. Old stone and old glass both answer it.' },
+  { id: 'sp-purify', type: CARD_TYPES.SPELL, name: 'Purify the Font', icon: '⛲', school: 'theurgy', power: 4, use: 'heal', text: 'Still water, said over and made willing — poured out when someone is failing, and again each round after. Best where the dungeon left a font.' },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -149,15 +209,22 @@ export const SPELL_CARDS = [
 /* ------------------------------------------------------------------ */
 
 export const PERSONALITY_CARDS = [
-  { id: 'pers-brave', type: CARD_TYPES.PERSONALITY, name: 'The Bold', icon: '🦁', archetype: 'brave', text: 'Fights before fleeing; opens the ominous door.' },
-  { id: 'pers-cunning', type: CARD_TYPES.PERSONALITY, name: 'The Cunning', icon: '🦊', archetype: 'cunning', text: 'Prefers the trap disarmed, the guard bribed, the fight skipped.' },
-  { id: 'pers-greedy', type: CARD_TYPES.PERSONALITY, name: 'The Covetous', icon: '💰', archetype: 'greedy', text: 'Never leaves treasure behind. Never.' },
-  { id: 'pers-scholarly', type: CARD_TYPES.PERSONALITY, name: 'The Scholarly', icon: '📚', archetype: 'scholarly', text: 'Reads everything; lingers in libraries; learns extra spells.' },
-  { id: 'pers-pious', type: CARD_TYPES.PERSONALITY, name: 'The Devout', icon: '🕯️', archetype: 'pious', text: 'Rests at shrines; heals more; abhors desecration.' },
-  { id: 'pers-reckless', type: CARD_TYPES.PERSONALITY, name: 'The Reckless', icon: '💥', archetype: 'reckless', text: 'Rushes in. Sometimes that works. Gloriously.' },
+  { id: 'pers-brave', type: CARD_TYPES.PERSONALITY, name: 'The Bold', icon: '🦁', archetype: 'brave', text: 'Fights before fleeing; opens the ominous door. Walks the dark like a road it knows: 1 less damage a march.' },
+  { id: 'pers-cunning', type: CARD_TYPES.PERSONALITY, name: 'The Cunning', icon: '🦊', archetype: 'cunning', text: 'Prefers the trap disarmed, the guard bribed, the fight skipped. Trims the wick without being asked: 2 more marches of oil.' },
+  { id: 'pers-greedy', type: CARD_TYPES.PERSONALITY, name: 'The Covetous', icon: '💰', archetype: 'greedy', text: 'Never leaves treasure behind. Never — not even blind, which costs it 1 more damage a march in the dark.' },
+  { id: 'pers-scholarly', type: CARD_TYPES.PERSONALITY, name: 'The Scholarly', icon: '📚', archetype: 'scholarly', text: 'Reads everything; lingers in libraries; learns extra spells. Wastes no light doing it: 1 more march of oil.' },
+  { id: 'pers-pious', type: CARD_TYPES.PERSONALITY, name: 'The Devout', icon: '🕯️', archetype: 'pious', text: 'Rests at shrines; heals more; abhors desecration. Tends what the dungeon opens, so fewer blows leave a lasting scar.' },
+  { id: 'pers-reckless', type: CARD_TYPES.PERSONALITY, name: 'The Reckless', icon: '💥', archetype: 'reckless', text: 'Rushes in. Sometimes that works. Gloriously. Never stops to bind anything, so more of it stays as scars.' },
   // Trap personality (Megabase): looks like a liability, spots what
   // the brave walk into. Cowards notice tripwires.
-  { id: 'pers-craven', type: CARD_TYPES.PERSONALITY, name: 'The Craven', icon: '🐔', archetype: 'craven', trap: true, text: 'Avoids every fight it can. Notices every exit — and every tripwire.' },
+  { id: 'pers-craven', type: CARD_TYPES.PERSONALITY, name: 'The Craven', icon: '🐔', archetype: 'craven', trap: true, text: 'Avoids every fight it can. Notices every exit — and every tripwire. Skipped fights pay no spoils. Creeps in the dark and pays 1 more for it, but packed 2 marches of spare oil.' },
+
+  // Feature-forward personalities. Both reuse a proven archetype (the
+  // alchemy pack's Hermetic set the precedent) so the barks and
+  // deliberation voices stay fully covered per class — the new name is
+  // a new *lens* on the same decision weights.
+  { id: 'pers-tinkerer', type: CARD_TYPES.PERSONALITY, name: 'The Tinkerer', icon: '🔧', archetype: 'cunning', text: 'Touches everything in the room: the chain, the lid, the lever. Uses the architecture as a weapon.' },
+  { id: 'pers-vandal', type: CARD_TYPES.PERSONALITY, name: 'The Vandal', icon: '🪓', archetype: 'reckless', text: 'If a thing in the room can be toppled, burned, or dropped on someone, it will be.' },
 ];
 
 /**
@@ -169,6 +236,7 @@ export function getAllCards() {
     ...EQUIPMENT_CARDS,
     ...SPELL_CARDS,
     ...PERSONALITY_CARDS,
+    ...TACTIC_CARDS,
   ];
 }
 

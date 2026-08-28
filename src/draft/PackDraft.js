@@ -8,6 +8,7 @@
  */
 
 import { CARD_TYPES, CLASSES } from '../game/Cards.js';
+import { PARTY_CAP } from '../agents/Party.js';
 import { pooledCards } from '../game/CardPacks.js';
 
 /**
@@ -50,13 +51,23 @@ export class SeededRandom {
 /* AI drafter personas — each seat wants different things              */
 /* ------------------------------------------------------------------ */
 
+/*
+ * Personas have two independent axes:
+ *   preferences — WHAT they like (weights/classBias/quirks): identity,
+ *                 stable across skill.
+ *   skill (0-1) — HOW WELL they evaluate: high skill blends toward the
+ *                 rational baseline (rationalValue, calibrated by the
+ *                 mining harness) and shrinks the chaos factor. Low
+ *                 skill amplifies preferences into predictable mistakes.
+ */
 export const DRAFT_PERSONAS = [
   {
     id: 'warlord',
     name: 'The Warlord',
     icon: '⚔️',
     desc: 'Drafts muscle first: fighters, weapons, and the will to use them.',
-    weights: { character: 3, equipment: 2.5, spell: 0.8, personality: 1 },
+    skill: 0.55,
+    weights: { character: 3, equipment: 2.5, spell: 0.8, personality: 1, tactic: 2.2 },
     classBias: { fighter: 3, rogue: 1.5 },
   },
   {
@@ -64,7 +75,8 @@ export const DRAFT_PERSONAS = [
     name: 'The Archmage',
     icon: '🔮',
     desc: 'Hoards spells and the wizards to wield them.',
-    weights: { character: 2, equipment: 1, spell: 3, personality: 1 },
+    skill: 0.5,
+    weights: { character: 2, equipment: 1, spell: 3, personality: 1, tactic: 1.8 },
     classBias: { wizard: 3, cleric: 1.5 },
   },
   {
@@ -72,19 +84,59 @@ export const DRAFT_PERSONAS = [
     name: 'The Guildmaster',
     icon: '⚖️',
     desc: 'Balances the ledger: a bit of everything, nothing wasted.',
-    weights: { character: 2, equipment: 2, spell: 2, personality: 2 },
+    skill: 0.7,
+    weights: { character: 2, equipment: 2, spell: 2, personality: 2, tactic: 2.5 },
     classBias: { rogue: 2, alchemist: 2 },
   },
 ];
+
+/*
+ * Skill-tier pilots — not seated at the default table (which stays
+ * player + 3), but available for lobbies, benchmarks, and the mining
+ * harness, which uses them to measure the game's skill expression:
+ * if the Prodigy and the Novice post the same win rate, the draft
+ * isn't rewarding evaluation skill.
+ */
+export const PILOT_TIERS = [
+  {
+    id: 'prodigy',
+    name: 'The Prodigy',
+    icon: '🧠',
+    desc: 'Evaluates coldly: bodies to four, the mythic uncommons, no romance.',
+    skill: 0.95,
+    weights: { character: 2, equipment: 2, spell: 2, personality: 2, tactic: 2 },
+    classBias: {},
+  },
+  {
+    id: 'novice',
+    name: 'The Novice',
+    icon: '🎈',
+    desc: 'Takes the shiniest rare every time. The glass cannon is SO cool.',
+    skill: 0.15,
+    weights: { character: 1.2, equipment: 2.2, spell: 2.2, personality: 1.5, tactic: 2.4 },
+    classBias: {},
+    quirks: { shiny: 2.5, bodyBlind: true, curseChaser: true, treeBlind: true },
+  },
+];
+
+/** Every persona that can pilot a seat (table AIs + skill tiers). */
+export const PILOT_PERSONAS = [...DRAFT_PERSONAS, ...PILOT_TIERS];
 
 /* ------------------------------------------------------------------ */
 /* Pack construction — guaranteed coverage                             */
 /* ------------------------------------------------------------------ */
 
 /**
- * Build one 8-card pack: 3 characters, 2 equipment, 2 spells,
- * 1 personality. Duplicates across packs are allowed (multiple
- * copies exist "in the box") but not within a pack.
+ * Build one 9-card pack: 2 characters, 3 equipment, 2 spells,
+ * 1 personality, 1 tactic. Duplicates across packs are allowed
+ * (multiple copies exist "in the box") but not within a pack.
+ *
+ * Two characters is the guaranteed-coverage floor (CLAUDE.md: packs
+ * always contain ≥2 characters, so no draft is dead). It used to be
+ * three — but a party caps at four (Party.PARTY_CAP) while a drafter
+ * makes 24 picks, so a third character per pack was measured forcing
+ * ~5 picks per draft onto adventurers nobody could ever field. The
+ * freed slot goes to equipment, which every party can use.
  */
 export function buildPack(rng) {
   const pack = [];
@@ -103,10 +155,13 @@ export function buildPack(rng) {
   };
 
   // The pool = base cards + every enabled content pack's
-  take(pooledCards(CARD_TYPES.CHARACTER), 3);
-  take(pooledCards(CARD_TYPES.EQUIPMENT), 2);
+  take(pooledCards(CARD_TYPES.CHARACTER), 2);
+  take(pooledCards(CARD_TYPES.EQUIPMENT), 3);
   take(pooledCards(CARD_TYPES.SPELL), 2);
   take(pooledCards(CARD_TYPES.PERSONALITY), 1);
+  // One tactic a pack: enough that a tree can be assembled across a
+  // draft, few enough that assembling one is a commitment
+  take(pooledCards(CARD_TYPES.TACTIC), 1);
 
   return rng.shuffle(pack);
 }
@@ -150,6 +205,32 @@ export function scoreCard(card, persona, pool, rng) {
     if (characters.some(c => c.class === CLASSES.WIZARD)) score += 1.2;
   }
 
+  if (card.type === CARD_TYPES.TACTIC) {
+    const held = pool.filter(c => c.type === CARD_TYPES.TACTIC);
+    const heldIds = new Set(held.map(c => c.id));
+    v = 2.5;
+
+    // A tier-two tactic is a blank without its root. Pricing that
+    // correctly is the whole skill test the tree exists to create:
+    // reading a branch card early, before you own the trunk, is exactly
+    // the mistake a novice makes with a splashy rare.
+    if (card.requires) {
+      v = heldIds.has(card.requires) ? 4.5 : 0.4;
+    }
+
+    // A root whose branch you already took is suddenly excellent: it
+    // switches a dead card on
+    if (held.some(c => c.requires === card.id)) v += 3;
+
+    // The arcane branch needs something to work on
+    if (card.capability === 'cast' && !pool.some(c => c.type === CARD_TYPES.SPELL)) {
+      v -= 1.5;
+    }
+
+    // Duplicates do nothing
+    if (heldIds.has(card.id)) v = 0;
+  }
+
   if (card.type === CARD_TYPES.PERSONALITY) {
     // One or two personalities is plenty
     const personalities = pool.filter(c => c.type === CARD_TYPES.PERSONALITY);
@@ -166,13 +247,143 @@ export function scoreCard(card, persona, pool, rng) {
 }
 
 /**
+ * The rational baseline — what the card is actually worth, calibrated
+ * by the mining harness (tools/mine.js): bodies dominate until four,
+ * the cleric is the format's mythic uncommon, class-keyed items are
+ * the real bombs, the Craven is a measured trap. This is the "pro"
+ * evaluation that skill blends toward.
+ */
+/**
+ * Cards that answer the dark. Under the supply clock a party that runs
+ * out of oil takes DARK_TOLL damage every march, so *some* answer to
+ * the dark is close to mandatory and the second one is nearly redundant
+ * — the shape of a classic format staple.
+ */
+export const LIGHT_ANSWERS = ['eq-lantern', 'sp-light', 'sp-eyes'];
+
+function lightAnswers(pool) {
+  return pool.filter(c => LIGHT_ANSWERS.includes(c.id)).length;
+}
+
+export function rationalValue(card, pool) {
+  const characters = pool.filter(c => c.type === CARD_TYPES.CHARACTER);
+  let v = 1;
+
+  if (card.type === CARD_TYPES.CHARACTER) {
+    // A body is the best card in the format until the party is full.
+    // Past the cap they can only sit in reserve as insurance, so the
+    // fifth body is worth about as much as a decent trinket and the
+    // sixth is worth nothing (Party.PARTY_CAP).
+    if (characters.length < PARTY_CAP) {
+      v = 6.5 - characters.length * 0.4;
+    } else if (characters.length === PARTY_CAP) {
+      v = 2;                     // one spare against a death
+    } else {
+      v = 0.2;                   // a bench nobody will ever call
+    }
+    // The mythic uncommon: unglamorous, measured at ~+7 win points
+    if (card.class === CLASSES.CLERIC && !characters.some(c => c.class === CLASSES.CLERIC)) v += 1.5;
+  }
+
+  if (card.type === CARD_TYPES.EQUIPMENT) {
+    const held = pool.filter(c => c.type === CARD_TYPES.EQUIPMENT).length;
+    v = 2;
+    if (card.classActions) v += 2;   // the real bombs (+22 pts on a thin party)
+    if (card.bestFor && characters.some(c => c.class === card.bestFor)) v += 1;
+    if (card.cursed) v -= 0.2;       // the pro prices the printed cost, reads the upside
+    // The armoury stops paying past about six pieces (MINING_REPORT.md,
+    // kit-count win curves): a seventh weapon does not swing a fight the
+    // first six were already winning.
+    if (held >= 6) v -= (held - 5) * 0.35;
+  }
+
+  if (card.type === CARD_TYPES.SPELL) {
+    const held = pool.filter(c => c.type === CARD_TYPES.SPELL).length;
+    v = 2
+      + (characters.some(c => c.class === CLASSES.WIZARD) ? 1 : 0)
+      + (card.use === 'heal' ? 0.5 : 0);
+    // Ordinary rooms ration the grimoire to one or two casts, so the
+    // workings past the fourth only ever matter at the throne
+    if (held >= 4) v -= (held - 3) * 0.45;
+  }
+
+  // Whatever type it is, the first answer to the dark is a staple and
+  // the second is close to dead weight (Party.SUPPLY_COVERAGE)
+  if (LIGHT_ANSWERS.includes(card.id)) {
+    const held = lightAnswers(pool);
+    v += held === 0 ? 3 : (held === 1 ? 0.5 : 0);
+  }
+
+  if (card.type === CARD_TYPES.PERSONALITY) {
+    const personalities = pool.filter(c => c.type === CARD_TYPES.PERSONALITY);
+    v = 1 - personalities.length * 1.2;
+    if (card.archetype === 'craven') v -= 1;     // measured: 62% vs 83% baseline
+    if (card.archetype === 'reckless' || card.archetype === 'greedy') v += 0.3;
+  }
+
+  return v;
+}
+
+/**
+ * The preference/bias evaluation — the persona's identity, plus the
+ * predictable mistakes its quirks encode:
+ *   shiny       — overvalues finicky rares (class-keyed items, big spells)
+ *   bodyBlind   — no urgency about drafting characters
+ *   curseChaser — reads a curse's big numbers as pure upside
+ */
+export function biasValue(card, persona, pool) {
+  const characters = pool.filter(c => c.type === CARD_TYPES.CHARACTER);
+  const quirks = persona.quirks || {};
+  let v = persona.weights?.[card.type] ?? 1;
+
+  if (card.type === CARD_TYPES.CHARACTER) {
+    v += persona.classBias?.[card.class] || 0;
+    v -= characters.length * 0.35;
+    if (!quirks.bodyBlind && characters.length === 0) v += 3;
+  }
+  if (card.type === CARD_TYPES.EQUIPMENT && card.cursed) {
+    v += quirks.curseChaser ? 0.8 : -0.8;
+  }
+  if (quirks.shiny && (card.classActions || (card.type === CARD_TYPES.SPELL && card.power >= 5))) {
+    v += quirks.shiny;
+  }
+  // The tree's own novice trap: a tier-two tactic has the biggest text
+  // in the pack and does nothing without its trunk. A body-blind,
+  // shiny-chasing drafter reads that as a bomb.
+  if (card.type === CARD_TYPES.TACTIC && card.requires) {
+    const hasRoot = pool.some(c => c.id === card.requires);
+    if (quirks.treeBlind && !hasRoot) v += 2;
+    else if (!hasRoot) v -= 1.5;
+  }
+  if (card.type === CARD_TYPES.PERSONALITY) {
+    const personalities = pool.filter(c => c.type === CARD_TYPES.PERSONALITY);
+    v -= personalities.length * 1.2;
+    if (card.trap && !quirks.curseChaser) v -= 0.6;
+  }
+  return v;
+}
+
+/**
+ * A pilot's actual pick evaluation: skill blends the rational baseline
+ * with the persona's preferences, and pros are consistent (low chaos)
+ * where novices are erratic.
+ */
+export function evaluatePick(card, persona, pool, rng) {
+  const skill = persona.skill ?? 0.5;
+  const chaos = rng.next() * (0.4 + (1 - skill) * 1.6);
+  return skill * rationalValue(card, pool)
+    + (1 - skill) * biasValue(card, persona, pool)
+    + chaos;
+}
+
+/**
  * AI drafter picks the highest-scoring card from a pack
  */
 export function aiPick(pack, persona, pool, rng) {
   let best = null;
   let bestScore = -Infinity;
   for (const card of pack) {
-    const s = scoreCard(card, persona, pool, rng);
+    const s = evaluatePick(card, persona, pool, rng);
     if (s > bestScore) {
       bestScore = s;
       best = card;

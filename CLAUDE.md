@@ -43,3 +43,48 @@ tests/                   ← Node test runner suites
 4. **Gradient outcomes**: encounters resolve on a spectrum, not binary win/lose.
 5. **Procgen validates**: dungeon graph must be traversable entrance→boss before acceptance.
 6. **The story panel is a product surface**: writing quality matters as much as mechanics.
+7. **No state change is silent**: if a number the player could care about moves, the run's
+   record says so. Every observable field lives in `Chronicle.snapshotState` and has writing
+   in `Chronicle.FIELDS`; `tick()` wraps its body and diffs on every exit path, so a mechanic
+   cannot dodge the record by returning early. `tests/silence.test.js` is the gate and fails
+   if a field can move unreported or is added without writing.
+   *Why it is a rule:* hand-placed narration proved bypassable — heroes were dying on the
+   march with the Chronicle saying nothing, because a snapshot was taken three lines too late.
+8. **A new mechanic ships with its writing and its record**: prose for what the player reads,
+   a `Chronicle` field + entry for what gets saved, and coverage that both exist. Curate what
+   reaches the prose (a beat, not a steady state) — but record everything.
+9. **When a mechanic lands, run the asset pass**: ask which existing cards, classes and
+   personalities should now interact with it, and redesign the ones written for a game that no
+   longer exists. Mechanics drift ahead of assets otherwise. See `ASSET_REVIEW.md`.
+   `npm run assets` asks two questions: does any mechanic *read* this card (static), and does
+   the thing the card promises ever *reach the player* (dynamic, measured over real delves).
+   `tests/assets.test.js` gates the second at one delve in ten.
+   *Why the second question exists:* Eyes of the Mouse fired on every dark march and its
+   three lines never named it, so a player who drafted it could not tell it was working.
+10. **Balance is measured, not judged**: the curve is 99/88/71/45 and every mechanic or
+   asset change moves it. `npm run calibrate` reports the drift and `--write` searches for
+   new constants; `npm run bench` regenerates `MINING_REPORT.md`, which stamps the
+   `STAT_SCALE` it ran against so a stale benchmark fails the gate rather than quietly
+   describing a different game. `npm run card <id>` measures one card's real contribution —
+   the cost model in `game/Costing.js` only screens (rank correlation ~0.69).
+   *Why it is a rule:* STAT_SCALE was re-swept by hand six times in one session, and doing
+   it by hand means sometimes not doing it.
+11. **A comparison that cannot fail is worse than no test**: fixtures must sit in a regime
+   where the arms could differ. `tests/helpers.js` `armsDiffer` refuses saturated totals,
+   the `max(1, …)` damage floor, and differences inside the noise.
+12. **A mechanic nobody meets is not in the game**: coverage proves a beat *can*
+   happen and `tests/prose.js` proves it appears in *some* transcript; neither says how
+   often. `npm run census` walks 600 delves and reports, per mechanic, the share of delves
+   that met it and the times a delve — plus every option offered against how often it was
+   taken, which separates "nobody is offered this" from "nobody wants this". Anything under
+   5% of delves is flagged. `tests/prose.test.js` gates the sharp end: an option offered
+   forty times and taken under 3% of them is decoration.
+   *Why it is a rule:* the boss unleash had no line at all, the idle-tactic warning reached
+   the panel and never the saga, and the stairhead camp — built the same day, with a card
+   supporting it — was met by 2% of delves because parties arrive at the stair at 96% health.
+13. **Writing is gated on accuracy, not just existence**: a line must state the number the
+   mechanic applied and invent none (`narrative/Prose.js`), no line may repeat itself through
+   a delve, card text and room tells pass a house-style lint, and every writable beat must
+   appear in a real seeded transcript. `tests/prose.test.js` is the gate.
+   *Why it is a rule:* Aegis of Ash read "blunts the first blow in each fight" while the
+   resolver warded every round, and a player who believed the card drafted it wrong.

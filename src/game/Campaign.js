@@ -90,8 +90,19 @@ export class Campaign {
     const healed = this.missingHealth();
     if (healed === 0 || this.party.gold < cost) return null;
     this.party.gold -= cost;
-    for (const m of this.party.living()) m.heal(m.maxHealth);
-    return { healed, cost };
+    // Town is where the delve's scars are actually worked out: the
+    // surgeon sets what the march only bandaged, so wounds clear before
+    // the healing is applied (Adventurer.mendWounds).
+    const scarred = this.party.living().filter(m => m.wounds > 0);
+    const mended = {
+      wounds: scarred.reduce((sum, m) => sum + m.wounds, 0),
+      names: scarred.map(m => m.name),
+    };
+    for (const m of this.party.living()) {
+      m.mendWounds();
+      m.heal(m.maxHealth);
+    }
+    return { healed, cost, mended };
   }
 
   /**
@@ -125,6 +136,15 @@ export class Campaign {
       }));
     }
     return this._recruitOffers.filter(o => o); // holes left by hires
+  }
+
+  /**
+   * Call up a reserve adventurer to fill a dead one's place. Free —
+   * they were drafted and have been waiting in town. Returns the
+   * promoted adventurer, or null if the party is full or empty-benched.
+   */
+  callUpReserve() {
+    return this.party.promoteReserve();
   }
 
   /**
@@ -186,6 +206,7 @@ export class Campaign {
       survivors: this.party.living().length,
       partySize: this.party.members.length,
       spellsLearned: this.party.spellsLearned,
+      trophies: this.party.trophies.length,
       retired: this.retired,
       over: this.over,
     };

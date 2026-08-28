@@ -14,6 +14,7 @@ const TYPE_COLORS = {
   entrance: '#8fb8dd', corridor: '#555', monster: '#c84c3c', trap: '#e8724a',
   treasure: '#d8a53f', library: '#b07ae8', shrine: '#e8d48a', lab: '#3cb8a8',
   materials: '#4a8a5c', disaster: '#e05555', boss: '#ff4444', vault: '#ffd75e',
+  stairs: '#7a7f8a',
 };
 
 const PAYLOAD_KEYS = ['monster', 'gold', 'mimicChance', 'trapDamage', 'materials'];
@@ -21,8 +22,11 @@ const PAYLOAD_KEYS = ['monster', 'gold', 'mimicChance', 'trapDamage', 'materials
 /** Retype a room in a layout, swapping in a sane default payload. */
 export function retypeRoom(layout, roomIndex, newType) {
   const room = layout.rooms.find(r => r.index === roomIndex);
-  if (!room || room.type === ROOM_TYPES.ENTRANCE || room.type === ROOM_TYPES.BOSS) return false;
-  if (newType === ROOM_TYPES.ENTRANCE || newType === ROOM_TYPES.BOSS) return false;
+  // The entrance, the throne room and the stairs are structure, not
+  // furniture: retyping a stair leaves a floor with no way down
+  const FIXED = [ROOM_TYPES.ENTRANCE, ROOM_TYPES.BOSS, ROOM_TYPES.STAIRS];
+  if (!room || FIXED.includes(room.type)) return false;
+  if (FIXED.includes(newType)) return false;
   for (const k of PAYLOAD_KEYS) delete room[k];
   room.type = newType;
   Object.assign(room, defaultPayloadFor(newType, DUNGEON_THEMES[layout.themeId] || DUNGEON_THEMES.delve));
@@ -51,38 +55,107 @@ export function drawMinimap(canvas, layout) {
   ctx.fillStyle = '#0d0b08';
   ctx.fillRect(0, 0, W, H);
 
-  const xs = layout.rooms.map(r => r.x);
-  const ys = layout.rooms.map(r => r.y);
-  const pad = 12;
-  const sx = (W - pad * 2) / Math.max(1, Math.max(...xs) - Math.min(...xs));
-  const sy = (H - pad * 2) / Math.max(1, Math.max(...ys) - Math.min(...ys));
-  const s = Math.min(sx, sy, 26);
-  const px = r => pad + (r.x - Math.min(...xs)) * s;
-  const py = r => pad + (r.y - Math.min(...ys)) * s;
+  // Fit by true extent: room footprints, not just their centers
+  const wOf = r => r.w || 4;
+  const hOf = r => r.h || 4;
+  const floorOf = r => r.floor || 0;
+
+  // Floors sit on top of each other in the dungeon and would draw as one
+  // illegible pile, so the archive lays their plans out side by side —
+  // floor 1, then floor 2, then floor 3, left to right.
+  const floors = [...new Set(layout.rooms.map(floorOf))].sort((a, b) => a - b);
+  // Each plan is drawn from its own origin, or the lower floors trail
+  // off down the canvas: floor 2's spine starts where floor 1's ended.
+  const box = f => {
+    const rs = layout.rooms.filter(r => floorOf(r) === f);
+    return {
+      x0: Math.min(...rs.map(r => r.x - wOf(r) / 2)),
+      y0: Math.min(...rs.map(r => r.y - hOf(r) / 2)),
+      w: Math.max(...rs.map(r => r.x + wOf(r) / 2)) - Math.min(...rs.map(r => r.x - wOf(r) / 2)),
+      h: Math.max(...rs.map(r => r.y + hOf(r) / 2)) - Math.min(...rs.map(r => r.y - hOf(r) / 2)),
+    };
+  };
+  const boxes = new Map(floors.map(f => [f, box(f)]));
+  const cellW = Math.max(...floors.map(f => boxes.get(f).w));
+  const cellH = Math.max(...floors.map(f => boxes.get(f).h));
+  const stride = cellW + 4;
+  const colOf = r => floors.indexOf(floorOf(r));
+  const xOf = r => (r.x - boxes.get(floorOf(r)).x0) + colOf(r) * stride;
+  const yOf = r => r.y - boxes.get(floorOf(r)).y0;
+
+  const minX = 0;
+  const maxX = floors.length * stride - 4;
+  const minY = 0;
+  const maxY = cellH;
+  const pad = 10;
+  // Room for the floor labels along the top when there is more than one
+  const top = floors.length > 1 ? 14 : pad;
+  const s = Math.min(
+    (W - pad * 2) / Math.max(1, maxX - minX),
+    (H - top - pad) / Math.max(1, maxY - minY)
+  );
+  const px = r => pad + (xOf(r) - minX) * s;
+  const py = r => top + (yOf(r) - minY) * s;
   const byIdx = new Map(layout.rooms.map(r => [r.index, r]));
 
   for (const e of layout.edges) {
     const a = byIdx.get(e.a);
     const b = byIdx.get(e.b);
     if (!a || !b) continue;
+    // A trapdoor is a vertical shortcut, not a corridor: dotted red.
+    // A stair joins two plans, so it is drawn faintly between them.
+    const isShaft = e.kind === 'trapdoor';
+    const isStair = e.kind === 'stair';
     ctx.beginPath();
-    ctx.setLineDash(e.secret ? [3, 3] : []);
-    ctx.strokeStyle = e.secret ? '#d8a53f' : '#4a443a';
-    ctx.lineWidth = 1.5;
+    ctx.setLineDash(isShaft ? [1, 3] : isStair ? [2, 2] : e.secret ? [3, 3] : []);
+    ctx.strokeStyle = isShaft ? '#c85a3c' : isStair ? '#7a7f8a' : e.secret ? '#d8a53f' : '#4a443a';
+    ctx.lineWidth = isShaft ? 1 : 1.5;
     ctx.moveTo(px(a), py(a));
     ctx.lineTo(px(b), py(b));
     ctx.stroke();
   }
   ctx.setLineDash([]);
 
+  // Rooms at their real footprints — a boss cavern dwarfs a vault
   for (const r of layout.rooms) {
-    const size = r.type === 'boss' ? 9 : 6;
+    const rw = Math.max(3, wOf(r) * s);
+    const rh = Math.max(3, hOf(r) * s);
     ctx.fillStyle = TYPE_COLORS[r.type] || '#777';
-    ctx.fillRect(px(r) - size / 2, py(r) - size / 2, size, size);
+    if (r.shape === 'rotunda') {
+      ctx.beginPath();
+      ctx.arc(px(r), py(r), Math.min(rw, rh) / 2, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      ctx.fillRect(px(r) - rw / 2, py(r) - rh / 2, rw, rh);
+    }
     if (r.secret) {
       ctx.strokeStyle = '#ffd75e';
-      ctx.strokeRect(px(r) - size / 2 - 1.5, py(r) - size / 2 - 1.5, size + 3, size + 3);
+      ctx.lineWidth = 1;
+      ctx.strokeRect(px(r) - rw / 2 - 1.5, py(r) - rh / 2 - 1.5, rw + 3, rh + 3);
     }
+  }
+
+  // Say which plan is which, when there is more than one
+  if (floors.length > 1) {
+    ctx.fillStyle = '#8a7a58';
+    ctx.font = '9px system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    floors.forEach((f, i) => {
+      ctx.fillText(`Floor ${f + 1}`, pad + i * stride * s, 2);
+    });
+  }
+
+  // Trapdoor mouths, marked in the room that holds them
+  for (const t of layout.trapdoors || []) {
+    const room = byIdx.get(t.from);
+    if (!room) continue;
+    ctx.fillStyle = t.secret ? '#6a3a2a' : '#111';
+    ctx.strokeStyle = '#c85a3c';
+    ctx.lineWidth = 1;
+    const size = Math.max(3, s * 1.4);
+    ctx.fillRect(px(room) - size / 2, py(room) - size / 2, size, size);
+    ctx.strokeRect(px(room) - size / 2, py(room) - size / 2, size, size);
   }
 }
 
@@ -176,8 +249,10 @@ export function setupArchive({ onDelve }) {
     layout.branches.forEach((branch, bi) => {
       const row = document.createElement('label');
       row.style.cssText = 'display:flex;gap:0.4rem;align-items:center;color:#b8a888;';
+      const label = branch.name || 'A side passage';
       row.innerHTML = `<input type="checkbox" ${branch.secret ? 'checked' : ''} />
-        Branch off room #${branch.junction} (${branch.rooms.length} room${branch.rooms.length > 1 ? 's' : ''}) is secret`;
+        ${label[0].toUpperCase()}${label.slice(1)} off room #${branch.junction}
+        (${branch.rooms.length} room${branch.rooms.length > 1 ? 's' : ''}) is secret`;
       row.querySelector('input').addEventListener('change', e => {
         setBranchSecret(layout, bi, e.target.checked);
         redraw();

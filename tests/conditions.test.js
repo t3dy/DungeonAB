@@ -109,11 +109,20 @@ describe('Conditions reshape generation', () => {
   });
 
   test('Monster Swarms thins the foes but multiplies the fights', () => {
-    const plain = generateDungeon('swarm-seed', 'medium', { theme: 'delve' });
-    const swarm = generateDungeon('swarm-seed', 'medium', { theme: 'delve', condition: 'swarms' });
-    assert.ok(monsterAvg(swarm).hp < monsterAvg(plain).hp, 'individually weaker');
+    // A weight tweak is a change to a distribution, so one seed can
+    // land either way by luck. Measure the distribution (rule 11).
+    const SEEDS = Array.from({ length: 24 }, (_, i) => `swarm-seed-${i}`);
     const count = d => d.rooms.filter(r => r.type === ROOM_TYPES.MONSTER).length;
-    assert.ok(count(swarm) >= count(plain), 'but more of them');
+    let plainRooms = 0, swarmRooms = 0, plainHp = 0, swarmHp = 0;
+    for (const seed of SEEDS) {
+      const plain = generateDungeon(seed, 'medium', { theme: 'delve' });
+      const swarm = generateDungeon(seed, 'medium', { theme: 'delve', condition: 'swarms' });
+      plainRooms += count(plain); swarmRooms += count(swarm);
+      plainHp += monsterAvg(plain).hp; swarmHp += monsterAvg(swarm).hp;
+    }
+    assert.ok(swarmHp / SEEDS.length < plainHp / SEEDS.length, 'individually weaker');
+    assert.ok(swarmRooms > plainRooms,
+      `but more of them (${swarmRooms} vs ${plainRooms} over ${SEEDS.length} seeds)`);
   });
 
   test('Trap-Dense deepens the bite', () => {

@@ -75,11 +75,19 @@ describe('the Root Cellar of the Bog Witch', () => {
 describe('the Ice Caverns of the Mad Pyromancer', () => {
   test('the caverns keep failing: disasters everywhere, worst traps in the game', () => {
     assert.equal(DUNGEON_THEMES.icecaverns.trapBonus, 2, 'flash-melt traps');
-    let disasters = 0;
-    for (const seed of [...SEEDS, 'nt-6', 'nt-7', 'nt-8']) {
+    // An absolute count reads the length of a dungeon as much as its
+    // weighting. Compare the caverns against a plain delve on the same
+    // seeds: the ice is meant to be the place things go wrong.
+    const seeds = Array.from({ length: 40 }, (_, i) => `nt-ice-${i}`);
+    let disasters = 0, plain = 0;
+    for (const seed of seeds) {
       disasters += count(generateDungeon(seed, 'medium', { theme: 'icecaverns' }), ROOM_TYPES.DISASTER);
+      plain += count(generateDungeon(seed, 'medium', { theme: 'delve' }), ROOM_TYPES.DISASTER);
     }
-    assert.ok(disasters >= 8, `steam and thaw are constant (${disasters} disasters across 8 delves)`);
+    assert.ok(disasters > plain,
+      `steam and thaw are constant (${disasters} in the caverns vs ${plain} in the delve, ${seeds.length} delves each)`);
+    assert.ok(disasters / seeds.length >= 0.9,
+      `about a failure a delve (${(disasters / seeds.length).toFixed(2)} per delve across ${seeds.length})`);
   });
 
   test('fire and ice share the roster', () => {

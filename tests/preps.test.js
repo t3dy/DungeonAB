@@ -42,7 +42,10 @@ describe('Preparation bonuses (one inspectable place)', () => {
 
   test('the lantern finds doors a bare party walks past', () => {
     const rogueParty = cards => new Party([byClass('rogue'), ...cards]);
-    const midRoll = 6;   // rogue mind 5 + 6 = 11: not enough bare
+    // The check is eyes + bonus + roll > 11. Pick a roll that leaves a
+    // bare rogue just short, so the lantern's +2 is what carries it.
+    const bareRogue = new Party([byClass('rogue')]);
+    const midRoll = 11 - bareRogue.bestMind() - 0.5;
     assert.equal(detectSecretDoor(rogueParty([]), midRoll), false);
     assert.equal(detectSecretDoor(rogueParty([eq('eq-lantern')]), midRoll), true, '+2 from the lantern');
   });
@@ -78,14 +81,17 @@ describe('Preparation-gated options', () => {
 });
 
 describe('Preparation-driven outcomes', () => {
-  test('Knock takes the full hoard safely and burns the scroll (no wizard)', () => {
+  test('Knock takes the full hoard safely, and is spent for the room', () => {
     const party = new Party([byClass('fighter'), sp('sp-knock')]);
     const room = { type: ROOM_TYPES.TREASURE, gold: 40, mimicChance: 1 };  // certain mimic!
     const result = resolveRoomAction(room, party, 'knock-open');
     assert.equal(result.gold, 40, 'full gold, at range');
     assert.equal(party.gold, 40);
-    assert.equal(result.consumed, true, 'the scroll burns');
-    assert.equal(party.grimoire.length, 0);
+    // A drafted working is prepared, not sealed: it stays in the
+    // grimoire but cannot be cast twice in one room (Party.castSpell)
+    assert.equal(result.consumed, false, 'a drafted working does not burn');
+    assert.equal(party.grimoire.length, 1, 'Knock is still known');
+    assert.equal(party.castSpell('utility', 'sp-knock'), null, 'but spent for this room');
     assert.ok(party.isAlive() && party.totalHealth() === party.totalMaxHealth(), 'the mimic bit only air');
   });
 
@@ -99,14 +105,17 @@ describe('Preparation-driven outcomes', () => {
     assert.equal(party.totalHealth(), hp, 'no blood');
   });
 
-  test('Cause Fear clears the room bloodlessly and burns the fear scroll specifically', () => {
+  test('Cause Fear clears the room bloodlessly, spending that working only', () => {
     const party = new Party([byClass('fighter'), sp('sp-firebolt'), sp('sp-fear')]);
     const room = { type: ROOM_TYPES.MONSTER, monster: { name: 'a nervous thing', attack: 4, health: 10 } };
     const result = resolveRoomAction(room, party, 'cause-fear');
     assert.equal(result.success, true);
     assert.equal(room.cleared, true);
-    assert.ok(!party.grimoire.some(s => s.id === 'sp-fear'), 'fear is spent');
-    assert.ok(party.grimoire.some(s => s.id === 'sp-firebolt'), 'the firebolt is NOT the scroll that burned');
+    // Prepared workings are spent per room, not burned: Cause Fear is
+    // used up here and the firebolt is untouched
+    assert.equal(party.castSpell('combat', 'sp-fear'), null, 'fear is spent for this room');
+    assert.ok(party.castSpell('combat', 'sp-firebolt'), 'the firebolt is not the working that was spent');
+    assert.ok(party.grimoire.some(s => s.id === 'sp-fear'), 'and fear is still known for later rooms');
   });
 
   test('a drafted healing spell finally fires after a bloody fight', () => {
@@ -118,7 +127,9 @@ describe('Preparation-driven outcomes', () => {
     const result = resolveRoomAction(room, party, 'fight');
     assert.ok(result.damage >= 6, `a long fight hurts (${result.damage})`);
     assert.ok(result.preps.some(p => p.source === 'Mending Word'), 'the mend is credited');
-    assert.equal(party.grimoire.length, 0, 'the scroll burned in the field');
+    // A prepared working stays known; it is simply spent for this room
+    assert.equal(party.grimoire.length, 1, 'the working is still known');
+    assert.equal(party.castSpell('heal', 'sp-mend'), null, 'but spent for this room');
   });
 
   test('practiced fingers inspect without leaving a coin behind', () => {

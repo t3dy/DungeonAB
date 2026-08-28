@@ -9,10 +9,39 @@
 import { CLASSES, SPELL_CARDS } from '../game/Cards.js';
 import { ROOM_TYPES } from '../world/DungeonGen.js';
 import { elementMult } from '../game/Bestiary.js';
+import { claimDrop, bonusText } from '../game/Drops.js';
+import {
+  FEATURE_ACTIONS, featureActions, featureModifiers, featureActionWeights,
+  isFeatureAction, getFeature, roomFeatures, actionTier,
+} from '../world/RoomFeatures.js';
+import { reactionsFor, foldReactions } from '../world/Reactions.js';
+import { tacticModifiers } from '../game/Tactics.js';
+import { chooseFormation, formationModifiers } from '../agents/Formation.js';
 
 function roll() {
   return Math.random() * 10;
 }
+
+/**
+ * A loosed working does not stop working.
+ *
+ * Measured, this is the whole reason the arcane package lost. In a
+ * controlled A/B — identical bodies and seeds, three equipment cards
+ * against three combat spells — both arms reached the boss ~100% of the
+ * time, and the entire 30-point win gap was the boss chamber itself:
+ * 34.8 damage taken with equipment against 42.9 with spells. A +2
+ * weapon is +2 for all twelve rounds of a boss fight; a one-shot burst
+ * off a large health pool is a rounding error, and the spell arm's
+ * fights ran longer, so it bled more. Equipment scaled with fight
+ * length and spells did not scale at all.
+ *
+ * So a combat working now keeps a share of its force for the rest of
+ * the fight: the fire goes on burning, the frost goes on biting. That
+ * is the same shape Aegis of Ash always had — a ward that blunts
+ * *every* round — which is exactly why it was the least-bad spell in
+ * the pool (DESIGN_DIALOGUE.md §8).
+ */
+export const SPELL_SUSTAIN_SHARE = 0.5;
 
 /* ------------------------------------------------------------------ */
 /* Preparation — what the drafted kit unlocks and improves             */
@@ -72,14 +101,50 @@ export function getPreparationBonuses(party) {
 /* Option definitions per room type                                    */
 /* ------------------------------------------------------------------ */
 
+/**
+ * The room's furniture, as options. A pit is scenery until somebody
+ * brings a line or the muscle to shove; a sarcophagus is a wall until
+ * somebody drafted a prybar. This is where room features and drafted
+ * cards meet (world/RoomFeatures.js).
+ */
+export function getFeatureOptions(room, party) {
+  return featureActions(room, party, {
+    item: id => hasItem(party, id),
+    spell: id => hasSpell(party, id),
+  });
+}
+
+/**
+ * Can the party cook a material down into lamp oil?
+ *
+ * The alembic's answer to the supply clock. It used to want a materials
+ * room and three marches of oil or fewer, and the coincidence of those
+ * with the card in the pack meant tools/census.mjs saw it fire in under
+ * one delve in twenty-five. A lab bench is the obvious other place to
+ * do it, and five marches is still running low.
+ */
+export function canBrewOil(party) {
+  return hasItem(party, 'eq-alembic') && party.materials > 0 && party.supply <= 5;
+}
+
 export function getRoomOptions(room, party) {
+  return [...baseRoomOptions(room, party), ...getFeatureOptions(room, party)];
+}
+
+function baseRoomOptions(room, party) {
   switch (room.type) {
     case ROOM_TYPES.MONSTER:
     case ROOM_TYPES.BOSS: {
-      const opts = [
-        { id: 'fight', name: 'Fight', desc: 'Steel and teamwork' },
-        { id: 'flee', name: 'Fall Back', desc: 'Retreat and try the fight later, worn down' },
-      ];
+      // Twice is a retreat; a third time is a rout, and the room does
+      // not allow one — whatever is in it is between them and the door.
+      const CORNERED_AT = 2;
+      const opts = [{ id: 'fight', name: 'Fight', desc: 'Steel and teamwork' }];
+      if ((room.fled || 0) < CORNERED_AT) {
+        opts.push({
+          id: 'flee', name: 'Fall Back',
+          desc: `Retreat and try the fight later, worn down: ${2 * ((room.fled || 0) + 1)} damage`,
+        });
+      }
       if (party.hasClass(CLASSES.ROGUE) && !room.monster?.isBoss) {
         opts.push({ id: 'sneak', name: 'Sneak Past', desc: 'The rogue leads a silent detour' });
       }
@@ -157,14 +222,50 @@ export function getRoomOptions(room, party) {
       if (party.hasClass(CLASSES.ALCHEMIST) && party.materials > 0) {
         opts.unshift({ id: 'alchemy', name: 'Work the Bench', desc: 'Brew a potion or mod a weapon' });
       }
+      // The alembic turns the bench on the supply clock: a material
+      // cooked down into light. Only worth offering when the lamp
+      // actually needs it, or the party will brew oil it cannot carry.
+      if (canBrewOil(party)) {
+        opts.unshift({ id: 'brew-oil', name: 'Cook Down Lamp Oil', desc: 'A material becomes two marches of light' });
+      }
       return opts;
     }
 
     case ROOM_TYPES.MATERIALS: {
-      return [
+      const opts = [
         { id: 'gather', name: 'Gather Materials', desc: 'Herbs, salts, quicksilver' },
         { id: 'pass-by', name: 'Leave Them', desc: 'The satchel stays light' },
       ];
+      if (canBrewOil(party)) {
+        opts.push({ id: 'brew-oil', name: 'Cook Down Lamp Oil', desc: 'A material becomes two marches of light' });
+      }
+      return opts;
+    }
+
+    case ROOM_TYPES.STAIRS: {
+      // The stairhead is the one place in a dungeon where stopping is
+      // sensible: it is behind you if the floor above went badly, and
+      // ahead of you it only gets worse. So the choice here is what to
+      // spend before going down.
+      const opts = [
+        { id: 'descend', name: 'Go Down', desc: 'A long climb by lamplight: 1 supply' },
+      ];
+      if (hasItem(party, 'eq-grapple')) {
+        opts.push({ id: 'rope-down', name: 'Rope Down the Well', desc: 'Straight down the shaft beside the stair: no supply spent' });
+      }
+      // Offered to the hurt and to the wounded. A party reaches the
+      // stair at 96% health on average (tools/census.mjs), so a camp
+      // that only healed was a choice nobody had a reason to make: what
+      // it is really for is the wound the delve would otherwise keep.
+      const hurt = party.living().some(m => m.health < m.effectiveMax());
+      const wounded = party.living().some(m => m.wounds > 0);
+      if (hurt || wounded) {
+        opts.push({
+          id: 'camp-stair', name: 'Camp at the Stairhead',
+          desc: 'Sleep and eat before the next floor: 2 supply for 6 healed each and a wound set, and something may find you',
+        });
+      }
+      return opts;
     }
 
     case ROOM_TYPES.DISASTER: {
@@ -184,13 +285,15 @@ export function getRoomOptions(room, party) {
 /* ------------------------------------------------------------------ */
 
 const PERSONALITY_WEIGHTS = {
-  brave: { fight: 3, 'push-through': 2, brace: 2, flee: -2, 'leave-it': -1 },
-  cunning: { sneak: 3, disarm: 3, bribe: 2, inspect: 2, 'spell-bypass': 2, fight: -1 },
-  greedy: { loot: 4, desecrate: 2, gather: 2, 'leave-it': -3, bribe: -2 },
+  brave: { fight: 3, 'push-through': 2, brace: 2, flee: -2, 'leave-it': -1, 'camp-stair': -1 },
+  cunning: { sneak: 3, disarm: 3, bribe: 2, inspect: 2, 'spell-bypass': 2, fight: -1, 'rope-down': 2 },
+  // Monsters always drop (Drops.js), so to the Covetous every fight
+  // is a payday — and sneaking past one is leaving money on the floor
+  greedy: { loot: 4, desecrate: 2, gather: 2, fight: 1, sneak: -1, 'leave-it': -3, bribe: -2, 'camp-stair': -1 },
   scholarly: { study: 3, 'deep-study': 3, 'spell-strike': 2, 'spell-bypass': 2 },
-  pious: { rest: 3, 'turn-undead': 3, desecrate: -5 },
-  reckless: { fight: 2, 'push-through': 3, loot: 2, inspect: -2, 'search-around': -2 },
-  craven: { flee: 3, sneak: 2, disarm: 2, 'search-around': 2, inspect: 1, scatter: 2, fight: -2, 'push-through': -2, brace: -1, 'cause-fear': 3, 'smoke-bomb': 2, 'knock-open': 1 },
+  pious: { rest: 3, 'turn-undead': 3, desecrate: -5, 'camp-stair': 2 },
+  reckless: { fight: 2, 'push-through': 3, loot: 2, inspect: -2, 'search-around': -2, 'camp-stair': -3, descend: 2 },
+  craven: { flee: 3, sneak: 2, disarm: 2, 'search-around': 2, inspect: 1, scatter: 2, fight: -2, 'push-through': -2, brace: -1, 'cause-fear': 3, 'smoke-bomb': 2, 'knock-open': 1, 'camp-stair': 3 },
 };
 
 /* Preparation-gated options are attractive to those who'd use them */
@@ -230,6 +333,19 @@ export function natureAdjustments(party, room) {
   if (m.trait === 'swarm') {
     add('spell-strike', 2);
   }
+  // The party reads the room, not just the monster. A caster holding
+  // fire, standing in front of a stack of dry crates, can see what is
+  // about to happen — and so can the player. Without this the reactions
+  // existed but almost never fired: 55% of fight rooms held something
+  // the party's elements could touch and a reaction landed in 15% of
+  // them, because nobody thought to look up (Reactions.js).
+  const areaHeld = party.grimoire.filter(sp => sp.use === 'combat' && sp.aoe);
+  const roomAnswers = areaHeld.some(sp => reactionsFor(sp, room).length > 0);
+  if (roomAnswers) {
+    add('spell-strike', 3);
+    add('fight', -1);
+  }
+
   // A caster holding the foe's weakness knows it — and wants to use it
   const combatSpells = party.grimoire.filter(s => s.use === 'combat');
   if (combatSpells.some(s => elementMult(s, m) > 1)) {
@@ -261,9 +377,41 @@ export function decideRoomAction(room, party) {
         if (prep[archetype]) w += prep[archetype];
       }
     }
+    // Using the room is its own temptation, and each archetype has
+    // opinions about which piece of furniture to reach for
+    const featWeights = featureActionWeights(opt.id);
+    if (featWeights) {
+      w += 1.2;                                  // furniture invites use
+      for (const archetype of party.personalities) {
+        if (featWeights[archetype]) w += featWeights[archetype];
+      }
+    }
     // The monster's nature argues for and against certain plans
     if (nature[opt.id]) w += nature[opt.id];
     if (opt.id === 'rest' && party.totalHealth() / party.totalMaxHealth() < 0.6) w += 3;
+
+    // The stairhead. A party decides whether to stop by how much it has
+    // left, not by temperament alone — without this the choice was a
+    // coin flip and a party at 20% health walked down as often as a
+    // party at 95%, which is a decision layer that cannot see the
+    // mechanic (the reactions lesson again).
+    if (opt.id === 'camp-stair') {
+      const share = party.totalHealth() / party.totalMaxHealth();
+      if (share < 0.5) w += 5;
+      else if (share < 0.75) w += 2;
+      else w -= 2;                            // barely scratched: not worth the oil
+      // A wound is the other reason to stop, and it does not care how
+      // full the health bars look: nothing else down here closes one
+      if (party.living().some(m => m.wounds > 0)) w += 3;
+      // Camping burns oil, and camping without oil to spare is how a
+      // party ends up marching the next floor in the dark. Cold Camp
+      // halves the bill, so it does not fear the lamp the same way.
+      const camped = tacticModifiers(party);
+      if (party.supply <= (camped.campSupply ? 2 : 4)) w -= 4;
+    }
+    // A rope down the shaft costs nothing at all, so it wins on the
+    // oil unless somebody wants the stop
+    if (opt.id === 'rope-down') w += party.supply <= 3 ? 3 : 1.5;
     if (opt.id === 'fight' && party.totalHealth() / party.totalMaxHealth() < 0.3) w -= 2;
     if (opt.id === 'flee' && party.totalHealth() / party.totalMaxHealth() < 0.3) w += 2;
     if (opt.id === 'study') w += 1;                         // Spells are score
@@ -284,23 +432,8 @@ export function decideRoomAction(room, party) {
 /* Boss phases — at half health, the fight changes                     */
 /* ------------------------------------------------------------------ */
 
-const BOSS_PHASE_LINES = {
-  'vampire-lord': '🩸 Half-spent, the Lord stops apologizing. The temperature of the room drops with his manners.',
-  'the-bride': '🩸 The Bride lets the Lord\'s name fall from her like a shawl, and what remains is far older.',
-  'bog-witch': '🍲 The Witch stops smiling like a hostess and starts smiling like a cook.',
-  'mad-pyromancer': '🔥 Bleeding, the Pyromancer remembers why he was exiled, and shares the memory generously.',
-  'mad-alchemist': '⚗️ The Alchemist drinks something from his own belt that no committee ever approved.',
-  'rebis': '👑 The Rebis turns its second face forward. That one has been resting.',
-  'shrouded-king': '👑 The Shroud comes off. It was never a shroud.',
-  'glacier-heart': '💠 The Heart cracks down its center, and both halves are angrier.',
-};
-const BOSS_PHASE_GENERIC = [
-  '💢 Half-dead, the thing stops playing with its food.',
-  '💢 Wounded past its patience, it becomes what the warnings were about.',
-];
-
 function bossPhaseLine(monster) {
-  return BOSS_PHASE_LINES[monster.kind] || BOSS_PHASE_GENERIC[monster.health % BOSS_PHASE_GENERIC.length];
+  return `💢 At half health, ${monster.name} turns fierce: attack +2 for the rest of the fight.`;
 }
 
 /* ------------------------------------------------------------------ */
@@ -324,20 +457,127 @@ export function rollFind(party, always = false, rollValue = Math.random()) {
 
   if (kind === 0) {
     party.potions.push({ kind: 'healing-draught', heal: 6 });
-    return { source: 'the hoard', find: 'potion', text: '🧪 Tucked behind the coin: a healing draught, still corked, still honest.' };
+    return { source: 'the hoard', find: 'potion', text: '🧪 Also in the hoard: a healing draught (heals 6), added to the satchel.' };
   }
   if (kind === 1) {
     party.materials += 2;
-    return { source: 'the hoard', find: 'materials', text: '🌿 Two bundles of rare simples, wrapped in oilcloth by careful, vanished hands.' };
+    return { source: 'the hoard', find: 'materials', text: '🌿 Also in the hoard: 2 alchemy materials.' };
   }
   if (kind === 2) {
     const scroll = SPELL_CARDS[Math.floor(rollValue * 997) % SPELL_CARDS.length];
-    party.grimoire.push({ ...scroll, id: `found-${scroll.id}-${party.grimoire.length}` });
-    return { source: scroll.name, find: 'scroll', text: `📜 A scroll of ${scroll.name}, sealed with someone's ring. The grimoire grows.` };
+    // A sealed scroll out of a hoard is one cast and gone
+    party.grimoire.push({ ...scroll, id: `found-${scroll.id}-${party.grimoire.length}`, source: 'found' });
+    return { source: scroll.name, find: 'scroll', text: `📜 Also in the hoard: a scroll of ${scroll.name}, added to the grimoire.` };
   }
   const trinket = TRINKETS[Math.floor(rollValue * 991) % TRINKETS.length];
-  party.assignEquipment({ ...trinket, id: `${trinket.id}-${Date.now().toString(36)}` });
-  return { source: trinket.name, find: 'trinket', text: `🍀 Among the coins, ${trinket.name} — claimed, worn, already working.` };
+  const wearer = party.assignEquipment({ ...trinket, id: `${trinket.id}-${Date.now().toString(36)}` });
+  return { source: trinket.name, find: 'trinket', text: `🍀 Also in the hoard: ${trinket.name} (${bonusText(trinket.bonus)}), now worn by ${wearer?.name || 'no one'}.` };
+}
+
+/* ------------------------------------------------------------------ */
+/* Feature actions — using the room itself                             */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Resolve a feature interaction. In a fight the furniture is a weapon:
+ * damage the monster with the room, then swing (the same shape as
+ * spell-strike). Outside a fight it's a resource: gold, materials, a
+ * spell, a weapon edge, a wash for the wounds.
+ *
+ * Mutates the party and the room. Returns a result carrying `feature`
+ * so the narration can name what was used.
+ */
+export function resolveFeatureAction(room, party, optionId, options = {}) {
+  // A drafted tool does the job better than bare hands (RoomFeatures
+  // actionTier): the class opens the option, the card upgrades it
+  const action = actionTier(optionId, party, {
+    item: id => hasItem(party, id),
+    spell: id => hasSpell(party, id),
+  });
+  const feature = getFeature(action.feature);
+  const preps = [];
+
+  /* The room as a weapon: an opener, then the ordinary fight */
+  if (action.fightOnly) {
+    const monster = room.monster;
+    // Improvised Arms: technique for using what the room left lying about
+    const improvised = tacticModifiers(party).featureOpener;
+    const opener = action.openerDamage + improvised;
+    const dealt = Math.min(opener, Math.max(0, monster.health - 1));
+    monster.health = Math.max(1, monster.health - opener);
+    if (improvised) {
+      preps.push({
+        source: 'improvised arms',
+        text: `🔧 The party knows how to swing what the room left lying about: +${improvised} to the opening.`,
+      });
+    }
+    const result = resolveRoomAction(room, party, 'fight', {
+      formation: options?.formation,
+      extraCover: action.extraCover || 0,
+    });
+    result.feature = action.feature;
+    result.featureAction = optionId;
+    result.featureDamage = dealt;
+    result.featureTier = action.tier;
+    result.spellElement = action.element || null;
+    return result;
+  }
+
+  /* The room as a resource */
+  const result = {
+    success: true, feature: action.feature, featureAction: optionId,
+    featureTier: action.tier, preps,
+  };
+
+  if (action.gold) {
+    party.addGold(action.gold);
+    result.gold = action.gold;
+  }
+  if (action.materials) {
+    party.materials += action.materials;
+    result.materials = action.materials;
+  }
+  if (action.heal) {
+    party.healParty(action.heal);
+    result.healed = action.heal;
+  }
+  if (action.curesLinger && party.poisonLinger > 0) {
+    party.poisonLinger = 0;
+    result.curedLinger = true;
+    preps.push({ source: 'the Great Waterskin', text: '🫗 The venom is flushed out with clean water before it can act again.' });
+  }
+  if (action.weaponMod) {
+    const striker = party.living().reduce((a, b) => (a.attack >= b.attack ? a : b));
+    striker.addWeaponMod({ ...action.weaponMod });
+    result.weaponMod = { ...action.weaponMod, target: striker.name };
+  }
+  if (action.spell) {
+    const spell = { ...action.spell, id: `feature-${optionId}-${party.grimoire.length}`, source: 'prepared', text: 'Taken off a dungeon shelf.' };
+    party.grimoire.push(spell);
+    result.spell = spell.name;
+    // A grimoire to copy into means taking two good pages, not one
+    if (action.extraSpell) {
+      const second = { ...action.spell, id: `feature-${optionId}-${party.grimoire.length}`, use: 'utility', source: 'prepared', text: 'Taken off a dungeon shelf.' };
+      party.grimoire.push(second);
+      result.extraSpell = true;
+    }
+  }
+  // Prying a sarcophagus is a gamble: sometimes the occupant objects
+  if (action.wakesDead) {
+    // Proper leverage lifts the lid instead of cracking it
+    const woke = !action.quiet && roll() > 6.5;
+    result.wokeDead = woke;
+    if (woke) {
+      const dmg = 4;
+      party.takeDamage(dmg);
+      result.damage = dmg;
+      preps.push({ source: feature.name, text: `⚰️ The occupant objects: ${dmg} damage before it is put back down.` });
+    }
+  }
+
+  room.cleared = true;
+  party.recordEncounter(optionId, true);
+  return result;
 }
 
 /* ------------------------------------------------------------------ */
@@ -362,10 +602,83 @@ export function detectSecretDoor(party, rollValue = roll()) {
 }
 
 /**
+ * Does the party spot the shaft under the rubble before standing on
+ * it? Rogues have the eyes and the pole; a lantern helps. Pure.
+ */
+export function detectTrapdoor(party, rollValue = roll()) {
+  const rogues = party.living().filter(m => m.class === CLASSES.ROGUE);
+  const eyes = rogues.length > 0
+    ? Math.max(...rogues.map(m => m.mind)) + 2      // tapping the floor ahead is the job
+    : Math.floor(party.bestMind() / 2);
+  let bonus = getPreparationBonuses(party).secretDoor;   // the lantern shows the seam
+  if (party.hasPersonality('craven')) bonus += 1;        // watches the floor, always
+  if (party.hasPersonality('reckless')) bonus -= 1;      // strides on ahead
+  return eyes + bonus + rollValue > 11;
+}
+
+/**
+ * Does the party climb down a shaft they've found? It skips rooms —
+ * their danger and their loot both — for a drop and a hard landing.
+ * The Craven take the short way; the Covetous refuse to skip treasure;
+ * a battered party takes any road to the end. Pure — pass the roll.
+ */
+export function decideTrapdoor(party, rollValue = roll()) {
+  let w = 3.5;                                           // a shortcut is tempting
+  if (party.hasPersonality('craven')) w += 3;            // fewer rooms, fewer teeth
+  if (party.hasPersonality('cunning')) w += 1.5;
+  if (party.hasPersonality('greedy')) w -= 3;            // skipped rooms hold coin
+  if (party.hasPersonality('brave')) w -= 2;             // we walk in the front door
+  if (party.hasPersonality('scholarly')) w -= 1;         // there is more to read this way
+  // Hurt parties want the boss sooner and the corridors fewer
+  if (party.totalHealth() / party.totalMaxHealth() < 0.5) w += 3;
+  return rollValue < w;
+}
+
+/**
  * Does the party take the side passage? The Covetous smell gold; the
  * Craven wants no part of optional danger. Pure — pass the roll.
  */
-export function decideDetour(party, rollValue = roll()) {
+/**
+ * What a party wants out of each wing (world/DungeonGen.js WINGS).
+ *
+ * A wing has a theme and a payoff, and a party that cannot see either
+ * is choosing between two anonymous side passages. The Covetous walk
+ * toward coin, the Scholarly toward books, an alchemist toward a
+ * workshop — and nobody volunteers for the flooded wing.
+ *
+ * Returns { weight, advocate } — the advocate is a whole clause, so
+ * the writing can print it as its own sentence.
+ */
+export function wingAppeal(party, wing) {
+  if (!wing) return { weight: 0, advocate: null };
+  const has = a => party.hasPersonality(a);
+  const cls = c => party.hasClass(c);
+  switch (wing) {
+    case 'crypt':
+      if (has('greedy')) return { weight: 3, advocate: 'the Covetous wanted what gets buried with people' };
+      if (has('pious')) return { weight: 2, advocate: 'the Devout did not like leaving the dead untended' };
+      return { weight: 0, advocate: null };
+    case 'works':
+      if (cls(CLASSES.ALCHEMIST)) return { weight: 4, advocate: 'the alchemist wanted the bench' };
+      if (has('scholarly')) return { weight: 2, advocate: 'the Scholarly wanted to see what was being made down there' };
+      return { weight: 0, advocate: null };
+    case 'archive':
+      if (has('scholarly')) return { weight: 4, advocate: 'the Scholarly wanted the shelves' };
+      if (cls(CLASSES.WIZARD)) return { weight: 3, advocate: 'the wizard reads everything, on principle' };
+      return { weight: 0, advocate: null };
+    case 'barracks':
+      if (has('greedy')) return { weight: 3, advocate: 'the Covetous wanted the weapon rack' };
+      if (has('brave')) return { weight: 2, advocate: 'the Bold wanted whatever was garrisoned there' };
+      return { weight: 0, advocate: null };
+    case 'sump':
+      // Nobody wants the flooded wing. It pays, and it is still wet.
+      return { weight: has('greedy') ? 1 : -2, advocate: null };
+    default:
+      return { weight: 0, advocate: null };
+  }
+}
+
+export function decideDetour(party, rollValue = roll(), wing = null) {
   let w = 4;   // idle curiosity baseline
   if (party.hasPersonality('greedy')) w += 3;
   if (party.hasPersonality('scholarly')) w += 2;
@@ -373,6 +686,8 @@ export function decideDetour(party, rollValue = roll()) {
   if (party.hasPersonality('craven')) w -= 3;
   // Battered parties press for the exit
   if (party.totalHealth() / party.totalMaxHealth() < 0.35) w -= 3;
+  // ...and what is down there is part of the argument
+  w += wingAppeal(party, wing).weight;
   return rollValue < w;
 }
 
@@ -384,7 +699,12 @@ export function decideDetour(party, rollValue = roll()) {
  * Resolve a chosen action in a room. Mutates the party.
  * Returns { success, text, gold, damage, learned, ... }
  */
-export function resolveRoomAction(room, party, optionId) {
+export function resolveRoomAction(room, party, optionId, options = null) {
+  // Feature actions (world/RoomFeatures.js) are dispatched separately:
+  // the room's furniture is its own family of outcomes
+  if (isFeatureAction(optionId)) {
+    return resolveFeatureAction(room, party, optionId, options);
+  }
   switch (optionId) {
     /* Combat */
     case 'fight': {
@@ -396,6 +716,7 @@ export function resolveRoomAction(room, party, optionId) {
       // wards blunt every round, summons swing alongside the party
       const itemActions = party.combatItemActions();
       let opening = 0, ward = 0, summon = 0;
+
       for (const a of itemActions) {
         opening += a.opening || 0;
         if (monster.undead) opening += a.vsUndead || 0;
@@ -408,25 +729,140 @@ export function resolveRoomAction(room, party, optionId) {
       // blows; the ethereal ignore steel unless faith gives the
       // blades conviction; the forewarned (a tripped alarm) hit harder
       const preps = [];
-      const armorShave = monster.trait === 'armored' ? 2 : 0;
-      const etherealMult = monster.trait === 'ethereal' && !party.hasClass(CLASSES.CLERIC) ? 0.6 : 1;
-      if (monster.trait === 'ethereal') {
-        preps.push(party.hasClass(CLASSES.CLERIC)
-          ? { source: 'the cleric', text: '✨ Steel alone would pass through it — but the cleric\'s murmured litany gives every blade conviction.' }
-          : { source: monster.name, text: '👻 Half the party\'s blows pass through it like an opinion through a committee.' });
+      // Sunder is the answer to plate, and its card has always said so:
+      // armour remembers being ore, and stops turning blows
+      const sundered = monster.trait === 'armored' && hasSpell(party, 'sp-sunder')
+        ? party.castSpell('combat', 'sp-sunder') : null;
+      const armorShave = (monster.trait === 'armored' && !sundered) ? 2 : 0;
+      if (sundered) {
+        preps.push({ source: sundered.name, text: `💢 ${sundered.name} reminds the plate it was ore: it stops turning blows for the rest of the fight.` });
       }
-      let monsterAtk = monster.attack;
+
+      // A greatsword is the wrong weapon for one foe and the right one
+      // for forty
+      const cleaves = monster.trait === 'swarm' && hasItem(party, 'eq-greatsword') ? 3 : 0;
+      if (cleaves) {
+        preps.push({ source: 'the Greatsword of the Vault', text: `🗡️ The greatsword takes a whole rank of them at a stroke: ${cleaves} more damage a round.` });
+      }
+
+      // Thrown before anyone closes
+      const thrown = hasItem(party, 'eq-throwing-knives') ? 4 : 0;
+      if (thrown) {
+        monsterHealth -= thrown;
+        preps.push({ source: 'the Bandolier of Knives', text: `🔪 Six knives arrive before the party does: ${thrown} damage before the first round.` });
+      }
+
+      // Quicksilver daggers land first, so nothing lands back that round
+      const quicksilver = hasItem(party, 'eq-quicksilver-daggers');
+      if (quicksilver) {
+        preps.push({ source: 'the Quicksilver Daggers', text: '🗡️ The daggers land before the argument starts: nothing comes back in the first round.' });
+      }
+
+      // A prepared ward goes up before the first blow — which is what
+      // Aegis of Ash's card text has always claimed, and what the fight
+      // resolver never implemented (ward came only from items)
+      const aegis = hasSpell(party, 'sp-shield') ? party.castSpell('combat', 'sp-shield') : null;
+      if (aegis) {
+        ward += 2;
+        preps.push({ source: aegis.name, text: `🛡️ ${aegis.name} goes up before the first blow: 2 less damage every round.` });
+      }
+
+      // The room fights too: cover blunts every round, a mirror robs
+      // the ethereal of its advantage (world/RoomFeatures.js)
+      const roomMods = featureModifiers(room);
+      // A blessed mace consecrates as it swings: whatever the room was
+      // going to let out of its sarcophagus stays where it is
+      if (roomMods.undeadRisk && hasItem(party, 'eq-blessed-mace')) {
+        roomMods.undeadRisk = false;
+        roomMods.notes.push({
+          feature: 'sarcophagus',
+          text: '🔨 The Blessed Mace sanctifies the room between swings: whatever was stirring in the stone settles.',
+        });
+      }
+      const cover = (roomMods.cover || 0) + (options?.extraCover || 0);
+      const mirrorInHand = hasItem(party, 'eq-silvered-mirror');
+      const blessed = party.hasClass(CLASSES.CLERIC) || roomMods.revealEthereal
+        || mirrorInHand || !!options?.forceRevealEthereal;
+      if (monster.trait === 'ethereal' && mirrorInHand && !roomMods.revealEthereal) {
+        preps.push({ source: 'the Silvered Hand-Mirror', text: '🪞 The Silvered Hand-Mirror catches the ethereal thing where it truly stands: weapons do full damage.' });
+      }
+      const etherealMult = monster.trait === 'ethereal' && !blessed ? 0.6 : 1;
+      for (const note of roomMods.notes) preps.push({ source: note.feature, text: note.text });
+      if (options?.extraCover) {
+        preps.push({ source: 'the pillars', text: `🏛️ Fighting from the aisles: ${options.extraCover} less damage per round on top of the cover.` });
+      }
+      if (monster.trait === 'ethereal' && !roomMods.revealEthereal) {
+        preps.push(party.hasClass(CLASSES.CLERIC)
+          ? { source: 'the cleric', text: '✨ The cleric blesses the blades: the ethereal monster takes full weapon damage.' }
+          : { source: monster.name, text: '👻 The monster is ethereal and the party\'s blows pass through it: weapon damage ×0.6 (no cleric to bless the blades).' });
+      }
+      // What an area working did to the room, if one was loosed here
+      for (const note of options?.reactionNotes || []) preps.push(note);
+
+      // Where the party stands, and what this room's floor allowed it to
+      // choose (agents/Formation.js). A passage six by two permits one
+      // shape; a boss cavern permits all of them.
+      const form = formationModifiers(
+        options?.formation || chooseFormation(party, room), room,
+      );
+      preps.push({
+        source: form.name,
+        text: `${form.icon} ${form.tell} ${form.effect}`,
+      });
+
+      // Learned technique (game/Tactics.js). Gated by capability, not
+      // class: every class swings at something, so the whole party
+      // fights better for a tactic any one of them could have taught.
+      const tac = tacticModifiers(party);
+      // Flanking is a spatial idea: it needs a formation with the room
+      // to work round the sides. A column cannot flank anything.
+      const flanking = tac.flankDamage > 0
+        && party.living().length >= tac.flankMin
+        && form.flanking;
+      if (flanking) {
+        preps.push({
+          source: 'the party\'s footwork',
+          text: `⚔️ The party has the numbers and uses them: +${tac.flankDamage} damage a round.`,
+        });
+      }
+      const armorEdge = (monster.trait === 'armored' && tac.vsArmored) ? tac.vsArmored : 0;
+      if (armorEdge) {
+        preps.push({
+          source: 'focused fire',
+          text: `🎯 Everyone strikes the same seam in the plate: +${armorEdge} damage a round.`,
+        });
+      }
+      if (tac.cover) {
+        preps.push({ source: 'the shield wall', text: `🛡️ The party closes ranks: ${tac.cover} less damage a round.` });
+      }
+      const castWard = tac.wardPerCast * (options?.castsThisFight || 0);
+      if (castWard) {
+        preps.push({ source: 'ward-weaving', text: `🕸️ Every working leaves a ward behind it: ${castWard} less damage a round.` });
+      }
+
+      let monsterAtk = Math.max(1, monster.attack + (options?.monsterAtkMod || 0)
+        + (tac.monsterAtk || 0));
       if (party.alarmed) {
         monsterAtk += 2;
         party.alarmed = false;
-        preps.push({ source: 'the alarm', text: '🔔 The tripped alarm did its work: the thing was waiting, braced and delighted.' });
+        preps.push({ source: 'the alarm', text: '🔔 The alarm tripped earlier warned it: the monster attacks with +2 this fight.' });
       }
 
       // An elemental coating on someone's blade bites deeper into
       // flesh that hates its element (the alchemist's bench pays off)
+      // A working loosed at the top of the fight goes on biting
+      // (spell-strike passes its share down; see SPELL_SUSTAIN_SHARE)
+      const spellSustain = options?.spellSustain || 0;
+      if (spellSustain > 0) {
+        preps.push({
+          source: options.spellSustainSource || 'the working',
+          text: `✨ The working holds: +${spellSustain} damage every round while the fight lasts.`,
+        });
+      }
+
       const coating = party.coatingBonusVs(monster);
       if (coating.bonus > 0) {
-        preps.push({ source: coating.notes.join(' + '), text: `⚗️ The ${coating.notes.join(' and ')} meets flesh that hates it — every stroke bites deeper.` });
+        preps.push({ source: coating.notes.join(' + '), text: `⚗️ The ${coating.notes.join(' and ')} exploits the monster's weakness: +${coating.bonus} damage per round.` });
       }
 
       // Auto-battle: rounds of party attack vs monster attack.
@@ -435,9 +871,15 @@ export function resolveRoomAction(room, party, optionId) {
       // Bosses turn the fight at half health.
       let rounds = 0;
       let phased = false;
+      // A healing working holds too — the same rule as a combat working
+      // (SPELL_SUSTAIN_SHARE), for the same measured reason: flat
+      // one-shot value cannot compete with a shield that mitigates
+      // every round of a twelve-round boss.
+      let mend = 0;
       while (monsterHealth > 0 && party.isAlive() && rounds < 12) {
         rounds++;
-        const swing = Math.max(1, Math.round((party.combatAttack() + summon + coating.bonus + Math.floor(roll() / 3)) * etherealMult) - armorShave);
+        const tactical = (flanking ? tac.flankDamage : 0) + armorEdge + cleaves;
+        const swing = Math.max(1, Math.round((party.combatAttack(form.frontage) + summon + coating.bonus + spellSustain + tactical + Math.floor(roll() / 3)) * etherealMult * form.attackMult) - armorShave);
         monsterHealth -= swing;
         if (monsterHealth <= 0) break;
         if (monster.isBoss && !phased && monsterHealth <= monster.health / 2) {
@@ -445,26 +887,59 @@ export function resolveRoomAction(room, party, optionId) {
           monsterAtk += 2;
           preps.push({ source: monster.name, text: bossPhaseLine(monster) });
         }
-        // The slow strike last: no incoming damage on the first round
-        if (monster.trait === 'slow' && rounds === 1) continue;
-        const incoming = Math.max(1, monsterAtk - Math.floor(party.totalDefense() / 3) - ward);
+        if (mend > 0) party.healParty(mend);
+        // The slow strike last, and so does anything the quicksilver
+        // daggers got in front of: no incoming damage on the first round
+        if ((monster.trait === 'slow' || quicksilver) && rounds === 1) continue;
+        const incoming = Math.max(1, Math.round((monsterAtk - Math.floor(party.totalDefense() / 3) - ward - cover - tac.cover - castWard) * form.incomingMult));
         party.takeDamage(incoming);
         partyDamageTaken += incoming;
+        // Mend the badly hurt while the fight is still on — a working
+        // spent after the fight is a working that never saved anybody
+        const mid = party.castHealIfNeeded();
+        if (mid) {
+          const holds = Math.round(mid.spell.effectivePower * SPELL_SUSTAIN_SHARE);
+          mend += holds;
+          preps.push({
+            source: mid.spell.name,
+            text: `💚 ${mid.spell.name} closes ${mid.target.name}'s wounds mid-fight: ${mid.spell.effectivePower} healed in round ${rounds}, then ${holds} a round while it holds${mid.spell.consumed ? ' (the scroll is consumed)' : ''}.`,
+          });
+        }
         party.quaffIfNeeded();
       }
 
+      // A fight the openers ended never ran a round, so anything that
+      // promised to happen "every round" did not happen at all. Saying
+      // it anyway is the same class of lie as a card that overstates its
+      // effect (found by reading a golden diff).
+      if (rounds === 0) {
+        const perRound = /every round|a round while|less damage a round|damage a round/i;
+        for (let i = preps.length - 1; i >= 0; i--) {
+          if (perRound.test(preps[i].text || '')) preps.splice(i, 1);
+        }
+      }
+
       const won = monsterHealth <= 0 && party.isAlive();
+      let drop = null;
       if (won) {
         const bounty = monster.isBoss ? 100 : 25;
         party.addScore(bounty);
         room.cleared = true;
+        // The dead always leave something interesting behind (Drops)
+        const claimed = claimDrop(party, monster);
+        drop = claimed.drop;
+        preps.push(claimed);
         // The venomous leave something behind, win or no win
         if (monster.trait === 'venomous') {
-          if (party.hasClass(CLASSES.CLERIC)) {
-            preps.push({ source: 'the cleric', text: '🐍 Venom in three sets of scratches — drawn, hissing, into the cleric\'s salt bowl before it can work.' });
+          if (hasItem(party, 'eq-cursed-blade')) {
+            // Whoever carries the adder's blade has been living with
+            // venom for a while. The party takes none of it.
+            preps.push({ source: 'the Blade of the Adder', text: '🐍 The Blade of the Adder has taught its bearer what venom tastes like: the party shrugs this off.' });
+          } else if (party.hasClass(CLASSES.CLERIC)) {
+            preps.push({ source: 'the cleric', text: '🐍 The monster was venomous, but the cleric cures the poison before it can act.' });
           } else {
             party.poisonLinger = (party.poisonLinger || 0) + 2;
-            preps.push({ source: monster.name, text: '🐍 The thing is dead, but its venom is patient. Someone will feel this a room from now.' });
+            preps.push({ source: monster.name, text: '🐍 The monster was venomous: the party will take 2 poison damage next room (no cleric to cure it).' });
           }
         }
         // A boss's hoard always holds more than coin
@@ -472,22 +947,23 @@ export function resolveRoomAction(room, party, optionId) {
           const find = rollFind(party, true);
           if (find) preps.push(find);
         }
-        // The Reckless make it look good, and the chroniclers pay for it
+        // The Reckless make it look good, and the scorers pay for it
         if (party.hasPersonality('reckless')) {
           party.addScore(5);
-          preps.push({ source: 'the Reckless', text: '💥 The Reckless insisted on doing it with style. The chronicle pays extra for style.' });
+          preps.push({ source: 'the Reckless', text: '💥 The Reckless finish the fight with style: +5 score.' });
         }
       }
-      // A drafted healing spell finally earns its keep after a bloody fight
+      // Anything still prepared tops the party up before the march.
+      // The working that mattered was already loosed mid-fight above.
       if (party.isAlive() && partyDamageTaken >= 6) {
         const heal = party.castSpell('heal');
         if (heal) {
           party.healParty(heal.effectivePower);
-          preps.push({ source: heal.name, text: `💚 ${heal.name} closes the worst of the wounds before they set (${heal.effectivePower} healed${heal.consumed ? '; the scroll burns' : ''}).` });
+          preps.push({ source: heal.name, text: `💚 ${heal.name} heals ${heal.effectivePower} after the fight${heal.consumed ? ' (the scroll is consumed)' : ''}.` });
         }
       }
       party.recordEncounter('fight', won);
-      return { success: won, rounds, damage: partyDamageTaken, monster: monster.name, itemActions, preps, bossPhased: phased };
+      return { success: won, rounds, damage: partyDamageTaken, monster: monster.name, itemActions, preps, drop, bossPhased: phased, formation: form.id };
     }
 
     case 'cause-fear': {
@@ -501,30 +977,139 @@ export function resolveRoomAction(room, party, optionId) {
 
     case 'spell-strike': {
       const monster = room.monster;
-      // The caster reads the foe and reaches for the right working:
-      // the spell whose element bites hardest (Bestiary weaknesses;
-      // swarms take spell openings half again as hard)
-      const combatSpells = party.grimoire.filter(s => s.use === 'combat');
-      let best = null;
-      let bestDmg = -1;
-      for (const s of combatSpells) {
-        const dmg = s.power * elementMult(s, monster);
-        if (dmg > bestDmg) { bestDmg = dmg; best = s; }
-      }
-      const spell = best ? party.castSpell('combat', best.id) : null;
+      // How many workings the party can loose before blades are drawn.
+      // One for anybody; a wizard opens with two, which is the reason
+      // to spend one of four body slots on the class.
+      //
+      // This used to be a flat one cast, and it made the second and
+      // third spell in a grimoire nearly dead cards: equipment scales
+      // linearly with picks, spells did not scale at all. Measured, a
+      // three-spell pool lost 26 win points to three equipment while
+      // one spell lost 9.6 (DESIGN_DIALOGUE.md §8).
+      // Against a boss the party holds nothing back: every prepared
+      // working goes off. Ordinary rooms still ration them, so a
+      // grimoire is a reserve you spend down toward the throne rather
+      // than a battery that fires the same way everywhere.
+      //
+      // This is where it matters. Instrumented, ~100% of A/B runs in
+      // both arms reached the boss and the boss chamber accounted for
+      // *all* of the win-rate difference. Under the old flat cast the
+      // second and third spell in a grimoire were dead cards in the one
+      // fight that decides the run.
+      const reactions = [];
+      const tac = tacticModifiers(party);
+      const combatHeld = party.grimoire.filter(sp => sp.use === 'combat').length;
+      const casts = monster.isBoss
+        ? Math.max(1, combatHeld)
+        : 1 + (party.hasClass(CLASSES.WIZARD) ? 1 : 0) + tac.extraCast;
+      const spellsCast = [];
       let spellEdge = null;
-      if (spell) {
+      let sustain = 0;
+
+      // The help has always promised that the party empties the
+      // grimoire in the boss chamber, and no transcript ever said it
+      // happened: the mechanic shipped without its line, which
+      // tools/census.mjs finds by asking how often each beat is read.
+
+
+      for (let c = 0; c < casts; c++) {
+        // The caster reads the foe and reaches for the right working:
+        // the spell whose element bites hardest (Bestiary weaknesses;
+        // swarms take spell openings half again as hard)
+        // Skip anything already loosed this room, or the second cast
+        // re-picks the same working and castSpell refuses it
+        const combatSpells = party.grimoire.filter(
+          sp => sp.use === 'combat' && !party.castThisRoom.has(sp.id),
+        );
+        let best = null;
+        let bestDmg = -1;
+        for (const sp of combatSpells) {
+          const dmg = sp.power * elementMult(sp, monster);
+          if (dmg > bestDmg) { bestDmg = dmg; best = sp; }
+        }
+        const spell = best ? party.castSpell('combat', best.id) : null;
+        if (!spell) break;                    // nothing left prepared
+
         const mult = elementMult(spell, monster) * (monster.trait === 'swarm' ? 1.5 : 1);
-        if (elementMult(spell, monster) > 1) spellEdge = 'weak';
-        else if (elementMult(spell, monster) < 1) spellEdge = 'resisted';
+        if (elementMult(spell, monster) > 1) spellEdge = spellEdge || 'weak';
+        else if (elementMult(spell, monster) < 1) spellEdge = spellEdge || 'resisted';
         if (monster.trait === 'swarm') spellEdge = spellEdge || 'swarm';
-        monster.health = Math.max(1, monster.health - Math.round(spell.effectivePower * mult));
+        const burst = Math.round(spell.effectivePower * mult);
+        monster.health = Math.max(1, monster.health - burst);
+        // ...and it keeps working for the rest of the fight
+        // Concentration holds the working at full force instead of half
+        sustain += Math.round(burst * (tac.sustainFull ? 1 : SPELL_SUSTAIN_SHARE));
+        spellsCast.push(spell);
+
+        // The room answers. An area working does not stop at the
+        // monster: fire takes the crates, lightning runs through the
+        // font, frost puts the brazier out (Reactions.js).
+        // Widening lets every working out wide, so the room answers
+        // anything, not only the spells printed as area workings
+        const wide = tac.allSpellsArea ? { ...spell, aoe: true } : spell;
+        for (const r of reactionsFor(wide, room)) reactions.push(r);
       }
-      // Then fight the softened monster
-      const result = resolveRoomAction(room, party, 'fight');
-      result.spell = spell ? spell.name : null;
+
+      // What the room did, folded into one set of modifiers
+      // The help has always promised that the party empties the grimoire
+      // in the boss chamber, and no transcript ever said it happened:
+      // the mechanic shipped without its line (tools/census.mjs asks how
+      // often each beat is actually read). Counted after the casting, so
+      // the number is what was loosed rather than what was held.
+      const unleash = (monster.isBoss && spellsCast.length > 1)
+        ? [{
+          source: 'the boss chamber',
+          text: `✨ Nothing is held back for later: the party looses everything it has, ${spellsCast.length} workings in the one fight that matters.`,
+        }]
+        : [];
+
+      const room_ = foldReactions(reactions);
+      if (room_.damage) monster.health = Math.max(1, monster.health - room_.damage);
+      if (room_.heal) party.healParty(room_.heal);
+      // A warded buckler turns aside half of what the party sets off;
+      // an athanor charm makes anything they light burn harder
+      if (room_.selfHarm && hasItem(party, 'eq-warded-buckler')) {
+        room_.selfHarm = Math.floor(room_.selfHarm / 2);
+        room_.notes.push({ source: 'the Warded Buckler', text: '🛡️ The prayers on the inside of the buckler turn aside half of what the party set off.' });
+      }
+      if (room_.burn > 0 && hasItem(party, 'eq-athanor-charm')) {
+        room_.burn += 2;
+        room_.notes.push({ source: 'the Athanor Charm', text: '🔥 The athanor charm feeds the blaze: 2 more damage a round while it burns.' });
+      }
+
+      // Firewatch: a party that sets the room alight stands clear of it
+      if (room_.selfHarm && !tac.noSelfHarm) {
+        for (const m of party.living()) m.takeDamage(room_.selfHarm);
+      } else if (room_.selfHarm && tac.noSelfHarm) {
+        room_.notes.push({ source: 'firewatch', text: '🧯 The party set it off and stood well clear: none of it comes back on them.' });
+      }
+      // A blaze is light to march by; a doused brazier takes light away
+      if (room_.light > 0) party.addSupply(room_.light);
+      else if (room_.light < 0) party.supply = Math.max(0, party.supply + room_.light);
+      // Burnt crates are gone, and so is the cover they gave
+      for (const id of room_.consumed) {
+        room.features = (room.features || []).filter(f => f !== id);
+      }
+
+      // Then fight the softened monster, with the workings still up
+      const result = resolveRoomAction(room, party, 'fight', {
+        // Carry the caller's formation through: spell-strike delegates to
+        // the fight, and building a fresh options bag silently dropped it
+        formation: options?.formation,
+        spellSustain: sustain + room_.burn,
+        spellSustainSource: spellsCast.map(sp => sp.name).join(' + ') || null,
+        extraCover: room_.cover,
+        castsThisFight: spellsCast.length,
+        monsterAtkMod: room_.monsterAtk,
+        forceRevealEthereal: room_.revealEthereal,
+        // The unleash line leads: it explains why what follows is three
+        // workings rather than one
+        reactionNotes: [...unleash, ...room_.notes],
+      });
+      result.spell = spellsCast[0]?.name || null;
+      result.spellsCast = spellsCast.map(sp => sp.name);
       result.spellEdge = spellEdge;
-      result.spellElement = spell?.element || null;
+      result.spellElement = spellsCast[0]?.element || null;
       return result;
     }
 
@@ -534,8 +1119,8 @@ export function resolveRoomAction(room, party, optionId) {
       const cravenEdge = party.hasPersonality('craven') ? 1 : 0;
       const prep = getPreparationBonuses(party);
       const preps = [];
-      if (prep.notes.sneak) preps.push({ source: prep.notes.sneak, text: `👢 The ${prep.notes.sneak} never let the floorboards learn a name.` });
-      if (prep.notes.sneakLight) preps.push({ source: prep.notes.sneakLight, text: '💡 Dancing Light had already shown where the watcher watched.' });
+      if (prep.notes.sneak) preps.push({ source: prep.notes.sneak, text: `👢 The ${prep.notes.sneak} add +1.5 to the sneak roll.` });
+      if (prep.notes.sneakLight) preps.push({ source: prep.notes.sneakLight, text: '💡 Dancing Light revealed the watcher\'s position: +1 to the sneak roll.' });
       const ok = rogueMind + cravenEdge + prep.sneak + roll() > 9;
       if (ok) {
         party.addScore(15);
@@ -550,14 +1135,20 @@ export function resolveRoomAction(room, party, optionId) {
     case 'turn-undead': {
       const clericMind = Math.max(...party.living().filter(m => m.class === CLASSES.CLERIC).map(m => m.mind));
       const ok = clericMind + roll() > 8;
+      const preps = [];
+      let drop = null;
       if (ok) {
         party.addScore(30);
         room.cleared = true;
+        // Turned to dust, but the dust settles around its grave-goods
+        const claimed = claimDrop(party, room.monster);
+        drop = claimed.drop;
+        preps.push(claimed);
       } else {
         party.takeDamage(room.monster.attack);
       }
       party.recordEncounter('turn-undead', ok);
-      return { success: ok, monster: room.monster.name };
+      return { success: ok, monster: room.monster.name, preps, drop };
     }
 
     case 'bribe': {
@@ -568,9 +1159,13 @@ export function resolveRoomAction(room, party, optionId) {
     }
 
     case 'flee': {
-      // Gradient: you escape, but worn — and the room stays hot
-      party.takeDamage(2);
-      return { success: true, retreated: true, monster: room.monster.name };
+      // Gradient: you escape, but worn — and the room stays hot. Each
+      // retreat from the same room costs more than the last: the thing
+      // in it has seen this before and follows further each time.
+      room.fled = (room.fled || 0) + 1;
+      const cost = 2 * room.fled;
+      party.takeDamage(cost);
+      return { success: true, retreated: true, damage: cost, fled: room.fled, monster: room.monster.name };
     }
 
     /* Traps */
@@ -578,7 +1173,7 @@ export function resolveRoomAction(room, party, optionId) {
       const rogueMind = Math.max(...party.living().filter(m => m.class === CLASSES.ROGUE).map(m => m.mind));
       const prep = getPreparationBonuses(party);
       const preps = [];
-      if (prep.notes.disarm) preps.push({ source: prep.notes.disarm, text: '🗝️ The Masterwork Lockpicks treated the mechanism as a lock, and every door is a suggestion.' });
+      if (prep.notes.disarm) preps.push({ source: prep.notes.disarm, text: '🗝️ The Masterwork Lockpicks add +1.5 to the disarm roll.' });
       const ok = rogueMind + prep.disarm + roll() > 8;
       if (ok) {
         party.addScore(20);
@@ -597,32 +1192,43 @@ export function resolveRoomAction(room, party, optionId) {
       const spotter = party.hasPersonality('craven') ? 1 : 0;
       const prep = getPreparationBonuses(party);
       const preps = [];
-      if (prep.trapSoak > 0) preps.push({ source: prep.notes.trapSoak, text: '🏮 The Everburning Lantern showed the plates before the boots found them.' });
+      if (prep.trapSoak > 0) preps.push({ source: prep.notes.trapSoak, text: '🏮 The Everburning Lantern showed the pressure plates: 1 less damage.' });
 
       // The trap's kind decides what pushing through costs (Bestiary
       // for rooms, as it were): fire burns unless frost answers it,
       // poison is patient, an alarm mostly just *tells on you*
       const trapType = room.trapType || 'spike';
-      let dmg = Math.max(1, (room.trapDamage || 3) - spotter - prep.trapSoak);
+      // Feather Step: the floor agrees to pretend nobody is on it
+      const feather = hasSpell(party, 'sp-feather') ? party.castSpell('utility', 'sp-feather') : null;
+      if (feather) {
+        preps.push({ source: feather.name, text: `🪶 ${feather.name} takes the party's weight off the floor: 3 less damage from anything underfoot.` });
+      }
+      let dmg = Math.max(1, (room.trapDamage || 3) - spotter - prep.trapSoak - (feather ? 3 : 0));
       if (trapType === 'fire') {
-        if (hasSpell(party, 'sp-frost')) {
+        // Firewatch is knowledge about where fire goes, and a flame trap
+        // is the commonest place to use it (game/Tactics.js)
+        const watched = tacticModifiers(party).fireTrapSoak;
+        if (watched) {
+          dmg = Math.max(1, dmg - watched);
+          preps.push({ source: 'firewatch', text: `🧯 The party reads the jet before it fires and is not standing there: ${watched} less damage.` });
+        } else if (hasSpell(party, 'sp-frost')) {
           dmg = Math.max(1, dmg - 2);
-          preps.push({ source: 'Frost Lance', text: '❄️ Frost Lance meets the jet of flame halfway, and the corridor fills with warm rain instead.' });
+          preps.push({ source: 'Frost Lance', text: '❄️ Frost Lance counters the flame jet: 2 less damage.' });
         } else {
           dmg += 1;
         }
       } else if (trapType === 'poison') {
         dmg = Math.max(1, Math.ceil(dmg / 2));
         if (party.hasClass(CLASSES.CLERIC)) {
-          preps.push({ source: 'the cleric', text: '🐍 The needles bite, but the cleric draws the venom before it can settle in.' });
+          preps.push({ source: 'the cleric', text: '🐍 The needles hit, but the cleric cures the venom on the spot.' });
         } else {
           party.poisonLinger = (party.poisonLinger || 0) + 2;
-          preps.push({ source: 'the trap', text: '🐍 The needles barely sting. That is what worries the ones who know poison.' });
+          preps.push({ source: 'the trap', text: '🐍 Poison needles: the party will take 2 poison damage next room (no cleric to cure it).' });
         }
       } else if (trapType === 'alarm') {
         dmg = Math.min(dmg, 2);
         party.alarmed = true;
-        preps.push({ source: 'the alarm', text: '🔔 Bells. Bells all the way down. Everything ahead now knows the party\'s pace and number.' });
+        preps.push({ source: 'the alarm', text: '🔔 The alarm rings through the dungeon: the next monster will attack with +2.' });
       }
 
       party.takeDamage(dmg);
@@ -679,7 +1285,7 @@ export function resolveRoomAction(room, party, optionId) {
       let gold = Math.floor((room.gold || 20) * 0.8);
       if (prep.cleanInspect) {
         gold = room.gold || 20;
-        preps.push({ source: prep.notes.cleanInspect, text: `🔍 ${prep.notes.cleanInspect === 'the Cunning' ? 'The Cunning eye misses nothing, and nothing is left behind' : 'The Masterwork Lockpicks open the false bottom too'} — the full hoard, safely.` });
+        preps.push({ source: prep.notes.cleanInspect, text: `🔍 ${prep.notes.cleanInspect === 'the Cunning' ? 'The Cunning eye' : 'The Masterwork Lockpicks'} found everything: the full gold taken, nothing missed.` });
       }
       party.addGold(gold);
       room.cleared = true;
@@ -718,7 +1324,8 @@ export function resolveRoomAction(room, party, optionId) {
         party.grimoire.push({
           id: `learned-${Date.now()}-${i}`, name: 'Found Cantrip', icon: '📜',
           school: 'found', power: 3, use: Math.random() < 0.5 ? 'combat' : 'utility',
-          text: 'Copied from the stacks.',
+          // Copied into the grimoire by hand, so it is prepared, not sealed
+          source: 'prepared', text: 'Copied from the stacks.',
         });
       }
       room.cleared = true;
@@ -729,7 +1336,7 @@ export function resolveRoomAction(room, party, optionId) {
       const wizardMind = Math.max(...party.living().filter(m => m.class === CLASSES.WIZARD).map(m => m.mind));
       const prep = getPreparationBonuses(party);
       const preps = prep.deepStudy > 0
-        ? [{ source: prep.notes.deepStudy, text: '📖 The Grimoire of Low Whispers argued with the sealed text in its own language, and won.' }]
+        ? [{ source: prep.notes.deepStudy, text: '📖 The Grimoire of Low Whispers adds +1.5 to the reading roll.' }]
         : [];
       const ok = wizardMind + prep.deepStudy + roll() > 9;
       if (ok) {
@@ -737,7 +1344,8 @@ export function resolveRoomAction(room, party, optionId) {
         party.addScore(50);
         party.grimoire.push({
           id: `sealed-${Date.now()}`, name: 'Sealed Working', icon: '🔏',
-          school: 'forbidden', power: 6, use: 'combat', text: 'The margins screamed. The wizard did not.',
+          school: 'forbidden', power: 6, use: 'combat', source: 'prepared',
+          text: 'The margins screamed. The wizard did not.',
         });
       } else {
         party.takeDamage(4);
@@ -748,11 +1356,35 @@ export function resolveRoomAction(room, party, optionId) {
     }
 
     /* Shrine */
+    case 'brew-oil': {
+      // The alchemist's answer to the supply clock: a material cooked
+      // down into light. Ties the bench to the lamp.
+      party.materials -= 1;
+      const gained = party.addSupply(2);
+      room.cleared = true;
+      return {
+        success: true,
+        preps: [{ source: 'the Portable Alembic', text: `⚗️ A material goes into the alembic and comes out as lamp oil: ${gained} more march${gained === 1 ? '' : 'es'} of light.` }],
+      };
+    }
+
     case 'rest': {
       const bonus = party.hasPersonality('pious') ? 4 : 0;
+      // Field Surgery: somebody learned to set a break on the road, so a
+      // shrine closes a wound the delve would otherwise keep until town
+      const mend = tacticModifiers(party).mendAtShrine;
+      const mended = [];
+      if (mend) {
+        for (const m of party.living()) {
+          if (m.wounds > 0) { m.mendWounds(mend); mended.push(m.name); }
+        }
+      }
       for (const m of party.living()) m.heal(5 + bonus);
       room.cleared = true;
-      return { success: true, healed: 5 + bonus };
+      const preps = mended.length
+        ? [{ source: 'field surgery', text: `✚ Somebody sets what the march only bandaged: a wound closed on ${mended.join(', ')} without waiting for town.` }]
+        : [];
+      return { success: true, healed: 5 + bonus, mended, preps };
     }
 
     case 'desecrate': {
@@ -779,6 +1411,62 @@ export function resolveRoomAction(room, party, optionId) {
       return { success: true, materials: room.materials || 1 };
     }
 
+    /* Stairs — the floor below is meaner than this one */
+    case 'descend': {
+      const spent = Math.min(1, party.supply);
+      party.supply -= spent;
+      room.cleared = true;
+      return { success: true, descended: true, supplySpent: spent };
+    }
+
+    case 'rope-down': {
+      room.cleared = true;
+      return {
+        success: true, descended: true, supplySpent: 0,
+        preps: [{ source: 'the Grapple and Line', text: '🪢 The line goes down the shaft beside the stair: the party descends without burning a march of oil.' }],
+      };
+    }
+
+    case 'camp-stair': {
+      // A cold camp is cheaper and nobody finds it (game/Tactics.js)
+      const tac = tacticModifiers(party);
+      const cost = tac.campSupply ? Math.max(1, 2 - tac.campSupply) : 2;
+      const spent = Math.min(cost, party.supply);
+      party.supply -= spent;
+      const CAMP_HEAL = 6;
+      let healed = 0;
+      for (const m of party.living()) {
+        const before = m.health;
+        m.heal(CAMP_HEAL);
+        healed += m.health - before;
+      }
+      // A night's sleep sets what the march only bandaged. One wound,
+      // from whoever is carrying the most of them — the only place
+      // besides a shrine with Field Surgery that a wound closes before
+      // town, and the reason to stop when nobody is bleeding.
+      const worst = party.living()
+        .filter(m => m.wounds > 0)
+        .sort((a, b) => b.wounds - a.wounds)[0] || null;
+      if (worst) worst.mendWounds(1);
+      // A camp is a fire and a smell of food at the top of a stair that
+      // something else also uses
+      const found = !tac.campWatched && roll() >= 5;
+      let damage = 0;
+      if (found) {
+        damage = 4 + Math.floor(roll() / 2);
+        party.takeDamage(damage);
+      }
+      room.cleared = true;
+      const preps = tac.campWatched
+        ? [{ source: 'Cold Camp', text: `🏕️ No fire and a watch kept: the camp costs ${spent} supply and nothing finds it.` }]
+        : [];
+      return {
+        success: true, descended: true, camped: true,
+        healed: CAMP_HEAL, healedTotal: healed, mended: worst?.name || null,
+        supplySpent: spent, damage, interrupted: found, preps,
+      };
+    }
+
     /* Disaster */
     case 'brace': {
       const dmg = (party.desecrated ? 8 : 5);
@@ -789,7 +1477,7 @@ export function resolveRoomAction(room, party, optionId) {
       const heal = party.castSpell('heal');
       if (heal) {
         party.healParty(heal.effectivePower);
-        preps.push({ source: heal.name, text: `💚 ${heal.name} knits the party back together while the dungeon finishes its tantrum.` });
+        preps.push({ source: heal.name, text: `💚 ${heal.name} heals ${heal.effectivePower} as the dust settles.` });
       }
       return { success: true, damage: dmg, preps };
     }

@@ -1,11 +1,12 @@
 /**
- * Tests for difficulty scaling and corridor frontage
+ * Tests for difficulty scaling and the four-adventurer party cap
  */
 
 import { strict as assert } from 'assert';
 import { generateDungeon, STAT_SCALE, ROOM_TYPES } from '../src/world/DungeonGen.js';
-import { Party } from '../src/agents/Party.js';
+import { Party, PARTY_CAP } from '../src/agents/Party.js';
 import { CHARACTER_CARDS } from '../src/game/Cards.js';
+import { BUDGETS, validateCard } from '../src/game/CardPacks.js';
 
 function bossOf(dungeon) {
   return dungeon.rooms.find(r => r.type === ROOM_TYPES.BOSS).monster;
@@ -46,19 +47,65 @@ describe('Corridor frontage', () => {
     assert.equal(party.combatAttack(), party.totalAttack());
   });
 
-  test('a mob helps less than it thinks: rear ranks contribute a quarter', () => {
-    // Build an oversized party by repeating the card pool
-    const mob = new Party([
-      ...CHARACTER_CARDS, ...CHARACTER_CARDS,
-    ]);
-    assert.ok(mob.members.length > 10);
+  test('the mob strategy is dead: a party is four, however many you draft', () => {
+    // Drafting the whole box used to be the dominant line (AUDIT.md D1:
+    // five bare bodies won 100% of medium runs). The cap ends it.
+    const mob = new Party([...CHARACTER_CARDS, ...CHARACTER_CARDS]);
+    assert.equal(mob.members.length, PARTY_CAP, 'only four march');
+    assert.ok(mob.reserve.length > 10, 'the rest wait in town');
+
+    // And the ones who march are the ones drafted first
+    const order = [...CHARACTER_CARDS, ...CHARACTER_CARDS].slice(0, PARTY_CAP).map(c => c.name);
+    assert.deepEqual(mob.members.map(m => m.name), order,
+      'draft order decides who fights');
+
+    // No hidden frontage tax inside the cap: all four blades count
     const combat = mob.combatAttack();
     const total = mob.totalAttack();
-    assert.ok(combat < total, `frontage ${combat} should be less than mob total ${total}`);
-    // Sanity: the front five still count fully
-    const attacks = mob.living().map(m => m.attack).sort((a, b) => b - a);
-    const front = attacks.slice(0, 5).reduce((s, a) => s + a, 0);
-    assert.ok(combat >= front, 'the front rank is never diluted');
+    assert.equal(combat, total, `a capped party swings in full (${combat})`);
+  });
+
+  test('every character costs the same, and no card breaks the cap', () => {
+    // The pool used to be silently uncosted: fighters ran 36-40 points
+    // while wizards ran 22-26, all against a documented cap of 34. A
+    // 24-point body and a 38-point body cannot compete for the same one
+    // of four party slots, which is most of why the arcane package lost
+    // (DESIGN_DIALOGUE.md §8). Equalized at 30 — the pool's own mean, so
+    // parity cost no power — with the 34 cap left as real headroom.
+    const cost = c => c.stats.health + c.stats.attack * 2 + c.stats.defense * 2 + c.stats.mind;
+    const totals = CHARACTER_CARDS.map(cost);
+    assert.equal(new Set(totals).size, 1,
+      `every character is costed alike (found ${[...new Set(totals)].sort().join(', ')})`);
+    for (const c of CHARACTER_CARDS) {
+      assert.ok(cost(c) <= BUDGETS.character.statTotal,
+        `${c.name} is inside the documented budget`);
+      assert.deepEqual(validateCard(c), [], `${c.name} is a legal card`);
+    }
+  });
+
+  test('each class still reads as itself after recosting', () => {
+    const avg = (cls, key) => {
+      const cards = CHARACTER_CARDS.filter(c => c.class === cls);
+      return cards.reduce((s, c) => s + c.stats[key], 0) / cards.length;
+    };
+    // Fighters hold the line, wizards hold the mind: equal cost, not
+    // equal shape
+    assert.ok(avg('fighter', 'defense') > avg('wizard', 'defense'), 'fighters are armoured');
+    assert.ok(avg('fighter', 'attack') > avg('wizard', 'attack'), 'fighters hit harder');
+    assert.ok(avg('wizard', 'mind') > avg('fighter', 'mind'), 'wizards think harder');
+    assert.ok(avg('cleric', 'health') > avg('rogue', 'health'), 'clerics outlast rogues');
+  });
+
+  test('a fallen adventurer can be replaced from the reserve, but only to the cap', () => {
+    const party = new Party(CHARACTER_CARDS.slice(0, 6));
+    assert.equal(party.reserve.length, 2);
+    assert.equal(party.promoteReserve(), null, 'nobody is promoted over a living four');
+
+    party.members[0].takeDamage(999);
+    const promoted = party.promoteReserve();
+    assert.ok(promoted, 'the dead make room');
+    assert.equal(party.living().length, PARTY_CAP, 'still four in the field');
+    assert.equal(party.reserve.length, 1);
   });
 });
 
