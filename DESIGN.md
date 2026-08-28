@@ -47,6 +47,48 @@ Each AI seat has a **draft persona** (e.g. "Warlord" prioritizes fighters+weapon
 
 ---
 
+## The Muster — the draft becomes a party
+
+The draft decides what the party *owns*; the muster decides who carries
+it. It opens before the first march and again from town, and everything
+in it is mechanical rather than cosmetic:
+
+- **Kit moves.** Equipment is dealt out by best fit when drafted, which
+  is a sensible default and not a decision. The decision is putting the
+  Tower Shield on whoever is holding the door. One piece per slot; a
+  displaced piece goes back to whoever gave the new one up, or waits in
+  **the pack**. Nothing is ever duplicated or lost — `tests/outfitting`
+  checks conservation, because a player who loses a draft pick to a UI
+  click has lost a draft pick.
+- **Somebody prepares each working.** A spell's power is its own plus
+  half the mind of the character who prepared it, so Fireball in the
+  wizard's hands is worth more than Fireball in the fighter's. A caster
+  is held by the *body* (`Adventurer.uid`), not the name — renaming
+  must not quietly hand the working back to the party — and a dead
+  caster falls back to the sharpest mind still standing rather than
+  turning the grimoire off.
+- **The player names their own.** A rename and a written history, both
+  carried through saves and both read back in the saga's roster line.
+- **Drills are not assignable.** Tactics are what the party trained
+  together; a UI that let you hand Flanking to one character would be
+  lying about the mechanic.
+
+## The Quartermaster — spending the purse
+
+Town sells three pieces of kit or workings, restocked each depth and
+never offering what the party already carries. Prices come from the
+**cost model** (`game/Costing.js`) rather than a hand-written table, so
+a shop stocking a new card charges for what that card actually does —
+mapped through a curve, because the model's totals run 2.5 to 60 (a
+per-round effect is worth twelve times a one-shot) and a flat multiple
+priced Fireball at 388 gold and the lockpicks at 22.
+
+Priced against the rest of the town, measured: a party leaves a delve
+with a **median of 67 gold**, a hire asks 42, and a full heal is about
+7 because wounds do not mend for coin. Kit runs 35–140, so a town visit
+buys roughly one thing. Buying is meant to be a worse deal than
+drafting — the draft is the game.
+
 ## The Party
 
 - Characters have `health / attack / defense / mind` plus a class kit:

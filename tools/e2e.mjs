@@ -100,7 +100,29 @@ async function run() {
   await draft(page, 'tactic');
   await page.selectOption('#difficulty-select', 'hard').catch(() => {});
   await page.getByRole('button', { name: /Enter the Dungeon/i }).click({ timeout: 3000 }).catch(() => {});
+
+  /* The muster: kit, workings, and who they are (ui/OutfitUI.js) */
+  await page.locator('.outfit-member').first().waitFor({ state: 'visible', timeout: 8000 }).catch(() => {});
+  const mustered = await page.locator('.outfit-member').count();
+  const nameField = page.locator('.outfit-name').first();
+  const bornAs = await nameField.inputValue().catch(() => '');
+  await nameField.fill('Hilda One-Eye').catch(() => {});
+  await nameField.press('Tab').catch(() => {});
+  await page.locator('.outfit-story').first().fill('Lost the eye to a door, not a monster.').catch(() => {});
+  await page.locator('.outfit-story').first().press('Tab').catch(() => {});
+  await page.waitForTimeout(200);
+  const renamed = await page.locator('.outfit-name').first().inputValue().catch(() => '');
+  await page.locator('#outfit-done-btn').click().catch(() => {});
   await page.locator('.member-hp').first().waitFor({ state: 'visible', timeout: 10000 }).catch(() => {});
+  const rosterText = await page.locator('#party-roster').innerText().catch(() => '');
+  // A draft that spends its picks on tactics can field a party of one,
+  // so the count is checked against the roster rather than a guess
+  const marching = await page.locator('.member-hp').count();
+  check('the muster lists everyone who marches, and takes a new name',
+    mustered === marching && bornAs.length > 0 && renamed === 'Hilda One-Eye',
+    `muster listed ${mustered}, ${marching} marched; name "${bornAs}" -> "${renamed}"`);
+  check('the name the player gave reaches the roster', /Hilda One-Eye/.test(rosterText),
+    rosterText.slice(0, 120));
   check('a delve starts and the roster renders',
     (await page.locator('.member-hp').count()) > 0);
 
@@ -113,10 +135,17 @@ async function run() {
 
   /* Watch the delve to its end, collecting what the player reads */
   let sawTown = false;
+  let townChecked = false;
   for (let t = 0; t < 80; t++) {
     await page.waitForTimeout(600);
     const body = await page.evaluate(() => document.body.innerText);
     if (/The chronicle is kept/i.test(body)) sawTown = true;
+    if (sawTown && !townChecked) {
+      townChecked = true;
+      check('the town sells kit and offers the muster again',
+        /quartermaster/i.test(body) && /The Muster/.test(body),
+        'the town screen offered neither a shop nor the muster');
+    }
     if (await page.locator('#gameover-display.active').count()) break;
   }
   const body = await page.evaluate(() => document.body.innerText);

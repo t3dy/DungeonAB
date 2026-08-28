@@ -79,7 +79,11 @@ export class Simulator {
       seed, difficulty, depth: this.depth,
       theme: this.dungeon.theme?.name || null,
       condition: this.condition && this.condition.id !== 'none' ? this.condition.name : null,
-      roster: this.party.members.map(m => `${m.icon} ${m.name} (${m.class})`),
+      // Named and described by the player, if they said so at the muster
+      // (ui/OutfitUI.js): a history somebody wrote belongs in the saga
+      // they are writing it for.
+      roster: this.party.members.map(m => `${m.icon} ${m.name} (${m.class})`
+        + (m.backstory ? ` — ${m.backstory}` : '')),
     });
     this.stateBefore = snapshotState(this);
 
