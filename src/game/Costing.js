@@ -93,6 +93,9 @@ export const EFFECT_SCALING = {
   fireTrapSoak: 'situational',
   // A march saved, but only at a stairhead: once or twice a delve
   campSupply: 'situational',
+  // Damage from the room, on a monster the party put there: it applies
+  // to an opener, not to every round
+  hazardDamage: 'perFight',
   vsUndead: 'situational',
   selfHarm: 'perFight',
   light: 'resource',
@@ -135,6 +138,9 @@ export const FLAG_WORTH = {
   // A stairhead camp is interrupted about a third of the time for 4-7
   // damage; a watched one never is, once or twice a delve
   campWatched: 4,
+  // Not a number but a key: it opens the hazard shoves to a party with
+  // no fighter and no rope, which is most of the openers in the game
+  hazardShoves: 8,
   consumes: -2,
 };
 

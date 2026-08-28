@@ -15,7 +15,7 @@ import {
   isFeatureAction, getFeature, roomFeatures, actionTier,
 } from '../world/RoomFeatures.js';
 import { reactionsFor, foldReactions } from '../world/Reactions.js';
-import { tacticModifiers } from '../game/Tactics.js';
+import { tacticModifiers, activeTactics } from '../game/Tactics.js';
 import { chooseFormation, formationModifiers } from '../agents/Formation.js';
 
 function roll() {
@@ -111,6 +111,7 @@ export function getFeatureOptions(room, party) {
   return featureActions(room, party, {
     item: id => hasItem(party, id),
     spell: id => hasSpell(party, id),
+    tactic: id => activeTactics(party).some(t => t.id === id),
   });
 }
 
@@ -415,6 +416,16 @@ export function decideRoomAction(room, party) {
     if (opt.id === 'fight' && party.totalHealth() / party.totalMaxHealth() < 0.3) w -= 2;
     if (opt.id === 'flee' && party.totalHealth() / party.totalMaxHealth() < 0.3) w += 2;
     if (opt.id === 'study') w += 1;                         // Spells are score
+    // Leaving a hoard alone is a real answer when the party has nothing
+    // left to survive a mimic with. Without this it was offered a
+    // hundred times a sweep and taken three (tools/census.mjs): the
+    // option existed and the party had no state in which it wanted it.
+    if (opt.id === 'leave-it') {
+      const share = party.totalHealth() / party.totalMaxHealth();
+      if (share < 0.4) w += 4;
+      else if (share < 0.65) w += 1.5;
+      if (party.supply === 0) w += 1.5;      // no light to fight a mimic by
+    }
 
     return { opt, w: Math.max(0.1, w) };
   });
@@ -493,6 +504,7 @@ export function resolveFeatureAction(room, party, optionId, options = {}) {
   const action = actionTier(optionId, party, {
     item: id => hasItem(party, id),
     spell: id => hasSpell(party, id),
+    tactic: id => activeTactics(party).some(t => t.id === id),
   });
   const feature = getFeature(action.feature);
   const preps = [];
@@ -501,8 +513,13 @@ export function resolveFeatureAction(room, party, optionId, options = {}) {
   if (action.fightOnly) {
     const monster = room.monster;
     // Improvised Arms: technique for using what the room left lying about
-    const improvised = tacticModifiers(party).featureOpener;
-    const opener = action.openerDamage + improvised;
+    const tac = tacticModifiers(party);
+    const improvised = tac.featureOpener;
+    // Pinning: a monster put somewhere stays put a moment longer, and
+    // the room keeps working on it. Only where the room is a hazard —
+    // there is nothing to pin a monster against in a row of pillars.
+    const hazard = (feature?.tags || []).includes('hazard') ? tac.hazardDamage : 0;
+    const opener = action.openerDamage + improvised + hazard;
     const dealt = Math.min(opener, Math.max(0, monster.health - 1));
     monster.health = Math.max(1, monster.health - opener);
     if (improvised) {
@@ -511,10 +528,17 @@ export function resolveFeatureAction(room, party, optionId, options = {}) {
         text: `🔧 The party knows how to swing what the room left lying about: +${improvised} to the opening.`,
       });
     }
+    if (hazard) {
+      preps.push({
+        source: 'pinning',
+        text: `📌 They do not let it climb straight back out: ${hazard} more damage from the room.`,
+      });
+    }
     const result = resolveRoomAction(room, party, 'fight', {
       formation: options?.formation,
       extraCover: action.extraCover || 0,
     });
+    result.preps = [...preps, ...(result.preps || [])];
     result.feature = action.feature;
     result.featureAction = optionId;
     result.featureDamage = dealt;

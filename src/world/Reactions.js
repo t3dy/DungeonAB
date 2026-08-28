@@ -52,6 +52,8 @@ export const MATTER = {
   anvil: 'metal',
   mirror: 'glass',
   pit: 'void',
+  chasm: 'void',
+  spikes: 'metal',
 };
 
 /**

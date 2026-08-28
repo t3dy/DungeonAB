@@ -17,12 +17,17 @@
 
 import * as THREE from 'three';
 import { ATLAS, FX_TILES, getClassTile, getMonsterTile, getRoomProp, getFeatureTile } from './SpriteAtlas.js';
+import { getFeature } from '../world/RoomFeatures.js';
 import {
   TILE, DOOR_W, roomHalf, roomAxis, monsterSpot, partySlots, wallSpans, doorMap,
   featureSlots,
 } from './RoomLayout.js';
 
-const VIEW_HALF = 11;       // half-height of the view, in world units (~2 rooms)
+// Half-height of the view, in world units, before the room adds to it.
+// Rooms are half again as big as they were, and a fixed wide view drew
+// four adventurers as six pixels each — which is no good to anyone
+// trying to read where the party is standing.
+const VIEW_HALF = 7;
 const CAM_BACK = 26;        // how far back the iso eye sits
 const WALL_H = 1.15;        // wall height in world units
 const WALL_T = 0.28;        // wall thickness
@@ -296,8 +301,14 @@ export class IsoDungeonRenderer {
       features.forEach((fid, fi) => {
         const tile = getFeatureTile(fid);
         const slot = slots[fi];
-        if (!tile || !slot) return;
-        const fsprite = this.tileSprite(tile, 0.8);
+        if (!slot) return;
+        // Art where the sheet has it, and the feature's own emoji as a
+        // place marker where it does not. A hazard the player cannot see
+        // is a hazard they cannot plan around, and waiting for pixel art
+        // is not a reason to leave the floor empty.
+        const fsprite = tile
+          ? this.tileSprite(tile, 0.8)
+          : this.emojiSprite(getFeature(fid)?.icon || '❔', 0.7);
         fsprite.position.set(slot.mx, fy + 0.58, slot.mz);
         fsprite.userData.baseY = fy + 0.58;
         fsprite.userData.phase = i * 1.1 + fi;
@@ -306,6 +317,16 @@ export class IsoDungeonRenderer {
         this.occupantGroup.add(fsprite);
       });
     });
+  }
+
+  /**
+   * A sprite showing an emoji, sized like a tile sprite. The marker for
+   * anything the Tiny Dungeon sheet has no art for.
+   */
+  emojiSprite(icon, scale = 0.8) {
+    const sprite = new THREE.Sprite(this.getSpriteMaterial(icon));
+    sprite.scale.set(scale, scale, 1);
+    return sprite;
   }
 
   roomWorldPos(room) {
@@ -364,8 +385,10 @@ export class IsoDungeonRenderer {
     if (!room || !this.camera) return;
     const { x, y, z } = this.roomWorldPos(room);
     // A big chamber needs the eye pulled back a little to fit
+    // Frame the room the party is in, plus a margin, rather than a fixed
+    // slab of dungeon: a boss cavern and a corridor need different eyes.
     const { hx, hz } = roomHalf(room);
-    const zoomOut = Math.max(0, Math.max(hx, hz) - 3.5) * 0.55;
+    const zoomOut = Math.max(0, Math.max(hx, hz) + 2.2 - VIEW_HALF);
     // The camera follows the party down: it tracks the floor they stand
     // on, so the level below is not framed from the ceiling of the one above
     if (!this.camTarget) this.camTarget = new THREE.Vector3(x, y, z);

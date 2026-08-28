@@ -134,11 +134,15 @@ export function firingRates(delves = 30) {
   ].filter(Boolean);
 
   const real = Math.random;
-  const stream = new SeededRandom('asset-firing');
-  Math.random = () => stream.next();
   const rows = [];
   try {
     for (const card of getAllCards()) {
+      // Each card gets its OWN pinned stream, keyed by its id. A single
+      // shared stream made a card's measured rate depend on where it sat
+      // in the list — the Blessed Mace read 5% in sequence and 20% on
+      // its own, which is the instrument moving, not the card.
+      const stream = new SeededRandom(`asset-firing-${card.id}`);
+      Math.random = () => stream.next();
       if (card.type === CARD_TYPES.CHARACTER) continue;      // always present by definition
       // Only cards that promise something beyond a stat line
       if (!PROMISE.test(card.text || '')) continue;

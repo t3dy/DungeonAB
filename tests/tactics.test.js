@@ -194,6 +194,10 @@ describe('The folded modifiers are what the fight reads', () => {
       supply: 2, extraCast: 2, mendAtShrine: 2,
       // one-off or situational
       featureOpener: 0.5, fireTrapSoak: 0.5,
+      // Only applies when the room has a hazard AND the party uses it:
+      // as conditional as featureOpener, and measured in the same band
+      // as the other roots (+2.3 over 2500 delves an arm)
+      hazardDamage: 0.5,
     };
     const BOOLEAN_WEIGHT = 2;
 

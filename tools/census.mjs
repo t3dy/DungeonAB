@@ -51,6 +51,8 @@ const PROBES = [
   ['trap sprung', /pushes through the trap|trap springs/],
   ['element reaction', /The working hits|The fire takes|Frost gets into|fire finds|sheets across/],
   ['feature opener', /shove|topple|drop the portcullis|into the pit|boulder/i],
+  ['hazard shove', /into the pit|onto (a bed of )?rusted|into the crack|into a brazier|drives the monster/i],
+  ['pinning', /do not let it climb straight back out/],
   ['formation chosen', /drives in as a wedge|Shields lock|closes ranks|fight spread out|single file/],
   ['cover from furniture', /less damage per round|fights from behind/],
   ['supply low', /oil for \d+ more|wick is well down|checks the reservoir/],
