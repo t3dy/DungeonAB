@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='26'%3E%E2%9A%94%EF%B8%8F%3C/text%3E%3C/svg%3E">
   <title>DungeonAB — Draft. Delve. Watch.</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -125,21 +124,6 @@
     .story-deliberation { color: #8fb8dd; font-style: italic; margin-bottom: 0.4rem; }
     .story-resolution { color: #a8d5b0; }
     .story-fall { color: #e08080; margin-top: 0.4rem; padding-left: 0.5rem; border-left: 2px solid #6a2a2a; font-style: italic; }
-    .party-tactics { margin-top: 0.5rem; font-size: 0.72rem; color: #9a8; display: flex; flex-wrap: wrap; gap: 0.35rem; }
-    .tactic-chip { background: #23201c; border: 1px solid #3d372e; border-radius: 3px; padding: 0.1rem 0.4rem; }
-    .tactic-chip.idle { color: #8a6a5a; border-color: #4a3228; border-style: dashed; }
-    .saga-row { display: flex; gap: 0.4rem; align-items: center; padding: 0.4rem 0; border-bottom: 1px dashed #2a2318; }
-    .saga-row button { font-size: 0.75rem; padding: 0.25rem 0.45rem; background: #221c14; color: #c0b090; border: 1px solid #3d372e; }
-    .saga-row button:hover { background: #2e2619; }
-    .saga-doc { max-height: 46vh; overflow-y: auto; padding: 0.6rem 0.8rem; background: #16130f; border: 1px solid #2a2318; border-radius: 4px; font-size: 0.78rem; line-height: 1.5; color: #b8ac96; }
-    .saga-doc h2 { color: #d8a53f; font-size: 1rem; margin: 0 0 0.5rem; }
-    .saga-doc h3 { color: #c99b3f; font-size: 0.88rem; margin: 0.9rem 0 0.35rem; border-bottom: 1px solid #2a2318; }
-    .saga-doc h4 { color: #9a8f78; font-size: 0.8rem; margin: 0.6rem 0 0.2rem; }
-    .saga-doc p { margin: 0 0 0.5rem; }
-    .saga-doc li { margin-left: 1rem; color: #a09070; }
-    .saga-doc details { margin: 0.3rem 0 0.6rem; color: #776; }
-    .saga-doc summary { cursor: pointer; font-size: 0.72rem; }
-    .story-wound { color: #cc8877; margin-top: 0.4rem; padding-left: 0.5rem; border-left: 2px solid #6a3a2a; font-style: italic; }
     .story-aside { color: #d8c26a; margin-top: 0.4rem; padding-left: 0.5rem; border-left: 2px solid #6a5a2a; font-style: italic; }
 
     .log {
@@ -240,15 +224,9 @@
 
     /* Event toasts */
     #toast-stack {
-      /* Over the map, not over the party. Centred on the viewport, the
-         stack sat on top of the roster and the tactics chips — the two
-         panels a player checks while the toasts are still up. */
-      position: fixed; top: 4.5rem; left: 1.25rem;
+      position: fixed; top: 4.5rem; left: 50%; transform: translateX(-50%);
       z-index: 150; display: flex; flex-direction: column; gap: 0.4rem;
-      pointer-events: none; width: min(420px, 46vw);
-    }
-    @media (max-width: 900px) {
-      #toast-stack { left: 50%; transform: translateX(-50%); width: min(420px, 92vw); }
+      pointer-events: none; width: min(440px, 92vw);
     }
     .toast {
       background: #1a1610; border: 1px solid #d8a53f; border-radius: 6px;
@@ -304,6 +282,7 @@
       #gameover-display { left: 50%; }
     }
   </style>
+  <script type="module" crossorigin src="./assets/index-NwDQOErZ.js"></script>
 </head>
 <body>
   <div id="app">
@@ -311,13 +290,11 @@
       <h1>⚔️ DungeonAB</h1>
       <p>Draft the party. Delve the dungeon. Watch the story.
         <span style="color:#665;">·</span>
-        <span style="color:#8a7a55;">v4.0</span>
+        <span style="color:#8a7a55;">v3.0</span>
         <span style="color:#665;">·</span>
-        <a href="v1/" style="color:#665;text-decoration:underline;" title="The first release: the original campaign loop">play v1.0</a>
+        <a href="../v1/" style="color:#665;text-decoration:underline;" title="The first release: the original campaign loop">play v1.0</a>
         <span style="color:#665;">·</span>
-        <a href="v2/" style="color:#665;text-decoration:underline;" title="The systems release: branching dungeons, the archive, the workshop, the Bestiary">play v2.0</a>
-        <span style="color:#665;">·</span>
-        <a href="v3/" style="color:#665;text-decoration:underline;" title="The integration release: theme-tinted worlds, readable enemies, nature-aware planning">play v3.0</a>
+        <a href="../v2/" style="color:#665;text-decoration:underline;" title="The systems release: branching dungeons, the archive, the workshop, the Bestiary">play v2.0</a>
       </p>
       <div class="header-btns">
         <button id="archive-btn">🗺️ Archive</button>
@@ -332,13 +309,10 @@
         <canvas id="game-canvas" width="500" height="420"></canvas>
         <div class="panel" style="display:flex;gap:1.25rem;font-size:0.8rem;flex-wrap:wrap;">
           <span>Room: <strong id="room-count" style="color:#d8a53f;">0</strong></span>
-          <span>Floor: <strong id="floor-count" style="color:#9aa3b0;" title="A dungeon goes down. Every floor is meaner than the one above it.">1</strong></span>
           <span>Gold: <strong id="gold-count" style="color:#d8a53f;">0</strong></span>
           <span>Score: <strong id="score-count" style="color:#d8a53f;">0</strong></span>
-          <span>Oil: <strong id="supply-count" style="color:#e8c07a;">0</strong></span>
           <span>Materials: <strong id="materials-count" style="color:#7a9;">0</strong></span>
           <span>Potions: <strong id="potions-count" style="color:#b07ae8;">0</strong></span>
-          <span>Trophies: <strong id="trophies-count" style="color:#d88a3f;" title="">0</strong></span>
           <span id="status-badges" style="color:#e08080;"></span>
         </div>
       </div>
@@ -346,7 +320,6 @@
         <div class="panel">
           <h2>🎭 The Party</h2>
           <div id="party-roster"></div>
-          <div id="party-tactics" class="party-tactics"></div>
         </div>
         <div class="panel">
           <h2>Controls</h2>
@@ -393,7 +366,6 @@
       <div class="help-step">
         <h3>1 · Draft at the Table</h3>
         <p>You and three AI rivals pass packs of cards. Take <strong>one</strong> card per pack, then it passes on. Draft characters to grow your party, plus equipment, spells, and personalities to shape it. Packs always hold characters — no dead drafts.</p>
-        <p><strong>Only four adventurers march.</strong> Draft a fifth and they wait in town as a <strong>reserve</strong>, stepping up the moment someone falls — so extra bodies are insurance, not an army. Draft order decides who takes the four field slots, which makes the fifth character a real cost: that pick could have been the blade, the working, or the temper that wins the room.</p>
         <dl class="help-legend" id="help-card-legend"></dl>
       </div>
 
@@ -410,12 +382,6 @@
       <div class="help-step">
         <h3>The Deeper Systems</h3>
         <p>Monsters have <strong>natures</strong> — armored 🛡️, ethereal 👻, venomous 🐍, swarming 🐝, slow 🐌 — shown over their heads and hinted in the prose, and the party plans around them. Spells carry <strong>elements</strong> (🔥❄️⚡🌟); a caster picks the working the foe hates. Traps come in kinds — fire burns, poison lingers, alarms tell the dungeon you're coming. Hoards hide <strong>finds</strong>: scrolls, trinkets, draughts. Your kit is read by every encounter.</p>
-        <p><strong>The grimoire</strong> holds two kinds of working. Spells you <strong>drafted</strong> are prepared: they come back every room, but each can only be cast once before the party moves on. Scrolls <strong>found</strong> in the dungeon burn on use — one shot, then gone. Power is the spell&rsquo;s own plus half the party&rsquo;s sharpest mind, so a high-minded character makes every working better; a <strong>wizard</strong> adds two more and opens an ordinary fight with two workings instead of one. A working that lands <strong>keeps working</strong> — half its force again every round while the fight lasts, whether it is burning the foe or mending the party — and in the <strong>boss chamber the party looses everything it has</strong>. A <strong>healing</strong> working goes off the moment a companion is failing, mid-fight, not after the dust settles. So a grimoire is a reserve you spend down toward the throne: one spell is a tool, three are a plan.</p>
-        <p><strong>The delve wears you down</strong>, on two clocks. The lamp burns <strong>oil</strong> on every march — run dry and the whole party takes damage every room it gropes through the dark, so an Everburning Lantern (which sips), Dancing Light or Eyes of the Mouse are worth real picks. And a blow worth a quarter of a body leaves a <strong>wound</strong>: healing can no longer reach past the hatched part of the health bar, and only town mends it. The throne is not the only thing that can kill you.</p>
-        <dl class="help-legend" id="help-attrition-legend"></dl>
-        <p>The dungeon itself is built room by room: <strong>halls, chambers, caverns, rotundas and cells</strong>, each sized for what happens in it — a boss gets a great cavern, a vault is a closet. Passages join them through real doorways, <strong>secret doors</strong> hide side branches, and a <strong>trapdoor</strong> in the floor drops the party to the level below, skipping the stair and the rooms between it for a fall. The Craven take it; the Covetous refuse to skip the loot.</p>
-        <p><strong>A dungeon goes down.</strong> Two floors, three once the campaign is deep, and every floor is meaner than the one above it. Each ends at a <strong>stair</strong>, which is the one place stopping is sensible: go down and burn a march of oil on the climb, rope down the shaft beside it if somebody drafted the Grapple and Line, or <strong>camp at the stairhead</strong> — two marches of oil for six health each, and a chance something climbs the stair into the camp. The throne room is always on the bottom floor.</p>
-        <p>Off the spine hang <strong>wings</strong>: two to four rooms with a theme and a payoff — the burial, workshop, archive, barracks and flooded wings. An open one is a party vote; a hidden one has to be noticed, and always ends in a vault.</p>
       </div>
 
       <div class="help-step">
@@ -431,7 +397,7 @@
   <div id="records-overlay">
     <div class="help-card">
       <h2>🏛️ Hall of Records</h2>
-      <div class="help-sub">Best scores, the campaigns that earned them, and every saga kept.</div>
+      <div class="help-sub">Best scores and the campaigns that earned them.</div>
       <div id="records-body"></div>
       <button id="records-close-btn">Close</button>
     </div>
@@ -457,6 +423,5 @@
     </div>
   </div>
 
-  <script type="module" src="./main.js"></script>
 </body>
 </html>

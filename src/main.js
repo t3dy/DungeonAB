@@ -326,7 +326,7 @@ function showToast(icon, text, kind = '') {
     toast.classList.add('fade');
     setTimeout(() => toast.remove(), 500);
   }, 3600);
-  while (stack.children.length > 4) stack.removeChild(stack.firstChild);
+  while (stack.children.length > 3) stack.removeChild(stack.firstChild);
 }
 
 /**
@@ -495,6 +495,12 @@ function togglePause() {
 
 function updateUI(state) {
   document.getElementById('room-count').textContent = `${state.roomIndex} / ${(state.pathLength || state.dungeon.length) - 1}`;
+  // How deep they are. The floor the party stands on is the one thing
+  // the panel could not say when floors landed (world/DungeonGen.js).
+  const floors = Math.max(...(state.dungeon.rooms || []).map(r => (r.floor || 0) + 1), 1);
+  const floorEl = document.getElementById('floor-count');
+  floorEl.textContent = `${(state.floor || 0) + 1} / ${floors}`;
+  floorEl.style.color = (state.floor || 0) + 1 === floors ? '#d88a3f' : '#9aa3b0';
   document.getElementById('gold-count').textContent = state.party.gold;
   document.getElementById('score-count').textContent = state.party.score;
   // The lamp. Amber while it lasts, red once the party is in the dark.
