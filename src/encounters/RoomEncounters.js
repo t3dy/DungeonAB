@@ -702,6 +702,47 @@ export function wingAppeal(party, wing) {
   }
 }
 
+/**
+ * A locked wing: what opens it, and what that costs.
+ *
+ * Lock and key is the oldest structural trick in the form (PCG ch.3
+ * Fig. 3.5): a branch with one entrance, sealed, its key placed on the
+ * spine before the door. Four ways through, in the order the party
+ * would try them — and only one of them is quiet.
+ *
+ * Returns { opened, how, noisy } so the writing can say which.
+ */
+export function openLockedWing(party, wing, rollValue = roll()) {
+  if (party.hasKey(wing)) return { opened: true, how: 'key', noisy: false };
+
+  // A rogue with picks, or a rogue with patience
+  const rogues = party.living().filter(m => m.class === CLASSES.ROGUE);
+  if (rogues.length > 0) {
+    const mind = Math.max(...rogues.map(m => m.mind));
+    const picks = getPreparationBonuses(party).disarm;   // the lockpicks help here too
+    if (mind + picks + rollValue > 9) return { opened: true, how: 'picked', noisy: false };
+  }
+  // Knock opens any lock. Loudly — the card has always said so.
+  if (hasSpell(party, 'sp-knock')) {
+    const knock = party.castSpell('utility', 'sp-knock');
+    if (knock) return { opened: true, how: 'knock', noisy: true, source: knock.name };
+  }
+  // Muscle, a prybar, or both. A door is not a monster: shouldering it
+  // hurts, everything below hears it, and it does not always work.
+  //
+  // Measured at a threshold of 12 the lock refused 0.3% of parties,
+  // which is a gate that is not a gate (tools/census.mjs). A wing you
+  // can always get into is a wing that was never locked.
+  const strongest = Math.max(0, ...party.living().map(m => m.attack));
+  const lever = hasItem(party, 'eq-prybar') ? 4 : 0;
+  if (strongest + lever + rollValue > 15) {
+    const hurt = lever ? 0 : 2;      // levered off its hinges, or shouldered
+    if (hurt) party.takeDamage(hurt);
+    return { opened: true, how: 'forced', noisy: true, lever: lever > 0, damage: hurt };
+  }
+  return { opened: false, how: null, noisy: false };
+}
+
 export function decideDetour(party, rollValue = roll(), wing = null) {
   let w = 4;   // idle curiosity baseline
   if (party.hasPersonality('greedy')) w += 3;

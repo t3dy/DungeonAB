@@ -74,6 +74,38 @@ export function composeSecretFound(party, wing = null) {
   return `🕳️ ${finder} finds a hidden door into ${wing?.name || 'a side passage'}.${behind} Its rooms join the route.`;
 }
 
+/** A key, found on the way in. */
+export function composeKeyFound(key, finder) {
+  return `🗝️ ${finder} pockets ${key.name}. Somewhere below there is a door it belongs to.`;
+}
+
+/**
+ * A locked wing, and how the party got through it — or did not.
+ * Every branch says what it cost, because forcing a door is not the
+ * same as unlocking one and the player should be able to tell.
+ */
+export function composeLockedWing(wing, outcome) {
+  const door = wing?.door || 'a locked door';
+  const name = wing?.name || 'a side passage';
+  if (!outcome.opened) {
+    return `🔒 ${name[0].toUpperCase()}${name.slice(1)} is shut behind ${door}. Nobody here can open it, and the party walks on.`;
+  }
+  switch (outcome.how) {
+    case 'key':
+      return `🗝️ ${door[0].toUpperCase()}${door.slice(1)} — and the party is carrying ${wing.keyName}. ${name[0].toUpperCase()}${name.slice(1)} opens.`;
+    case 'picked':
+      return `🗝️ ${door[0].toUpperCase()}${door.slice(1)}. The rogue has it open in the time it takes to say so, and quietly.`;
+    case 'knock':
+      return `💥 ${outcome.source || 'Knock'} takes ${door} off its fastenings. ${name[0].toUpperCase()}${name.slice(1)} is open, and everything below heard it.`;
+    case 'forced':
+      return outcome.lever
+        ? `💪 ${door[0].toUpperCase()}${door.slice(1)} comes off its hinges under the prybar. ${name[0].toUpperCase()}${name.slice(1)} is open, and that was not quiet.`
+        : `💪 ${door[0].toUpperCase()}${door.slice(1)} goes down under somebody's shoulder: ${outcome.damage} damage taken doing it, and everything below heard.`;
+    default:
+      return `🔒 ${name} opens.`;
+  }
+}
+
 export function composeDetour(taken, wing = null, advocate = null) {
   const name = wing?.name || 'the side passage';
   const tell = wing?.tell ? ` — ${wing.tell}` : '';
