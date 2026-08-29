@@ -25,7 +25,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { Simulator } from '../src/sim/Simulator.js';
 import { toMarkdown } from '../src/narrative/Chronicle.js';
-import { SeededRandom } from '../src/draft/PackDraft.js';
+import { SeededRandom, TARGET_POOL } from '../src/draft/PackDraft.js';
 import { getAllCards } from '../src/game/Cards.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -40,7 +40,11 @@ export const CASES = [
   // writing are never exercised by a golden at all.
   // Re-picked when rooms got bigger and the hazards got teeth: the old
   // seed started winning, and three victories freeze no defeat at all.
-  { name: 'nightmare-delve', seed: 'golden-fall-1', difficulty: 'nightmare' },
+  // Re-picked again in v4.4, for the same reason and a new cause — the
+  // pack-size sweep moved nightmare's monsters from 1.83 to 1.38 and
+  // `golden-fall-1` started walking out alive. This seed dies deep,
+  // which freezes the most writing on the way down.
+  { name: 'nightmare-delve', seed: 'golden-fall-2', difficulty: 'nightmare' },
 ];
 
 /**
@@ -52,7 +56,10 @@ export function renderCase({ seed, difficulty }) {
   const rng = new SeededRandom(`${seed}-rolls`);
   Math.random = () => rng.next();
   try {
-    const pool = new SeededRandom(seed).shuffle(getAllCards()).slice(0, 27);
+    // The same pool size a real draft leaves the table with, whatever
+    // the difficulty (PackDraft.TARGET_POOL) — a golden built from a
+    // pool the game never deals is describing a different game.
+    const pool = new SeededRandom(seed).shuffle(getAllCards()).slice(0, TARGET_POOL);
     const sim = new Simulator(pool, seed, difficulty);
     let guard = 0;
     while (!sim.gameOver && guard++ < 400) sim.tick();

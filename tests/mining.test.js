@@ -5,6 +5,10 @@
  */
 
 import { strict as assert } from 'assert';
+import { PACK_SIZES, roundsForPackSize } from '../src/draft/PackDraft.js';
+
+/** What one seat leaves the table with, at the mining default. */
+const POOL = PACK_SIZES.medium * roundsForPackSize(PACK_SIZES.medium);
 import { draftTable, simulate, aggregate, renderReport, runMining } from '../tools/mine.js';
 import { getAllCards, CARD_TYPES } from '../src/game/Cards.js';
 
@@ -13,7 +17,8 @@ describe('Drafting a full AI table', () => {
     const draft = draftTable(0);
     assert.equal(draft.finished, true, 'the draft completes');
     for (const seat of draft.seats) {
-      assert.equal(seat.pool.length, 27, `${seat.name} made all 27 picks`);
+      assert.equal(seat.pool.length, POOL,
+        `${seat.name} made all ${POOL} picks`);
       const chars = seat.pool.filter(c => c.type === CARD_TYPES.CHARACTER);
       assert.ok(chars.length >= 1, `${seat.name} has at least one character`);
     }
@@ -32,9 +37,10 @@ describe('Game records', () => {
     assert.equal(games.length, 8, '2 tables × 4 seats');
     for (const g of games) {
       assert.equal(typeof g.victory, 'boolean');
-      assert.ok(g.poolIds.length === 27);
-      assert.equal(g.picks.length, 27, 'every pick logged');
-      assert.ok(g.picks.every(p => p.takenAt >= 1 && p.takenAt <= 27), 'pick positions in range');
+      assert.ok(g.poolIds.length === POOL);
+      assert.equal(g.picks.length, POOL, 'every pick logged');
+      assert.ok(g.picks.every(p => p.takenAt >= 1 && p.takenAt <= POOL),
+        'pick positions in range');
       assert.ok(g.decisions.length > 0, 'room decisions were logged');
       assert.ok(g.decisions.every(d => d.room && d.action), 'decisions carry room and action');
     }
@@ -50,7 +56,7 @@ describe('Aggregation and report', () => {
       assert.ok(row.games > 0);
       assert.ok(row.wrIn >= 0 && row.wrIn <= 1, `${row.id} WR in [0,1]`);
       assert.ok(!Number.isNaN(row.iwd), `${row.id} IWD is a number`);
-      assert.ok(Number.isNaN(row.ata) || (row.ata >= 1 && row.ata <= 24), `${row.id} ATA in pick range`);
+      assert.ok(Number.isNaN(row.ata) || (row.ata >= 1 && row.ata <= POOL), `${row.id} ATA in pick range`);
     }
 
     const sizes = [...agg.bySize.values()].reduce((s, [n]) => s + n, 0);

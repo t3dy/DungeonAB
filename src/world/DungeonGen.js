@@ -410,6 +410,9 @@ export function generateDungeon(seed, difficulty = 'medium', opts = {}) {
     const wing = WINGS[wingIds[Math.floor(rng.next() * wingIds.length)]];
 
     const secret = rng.next() < 0.5;
+    // Decided before the rooms are laid out, so the junction edge can
+    // carry the lock (the renderers read edges, not branch records)
+    const lockedWing = !secret && junction > 2 && rng.next() < 0.55;
     const chainLen = 2 + Math.floor(rng.next() * 3);    // 2-4 rooms deep
     const branchRooms = [];
     let prev = rooms[junction];
@@ -443,6 +446,9 @@ export function generateDungeon(seed, difficulty = 'medium', opts = {}) {
         a: prevIdx, b: room.index,
         secret: secret && i === 0,
         kind: secret && i === 0 ? 'secret' : 'arch',
+        // The door itself, so the map can draw a lock the player can
+        // see rather than one they only read about afterwards
+        ...(i === 0 && lockedWing ? { locked: true } : {}),
       });
       branchRooms.push(room.index);
       prevIdx = room.index;
@@ -455,8 +461,7 @@ export function generateDungeon(seed, difficulty = 'medium', opts = {}) {
       // turns a branch from optional loot into a question the dungeon
       // asked earlier. Only open wings lock — a secret wing already
       // has a lock, and it is the door itself.
-      const lockable = !secret && junction > 2;
-      const locked = lockable && rng.next() < 0.55;
+      const locked = lockedWing;
       let keyRoom = null;
       if (locked && rng.next() < 0.6) {
         // Six times in ten the key is on the spine before the door, so
@@ -781,12 +786,23 @@ export const DUNGEON_THEMES = {
  * had to give some of that back. Difficulty lives in two places now,
  * and this constant is only one of them: see Party.SUPPLY_COVERAGE for
  * how much of the walk each difficulty spends in the dark.
+ *
+ * The fourth sweep (v4.4: difficulty sets the pack size — easy sees 6
+ * cards a pack, nightmare 3) moved difficulty into a third place, the
+ * *draft*, and this constant had to give that ground back. It is why
+ * hard and nightmare now sit almost on top of each other at 1.34 and
+ * 1.38: at nearly identical monsters, a hard party wins 70% and a
+ * nightmare party 46%, and the entire 24-point gap is the density of
+ * the choices they were offered. That is the intended shape — the
+ * player asked for difficulty to be *"choice density, not whether
+ * certain cards are accessible"* — but it means a future change to
+ * PACK_SIZES is a difficulty change and must re-run `npm run calibrate`.
  */
 export const STAT_SCALE = {
   easy: 0.9,
   medium: 1.19,
-  hard: 1.44,
-  nightmare: 1.83,
+  hard: 1.34,
+  nightmare: 1.38,
 };
 
 /* ------------------------------------------------------------------ */

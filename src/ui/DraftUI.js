@@ -9,9 +9,12 @@
 
 import { CARD_TYPES } from '../game/Cards.js';
 import { DUNGEON_CONDITIONS } from '../game/Conditions.js';
+import { PACK_SIZES } from '../draft/PackDraft.js';
 
 export class DraftUI {
-  constructor(draft, onComplete) {
+  constructor(draft, onComplete, difficulty = 'medium', onDifficulty = null) {
+    this.difficulty = difficulty;
+    this.onDifficulty = onDifficulty;
     this.draft = draft;
     this.onComplete = onComplete;
     this.lastAiPicks = [];
@@ -31,6 +34,30 @@ export class DraftUI {
     const round = this.draft.round + 1;
     const pick = this.draft.pickInRound + 1;
     const dir = this.draft.passDirection() === 1 ? '→ passing left' : '← passing right';
+
+    const started = this.draft.log.length > 0;
+    const chooser = document.createElement('div');
+    chooser.style.cssText = 'text-align:center;margin-bottom:0.6rem;font-size:0.82rem;color:#887755;';
+    chooser.innerHTML = `
+      <label>Difficulty
+        <select id="draft-difficulty" ${started ? 'disabled' : ''}
+          title="${started ? 'Locked once the first pack is opened' : 'Sets how many cards each pack offers'}"
+          style="background:#14110b;color:#e0e0e0;border:1px solid #3a2f1e;padding:0.3rem;border-radius:4px;font-family:inherit;${started ? 'opacity:0.5;' : ''}">
+          ${Object.entries(PACK_SIZES).map(([id, size]) => `
+            <option value="${id}"${id === this.difficulty ? ' selected' : ''}>
+              ${id[0].toUpperCase()}${id.slice(1)} — ${size} cards a pack
+            </option>`).join('')}
+        </select>
+      </label>
+      <span style="margin-left:0.5rem;">${started
+        ? 'The table is drafting; difficulty is set for this run.'
+        : 'Harder means fewer choices a pack, not fewer cards in the game.'}</span>`;
+    container.appendChild(chooser);
+    if (!started) {
+      chooser.querySelector('#draft-difficulty').addEventListener('change', e => {
+        this.onDifficulty?.(e.target.value);
+      });
+    }
 
     const title = document.createElement('div');
     title.style.cssText = 'text-align:center;margin-bottom:1rem;';
@@ -178,11 +205,9 @@ export class DraftUI {
       <h2>The Delve</h2>
       <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;font-size:0.85rem;">
         <label>Difficulty
-          <select id="difficulty-select" style="background:#14110b;color:#e0e0e0;border:1px solid #3a2f1e;padding:0.4rem;border-radius:4px;font-family:inherit;">
-            <option value="easy">Easy</option>
-            <option value="medium" selected>Medium</option>
-            <option value="hard">Hard</option>
-            <option value="nightmare">Nightmare</option>
+          <select id="difficulty-select" disabled title="Chosen before the draft — it set how many cards each pack offered"
+            style="background:#14110b;color:#887755;border:1px solid #3a2f1e;padding:0.4rem;border-radius:4px;font-family:inherit;opacity:0.7;">
+            ${Object.keys(PACK_SIZES).map(id => `<option value="${id}"${id === this.difficulty ? ' selected' : ''}>${id[0].toUpperCase()}${id.slice(1)}</option>`).join('')}
           </select>
         </label>
         <label style="flex:1;">Seed

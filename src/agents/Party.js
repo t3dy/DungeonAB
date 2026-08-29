@@ -96,6 +96,16 @@ export class Party {
     // the march between rooms by restStep)
     this.castThisRoom = new Set();
 
+    // Ids for the things the dungeon hands out that were never on a
+    // card: a copied cantrip, a sealed working, a trinket cut off a
+    // corpse. They used to be stamped `Date.now()`, and two finds
+    // inside the same millisecond got the same id — which
+    // `castThisRoom` (a set of ids) then read as one working, so the
+    // party silently lost a spell it had earned. It also made a seeded
+    // delve non-reproducible, which is how it was caught: the golden
+    // read 9 workings loosed at the boss on one run and 8 on the next.
+    this.mintedIds = 0;
+
     // Learned technique. A tactic is live only when the party has the
     // capability it asks for and holds its prerequisite (game/Tactics.js).
     //
@@ -258,6 +268,16 @@ export class Party {
   }
 
   /**
+   * A fresh, unique id for something the dungeon made up on the spot.
+   * Counted rather than clocked, so it collides with nothing and a
+   * seeded delve tells the same story twice.
+   */
+  mintId(prefix) {
+    this.mintedIds += 1;
+    return `${prefix}-${this.mintedIds}`;
+  }
+
+  /**
    * Say who prepares a working.
    *
    * A grimoire is the party's, but somebody has to have studied the
@@ -334,6 +354,7 @@ export class Party {
       spellsLearned: this.spellsLearned,
       poisonLinger: this.poisonLinger || 0,
       alarmed: !!this.alarmed,
+      mintedIds: this.mintedIds,
       desecrated: !!this.desecrated,
     };
   }
@@ -378,6 +399,7 @@ export class Party {
     party.spellsLearned = saved.spellsLearned || 0;
     party.poisonLinger = saved.poisonLinger || 0;
     party.alarmed = !!saved.alarmed;
+    party.mintedIds = saved.mintedIds || 0;
     party.desecrated = !!saved.desecrated;
     return party;
   }

@@ -7,7 +7,7 @@ import { strict as assert } from 'assert';
 import {
   registerPack, setPackEnabled, listPacks, pooledCards, validateCard, validatePack, _resetPacks,
 } from '../src/game/CardPacks.js';
-import { buildPack, SeededRandom } from '../src/draft/PackDraft.js';
+import { buildPack, SeededRandom, PACK_SIZES } from '../src/draft/PackDraft.js';
 import { ALCHEMY_PACK, ATHANOR_THEME, installAlchemyPack } from '../src/packs/alchemyPack.js';
 import { generateDungeon, DUNGEON_THEMES } from '../src/world/DungeonGen.js';
 import { getMonsterTile, ATLAS } from '../src/ui/SpriteAtlas.js';
@@ -61,11 +61,17 @@ describe('The pack registry', () => {
     _resetPacks();
     installAlchemyPack();
     const rng = new SeededRandom('pack-draft');
-    const pack = buildPack(rng);
-    assert.equal(pack.length, 9);
+    // Pack size is the difficulty's business now (PACK_SIZES); what a
+    // content pack must not do is crowd out the coverage floor or make
+    // a card type unreachable.
+    const pack = buildPack(rng, PACK_SIZES.easy, 0);
+    assert.equal(pack.length, PACK_SIZES.easy);
     assert.ok(pack.filter(c => c.type === 'character').length >= 2, 'coverage holds');
-    assert.equal(pack.filter(c => c.type === 'tactic').length, 1,
-      'and a content pack does not crowd out the tactic slot');
+    const seen = new Set();
+    for (let i = 0; i < 40; i++) for (const c of buildPack(rng, PACK_SIZES.easy, i)) seen.add(c.type);
+    for (const type of ['character', 'equipment', 'spell', 'personality', 'tactic']) {
+      assert.ok(seen.has(type), `${type} still reaches the table with a pack installed`);
+    }
     _resetPacks();
   });
 });

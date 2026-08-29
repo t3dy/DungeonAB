@@ -21,7 +21,7 @@
  */
 
 import { STAT_SCALE } from '../src/world/DungeonGen.js';
-import { PackDraft, PILOT_PERSONAS, aiPick } from '../src/draft/PackDraft.js';
+import { PackDraft, PILOT_PERSONAS, aiPick, PACK_SIZES } from '../src/draft/PackDraft.js';
 import { Simulator } from '../src/sim/Simulator.js';
 import { CARD_TYPES, CLASSES, getAllCards } from '../src/game/Cards.js';
 
@@ -35,8 +35,12 @@ import { CARD_TYPES, CLASSES, getAllCards } from '../src/game/Cards.js';
  * so the aggregate measures skill expression: whether better
  * evaluation actually wins more.
  */
-export function draftTable(tableIndex) {
-  const draft = new PackDraft(`mine-${tableIndex}`);
+export function draftTable(tableIndex, difficulty = 'medium') {
+  // Difficulty sizes the pack and the rounds answer back, so every
+  // table drafts ~24 cards however dense the choices were. The mining
+  // has to draft the way the game does or it is measuring a different
+  // game (PackDraft.PACK_SIZES, roundsForPackSize).
+  const draft = new PackDraft(`mine-${tableIndex}`, null, PACK_SIZES[difficulty] ?? PACK_SIZES.medium);
   const pilot = PILOT_PERSONAS[tableIndex % PILOT_PERSONAS.length];
   draft.pilot = pilot;
   let guard = 0;
@@ -89,12 +93,15 @@ export function playGame(pool, seed, difficulty) {
 export function simulate({ tables = 100, difficulty = 'medium' } = {}) {
   const games = [];
   for (let t = 0; t < tables; t++) {
-    const draft = draftTable(t);
+    const draft = draftTable(t, difficulty);
     for (let s = 0; s < draft.seats.length; s++) {
       const seat = draft.seats[s];
       const picks = draft.log
         .filter(e => e.seat === s)
-        .map(e => ({ cardId: e.card.id, takenAt: e.round * 8 + e.pick + 1 }));
+        // Pick position within the whole draft. This used to multiply
+        // by a hard-coded 8 — the pack size before difficulty set it —
+        // which put every pick past the first round out of range.
+        .map(e => ({ cardId: e.card.id, takenAt: e.round * draft.packSize + e.pick + 1 }));
       const game = playGame(seat.pool, `mine-${t}-seat-${s}`, difficulty);
       const pilotId = s === 0 ? draft.pilot.id : seat.id;
       games.push({ table: t, seat: s, pilotId, poolIds: seat.pool.map(c => c.id), picks, ...game });

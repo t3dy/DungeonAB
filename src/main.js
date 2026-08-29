@@ -3,11 +3,12 @@
  * Draft at the table → delve the dungeon → read the chronicle.
  */
 
-import { PackDraft } from './draft/PackDraft.js';
+import { PackDraft, PACK_SIZES } from './draft/PackDraft.js';
 import { DraftUI } from './ui/DraftUI.js';
 import { DungeonRenderer } from './ui/DungeonRenderer.js';
 import { IsoDungeonRenderer } from './ui/IsoDungeonRenderer.js';
 import { renderOutfitting } from './ui/OutfitUI.js';
+import { CueLayer } from './ui/Cues.js';
 import { Campaign, TOWN_PRICES } from './game/Campaign.js';
 import { PARTY_CAP } from './agents/Party.js';
 import { composeTownInterlude } from './narrative/Narrator.js';
@@ -97,6 +98,7 @@ function init() {
   installAlchemyPack({ enabled: prefs['alchemy-17c'] !== false });
 
   setupHelp();
+  setupPanels();
   setupRecords();
   setupCardEditor();
   setupArchive({
@@ -345,9 +347,17 @@ function announceEvents(prevState, state) {
   }
 }
 
-function startNewDraft() {
-  appState.draft = new PackDraft(`table-${Date.now().toString(36)}`);
-  appState.draftUI = new DraftUI(appState.draft, startDelve);
+function startNewDraft(difficulty = appState.draftDifficulty || 'medium') {
+  // Difficulty is chosen before the first pack is opened, because it
+  // sets how many cards a pack offers (PackDraft.PACK_SIZES): easy 6,
+  // medium 5, hard 4, nightmare 3. Choice density, not card access —
+  // every card is still reachable at every difficulty, and the rounds
+  // grow as the pack shrinks so every difficulty drafts the same pool.
+  appState.draftDifficulty = difficulty;
+  appState.draft = new PackDraft(
+    `table-${Date.now().toString(36)}`, null, PACK_SIZES[difficulty] ?? PACK_SIZES.medium,
+  );
+  appState.draftUI = new DraftUI(appState.draft, startDelve, difficulty, next => startNewDraft(next));
   appState.draftUI.render();
 
   document.getElementById('world-container').style.display = 'none';
@@ -437,6 +447,8 @@ function showMuster(campaign, doneLabel, onDone) {
  */
 function beginDelve(sim) {
   appState.simulator = sim;
+  if (!appState.cues) appState.cues = new CueLayer();
+  appState.cues.clear();
 
   // Torchlit isometric 3D, with the 2D map as a WebGL fallback
   if (!appState.renderer) {
@@ -485,6 +497,12 @@ function processTickResult() {
   const state = appState.simulator.getState();
   appState.renderer.render(state);
   updateUI(state);
+
+  // Numbers over the map, straight off the Chronicle's own diff — so
+  // every change the record knows about, the player also *sees*
+  // (ui/Cues.js). This is what makes the delve watchable rather than
+  // readable.
+  appState.cues?.showTick(appState.simulator.lastEvents, appState.simulator.turn);
 
   if (state.narration) {
     appendStory(state.narration, state.roomIndex);
@@ -620,6 +638,75 @@ function updateUI(state) {
   log.scrollTop = log.scrollHeight;
 }
 
+/**
+ * Accordion panels. The player decides how much of the game is on
+ * screen, and the choice survives a reload — a player who wants the
+ * map and nothing else should not have to close the log every time.
+ */
+function setupPanels() {
+  for (const panel of document.querySelectorAll('.panel[data-panel]')) {
+    const key = `dab-panel-${panel.dataset.panel}`;
+    let stored = null;
+    try { stored = localStorage.getItem(key); } catch { /* private window */ }
+    if (stored === 'closed') panel.classList.add('collapsed');
+    if (stored === 'open') panel.classList.remove('collapsed');
+
+    const head = panel.querySelector('.panel-head');
+    if (!head) continue;
+    head.addEventListener('click', () => {
+      panel.classList.toggle('collapsed');
+      try {
+        localStorage.setItem(key, panel.classList.contains('collapsed') ? 'closed' : 'open');
+      } catch { /* nothing to remember it with */ }
+    });
+  }
+
+  // Terse by default: one line a room, the rest on demand
+  const verbose = document.getElementById('story-verbose');
+  if (verbose) {
+    try { verbose.checked = localStorage.getItem('dab-story-verbose') === 'yes'; } catch { /* ignore */ }
+    applyVerbosity();
+    verbose.addEventListener('change', () => {
+      try { localStorage.setItem('dab-story-verbose', verbose.checked ? 'yes' : 'no'); } catch { /* ignore */ }
+      applyVerbosity();
+    });
+  }
+}
+
+function storyIsVerbose() {
+  return !!document.getElementById('story-verbose')?.checked;
+}
+
+/** Push the current verbosity onto every room already on screen. */
+function applyVerbosity() {
+  const verbose = storyIsVerbose();
+  for (const entry of document.querySelectorAll('.story-entry')) {
+    if (entry.dataset.pinned === 'yes') continue;     // opened by hand, left open
+    entry.classList.toggle('terse', !verbose);
+  }
+}
+
+/**
+ * Scroll to a room's chapter and open it. Called when the player
+ * clicks a room on the map — the feedback was "clicking a room pulls
+ * up the relevant log".
+ */
+export function focusRoomStory(roomIndex) {
+  const panel = document.getElementById('story-panel');
+  if (!panel) return false;
+  const entry = panel.querySelector(`.story-entry[data-room="${roomIndex}"]`);
+  if (!entry) return false;
+  for (const other of panel.querySelectorAll('.story-entry.focused')) other.classList.remove('focused');
+  entry.classList.remove('terse');
+  entry.dataset.pinned = 'yes';
+  entry.classList.add('focused');
+  // Make sure the panel is open before scrolling into it
+  const owner = panel.closest('.panel');
+  if (owner) owner.classList.remove('collapsed');
+  entry.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  return true;
+}
+
 function appendStory(narration, roomIndex) {
   const panel = document.getElementById('story-panel');
   const empty = panel.querySelector('.story-empty');
@@ -638,9 +725,10 @@ function appendStory(narration, roomIndex) {
     : '';
 
   const entry = document.createElement('div');
-  entry.className = 'story-entry';
+  entry.className = `story-entry${storyIsVerbose() ? '' : ' terse'}`;
+  entry.dataset.room = String(roomIndex);
   entry.innerHTML = `
-    <div class="story-room">${narration.icon} Room ${roomIndex} — ${narration.room}</div>
+    <div class="story-room" title="Click to open this room in full">${narration.icon} Room ${roomIndex} — ${narration.room}</div>
     <div class="story-predicament">${escapeHtml(narration.predicament)}</div>
     <div class="story-deliberation">${escapeHtml(narration.deliberation)}</div>
     <div class="story-resolution">${escapeHtml(narration.resolution)}</div>
@@ -648,6 +736,13 @@ function appendStory(narration, roomIndex) {
     ${fallLines}
     ${asideLine}
   `;
+  // Click the heading to open one room in full, click again to fold it
+  entry.querySelector('.story-room').addEventListener('click', () => {
+    const opening = entry.classList.contains('terse');
+    entry.classList.toggle('terse', !opening);
+    entry.dataset.pinned = opening ? 'yes' : 'no';
+  });
+
   panel.appendChild(entry);
   while (panel.children.length > 14) panel.removeChild(panel.firstChild);
   panel.scrollTop = panel.scrollHeight;

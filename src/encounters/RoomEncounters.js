@@ -481,7 +481,7 @@ export function rollFind(party, always = false, rollValue = Math.random()) {
     return { source: scroll.name, find: 'scroll', text: `📜 Also in the hoard: a scroll of ${scroll.name}, added to the grimoire.` };
   }
   const trinket = TRINKETS[Math.floor(rollValue * 991) % TRINKETS.length];
-  const wearer = party.assignEquipment({ ...trinket, id: `${trinket.id}-${Date.now().toString(36)}` });
+  const wearer = party.assignEquipment({ ...trinket, id: party.mintId(trinket.id) });
   return { source: trinket.name, find: 'trinket', text: `🍀 Also in the hoard: ${trinket.name} (${bonusText(trinket.bonus)}), now worn by ${wearer?.name || 'no one'}.` };
 }
 
@@ -1387,7 +1387,7 @@ export function resolveRoomAction(room, party, optionId, options = null) {
       // Learning adds a real spell to the grimoire
       for (let i = 0; i < learned; i++) {
         party.grimoire.push({
-          id: `learned-${Date.now()}-${i}`, name: 'Found Cantrip', icon: '📜',
+          id: party.mintId('learned'), name: 'Found Cantrip', icon: '📜',
           school: 'found', power: 3, use: Math.random() < 0.5 ? 'combat' : 'utility',
           // Copied into the grimoire by hand, so it is prepared, not sealed
           source: 'prepared', text: 'Copied from the stacks.',
@@ -1408,7 +1408,7 @@ export function resolveRoomAction(room, party, optionId, options = null) {
         party.spellsLearned += 2;
         party.addScore(50);
         party.grimoire.push({
-          id: `sealed-${Date.now()}`, name: 'Sealed Working', icon: '🔏',
+          id: party.mintId('sealed'), name: 'Sealed Working', icon: '🔏',
           school: 'forbidden', power: 6, use: 'combat', source: 'prepared',
           text: 'The margins screamed. The wizard did not.',
         });

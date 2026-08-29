@@ -271,3 +271,27 @@ function describe(name, fn) {
   console.log(`\n${name}`);
   fn();
 }
+
+describe('Found workings keep their own identity', () => {
+  test('two finds in the same instant are two workings, not one', () => {
+    // `castThisRoom` is a set of spell ids, so two grimoire entries
+    // sharing an id are one working as far as the resolver is
+    // concerned: cast the first and the second is filtered out and
+    // never loosed. The ids used to be `Date.now()`, and a party that
+    // studied twice inside the same millisecond lost a spell it had
+    // earned — with nothing in the Chronicle to say so.
+    const party = new Party([]);
+    const minted = [];
+    for (let i = 0; i < 200; i++) minted.push(party.mintId('learned'));
+    assert.equal(new Set(minted).size, minted.length, 'every minted id is its own');
+  });
+
+  test('a saved party does not re-issue ids it has already spent', () => {
+    // Ids carry across a trip to town, or the next delve's first find
+    // collides with the scroll already in the grimoire.
+    const party = new Party([]);
+    const first = party.mintId('sealed');
+    const back = Party.fromJSON(party.toJSON(), () => null);
+    assert.notEqual(back.mintId('sealed'), first, 'the counter survives the save');
+  });
+});

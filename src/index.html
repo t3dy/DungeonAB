@@ -118,6 +118,60 @@
       line-height: 1.55;
     }
     .story-empty { color: #555; font-style: italic; }
+    /* The stage: the map, with a layer of floating cues over it. The
+       delve should be watchable without reading (ui/Cues.js). */
+    #stage { position: relative; line-height: 0; }
+    #cue-layer {
+      position: absolute; inset: 0; pointer-events: none; overflow: hidden;
+      line-height: 1; z-index: 5;
+    }
+    .cue {
+      position: absolute; font-size: 1.15rem; font-weight: bold;
+      text-shadow: 0 2px 6px #000, 0 0 3px #000;
+      animation: cue-float 1.4s ease-out forwards;
+      white-space: nowrap;
+    }
+    @keyframes cue-float {
+      0%   { opacity: 0; transform: translateY(6px) scale(0.85); }
+      15%  { opacity: 1; transform: translateY(0) scale(1.08); }
+      30%  { transform: translateY(-4px) scale(1); }
+      100% { opacity: 0; transform: translateY(-38px) scale(1); }
+    }
+    .cue-hurt   { color: #ff6b6b; }
+    .cue-wound  { color: #e0885a; }
+    .cue-death  { color: #ff4444; font-size: 1.35rem; }
+    .cue-gold   { color: #ffd75e; }
+    .cue-supply { color: #e8c07a; }
+    .cue-gear   { color: #9fd6a0; }
+    .cue-magic  { color: #c39cf0; }
+    .cue-score  { color: #d8a53f; }
+    .cue-floor  { color: #9aa3b0; }
+
+    /* Accordion panels — the player sets how much detail they want */
+    .panel-head {
+      display: flex; align-items: center; gap: 0.4rem; cursor: pointer;
+      user-select: none; margin: 0;
+    }
+    .panel-head:hover { color: #e8c07a; }
+    .panel-caret { font-size: 0.7rem; color: #887755; transition: transform 0.15s; }
+    .panel.collapsed .panel-caret { transform: rotate(-90deg); }
+    .panel.collapsed .panel-body { display: none; }
+
+    /* A room reads as one line until you ask for more */
+    .story-entry.terse .story-predicament,
+    .story-entry.terse .story-deliberation,
+    .story-entry.terse .story-wound,
+    .story-entry.terse .story-fall,
+    .story-entry.terse .story-aside { display: none; }
+    .story-entry.terse .story-resolution {
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .story-room { cursor: pointer; }
+    .story-room:hover { color: #d8a53f; }
+    .story-entry.focused {
+      background: #191509; border-left: 2px solid #d8a53f; padding-left: 0.5rem;
+    }
     .story-entry { margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px dashed #2a2318; }
     .story-entry:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
     .story-room { color: #665; font-size: 0.7rem; margin-bottom: 0.3rem; text-transform: uppercase; letter-spacing: 0.08em; }
@@ -329,7 +383,10 @@
     <main>
       <div id="draft-container"></div>
       <div id="world-container" style="display: none;">
-        <canvas id="game-canvas" width="500" height="420"></canvas>
+        <div id="stage">
+          <canvas id="game-canvas" width="500" height="420"></canvas>
+          <div id="cue-layer"></div>
+        </div>
         <div class="panel" style="display:flex;gap:1.25rem;font-size:0.8rem;flex-wrap:wrap;">
           <span>Room: <strong id="room-count" style="color:#d8a53f;">0</strong></span>
           <span>Floor: <strong id="floor-count" style="color:#9aa3b0;" title="A dungeon goes down. Every floor is meaner than the one above it.">1</strong></span>
@@ -343,13 +400,16 @@
         </div>
       </div>
       <div id="ui-container" style="display: none;">
-        <div class="panel">
-          <h2>🎭 The Party</h2>
-          <div id="party-roster"></div>
-          <div id="party-tactics" class="party-tactics"></div>
+        <div class="panel" data-panel="party">
+          <h2 class="panel-head"><span class="panel-caret">▼</span>🎭 The Party</h2>
+          <div class="panel-body">
+            <div id="party-roster"></div>
+            <div id="party-tactics" class="party-tactics"></div>
+          </div>
         </div>
-        <div class="panel">
-          <h2>Controls</h2>
+        <div class="panel" data-panel="controls">
+          <h2 class="panel-head"><span class="panel-caret">▼</span>Controls</h2>
+          <div class="panel-body">
           <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
             <button id="pause-btn" disabled>Pause</button>
             <button id="step-btn" disabled>Step</button>
@@ -363,16 +423,25 @@
             <strong style="color:#a89868;">Step</strong> one room at a time, or set the
             <strong style="color:#a89868;">Speed</strong>. Watch <span style="color:#d8a53f;">The Chronicle</span> below for what unfolds.
           </div>
-        </div>
-        <div class="panel">
-          <h2>📖 The Chronicle</h2>
-          <div id="story-panel" class="story">
-            <div class="story-empty">The chronicle of this delve is not yet written…</div>
           </div>
         </div>
-        <div class="panel">
-          <h2>Log</h2>
-          <div id="debug-log" class="log"></div>
+        <div class="panel" data-panel="chronicle">
+          <h2 class="panel-head"><span class="panel-caret">▼</span>📖 The Chronicle
+            <label style="margin-left:auto;font-size:0.68rem;color:#887755;font-weight:normal;cursor:pointer;"
+                   title="Show every beat, or one line a room. Rooms expand when you click them either way."
+                   onclick="event.stopPropagation()">
+              <input type="checkbox" id="story-verbose" style="vertical-align:-1px;" /> full prose
+            </label>
+          </h2>
+          <div class="panel-body">
+            <div id="story-panel" class="story">
+              <div class="story-empty">The chronicle of this delve is not yet written…</div>
+            </div>
+          </div>
+        </div>
+        <div class="panel collapsed" data-panel="log">
+          <h2 class="panel-head"><span class="panel-caret">▼</span>Log</h2>
+          <div class="panel-body"><div id="debug-log" class="log"></div></div>
         </div>
       </div>
     </main>

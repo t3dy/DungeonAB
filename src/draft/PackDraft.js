@@ -127,18 +127,94 @@ export const PILOT_PERSONAS = [...DRAFT_PERSONAS, ...PILOT_TIERS];
 /* ------------------------------------------------------------------ */
 
 /**
- * Build one 9-card pack: 2 characters, 3 equipment, 2 spells,
- * 1 personality, 1 tactic. Duplicates across packs are allowed
- * (multiple copies exist "in the box") but not within a pack.
+ * Build one pack. **Difficulty sets its size** — easy 6, medium 5,
+ * hard 4, nightmare 3 — because difficulty should control *choice
+ * density*, not which cards exist: a nightmare player sees fewer
+ * options at a time but can still reach any card in the set, through
+ * the dungeon, the shop, or a later pack.
  *
- * Two characters is the guaranteed-coverage floor (CLAUDE.md: packs
- * always contain ≥2 characters, so no draft is dead). It used to be
- * three — but a party caps at four (Party.PARTY_CAP) while a drafter
- * makes 24 picks, so a third character per pack was measured forcing
- * ~5 picks per draft onto adventurers nobody could ever field. The
- * freed slot goes to equipment, which every party can use.
+ * Duplicates across packs are allowed (multiple copies exist "in the
+ * box") but not within a pack.
+ *
+ * Guaranteed coverage (CLAUDE.md 3) lives in `packCharacterFloor`.
  */
-export function buildPack(rng) {
+export const PACK_SIZES = { easy: 6, medium: 5, hard: 4, nightmare: 3 };
+
+/**
+ * The pool every drafter leaves the table with, whatever the
+ * difficulty. A drafter takes one card per pass and a pack of N is
+ * drained in N passes, so a seat's pool is `packSize × numRounds` —
+ * which means shrinking the pack shrinks the party unless the rounds
+ * grow to match.
+ *
+ * They must match, because the player was explicit about what
+ * difficulty is for: *"difficulty controls choice density, not whether
+ * certain cards are accessible."* A nightmare drafter sees three cards
+ * at a time instead of six — a harder decision, twice as often — and
+ * still walks away with a full pool. Difficulty lives in the monsters
+ * (`STAT_SCALE`), not in a starved party.
+ *
+ * Measured, not assumed: 3 rounds of 3-card packs put nightmare's win
+ * rate at 6% against a 45% target, and the calibrator's only way out
+ * was to make nightmare monsters *weaker than easy's*.
+ */
+export const TARGET_POOL = 24;
+
+/** Rounds that bring a pack of `size` up to TARGET_POOL cards. */
+export function roundsForPackSize(size) {
+  return Math.max(2, Math.round(TARGET_POOL / size));
+}
+
+/**
+ * How many adventurers a pack must contain, by round.
+ *
+ * The guaranteed-coverage rule (CLAUDE.md 3) protects one thing: **no
+ * dead drafts** — a drafter must never finish unable to field a party.
+ * Two per pack in the opening rounds settles that permanently: a party
+ * caps at four (`PARTY_CAP`) and the first two rounds put at least
+ * four adventurers in front of every seat, with the whole rest of the
+ * draft still to come.
+ *
+ * After that the floor drops to one, because a second guaranteed
+ * character stops being coverage and becomes a tax. Measured: with two
+ * in every pack, a nightmare drafter (3-card packs, 8 rounds) took
+ * **16 characters and 8 of everything else** — twelve adventurers who
+ * could never be fielded — against an easy drafter's 8 and 16. Their
+ * parties marched in with a quarter of the gear, and the curve read
+ * hard 42% / nightmare 17% against targets of 71 and 45.
+ *
+ * The floor is a floor, not a cap: the rotating slot deals characters
+ * too, so a late pack can still offer several.
+ */
+export function packCharacterFloor(round) {
+  return round < 2 ? 2 : 1;
+}
+
+/**
+ * How the slots are spent, given the size and the round's character
+ * floor. One slot is always left over for `ROTATING`, or the small
+ * packs would have no room for a personality or a tactic at all.
+ */
+function recipeFor(size, charFloor) {
+  const recipe = [['character', charFloor]];
+  let used = charFloor;
+  for (const [type, count] of [['equipment', size >= 6 ? 2 : 1], ['spell', 1]]) {
+    if (used + count > size - 1) break;
+    recipe.push([type, count]);
+    used += count;
+  }
+  return recipe;
+}
+
+/**
+ * The rotating extra slot. A four-card pack has no room for a
+ * personality or a tactic in its fixed recipe, but a draft that can
+ * never offer one is a draft with cards nobody can reach — so the last
+ * slot rotates by pack number instead of being dropped.
+ */
+const ROTATING = ['tactic', 'personality', 'spell', 'equipment'];
+
+export function buildPack(rng, size = 5, packNumber = 0, charFloor = 2) {
   const pack = [];
   const usedIds = new Set();
 
@@ -155,13 +231,17 @@ export function buildPack(rng) {
   };
 
   // The pool = base cards + every enabled content pack's
-  take(pooledCards(CARD_TYPES.CHARACTER), 2);
-  take(pooledCards(CARD_TYPES.EQUIPMENT), 3);
-  take(pooledCards(CARD_TYPES.SPELL), 2);
-  take(pooledCards(CARD_TYPES.PERSONALITY), 1);
-  // One tactic a pack: enough that a tree can be assembled across a
-  // draft, few enough that assembling one is a commitment
-  take(pooledCards(CARD_TYPES.TACTIC), 1);
+  for (const [type, count] of recipeFor(size, charFloor)) take(pooledCards(type), count);
+
+  // Fill any remaining slot from the rotation, so every card type is
+  // reachable at every pack size
+  let spin = packNumber;
+  while (pack.length < size) {
+    const before = pack.length;
+    take(pooledCards(ROTATING[spin % ROTATING.length]), 1);
+    spin++;
+    if (pack.length === before && spin > packNumber + ROTATING.length) break;
+  }
 
   return rng.shuffle(pack);
 }
@@ -399,12 +479,15 @@ export function aiPick(pack, persona, pool, rng) {
 export class PackDraft {
   /**
    * @param seed        Reproducible table seed
-   * @param numRounds   Packs per drafter (default 3)
-   * @param packSize    Cards per pack (default 8 from buildPack)
+   * @param numRounds   Packs per drafter — null derives it from packSize
+   *                    so every difficulty drafts the same pool size
+   * @param packSize    Cards per pack — set by difficulty (PACK_SIZES)
    */
-  constructor(seed = 'table', numRounds = 3) {
+  constructor(seed = 'table', numRounds = null, packSize = PACK_SIZES.medium) {
     this.rng = new SeededRandom(seed);
-    this.numRounds = numRounds;
+    this.numRounds = numRounds ?? roundsForPackSize(packSize);
+    this.packSize = packSize;
+    this.packsOpened = 0;
 
     // Seat 0 is the player; 1-3 are AI personas
     this.seats = [
@@ -427,7 +510,10 @@ export class PackDraft {
    * Crack a fresh pack for every seat
    */
   openNewPacks() {
-    this.packs = this.seats.map(() => buildPack(this.rng));
+    const floor = packCharacterFloor(this.round);
+    this.packs = this.seats.map((_, i) =>
+      buildPack(this.rng, this.packSize, this.packsOpened + i, floor));
+    this.packsOpened += this.seats.length;
     this.pickInRound = 0;
   }
 
