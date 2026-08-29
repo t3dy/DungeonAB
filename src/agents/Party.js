@@ -130,6 +130,11 @@ export class Party {
     // swap, or bought in town and not yet handed to anybody
     this.pack = [];
 
+    // Keys found in the dungeon, each opening one locked wing
+    // (world/DungeonGen.js lock and key). They do not leave with the
+    // party: a sexton's key is for one door in one crypt.
+    this.keys = [];
+
     // The lantern's reserve, spent on the march (see restStep)
     this.supply = STARTING_SUPPLY;
     this.marches = 0;
@@ -226,6 +231,18 @@ export class Party {
     return { moved: card, from, to: target, displaced };
   }
 
+  /** Pocket a key found in a room. Returns it, or null if already held. */
+  takeKey(key) {
+    if (!key || this.keys.some(k => k.wing === key.wing)) return null;
+    this.keys.push({ ...key });
+    return key;
+  }
+
+  /** Does anybody have the key to this wing? */
+  hasKey(wingId) {
+    return this.keys.some(k => k.wing === wingId);
+  }
+
   /** Take a piece off and leave it with the pack. */
   unequip(cardId) {
     for (const m of [...this.members, ...this.reserve]) {
@@ -312,6 +329,7 @@ export class Party {
       materials: this.materials,
       potions: this.potions.map(x => ({ ...x })),
       pack: this.pack.map(e => ({ ...e })),
+      keys: this.keys.map(k => ({ ...k })),
       supply: this.supply,
       spellsLearned: this.spellsLearned,
       poisonLinger: this.poisonLinger || 0,
@@ -355,6 +373,7 @@ export class Party {
     party.materials = saved.materials || 0;
     party.potions = (saved.potions || []).map(x => ({ ...x }));
     party.pack = (saved.pack || []).map(rehydrate).filter(Boolean);
+    party.keys = (saved.keys || []).map(k => ({ ...k }));
     party.supply = saved.supply ?? party.supply;
     party.spellsLearned = saved.spellsLearned || 0;
     party.poisonLinger = saved.poisonLinger || 0;

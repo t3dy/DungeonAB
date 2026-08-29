@@ -1427,3 +1427,53 @@ hire costs 42, a full heal about 7. Kit at 35–140 makes a town visit
 worth exactly one purchase, which is a decision. Buying stays a worse
 deal than drafting on purpose — the draft is the game, and the shop is
 the consolation for a draft that went badly.
+
+
+## 20. Lock and key, and the gate that was not a gate (2026-08-28)
+
+**NARR:** The brief was the dungeon canon — what a tabletop dungeon,
+a Poe story, and a roguelike each expect a dungeon to have. Writing
+`DUNGEON_CANON.md` as an audit rather than a wish list was the useful
+part: three columns, and the gaps stop being a mood and become a list.
+Most of the canon is already here. What was missing and cheap was
+**lock and key**, which the roadmap's own research names next.
+
+### The key on the critical path is not a lock
+
+**TCG:** The first cut worked and meant nothing. To guarantee a locked
+wing was always solvable I put its key on the spine before the door —
+and the spine is the *critical path*, the rooms the party walks by
+definition. So the party picked the key up on the way past every single
+time. Instrumented: **93 of 98 doors opened with the key.** The rogue
+had nothing to do, the prybar had nothing to do, Knock had nothing to
+do, and no door was ever refused.
+
+That is the same failure as a card that only unlocks: a gate that
+cannot say no is decoration. And I would not have seen it from the
+prose — every transcript read beautifully, because opening a door with
+its key is a perfectly good beat. It took counting.
+
+**NARR:** So four locks in ten now have **no key in the dungeon at
+all**. The wing is optional loot; it is allowed to stay shut. That one
+change turned four dead alternatives into live ones — key 57, picked
+17, refused 12, Knock 5, forced 4 — and gave the shut door back its
+meaning.
+
+### Two of the four ways in are loud
+
+The interesting part of the design is that the ways through are not
+interchangeable. A key is silent. A rogue is silent. **Knock** and a
+**shoulder** are loud, and set the same `alarmed` flag a tripped bell
+does, so the next monster fights forewarned — and a bare-handed force
+costs health, because a door is not a monster and shouldering one
+hurts. The party without a key gets in; it just does not get in for
+free.
+
+### What the conservation gate caught, again
+
+Adding `room.key` broke `tests/archive` within a minute: the archive
+serializes an enumerated list of room fields, and a replayed dungeon
+would have locked a wing whose key no longer existed anywhere in it.
+That gate has now caught four fields in four sessions — trapType,
+floor, wing, key — which is a good argument for writing the general
+check instead of the specific one.

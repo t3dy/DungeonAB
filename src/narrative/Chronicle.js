@@ -65,6 +65,7 @@ export function snapshotState(sim) {
     wounds: p.members.reduce((s, m) => s + m.wounds, 0),
     equipment: p.members.reduce((s, m) => s + m.equipment.length, 0),
     weaponMods: p.members.reduce((s, m) => s + m.weaponMods.length, 0),
+    keys: p.keys.length,
     roomsCleared: sim.roomsCleared,
     // Which floor the party is standing on. A descent is a state change
     // the player cares about (everything below is scaled harder), so it
@@ -166,6 +167,11 @@ const FIELDS = {
     icon: '⚗️', label: 'weapon coatings', salience: SALIENCE.NOTABLE, threshold: 1,
     up: n => `${n} blade${n > 1 ? 's' : ''} coated at the bench.`,
     down: n => `${n} coating${n > 1 ? 's wear' : ' wears'} off.`,
+  },
+  keys: {
+    icon: '🗝️', label: 'keys', salience: SALIENCE.NOTABLE,
+    up: n => `${n === 1 ? 'A key' : `${n} keys`} taken up. Somewhere below there is a door for it.`,
+    down: n => `${n === 1 ? 'A key' : `${n} keys`} gone from the ring.`,
   },
   floor: {
     icon: '🪜', label: 'floor', salience: SALIENCE.BEAT,

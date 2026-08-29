@@ -43,11 +43,11 @@ From the game design library (`E:\pdf\Game Design`):
 | Vaults (rich hidden rooms) | NetHack, DCSS | 🔨 **v2 (this phase)** |
 | Branches / optional areas | DCSS, Spelunky off-path | 🔨 **v2 (this phase)** |
 | Meta-progression / archives | modern roguelites | 🔨 **Dungeon Archive (this phase)** |
-| Shops / town | Spelunky, roguelites | ✅ town between delves |
+| Shops / town | Spelunky, roguelites | ✅ town between delves; **v4.2** adds the quartermaster's stock |
 | Risk wagers | DCSS Zig, Pact-likes | ✅ conditions + hex exchange |
 | Item identification | NetHack, DCSS | 🕐 Phase 5 (unidentified potions/scrolls) |
-| Lock & key | Zelda-likes, BSP partitions | 🕐 Phase 5 |
-| Multi-floor stairs | all | 🕐 Phase 5 (campaign depth is the current analogue) |
+| Lock & key | Zelda-likes, BSP partitions | ✅ **v4.3** — locked wings, keys on the spine, four ways through |
+| Multi-floor stairs | all | ✅ **v4.0** — two or three floors, stairs, each floor meaner |
 | Character classes/party | ADOM, ToME | ✅ five classes, personalities |
 
 ## Phases

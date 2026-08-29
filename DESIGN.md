@@ -389,6 +389,27 @@ Placement walks the spine outward, one axis at a time, rejecting any position wh
 
 **Trapdoors** are the vertical shortcut: a shaft that skips 2–4 rooms of the spine (never the boss) for a fall. Found ones are a choice — the Craven take them, the Covetous refuse to skip loot, a battered party takes any road to the end; roping down halves the drop. Unfound ones are an accident that costs the full fall. Either way the skipped rooms' loot *and* danger are both forgone.
 
+### Lock and key
+Some open wings are **locked**. The structural argument is
+Shaker/Togelius/Nelson ch.3 (Fig. 3.5): a subtree with a single
+entrance can be sealed and its key placed elsewhere, which turns a
+branch from *optional loot* into *a question the dungeon asked
+earlier*. Our wings are exactly those subtrees.
+
+Four ways through, in the order a party tries them: the **key** (found
+on the spine, pocketed on the way past), a **rogue** picking it, a
+**Knock** working, or a **shoulder** — with a prybar if anybody drafted
+one. The last two are loud: they set the same `alarmed` flag a tripped
+bell does, so the next monster fights forewarned, and a bare-handed
+force costs health.
+
+**Four locks in ten have no key in the dungeon at all**, and that is the
+number that makes the mechanic work. The first cut guaranteed
+solvability by always putting the key on the critical path — which is
+*mandatory*, so the party walked past it by construction and **93 of 98
+doors opened with the key**. A lock nothing can refuse is not a lock.
+Measured now: key 57, picked 17, refused 12, Knock 5, forced 4.
+
 ### Room Features (what's *in* a chamber)
 A room is no longer one type and one decision. Every room big enough to
 hold furniture (≥18 tiles; a vault-sized cell holds none) is furnished

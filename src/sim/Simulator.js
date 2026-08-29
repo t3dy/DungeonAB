@@ -15,12 +15,13 @@ import { Chronicle, snapshotState, diffEvents, SALIENCE } from '../narrative/Chr
 import { CLASSES } from '../game/Cards.js';
 import {
   getRoomOptions, decideRoomAction, resolveRoomAction,
-  detectSecretDoor, decideDetour, wingAppeal, detectTrapdoor, decideTrapdoor,
+  detectSecretDoor, decideDetour, wingAppeal, openLockedWing,
+  detectTrapdoor, decideTrapdoor,
 } from '../encounters/RoomEncounters.js';
 import {
   composePredicament, composeDeliberation, composeResolution,
   composeWipe, composeVictory, composeFall,
-  composeSecretFound, composeDetour, composeTrapdoor,
+  composeSecretFound, composeDetour, composeTrapdoor, composeKeyFound, composeLockedWing,
   composeSupply, composeWound, composeDormant, composeTactics, composeProvision,
 } from '../narrative/Narrator.js';
 import { resetBarks } from '../narrative/Barks.js';
@@ -273,6 +274,18 @@ export class Simulator {
         : supplyLine,
     };
 
+    // A key on a hook, a belt, or a body. Finding it is not a decision
+    // — carrying it to the right door is (world/DungeonGen.js).
+    if (room.key && this.party.isAlive()) {
+      const took = this.party.takeKey(room.key);
+      if (took) {
+        const finder = this.party.living()[0]?.name || 'Somebody';
+        this.lastNarration.aside = [this.lastNarration.aside, composeKeyFound(took, finder)]
+          .filter(Boolean).join(' ');
+        this.addLog(`🗝️ ${took.name} found.`);
+      }
+    }
+
     // A side passage? Secret doors must be noticed first; open ones
     // are a party vote. Taking one splices its rooms into the march.
     const branch = this.party.isAlive() ? this.dungeon.branchAt(roomIdx) : null;
@@ -286,6 +299,28 @@ export class Simulator {
           this.addLog('🕳️ A hidden door!');
         }
         // Unnoticed secrets stay secret — the branch may be found on a retreat pass
+      } else if (branch.locked) {
+        // Lock and key: the wing was sealed and the key was somewhere
+        // back up the spine. Four ways through, and two of them are loud
+        // (RoomEncounters.openLockedWing).
+        branch.consumed = true;
+        const opened = openLockedWing(this.party, branch.wing);
+        if (opened.noisy) this.party.alarmed = true;   // the dungeon heard that
+        if (opened.opened) {
+          const going = decideDetour(this.party, undefined, branch.wing);
+          if (going) this.path.splice(this.roomIndex + 1, 0, ...branch.rooms);
+          const appeal = wingAppeal(this.party, branch.wing);
+          this.lastNarration.aside = [
+            this.lastNarration.aside,
+            composeLockedWing(branch, opened),
+            composeDetour(going, branch, going ? appeal.advocate : null),
+          ].filter(Boolean).join(' ');
+        } else {
+          this.lastNarration.aside = [
+            this.lastNarration.aside,
+            composeLockedWing(branch, opened),
+          ].filter(Boolean).join(' ');
+        }
       } else {
         branch.consumed = true;
         const going = decideDetour(this.party, undefined, branch.wing);

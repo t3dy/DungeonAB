@@ -60,31 +60,36 @@ export const MAX_FLOORS = 3;
  */
 export const WINGS = {
   crypt: {
-    id: 'crypt', name: 'the burial wing',
+    id: 'crypt',
+    door: 'a barred grille, its bar on the far side', keyName: 'the sexton\'s key', name: 'the burial wing',
     tell: 'burial niches, most of them open',
     body: ['monster', 'trap', 'shrine'],
     payoff: 'treasure',
   },
   works: {
-    id: 'works', name: 'the workshop wing',
+    id: 'works',
+    door: 'a workshop door with a lock cast into it', keyName: 'a brass workshop key', name: 'the workshop wing',
     tell: 'cold furnaces and racked glassware',
     body: ['materials', 'lab', 'trap'],
     payoff: 'materials',
   },
   archive: {
-    id: 'archive', name: 'the archive wing',
+    id: 'archive',
+    door: 'a reading-room door, locked since the last audit', keyName: 'the archivist\'s key', name: 'the archive wing',
     tell: 'shelving stacked to the ceiling, half of it collapsed',
     body: ['library', 'trap', 'monster'],
     payoff: 'library',
   },
   barracks: {
-    id: 'barracks', name: 'the barracks wing',
+    id: 'barracks',
+    door: 'a guardroom door with a drop-bar', keyName: 'the watch-captain\'s key', name: 'the barracks wing',
     tell: 'bunkrooms and a picked-over weapon rack',
     body: ['monster', 'monster', 'corridor'],
     payoff: 'treasure',
   },
   sump: {
-    id: 'sump', name: 'the flooded wing',
+    id: 'sump',
+    door: 'a sluice gate, wound shut', keyName: 'a sluice crank', name: 'the flooded wing',
     tell: 'a floor that slopes down into standing water',
     body: ['disaster', 'monster', 'trap'],
     payoff: 'treasure',
@@ -445,9 +450,37 @@ export function generateDungeon(seed, difficulty = 'medium', opts = {}) {
     }
 
     if (branchRooms.length > 0) {
+      // Lock and key (PCG ch.3, Fig. 3.5): a subtree with a single
+      // entrance can be locked and its key placed elsewhere, which
+      // turns a branch from optional loot into a question the dungeon
+      // asked earlier. Only open wings lock — a secret wing already
+      // has a lock, and it is the door itself.
+      const lockable = !secret && junction > 2;
+      const locked = lockable && rng.next() < 0.55;
+      let keyRoom = null;
+      if (locked && rng.next() < 0.6) {
+        // Six times in ten the key is on the spine before the door, so
+        // the party picks it up on the way past. It must never be
+        // *behind* the door it opens — that is the one arrangement
+        // nothing can solve.
+        //
+        // The other four times there is no key in the dungeon at all,
+        // and the door has to be picked, Knocked, or shouldered. With a
+        // key on the critical path every time, 93 of 98 doors opened
+        // with it and the lock asked nobody anything (tools/census.mjs).
+        const before = spine.slice(1, junction).filter(i => rooms[i].type !== ROOM_TYPES.STAIRS);
+        if (before.length > 0) {
+          keyRoom = before[Math.floor(rng.next() * before.length)];
+          rooms[keyRoom].key = { wing: wing.id, name: wing.keyName };
+        }
+      }
       branches.push({
         junction, rooms: branchRooms, secret, consumed: false,
         wing: wing.id, name: wing.name, tell: wing.tell,
+        locked,
+        keyRoom,
+        keyName: wing.keyName,
+        door: wing.door,
       });
     }
   }
@@ -783,6 +816,9 @@ export function serializeDungeon(dungeon) {
       // A wing's identity is in its writing, so it has to survive the
       // archive or a replayed detour is an anonymous side passage
       ...(r.wing ? { wing: r.wing } : {}),
+      // ...and the key on the hook, or a replayed dungeon locks a wing
+      // whose key no longer exists anywhere in it
+      ...(r.key ? { key: { ...r.key } } : {}),
       secret: !!r.secret,
       ...(r.monster ? { monster: { ...r.monster } } : {}),
       ...(r.gold !== undefined ? { gold: r.gold } : {}),
