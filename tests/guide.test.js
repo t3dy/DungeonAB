@@ -5,7 +5,8 @@
  */
 
 import { strict as assert } from 'assert';
-import { ROOM_HELP, CARD_TYPE_HELP, CONTROL_HELP, describeTickEvents } from '../src/ui/GameGuide.js';
+import { ROOM_HELP, ROOM_TELL, CARD_TYPE_HELP, CONTROL_HELP, describeTickEvents } from '../src/ui/GameGuide.js';
+import { lintLine } from '../src/narrative/Prose.js';
 import { ROOM_TYPES } from '../src/world/DungeonGen.js';
 import { CARD_TYPES } from '../src/game/Cards.js';
 
@@ -40,6 +41,32 @@ function stateWith({ members, gold = 0, spellsLearned = 0, room = 'corridor' }) 
 }
 const hero = (name, alive = true) => ({ name, alive });
 
+describe('The first-visit tell', () => {
+  test('every room type has one, and it fits on the screen', () => {
+    for (const type of Object.values(ROOM_TYPES)) {
+      const tell = ROOM_TELL[type];
+      assert.ok(tell, `${type} has a tell`);
+      const words = tell.trim().split(/\s+/).length;
+      assert.ok(words <= 14, `${type}'s tell is a glance, not a paragraph (${words} words)`);
+    }
+  });
+
+  test('a tell is shorter than the reference it stands in for', () => {
+    // If the tell were as long as the help, moving it onto the map
+    // would have solved nothing — which is the whole point of it.
+    for (const type of Object.values(ROOM_TYPES)) {
+      assert.ok(ROOM_TELL[type].length < ROOM_HELP[type].length,
+        `${type}: the tell should be the short form`);
+    }
+  });
+
+  test('the tells pass house style', () => {
+    const findings = Object.entries(ROOM_TELL)
+      .flatMap(([type, text]) => lintLine(text, { label: type }));
+    assert.deepEqual(findings, [], findings.map(f => `${f.label}: ${f.why}`).join('\n'));
+  });
+});
+
 describe('Event detection', () => {
   test('a null previous state yields no events (first tick is quiet)', () => {
     const curr = stateWith({ members: [hero('Brand')] });
@@ -65,27 +92,17 @@ describe('Event detection', () => {
       'no repeat once already in the chamber');
   });
 
-  test('learning spells is announced with the count', () => {
-    const prev = stateWith({ members: [hero('Yarrow')], spellsLearned: 1 });
-    const curr = stateWith({ members: [hero('Yarrow')], spellsLearned: 3 });
-    const spell = describeTickEvents(prev, curr).find(e => e.kind === 'spell');
-    assert.ok(spell);
-    assert.ok(spell.text.includes('2'), 'reports the two new workings');
-  });
-
-  test('a windfall is loud; loose change is quiet', () => {
+  test('a number the map already floats is not also said in words', () => {
+    // The v4.4 division of labour: cues carry numbers (ui/Cues.js reads
+    // them off the Chronicle diff), toasts carry what a number cannot.
+    // Gold and the grimoire's count were being reported twice, which is
+    // half of why a playtester called the game text-heavy.
     const base = [hero('Silin')];
-    const windfall = describeTickEvents(
-      stateWith({ members: base, gold: 0 }),
-      stateWith({ members: base, gold: 40 }),
+    const events = describeTickEvents(
+      stateWith({ members: base, gold: 0, spellsLearned: 0 }),
+      stateWith({ members: base, gold: 400, spellsLearned: 3 }),
     );
-    assert.ok(windfall.some(e => e.kind === 'gold'));
-
-    const trickle = describeTickEvents(
-      stateWith({ members: base, gold: 0 }),
-      stateWith({ members: base, gold: 8 }),
-    );
-    assert.ok(!trickle.some(e => e.kind === 'gold'), 'small gold stays quiet');
+    assert.deepEqual(events, [], 'a pure quantity is the cue layer\'s job');
   });
 
   test('several things can happen in one tick', () => {
@@ -94,7 +111,6 @@ describe('Event detection', () => {
     const kinds = describeTickEvents(prev, curr).map(e => e.kind);
     assert.ok(kinds.includes('death'));
     assert.ok(kinds.includes('boss'));
-    assert.ok(kinds.includes('gold'));
   });
 });
 

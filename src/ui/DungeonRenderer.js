@@ -11,6 +11,30 @@ export class DungeonRenderer {
   constructor(canvasId) {
     this.canvas = document.getElementById(canvasId);
     this.ctx = this.canvas.getContext('2d');
+    // Rectangles in canvas pixels, remembered from the last frame, so a
+    // click can be answered without re-deriving the layout. The iso
+    // renderer raycasts for the same thing (IsoDungeonRenderer.pickRoom)
+    this.hitBoxes = [];
+    this.onRoomClick = null;
+    this.canvas.addEventListener('click', e => this.pickRoom(e));
+    this.canvas.style.cursor = 'pointer';
+  }
+
+  /** Which room did they click? Topmost hit wins. */
+  pickRoom(event) {
+    if (!this.onRoomClick || this.hitBoxes.length === 0) return null;
+    const rect = this.canvas.getBoundingClientRect();
+    if (!rect.width || !rect.height) return null;
+    const x = (event.clientX - rect.left) * (this.canvas.width / rect.width);
+    const y = (event.clientY - rect.top) * (this.canvas.height / rect.height);
+    for (let i = this.hitBoxes.length - 1; i >= 0; i--) {
+      const b = this.hitBoxes[i];
+      if (x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h) {
+        this.onRoomClick(b.index);
+        return b.index;
+      }
+    }
+    return null;
   }
 
   render(state) {
@@ -73,11 +97,13 @@ export class DungeonRenderer {
     ctx.setLineDash([]);
 
     // Rooms, drawn at their real size
+    this.hitBoxes = [];
     for (let i = 0; i < rooms.length; i++) {
       const room = rooms[i];
       if (!onFloor(room) || (room.secret && !room.discovered)) continue;
       const rw = Math.max(6, (room.w || 4) * s);
       const rh = Math.max(6, (room.h || 4) * s);
+      this.hitBoxes.push({ index: room.index ?? i, x: px(room) - rw / 2, y: py(room) - rh / 2, w: rw, h: rh });
       const x = px(room);
       const y = py(room);
       const isCurrent = room === current;

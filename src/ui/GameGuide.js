@@ -5,12 +5,47 @@
  *   1. ROOM_HELP — a one-line explanation of each room type, shown
  *      the first time the party walks into one.
  *   2. describeTickEvents — diff two simulator states and surface the
- *      notable things that just happened (a hero falls, the boss
- *      chamber opens, a spell is learned, a windfall of gold), so the
- *      player is never left wondering what changed.
+ *      notable things that just happened, so the player is never left
+ *      wondering what changed.
+ *
+ * On what belongs in a toast (v4.4). Numbers float over the map now
+ * (ui/Cues.js), read straight off the Chronicle diff, and a toast that
+ * repeats one is the thing a playtester was complaining about when they
+ * said the game was *"a little text heavy"* — the windfall of gold and
+ * the count of spells learned were being said twice, once as ✨ +54 and
+ * once as a sentence. A toast is for what a floating number cannot
+ * carry: a **name** (which trophy), or an event with no number at all
+ * (a hero falls, the boss chamber opens).
  */
 
 import { ROOM_TYPES } from '../world/DungeonGen.js';
+
+/**
+ * The first-visit tell: one line, on the screen, while the party is
+ * standing in the room.
+ *
+ * `ROOM_HELP` below is the reference — it belongs in the How to Play
+ * card, where a player has chosen to read. Putting the same paragraph
+ * on the map was most of what a playtester meant by *"a little text
+ * heavy"*: three of them covered the delve they were trying to watch.
+ * The tell says what the room is for in a glance; the paragraph is a
+ * click away and stays exact.
+ */
+export const ROOM_TELL = {
+  [ROOM_TYPES.ENTRANCE]: 'The way in.',
+  [ROOM_TYPES.CORRIDOR]: 'Passage — a breath between dangers.',
+  [ROOM_TYPES.MONSTER]: 'Something holds this room. Fight it, slip past it, or talk.',
+  [ROOM_TYPES.TRAP]: 'A trap. Disarm it, go around, or take the hit.',
+  [ROOM_TYPES.TREASURE]: 'Treasure — or a mimic wearing its shape.',
+  [ROOM_TYPES.LIBRARY]: 'Shelves. The party can leave knowing a working it did not.',
+  [ROOM_TYPES.SHRINE]: 'A shrine. Rest here, or strip the gold and answer for it.',
+  [ROOM_TYPES.LAB]: 'A bench. With materials, something can be brewed.',
+  [ROOM_TYPES.MATERIALS]: 'Herbs and salts, if anyone gathers them.',
+  [ROOM_TYPES.DISASTER]: 'The dungeon itself turns on them.',
+  [ROOM_TYPES.BOSS]: 'The boss chamber. Everything drafted, tested at once.',
+  [ROOM_TYPES.STAIRS]: 'A stair down. Meaner below, and no way back up.',
+  [ROOM_TYPES.VAULT]: 'A vault behind a secret door. Nobody was meant to find this.',
+};
 
 /* First-visit explanations — what this kind of room means for the party */
 export const ROOM_HELP = {
@@ -91,24 +126,11 @@ export function describeTickEvents(prev, curr) {
     events.push({ icon: '🐉', kind: 'boss', text: 'The boss chamber — everything you drafted, tested at once.' });
   }
 
-  // The grimoire grows
-  if (prevParty && currParty && currParty.spellsLearned > prevParty.spellsLearned) {
-    const n = currParty.spellsLearned - prevParty.spellsLearned;
-    events.push({ icon: '📖', kind: 'spell', text: `The grimoire grows: ${n} new working${n > 1 ? 's' : ''} learned.` });
-  }
-
-  // A trophy claimed from a kill (Drops) — name it while it's warm
+  // A trophy claimed from a kill (Drops) — the cue can only float 🏆+1,
+  // and the whole point of a trophy is which one it is
   if (prevParty?.trophies && currParty?.trophies?.length > prevParty.trophies.length) {
     const latest = currParty.trophies[currParty.trophies.length - 1];
     events.push({ icon: latest.icon, kind: 'trophy', text: `Claimed from the kill: ${latest.name}.` });
-  }
-
-  // A windfall of gold (small pickups stay quiet)
-  if (prevParty && currParty) {
-    const gained = currParty.gold - prevParty.gold;
-    if (gained >= 25) {
-      events.push({ icon: '💰', kind: 'gold', text: `A windfall: +${gained} gold.` });
-    }
   }
 
   return events;

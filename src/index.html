@@ -294,15 +294,12 @@
 
     /* Event toasts */
     #toast-stack {
-      /* Over the map, not over the party. Centred on the viewport, the
-         stack sat on top of the roster and the tactics chips — the two
-         panels a player checks while the toasts are still up. */
-      position: fixed; top: 4.5rem; left: 1.25rem;
-      z-index: 150; display: flex; flex-direction: column; gap: 0.4rem;
-      pointer-events: none; width: min(420px, 46vw);
-    }
-    @media (max-width: 900px) {
-      #toast-stack { left: 50%; transform: translateX(-50%); width: min(420px, 92vw); }
+      /* Under the map, not on it (v4.4). It floated over the canvas at
+         top-left, which is where the delve happens and where the cues
+         now float: three toasts covered the party, the room and every
+         number rising off it. The column below the map was empty. */
+      display: flex; flex-direction: column; gap: 0.4rem;
+      pointer-events: none; min-height: 0;
     }
     .toast {
       background: #1a1610; border: 1px solid #d8a53f; border-radius: 6px;
@@ -365,7 +362,7 @@
       <h1>⚔️ DungeonAB</h1>
       <p>Draft the party. Delve the dungeon. Watch the story.
         <span style="color:#665;">·</span>
-        <span style="color:#8a7a55;">v4.3</span>
+        <span style="color:#8a7a55;">v4.4</span>
         <span style="color:#665;">·</span>
         <a href="v1/" style="color:#665;text-decoration:underline;" title="The first release: the original campaign loop">play v1.0</a>
         <span style="color:#665;">·</span>
@@ -398,6 +395,8 @@
           <span>Trophies: <strong id="trophies-count" style="color:#d88a3f;" title="">0</strong></span>
           <span id="status-badges" style="color:#e08080;"></span>
         </div>
+        <!-- Onscreen event messages: what a floating number cannot say -->
+        <div id="toast-stack"></div>
       </div>
       <div id="ui-container" style="display: none;">
         <div class="panel" data-panel="party">
@@ -450,9 +449,6 @@
   <div id="gameover-display"></div>
   <button id="show-results-btn">🏆 Show Results</button>
 
-  <!-- Onscreen event messages -->
-  <div id="toast-stack"></div>
-
   <!-- How-to-play overlay -->
   <div id="help-overlay">
     <div class="help-card">
@@ -496,7 +492,9 @@
 
       <div class="help-step">
         <h3>Watching the Delve</h3>
-        <p><strong>The Chronicle</strong> narrates every room in three beats. Toasts flag big moments — a hero falling, the boss chamber, a spell learned. Use the controls to pause, step, or change speed.</p>
+        <p><strong>Numbers float over the map</strong> as the party earns or pays them — damage taken, gold found, a trophy claimed, a floor descended. They come straight off the run's own record, so anything that moves shows up.</p>
+        <p><strong>The Chronicle</strong> runs terse: a line a room. Click a room's heading — or the room itself on the map — to open its full account, or tick <strong>full prose</strong> to read every delve in three beats. Toasts under the map carry what a number cannot: who fell, what the trophy was called, what kind of room this is the first time you meet one.</p>
+        <p>Every panel folds. Click a heading to collapse it, and the game remembers next time. Use the controls to pause, step, or change speed.</p>
       </div>
 
       <button id="help-close-btn">Got it — let's draft</button>

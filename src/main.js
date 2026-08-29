@@ -21,7 +21,7 @@ import { serializeDungeon } from './world/DungeonGen.js';
 import { setupArchive } from './ui/ArchiveUI.js';
 import { setupCardEditor, loadPlayerPacks } from './ui/CardEditorUI.js';
 import { installAlchemyPack } from './packs/alchemyPack.js';
-import { ROOM_HELP, CARD_TYPE_HELP, ATTRITION_HELP, describeTickEvents } from './ui/GameGuide.js';
+import { ROOM_HELP, ROOM_TELL, CARD_TYPE_HELP, ATTRITION_HELP, describeTickEvents } from './ui/GameGuide.js';
 import { composeMend } from './narrative/Narrator.js';
 import { ChronicleLibrary, chronicleFilename } from './game/Chronicles.js';
 import { FORMATIONS } from './agents/Formation.js';
@@ -338,9 +338,11 @@ function showToast(icon, text, kind = '') {
  */
 function announceEvents(prevState, state) {
   const roomType = state.narration?.room;
-  if (roomType && appState.seenRoomTypes && !appState.seenRoomTypes.has(roomType) && ROOM_HELP[roomType]) {
+  if (roomType && appState.seenRoomTypes && !appState.seenRoomTypes.has(roomType) && ROOM_TELL[roomType]) {
     appState.seenRoomTypes.add(roomType);
-    showToast(state.narration.icon || 'ℹ️', ROOM_HELP[roomType], 'room');
+    // The one-line tell, not the reference paragraph: the full ROOM_HELP
+    // lives in How to Play, where a player has chosen to read it
+    showToast(state.narration.icon || 'ℹ️', ROOM_TELL[roomType], 'room');
   }
   for (const ev of describeTickEvents(prevState, state)) {
     showToast(ev.icon, ev.text, ev.kind);
@@ -458,6 +460,10 @@ function beginDelve(sim) {
       console.warn('WebGL unavailable, using 2D map renderer:', e);
       appState.renderer = new DungeonRenderer('game-canvas');
     }
+    // The map is the index into the story. The panel runs terse, and a
+    // click on a room opens that room's full account of itself — which
+    // is the whole reason the terse mode is safe to default to.
+    appState.renderer.onRoomClick = index => focusRoomStory(index);
   }
 
   const state = sim.getState();
@@ -1162,5 +1168,12 @@ function escapeHtml(text) {
 function placeLabel(place) {
   return ['🥇', '🥈', '🥉'][place - 1] || `${place}.`;
 }
+
+/**
+ * One handle on the running game, for the browser console and for the
+ * end-to-end suite. Read-only in spirit: the game never reads it back,
+ * so nothing here can change how a delve goes.
+ */
+window.dungeonAB = appState;
 
 window.addEventListener('DOMContentLoaded', init);

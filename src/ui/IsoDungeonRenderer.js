@@ -120,6 +120,12 @@ export class IsoDungeonRenderer {
     this.scene.add(this.staticGroup, this.iconGroup, this.occupantGroup, this.partyGroup, this.fxGroup);
 
     this.spriteMaterials = new Map();
+    // Floors, tagged with their room index, for picking
+    this.pickTargets = [];
+    this.raycaster = new THREE.Raycaster();
+    this.onRoomClick = null;
+    this.canvas.addEventListener('click', e => this.pickRoom(e));
+    this.canvas.style.cursor = 'pointer';
     this.builtKey = null;
     this.roomPositions = [];
     this.clock = new THREE.Clock();
@@ -320,6 +326,35 @@ export class IsoDungeonRenderer {
   }
 
   /**
+   * Which room did they click?
+   *
+   * A playtester asked for it in one line — *"clicking a room on the
+   * map pulls up the relevant log"* — and it is the cheapest way to
+   * make a long delve readable: the story panel runs terse by default,
+   * and the map is the index into it.
+   *
+   * Raycast rather than arithmetic, because the floors are stacked by
+   * depth: a room two levels down is drawn two drops below, and a flat
+   * ground-plane projection would hand back the room above it.
+   */
+  pickRoom(event) {
+    if (!this.onRoomClick || !this.camera || this.pickTargets.length === 0) return null;
+    const rect = this.canvas.getBoundingClientRect();
+    if (!rect.width || !rect.height) return null;
+    const ndc = new THREE.Vector2(
+      ((event.clientX - rect.left) / rect.width) * 2 - 1,
+      -((event.clientY - rect.top) / rect.height) * 2 + 1,
+    );
+    this.raycaster.setFromCamera(ndc, this.camera);
+    const hits = this.raycaster.intersectObjects(this.pickTargets, false);
+    if (hits.length === 0) return null;
+    const index = hits[0].object.userData.roomIndex;
+    if (index === undefined) return null;
+    this.onRoomClick(index);
+    return index;
+  }
+
+  /**
    * A sprite showing an emoji, sized like a tile sprite. The marker for
    * anything the Tiny Dungeon sheet has no art for.
    */
@@ -398,6 +433,7 @@ export class IsoDungeonRenderer {
 
   buildDungeon(rooms, edges = null, themeId = 'delve', trapdoors = []) {
     this.staticGroup.clear();
+    this.pickTargets = [];
     this.roomPositions = rooms.map(r => this.roomWorldPos(r));
 
     const palette = THEME_PALETTES[themeId] || DEFAULT_PALETTE;
@@ -441,7 +477,11 @@ export class IsoDungeonRenderer {
       }
       floor.position.set(x, fy, z);
       floor.receiveShadow = true;
+      // The floor is the room's hit target: a click lands on the slab
+      // and the panel opens that room's account of itself (onRoomClick)
+      floor.userData.roomIndex = room.index;
       this.staticGroup.add(floor);
+      this.pickTargets.push(floor);
 
       // A cavern's edges break up: slabs of fallen rock at the corners
       if (room.shape === 'cavern') {

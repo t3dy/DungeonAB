@@ -17,6 +17,9 @@
  * LEDGER ones stay in the log where they belong.
  */
 
+/** More than a handful of numbers at once is noise again. */
+const MAX_CUES = 5;
+
 /** Fields worth a number over the map, and how to phrase the number. */
 const CUE_STYLE = {
   health: { good: false, fmt: n => `${n}`, cls: 'cue-hurt' },
@@ -43,6 +46,35 @@ function tone(field, delta) {
   return { ...style, gain };
 }
 
+/**
+ * Which of a tick's changes float, and what each one reads as.
+ *
+ * Separate from the drawing so the decision can be tested without a
+ * browser: what floats is a design question (numbers over the map,
+ * ledger lines in the log), and the DOM is only how it is shown.
+ *
+ * Collected as a batch rather than popped one at a time, because the
+ * cues of one tick have to know how many of them there are or they land
+ * on top of each other — the first cut scattered them at random and two
+ * cues in one tick read as a single garbled number over the map.
+ */
+export function selectCues(events) {
+  const batch = [];
+  for (const event of events || []) {
+    if (event.salience === 'ledger') continue;        // the log's business
+    const style = tone(event.field, event.delta);
+    if (!style || !event.delta) continue;
+    const sign = event.delta > 0 ? '+' : '−';
+    batch.push({
+      field: event.field,
+      text: `${event.icon} ${sign}${style.fmt(Math.abs(event.delta))}`,
+      cls: style.cls,
+    });
+    if (batch.length >= MAX_CUES) break;   // a screenful of numbers is noise again
+  }
+  return batch;
+}
+
 export class CueLayer {
   /**
    * @param hostId  id of the element the cues float over (the canvas's
@@ -63,30 +95,28 @@ export class CueLayer {
     if (!this.host || !events || turn === this.lastTurn) return 0;
     this.lastTurn = turn;
 
-    let shown = 0;
-    let stagger = 0;
-    for (const event of events) {
-      if (event.salience === 'ledger') continue;      // the log's business
-      const style = tone(event.field, event.delta);
-      if (!style || !event.delta) continue;
-      const sign = event.delta > 0 ? '+' : '−';
-      this.pop(`${event.icon} ${sign}${style.fmt(Math.abs(event.delta))}`, style.cls, stagger);
-      stagger += 90;
-      shown++;
-      if (shown >= 5) break;      // a screenful of numbers is noise again
-    }
-    return shown;
+    const batch = selectCues(events);
+    batch.forEach((cue, i) => this.pop(cue.text, cue.cls, i * 90, i, batch.length));
+    return batch.length;
   }
 
-  /** One floating cue: rises, fades, removes itself. */
-  pop(text, cls = '', delay = 0) {
+  /**
+   * One floating cue: rises, fades, removes itself.
+   *
+   * `lane` of `lanes` places it. Cues from one tick are dealt into
+   * stacked rows around the middle of the map so that five of them read
+   * as a list rather than a smear, and each row is nudged sideways by
+   * its lane so a repeated cue does not trace the same path twice.
+   */
+  pop(text, cls = '', delay = 0, lane = 0, lanes = 1) {
     if (!this.host) return null;
     const el = document.createElement('div');
     el.className = `cue ${cls}`;
     el.textContent = text;
-    // Scatter them so simultaneous cues do not stack into one blur
-    el.style.left = `${18 + Math.random() * 44}%`;
-    el.style.top = `${34 + Math.random() * 26}%`;
+    const spread = Math.min(lanes, MAX_CUES);
+    const row = spread > 1 ? lane / (spread - 1) : 0.5;   // 0…1 down the stack
+    el.style.top = `${30 + row * 30}%`;
+    el.style.left = `${34 + (lane % 2 ? 1 : -1) * 9}%`;
     el.style.animationDelay = `${delay}ms`;
     this.host.appendChild(el);
     setTimeout(() => el.remove(), 1500 + delay);

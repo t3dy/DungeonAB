@@ -133,6 +133,21 @@ async function run() {
     names.length === new Set(names).size,
     `chips: ${names.join(' | ')}`);
 
+  /* The accordion: panels fold, and the choice survives a reload */
+  const chronicleHead = page.locator('[data-panel="chronicle"] .panel-head');
+  if (await chronicleHead.count()) {
+    await chronicleHead.click();
+    await page.waitForTimeout(150);
+    const folded = await page.locator('[data-panel="chronicle"].collapsed').count();
+    check('a panel folds when its header is clicked', folded === 1);
+    await chronicleHead.click();
+    await page.waitForTimeout(150);
+    check('and unfolds again',
+      (await page.locator('[data-panel="chronicle"].collapsed').count()) === 0);
+  } else {
+    check('the panels have headers to fold', false, 'no [data-panel] .panel-head found');
+  }
+
   /* Watch the delve to its end, collecting what the player reads */
   let sawTown = false;
   let townChecked = false;
@@ -152,6 +167,36 @@ async function run() {
 
   check('the oil readout is live', /Oil:/.test(body));
   check('the Chronicle carries the delve', (await page.locator('.story-entry').count()) > 2);
+
+  /* v4.4: the delve is watchable, not only readable */
+  check('the story runs terse by default, so the panel is skimmable',
+    (await page.locator('.story-entry.terse').count()) > 0,
+    'every entry rendered in full — the terse default is not applying');
+  check('a room heading opens that room in full',
+    await (async () => {
+      // An element handle, not a locator: a locator would re-resolve
+      // after the click and answer about a different entry entirely
+      const entry = await page.locator('.story-entry.terse').first().elementHandle();
+      if (!entry) return false;
+      await entry.$eval('.story-room', el => el.click());
+      await page.waitForTimeout(150);
+      return (await entry.evaluate(el => el.classList.contains('terse'))) === false;
+    })());
+  check('clicking a room on the map opens that room\'s log',
+    await page.evaluate(() => {
+      const entry = document.querySelector('.story-entry[data-room]');
+      if (!entry) return false;
+      const index = Number(entry.dataset.room);
+      // Straight at the renderer's hook: the raycast itself needs a real
+      // pointer over a floor, which a headless click cannot promise
+      const hit = window.dungeonAB?.renderer?.onRoomClick;
+      if (typeof hit !== 'function') return false;
+      hit(index);
+      return entry.classList.contains('focused');
+    }),
+    'the renderer has no onRoomClick, or it did not reach the panel');
+  check('the cue layer is mounted over the map',
+    (await page.locator('#cue-layer').count()) === 1);
   check('the saga is kept at the end of a delve, not only the campaign',
     sawTown || /Find it under/i.test(body),
     'no save confirmation appeared in town or at the end');
