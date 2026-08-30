@@ -31,6 +31,14 @@ const FORMATION_GLYPH = Object.fromEntries(
 const FORMATION_LABEL = Object.fromEntries(
   Object.entries(FORMATIONS).map(([id, f]) => [id, f.name]));
 import { toMarkdown } from './narrative/Chronicle.js';
+import { CAPABILITIES } from './game/Capabilities.js';
+import { getEncounterTrace, clearEncounterTrace, capabilityUsageSummary } from './encounters/EncounterEngine.js';
+
+// Developer visibility for the capability system, from the console:
+//   v6debug.summary() — per-capability optionsUnlocked / chosen
+//   v6debug.trace()   — every evaluation, including why options were hidden
+//   v6debug.clear()
+window.v6debug = { trace: getEncounterTrace, summary: capabilityUsageSummary, clear: clearEncounterTrace };
 
 /* The shelf the party's saga is kept on (game/Chronicles.js) */
 const chronicles = new ChronicleLibrary();
@@ -765,11 +773,16 @@ function showTown(state) {
         render();
       },
     );
+    const potionCost = campaign.potionCost();
     btn(
-      `🧪 Buy a Healing Draught — ${TOWN_PRICES.potion}g`,
-      gold >= TOWN_PRICES.potion,
+      `🧪 Buy a Healing Draught — ${potionCost}g`,
+      gold >= potionCost,
       () => { campaign.buyPotion(); render(); },
     );
+
+    // The situations the town puts in front of the party — where the
+    // capabilities that never swing a sword earn their draft slot
+    renderTownEncounters(display, campaign, render);
 
     // The reserve — adventurers you drafted but couldn't field. Free,
     // and the whole reason a fifth character pick is worth anything.
@@ -873,6 +886,11 @@ function showTown(state) {
       'margin-top:0.8rem;font-size:0.86rem;padding:0.65rem;background:#22201a;color:#d8c9a3;',
     );
 
+    // What the party's name is worth now, and what the diviners can see
+    // of the descent ahead — both read before committing to it
+    renderTownStandings(display, campaign);
+    renderOmens(display, campaign);
+
     btn(
       `⛏️ Delve Deeper — depth ${campaign.depth + 1} awaits`,
       true,
@@ -898,6 +916,108 @@ function showTown(state) {
 
   render();
   display.classList.add('active');
+}
+
+/* ------------------------------------------------------------------ */
+/* The town's v6 surfaces — situations, standing, omens                */
+/* ------------------------------------------------------------------ */
+
+/**
+ * The town's situations. Each option prints the capability that opened
+ * it, so the player can see their draft paying off — or see the option
+ * they are missing, and why.
+ */
+function renderTownEncounters(display, campaign, rerender) {
+  const offers = campaign.townOffers();
+  if (offers.length === 0) return;
+
+  const label = document.createElement('div');
+  label.style.cssText = 'margin-top:1rem;color:#887755;font-size:0.78rem;border-top:1px dashed #3a2f1e;padding-top:0.7rem;';
+  label.textContent = '🏘️ In town this visit:';
+  display.appendChild(label);
+
+  for (const def of offers) {
+    const card = document.createElement('div');
+    card.style.cssText = 'margin-top:0.6rem;padding:0.7rem;background:#141110;border:1px solid #3a2f1e;border-radius:4px;';
+    card.innerHTML = `
+      <div style="color:#c8b088;font-weight:bold;font-size:0.9rem;">${escapeHtml(def.title)}</div>
+      <div style="color:#998866;font-size:0.82rem;margin:0.3rem 0 0.5rem;line-height:1.5;">${escapeHtml(def.situation || '')}</div>
+    `;
+
+    for (const opt of campaign.townOptions(def.id)) {
+      const gatedBy = opt.unlockedBy?.length
+        ? opt.unlockedBy.map(u => CAPABILITIES[u.capability]?.name || u.capability).join(' + ')
+        : null;
+      const b = document.createElement('button');
+      b.style.cssText = 'width:100%;margin-top:0.35rem;padding:0.55rem;font-size:0.82rem;text-align:left;'
+        + (gatedBy
+          ? 'background:#16211a;color:#9fc4a8;border:1px solid #3a4a3e;'
+          : 'background:#1b1713;color:#b8a888;');
+      b.innerHTML = `<strong>${escapeHtml(opt.name)}</strong>`
+        + (gatedBy ? ` <span style="color:#7fae8c;font-size:0.72rem;">· ${escapeHtml(gatedBy)}</span>` : '')
+        + `<br><span style="color:#887755;font-size:0.74rem;">${escapeHtml(opt.desc || '')}</span>`;
+      if (opt.unlockedBy?.length) {
+        b.title = opt.unlockedBy
+          .map(u => `${CAPABILITIES[u.capability]?.name || u.capability}: ${u.holders.join(', ')}`)
+          .join('\n');
+      }
+      b.addEventListener('click', () => {
+        const result = campaign.resolveTownOption(def.id, opt.id);
+        if (result) {
+          showToast(result.success === false ? '⚠️' : '🏘️', result.narrative || def.title, 'room');
+          appendStory({
+            room: 'town', icon: '🏘️',
+            predicament: def.situation || def.title,
+            deliberation: `The party chose: ${opt.name}.`,
+            resolution: result.narrative || '',
+          }, def.title);
+        }
+        rerender();
+      });
+      card.appendChild(b);
+    }
+    display.appendChild(card);
+  }
+}
+
+/** Where the party stands with the town, and what that standing costs. */
+function renderTownStandings(display, campaign) {
+  const summary = campaign.town.summary();
+  const moved = summary.factions.filter(f => f.value !== 0);
+  if (moved.length === 0 && summary.log.length === 0) return;
+
+  const priceNote = summary.priceMultiplier === 1
+    ? ''
+    : summary.priceMultiplier < 1
+      ? ` · prices ×${summary.priceMultiplier} (your name is worth money)`
+      : ` · prices ×${summary.priceMultiplier} (your name is costing you)`;
+
+  const box = document.createElement('div');
+  box.style.cssText = 'margin-top:1rem;padding:0.7rem;background:#12100e;border-left:3px solid #6a5a3a;border-radius:4px;';
+  box.innerHTML = `<div style="color:#887755;font-size:0.78rem;margin-bottom:0.4rem;">📜 The town's opinion${priceNote}</div>`
+    + (moved.length
+      ? '<div style="display:flex;flex-wrap:wrap;gap:0.4rem;">' + moved.map(f =>
+          `<span style="font-size:0.75rem;padding:0.15rem 0.4rem;border-radius:3px;border:1px solid #3a2f1e;color:${f.value > 0 ? '#9fc4a8' : '#d99a8a'};">${f.icon} ${escapeHtml(f.name)}: ${f.label}</span>`
+        ).join('') + '</div>'
+      : '<div style="color:#665544;font-size:0.75rem;">No faction has made up its mind yet.</div>')
+    + (summary.hostility > 0.2
+      ? '<div style="color:#d99a8a;font-size:0.75rem;margin-top:0.4rem;">⚠️ The streets are not safe for this party.</div>'
+      : '');
+  display.appendChild(box);
+}
+
+/** What the diviners see of the descent ahead — information to prepare against. */
+function renderOmens(display, campaign) {
+  const reading = campaign.previewNextDelve();
+  if (!reading) return;
+
+  const box = document.createElement('div');
+  box.style.cssText = `margin-top:0.8rem;padding:0.7rem;background:#0f1016;border-left:3px solid ${reading.blind ? '#4a4458' : '#7a6ad8'};border-radius:4px;`;
+  box.innerHTML = `<div style="color:#887799;font-size:0.78rem;margin-bottom:0.4rem;">🔮 ${escapeHtml(reading.headline)}</div>`
+    + reading.lines.map(l =>
+        `<div style="color:#b0a8c8;font-size:0.8rem;line-height:1.55;">${escapeHtml(l)}</div>`
+      ).join('');
+  display.appendChild(box);
 }
 
 /**

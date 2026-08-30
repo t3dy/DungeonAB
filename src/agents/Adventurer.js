@@ -27,6 +27,12 @@ export class Adventurer {
   constructor(card) {
     this.uid = `adv-${nextUid++}`;
     this.id = card.id;
+    // The card an adventurer was drafted from, kept because their
+    // capabilities live on it. Party.capabilities() reads
+    // `member.card?.capabilities`, so without this the whole capability
+    // system reads an empty set and every gated option silently
+    // disappears — the optional chaining hides it rather than throwing.
+    this.card = card;
     this.name = card.name;
     this.cardName = card.name;      // what the card called them, before any rename
     this.class = card.class;

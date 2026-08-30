@@ -17,6 +17,22 @@ import {
 import { reactionsFor, foldReactions } from '../world/Reactions.js';
 import { tacticModifiers, activeTactics } from '../game/Tactics.js';
 import { chooseFormation, formationModifiers } from '../agents/Formation.js';
+import { getEncounterForRoom, evaluateOptions, resolveEncounterOption } from './EncounterEngine.js';
+import './Encounters.js';   // registers the data-driven situations
+
+/**
+ * Ids for things picked up mid-delve (copied cantrips, sealed workings,
+ * found trinkets). These used to be stamped with `Date.now()`, which
+ * collides whenever two of them happen inside the same millisecond —
+ * two cantrips copied from one shelf got the same id, and anything
+ * keyed by id then saw one working where the party had two. A counter
+ * cannot collide and does not depend on how fast the machine is, which
+ * also stops the golden chronicles drifting between runs.
+ */
+let foundCounter = 0;
+function nextFoundId() {
+  return (++foundCounter).toString(36);
+}
 
 function roll() {
   return Math.random() * 10;
@@ -129,6 +145,13 @@ export function canBrewOil(party) {
 }
 
 export function getRoomOptions(room, party) {
+  // A room carrying a stamped situation is governed by the capability
+  // engine instead of a hand-written case (encounters/Encounters.js).
+  // Its furniture still contributes its own actions.
+  const def = getEncounterForRoom(room);
+  if (def) {
+    return [...evaluateOptions(def, party, room), ...getFeatureOptions(room, party)];
+  }
   return [...baseRoomOptions(room, party), ...getFeatureOptions(room, party)];
 }
 
@@ -481,7 +504,7 @@ export function rollFind(party, always = false, rollValue = Math.random()) {
     return { source: scroll.name, find: 'scroll', text: `📜 Also in the hoard: a scroll of ${scroll.name}, added to the grimoire.` };
   }
   const trinket = TRINKETS[Math.floor(rollValue * 991) % TRINKETS.length];
-  const wearer = party.assignEquipment({ ...trinket, id: `${trinket.id}-${Date.now().toString(36)}` });
+  const wearer = party.assignEquipment({ ...trinket, id: `${trinket.id}-${nextFoundId()}` });
   return { source: trinket.name, find: 'trinket', text: `🍀 Also in the hoard: ${trinket.name} (${bonusText(trinket.bonus)}), now worn by ${wearer?.name || 'no one'}.` };
 }
 
@@ -769,6 +792,11 @@ export function resolveRoomAction(room, party, optionId, options = null) {
   // the room's furniture is its own family of outcomes
   if (isFeatureAction(optionId)) {
     return resolveFeatureAction(room, party, optionId, options);
+  }
+  // A stamped situation resolves through its own definition
+  const def = getEncounterForRoom(room);
+  if (def?.resolveOption && def.options.some(o => o.id === optionId)) {
+    return resolveEncounterOption(def, optionId, party, room);
   }
   switch (optionId) {
     /* Combat */
@@ -1387,7 +1415,7 @@ export function resolveRoomAction(room, party, optionId, options = null) {
       // Learning adds a real spell to the grimoire
       for (let i = 0; i < learned; i++) {
         party.grimoire.push({
-          id: `learned-${Date.now()}-${i}`, name: 'Found Cantrip', icon: '📜',
+          id: `learned-${nextFoundId()}`, name: 'Found Cantrip', icon: '📜',
           school: 'found', power: 3, use: Math.random() < 0.5 ? 'combat' : 'utility',
           // Copied into the grimoire by hand, so it is prepared, not sealed
           source: 'prepared', text: 'Copied from the stacks.',
@@ -1408,7 +1436,7 @@ export function resolveRoomAction(room, party, optionId, options = null) {
         party.spellsLearned += 2;
         party.addScore(50);
         party.grimoire.push({
-          id: `sealed-${Date.now()}`, name: 'Sealed Working', icon: '🔏',
+          id: `sealed-${nextFoundId()}`, name: 'Sealed Working', icon: '🔏',
           school: 'forbidden', power: 6, use: 'combat', source: 'prepared',
           text: 'The margins screamed. The wizard did not.',
         });

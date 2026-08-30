@@ -8,6 +8,23 @@
  */
 
 import { CARD_TYPES } from '../game/Cards.js';
+import { CAPABILITIES } from '../game/Capabilities.js';
+
+/**
+ * What a card lets the party ATTEMPT, printed on the card at draft
+ * time. A capability is the thing a situation will ask for by name, so
+ * a drafter has to be able to read it before they commit the pick.
+ */
+export function capabilityChips(card) {
+  const caps = card.capabilities || [];
+  if (caps.length === 0) return '';
+  const chips = caps.map(id => {
+    const cap = CAPABILITIES[id];
+    if (!cap) return '';
+    return `<span style="color:#9fc4a8;border:1px solid #3a4a3e;border-radius:3px;padding:0 0.3rem;" title="${cap.text}">${cap.icon} ${cap.name}</span>`;
+  }).join('');
+  return `<div class="card-caps" style="margin-top:0.3rem;font-size:0.68rem;display:flex;gap:0.3rem;flex-wrap:wrap;">${chips}</div>`;
+}
 import { DUNGEON_CONDITIONS } from '../game/Conditions.js';
 
 export class DraftUI {
@@ -100,6 +117,7 @@ export class DraftUI {
       <div class="card-name">${card.icon} ${card.name}</div>
       <div class="card-text">${card.trait || card.text || ''}</div>
       ${stats}
+      ${capabilityChips(card)}
     `;
     el.addEventListener('click', onClick);
     return el;

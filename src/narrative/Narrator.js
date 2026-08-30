@@ -12,6 +12,7 @@
  */
 
 import { ROOM_TYPES } from '../world/DungeonGen.js';
+import { getEncounter } from '../encounters/EncounterEngine.js';
 import { CLASSES } from '../game/Cards.js';
 import { getBark } from './Barks.js';
 import { roomFeatures, getFeature, FEATURE_ACTIONS } from '../world/RoomFeatures.js';
@@ -152,6 +153,26 @@ export function phrasedOptions() {
 }
 
 const OPTION_PHRASES = {
+  // Capability-engine situations (encounters/Encounters.js)
+  'repair-gears': 'repair the gears',
+  'correct-orrery': 'correct the orrery',
+  'divine-instability': 'divine the unstable motion',
+  'recognize-model': 'recognize the cosmological model',
+  'steady-ground': 'hold the stationary floor',
+  'hurry-through': 'hurry through the turning room',
+  'read-correspondences': 'read the correspondences',
+  'planetary-sequence': 'work the planetary sequence',
+  'material-symbolism': 'read the metals',
+  'reconcile-traditions': 'reconcile the traditions',
+  'divine-sequence': 'divine the opening order',
+  'force-the-door': 'force the door',
+  'leave-sealed': 'leave it sealed',
+  'negotiate-grievance': 'negotiate with it',
+  'translate-claim': 'answer it in its own tongue',
+  'identify-artifact': 'identify the disputed thing',
+  'investigate-claim': 'investigate its claim',
+  'slip-past-grievance': 'slip past it',
+  'fight-grievance': 'fight it',
   'brew-oil': 'cook a material down into lamp oil',
   fight: 'stand and fight',
   flee: 'fall back',
@@ -393,6 +414,13 @@ const PROCEED_LINES = [
 
 export function composeResolution(room, optionId, result, party) {
   const bits = [];
+
+  // A capability-engine situation carries its own resolution line
+  if (result?.narrative) {
+    bits.push(result.narrative);
+    for (const prep of result.preps || []) bits.push(prep.text);
+    return bits.join(' ');
+  }
 
   // The room's furniture, used (world/RoomFeatures.js)
   if (FEATURE_ACTIONS[optionId]) {
@@ -796,6 +824,11 @@ const RETURN_LINES = [
 ];
 
 export function composePredicament(room, theme = null) {
+  // A stamped situation states its own predicament
+  if (room?.encounterId && !room.visits) {
+    const def = getEncounter(room.encounterId);
+    if (def?.situation) return def.situation;
+  }
   // A return visit gets its own opening rather than the room's
   // first-sight description over again
   // A room the party has already backed out of twice does not offer a

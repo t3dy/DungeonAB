@@ -11,8 +11,14 @@
 import { Party } from '../agents/Party.js';
 import { Simulator } from '../sim/Simulator.js';
 import { SeededRandom } from '../draft/PackDraft.js';
-import { CHARACTER_CARDS, EQUIPMENT_CARDS, SPELL_CARDS } from '../game/Cards.js';
+import { CHARACTER_CARDS, EQUIPMENT_CARDS, SPELL_CARDS, CLASSES } from '../game/Cards.js';
 import { costCard } from '../game/Costing.js';
+import { TownState } from './TownState.js';
+import { Providence } from './Providence.js';
+import { readOmens } from './Divination.js';
+import { generateDungeon } from '../world/DungeonGen.js';
+import { getEncounter, evaluateOptions, resolveEncounterOption } from '../encounters/EncounterEngine.js';
+import { offerTownEncounters } from '../encounters/TownEncounters.js';
 
 export const TOWN_PRICES = {
   healPerHp: 2,     // gold per missing health point
@@ -67,6 +73,17 @@ export class Campaign {
     this.roomsCleared = 0;   // Cumulative across dungeons
     this.over = false;
     this.retired = false;
+
+    // The world's two long memories: the town remembers what the party
+    // did to it, and Providence remembers what the player said the
+    // party was trying to become. Both ride the campaign across depths.
+    this.town = new TownState();
+    this.providence = new Providence();
+  }
+
+  /** The seed of the dungeon at a given depth — one definition, used everywhere. */
+  delveSeed(depth = this.depth + 1) {
+    return `${this.seed}-depth-${depth}`;
   }
 
   /**
@@ -77,12 +94,98 @@ export class Campaign {
   nextDelve(theme = undefined) {
     if (this.over) return null;
     this.depth++;
-    return new Simulator(this.party, `${this.seed}-depth-${this.depth}`, this.difficulty, {
+    return new Simulator(this.party, this.delveSeed(this.depth), this.difficulty, {
       depth: this.depth,
       theme,
       condition: this.condition,
       layout: this.depth === 1 ? this.layout : null,   // deeper floors generate fresh
+      providence: this.providence,
     });
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Divination — read the next descent before committing to it        */
+  /* ---------------------------------------------------------------- */
+
+  /**
+   * Generate the dungeon the party is ABOUT to enter, and read it.
+   * Generation is deterministic from (seed, depth), so previewing costs
+   * nothing and changes nothing — nextDelve() rebuilds the same
+   * dungeon. A party with no divination gets the blind reading, which
+   * is the point: information is a thing you draft for.
+   */
+  previewNextDelve(theme = undefined) {
+    if (this.over) return null;
+    const nextDepth = this.depth + 1;
+    // An archived layout is the player's own dungeon; nothing to foresee
+    if (nextDepth === 1 && this.layout) return null;
+    const dungeon = generateDungeon(this.delveSeed(nextDepth), this.difficulty, {
+      wantLab: this.party.hasClass(CLASSES.ALCHEMIST),
+      theme,
+      depth: nextDepth,
+      condition: this.condition,
+      providence: this.providence,
+    });
+    return readOmens(this.party, dungeon);
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Town encounters — the social half of the loop                     */
+  /* ---------------------------------------------------------------- */
+
+  /**
+   * The situations this visit puts in front of the party. Stable per
+   * (seed, depth), like the hiring board, so the screen doesn't
+   * reshuffle on every re-render.
+   */
+  townOffers() {
+    if (this._offerDepth !== this.depth) {
+      const rng = new SeededRandom(`${this.seed}-town-${this.depth}`);
+      this._offerDepth = this.depth;
+      this._townOffers = offerTownEncounters(this.town, rng, {
+        count: 2,
+        favored: this.providence.favoredEncounters(),
+      }).map(def => def.id);
+    }
+    return this._townOffers.map(id => getEncounter(id)).filter(Boolean);
+  }
+
+  /** The context a town encounter reads. */
+  townContext() {
+    return { type: 'town', town: this.town, party: this.party, depth: this.depth };
+  }
+
+  /** The options a town situation currently offers this party. */
+  townOptions(encounterId) {
+    const def = getEncounter(encounterId);
+    if (!def) return [];
+    return evaluateOptions(def, this.party, this.townContext());
+  }
+
+  /**
+   * Take an option in a town situation. Mutates the party and the
+   * town's memory. Returns the result, or null if the situation isn't
+   * on offer or the option isn't available to this party.
+   */
+  resolveTownOption(encounterId, optionId) {
+    const def = getEncounter(encounterId);
+    if (!def) return null;
+    if (!this.townOffers().some(d => d.id === encounterId)) return null;
+    if (!this.townOptions(encounterId).some(o => o.id === optionId)) return null;
+
+    const result = resolveEncounterOption(def, optionId, this.party, this.townContext());
+    if (def.once) this.town.markResolved(def.id);
+    this._townOffers = this._townOffers.filter(id => id !== encounterId);
+
+    // Providence notes when the world tested a destiny it arranged
+    if (this.providence.favoredEncounters().includes(encounterId)) {
+      const destiny = this.providence.destinies[0];
+      if (destiny) {
+        this.providence.recordTest(destiny.characterId,
+          `${def.title} — the world put ${destiny.characterName}'s destiny in their way.`);
+      }
+    }
+    return result;
   }
 
   /**
@@ -105,7 +208,13 @@ export class Campaign {
   healCost() {
     const base = this.missingHealth() * TOWN_PRICES.healPerHp;
     const rate = this.party.hasPersonality('pious') ? TOWN_PRICES.piousDiscount : 1;
-    return Math.ceil(base * rate);
+    // Reputation is money: the town charges what it thinks of you
+    return Math.ceil(base * rate * this.town.priceMultiplier());
+  }
+
+  /** What a potion costs this party, in this town, today. */
+  potionCost() {
+    return Math.ceil(TOWN_PRICES.potion * this.town.priceMultiplier());
   }
 
   /**
@@ -137,8 +246,9 @@ export class Campaign {
    * Returns true if bought.
    */
   buyPotion() {
-    if (this.party.gold < TOWN_PRICES.potion) return false;
-    this.party.gold -= TOWN_PRICES.potion;
+    const cost = this.potionCost();
+    if (this.party.gold < cost) return false;
+    this.party.gold -= cost;
     this.party.potions.push({ kind: 'healing-draught', heal: 6 });
     return true;
   }
@@ -254,7 +364,8 @@ export class Campaign {
   /* ---------------------------------------------------------------- */
 
   forgeCost() {
-    return TOWN_PRICES.forge + (this.depth - 1) * 4;
+    // The guild sets the smith's price, and the guild has an opinion
+    return Math.ceil((TOWN_PRICES.forge + (this.depth - 1) * 4) * this.town.priceMultiplier());
   }
 
   /**
@@ -293,6 +404,8 @@ export class Campaign {
       trophies: this.party.trophies.length,
       retired: this.retired,
       over: this.over,
+      town: this.town.summary(),
+      providence: this.providence.summary(),
     };
   }
 }

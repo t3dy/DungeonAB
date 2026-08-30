@@ -398,6 +398,70 @@ export class Party {
     return bias;
   }
 
+  /**
+   * All capabilities possessed by the party — from its people, their
+   * equipment, and the workings in the shared grimoire. Used by the
+   * encounter engine to evaluate which options unlock.
+   *
+   * The grimoire counts because a capability is a thing the party can
+   * DO, and a party that carries Eyes of the Mouse can scry whether or
+   * not anyone in it was born a diviner. That is the whole point of a
+   * capability rather than a class: it can be drafted onto a party that
+   * lacks the person for it.
+   */
+  capabilities() {
+    const caps = new Set();
+    for (const member of [...this.members, ...this.reserve]) {
+      const memberCaps = member.card?.capabilities || [];
+      for (const cap of memberCaps) caps.add(cap);
+      for (const eq of member.equipment) {
+        const eqCaps = eq.capabilities || [];
+        for (const cap of eqCaps) caps.add(cap);
+      }
+    }
+    for (const eq of this.pack || []) {
+      for (const cap of eq.capabilities || []) caps.add(cap);
+    }
+    for (const spell of this.grimoire || []) {
+      for (const cap of spell.capabilities || []) caps.add(cap);
+    }
+    return caps;
+  }
+
+  /**
+   * Does the party possess this capability?
+   */
+  hasCapability(capId) {
+    return this.capabilities().has(capId);
+  }
+
+  /**
+   * Who holds this capability, and from what source?
+   * Returns array of { member, source, holder } where source is 'character' or 'equipment'.
+   */
+  capabilityHolders(capId) {
+    const holders = [];
+    for (const member of [...this.members, ...this.reserve]) {
+      const memberCaps = member.card?.capabilities || [];
+      if (memberCaps.includes(capId)) {
+        holders.push({ member, source: 'character' });
+      }
+      for (const eq of member.equipment) {
+        if ((eq.capabilities || []).includes(capId)) {
+          holders.push({ member, source: 'equipment', equipment: eq });
+        }
+      }
+    }
+    // A working in the grimoire answers for the whole party, so it is
+    // credited to the party rather than to any one pair of hands
+    for (const spell of this.grimoire || []) {
+      if ((spell.capabilities || []).includes(capId)) {
+        holders.push({ member: { name: 'the grimoire' }, source: 'spell', equipment: spell });
+      }
+    }
+    return holders;
+  }
+
   living() {
     return this.members.filter(m => m.isAlive());
   }
@@ -776,8 +840,10 @@ export class Party {
 
     this.materials--;
 
-    // Perenelle's trait: some alchemists work in doubles
-    const doubler = this.living().some(m => m.id === 'char-perenelle');
+    // The fugue rule: alchemy and music held together draw two flasks
+    // where one would come. Maier set the Work to music and got both;
+    // so does any party that drafts the pair, in whosever hands.
+    const doubler = this.hasCapability('alchemy') && this.hasCapability('music');
 
     if (rngValue < 0.5) {
       const potion = { kind: 'healing-draught', heal: 6 };

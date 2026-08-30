@@ -516,3 +516,97 @@ SnakeAB's three-beat Narrator adapted to a party voice: predicament → the part
 ## Tech
 
 Vanilla JS + Vite + Three.js isometric renderer (SnakeAB's IsoRenderer adapted: stone floors, torchlit walls, party of meeples). Node test runner. Vercel deploy.
+
+## v6 — Preparation: capabilities, situations, and a world that remembers
+
+The v6 chain, and the thing every part of it serves:
+
+**CHARACTER → CAPABILITIES → AFFORDANCES → OPTIONS → CHOICE → CONSEQUENCES**
+
+The dungeon stops asking "can you win this fight?" and starts asking "what did
+you bring, and what can you do with this?"
+
+### The magi are capability packages
+
+The roster is fifteen Renaissance figures, each carrying three or four reusable
+capability tags chosen for what they were actually known for: Dee brings
+conjuring, divination, astronomy and mathematics; Digby diplomacy, fencing,
+antiquarian knowledge and appraisal; Brahe tinkering, astronomy, observation and
+experimentation. Margaret Cavendish brings the non-occult answers (natural
+philosophy, experimentation, imagination, alchemy); Isabella Cortese the
+practical secrets.
+
+**Nothing checks for a character id.** Dee is the party's diviner because he
+carries `divination`, and any party that drafts that tag elsewhere — on Forman,
+on Eyes of the Mouse in the grimoire — reaches the same options. The old
+Perenelle id-check is gone, replaced by the *fugue rule*: alchemy and music held
+together draw two flasks where one would come, whether that is Maier alone or
+Paracelsus standing next to Ficino. A test enforces the principle directly: no
+capability may live on only one card, or it is a character in disguise.
+
+Every magus is costed alike at 30 points, so a magus is distinguished by what
+they can *do*, never by being worth more than the magus beside them.
+
+`game/Capabilities.js` is the dictionary — the only file to touch when adding a
+capability, since the engine reads tags generically and never enumerates them.
+(It is deliberately distinct from `game/Tactics.js`'s `CAPABILITIES`, which is
+the narrower four-predicate gate on the tactic tree.)
+
+### Situations, and the engine that runs them
+
+`Party.capabilities()` had long carried a docstring promising it was "used by
+the encounter engine to evaluate which options unlock." `encounters/
+EncounterEngine.js` is that engine. A situation declares what it **affords**
+(mechanism, astral, people, undead — the same tag vocabulary `RoomFeatures`
+already puts on furniture); each option declares the capabilities it
+**requires**. An option appears only where the two intersect, and carries
+`unlockedBy` provenance so the UI can print which capability opened it and who
+is holding it.
+
+`situation` is a first-class room type with its own geometry and weight, so the
+dungeon generates them deliberately — most delves hold one. Three ship in
+`encounters/Encounters.js`: the Astronomer's Chamber, the Sealed Laboratory, and
+the Monster With a Grievance. Their consequences reach past the room: salvage,
+a one-fight ward read off a corrected orrery, forewarning spent on the next
+snare. Hand-written rooms in `RoomEncounters` are untouched and still run.
+
+### The town remembers
+
+`game/TownState.js` rides the campaign: six factions on a -100..100 standing,
+individual NPCs with disposition and flags, unlockable standing services, and an
+append-only log that records *why*. Two things read off it mechanically —
+`priceMultiplier()`, because reputation is money and it moves healing, potions,
+the smith and the hiring board; and `hostility()`, because a town with enemies
+in it is not a safe place to walk.
+
+Seven town situations run on the same engine (`encounters/TownEncounters.js`),
+testing diplomacy, antiquarian knowledge, appraisal, music, debate, tinkering
+and observation — the capabilities that never swing a sword. **The Town
+Remembers** appears only once there is something to remember, and its options
+are gated on what the party actually did.
+
+### Providence and Divination
+
+`game/Providence.js` reads a destiny the player writes in their own words
+against a curated eight-theme vocabulary, capped at two themes — a destiny that
+means everything means nothing. Themes become small room-weight nudges behind
+two guards that keep this Providence rather than a keyword cheat code: a chance
+gate (on most descents the world says nothing at all) and a strength scalar.
+Providence arranges opportunities; the party still needs the capability to take
+one.
+
+`game/Divination.js` reads the dungeon the party is about to enter and reports
+what it will *demand* — never the outcome. Clarity scales with what was drafted:
+no sight at all means walking in blind; more sight buys counts, snare kinds, and
+the guardian's name. The actionable half is always the capability ledger: what
+the party can already answer, and what it cannot. `Campaign.previewNextDelve()`
+costs nothing and changes nothing, because generation is deterministic from the
+seed. That closes the loop the release is named for:
+**information → prediction → investment → test.**
+
+### Developer visibility
+
+`window.v6debug.summary()` answers the balancing question directly — per
+capability, how many options it unlocked this run and how often they were
+actually taken. `v6debug.trace()` additionally records why options did *not*
+appear.

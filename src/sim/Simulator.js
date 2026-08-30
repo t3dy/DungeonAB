@@ -45,6 +45,7 @@ export class Simulator {
           theme: opts.theme,
           depth: this.depth,
           condition: opts.condition,
+          providence: opts.providence,
         });
     this.condition = this.dungeon.condition;
 

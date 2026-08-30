@@ -27,6 +27,10 @@ export const ROOM_TYPES = {
   BOSS: 'boss',
   VAULT: 'vault',   // the rich room behind the secret door
   STAIRS: 'stairs', // down to the next floor — the only way but the fall
+  // A furnished situation the capability engine governs
+  // (encounters/Encounters.js): a room whose whole content is a
+  // problem the party's drafted capabilities may or may not answer.
+  SITUATION: 'situation',
 };
 
 /**
@@ -138,6 +142,10 @@ const ROOM_GEOMETRY = {
   boss:      [{ shape: 'cavern', min: [17, 14], max: [22, 17] }, { shape: 'hall', min: [20, 12], max: [24, 14] }],
   vault:     [{ shape: 'cell', min: [6, 6], max: [8, 8] }],
   stairs:    [{ shape: 'cell', min: [6, 6], max: [8, 8] }, { shape: 'rotunda', min: [7, 7], max: [9, 9] }],
+  // A situation is a room you stand in and work in — an orrery
+  // chamber, a sealed laboratory door, something large blocking a
+  // hall — so it gets proper floor, not a corridor's shoulders.
+  situation: [{ shape: 'chamber', min: [9, 8], max: [12, 11] }, { shape: 'rotunda', min: [9, 9], max: [12, 12] }, { shape: 'hall', min: [12, 6], max: [15, 8] }],
 };
 
 /** The smallest floor a fight can happen on without feeling like a hallway. */
@@ -160,7 +168,7 @@ const ROOM_ICONS = {
   entrance: '🚪', corridor: '⬛', monster: '👹', trap: '⚠️',
   treasure: '💰', library: '📚', shrine: '🕯️', lab: '⚗️',
   materials: '🌿', disaster: '🌋', boss: '🐉', vault: '💎',
-  stairs: '🪜',
+  stairs: '🪜', situation: '🪐',
 };
 
 /**
@@ -168,10 +176,10 @@ const ROOM_ICONS = {
  * entrance/boss). Weights, not counts.
  */
 const TYPE_WEIGHTS = {
-  easy: { monster: 2, trap: 1, treasure: 2, library: 1, shrine: 1.5, lab: 1, materials: 2, disaster: 0.5, corridor: 1 },
-  medium: { monster: 3, trap: 1.5, treasure: 2, library: 1, shrine: 1, lab: 1, materials: 1.5, disaster: 1, corridor: 1 },
-  hard: { monster: 4, trap: 2.5, treasure: 1.5, library: 1, shrine: 0.7, lab: 1, materials: 1, disaster: 2, corridor: 0.5 },
-  nightmare: { monster: 5, trap: 3, treasure: 1.5, library: 0.8, shrine: 0.5, lab: 1, materials: 1, disaster: 3, corridor: 0.3 },
+  easy: { monster: 2, trap: 1, treasure: 2, library: 1, shrine: 1.5, lab: 1, materials: 2, disaster: 0.5, corridor: 1, situation: 3 },
+  medium: { monster: 3, trap: 1.5, treasure: 2, library: 1, shrine: 1, lab: 1, materials: 1.5, disaster: 1, corridor: 1, situation: 3 },
+  hard: { monster: 4, trap: 2.5, treasure: 1.5, library: 1, shrine: 0.7, lab: 1, materials: 1, disaster: 2, corridor: 0.5, situation: 2.6 },
+  nightmare: { monster: 5, trap: 3, treasure: 1.5, library: 0.8, shrine: 0.5, lab: 1, materials: 1, disaster: 3, corridor: 0.3, situation: 2.2 },
 };
 
 function weightedPick(rng, weights) {
@@ -307,6 +315,15 @@ export function generateDungeon(seed, difficulty = 'medium', opts = {}) {
   }
   for (const [type, tweak] of Object.entries(condition.weightTweaks || {})) {
     weights[type] = Math.max(0.1, (weights[type] || 0) + tweak);
+  }
+  // Providence: the world leans, slightly and not always, toward tests
+  // of what the player said this party was trying to become. Rolled off
+  // the same seeded rng, so a previewed dungeon and the dungeon actually
+  // entered are the same dungeon.
+  if (opts.providence?.hasThemes?.()) {
+    for (const [type, tweak] of Object.entries(opts.providence.weightTweaks(rng.next()))) {
+      weights[type] = Math.max(0.1, (weights[type] || 0) + tweak);
+    }
   }
 
   // Difficulty sharpens the monsters themselves, not just the map
@@ -601,8 +618,18 @@ function makeRoom(index, type, rng, theme, depth = 1, statScale = 1, condition =
     room.materials = 1 + Math.floor(rng.next() * 2);
   }
 
+  // A situation room's whole content is its encounter definition
+  // (encounters/Encounters.js): the capability engine supplies the
+  // options, so which ones exist depends on who the party drafted.
+  if (type === ROOM_TYPES.SITUATION) {
+    room.encounterId = SITUATION_ROOMS[Math.floor(rng.next() * SITUATION_ROOMS.length)];
+  }
+
   return room;
 }
+
+/** Situations that can furnish an otherwise empty corridor. */
+const SITUATION_ROOMS = ['astronomers-chamber', 'sealed-laboratory', 'monster-grievance'];
 
 /* ------------------------------------------------------------------ */
 /* Dungeon themes — each delve has a face (Megabase: different         */
@@ -828,6 +855,9 @@ export function serializeDungeon(dungeon) {
       // archived trap replayed as a generic spike pit (audit A3)
       ...(r.trapType !== undefined ? { trapType: r.trapType } : {}),
       ...(r.materials !== undefined ? { materials: r.materials } : {}),
+      // A stamped situation is part of the room, or a replayed dungeon
+      // loses the encounter that made it worth replaying
+      ...(r.encounterId ? { encounterId: r.encounterId } : {}),
     })),
     spine: [...dungeon.spine],
     edges: dungeon.edges.map(e => ({ ...e })),
