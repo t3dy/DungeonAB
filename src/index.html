@@ -299,7 +299,17 @@
 
     @media (max-width: 1024px) {
       main { flex-direction: column; }
-      #world-container { flex: 0 0 auto; max-height: 42%; border-right: none; border-bottom: 1px solid #3a2f1e; }
+      /* The corner buttons were absolutely positioned assuming a wide
+         header; on a narrow one they overlapped the centered title
+         instead of pushing it down — the "can't see the dungeon"
+         reports traced to this: the canvas below inherited whatever
+         sliver of height was left. Back to normal flow, wraps below
+         the title instead of on top of it. */
+      .header-btns { position: static; justify-content: center; flex-wrap: wrap; margin-top: 0.5rem; }
+      /* A real floor on the canvas's height, tied to the viewport
+         (not a % of whatever space the header happened to leave) —
+         short/landscape windows still show a usable dungeon. */
+      #world-container { flex: 1 1 42vh; min-height: 220px; max-height: 48vh; border-right: none; border-bottom: 1px solid #3a2f1e; }
       .pack-grid { grid-template-columns: repeat(2, 1fr); }
       #gameover-display { left: 50%; }
     }
