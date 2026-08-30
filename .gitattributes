@@ -1,0 +1,19 @@
+# The golden chronicles are compared byte for byte against freshly
+# rendered output, and the renderer always emits LF. With core.autocrlf
+# on (the Windows default) git would check them out as CRLF, and every
+# golden would fail on a clean clone for a reason that has nothing to do
+# with the writing. Pin them to LF.
+tests/golden/*.md text eol=lf
+
+# Source and docs are LF everywhere too, so a chronicle exported on
+# Windows matches one exported in CI.
+*.js text eol=lf
+*.mjs text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.html text eol=lf
+*.css text eol=lf
+
+# The frozen v1/v2/v3 builds are shipped artifacts. Leave their bytes
+# exactly as they were published.
+src/public/** -text
