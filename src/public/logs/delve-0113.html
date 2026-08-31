@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Delve 113 — the Root Cellar of the Bog Witch</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='26'%3E%F0%9F%93%9C%3C/text%3E%3C/svg%3E">
+<style>
+:root{--ink:#e6ddc8;--dim:#8d8069;--gold:#d8a53f;--bg:#0b0a08;--panel:#14110c;
+      --line:#332a1c;--good:#6f9e5a;--bad:#b8523f;--warn:#b4863a}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:'Iowan Old Style',Georgia,serif;
+     line-height:1.6;padding:2rem 1.25rem 5rem}
+.wrap{max-width:52rem;margin:0 auto}
+.wide{max-width:70rem}
+a{color:var(--gold)}
+h1{font-size:1.7rem;color:var(--gold);margin-bottom:.3rem;letter-spacing:.01em}
+h2{font-size:1.15rem;color:var(--gold);margin:2.2rem 0 .7rem;
+   border-bottom:1px solid var(--line);padding-bottom:.3rem}
+h3{font-size:1rem;color:var(--ink);margin:1.6rem 0 .4rem}
+p{margin:.55rem 0}
+.sub{color:var(--dim);font-size:.9rem;margin-bottom:1.6rem}
+.mono{font-family:ui-monospace,'Courier New',monospace}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:4px;
+       padding:1rem 1.15rem;margin:1rem 0}
+.meta{color:var(--dim);font-size:.85rem}
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.9rem;margin-top:.6rem}
+th,td{text-align:left;padding:.42rem .5rem;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--dim);font-weight:normal;font-size:.8rem;text-transform:uppercase;letter-spacing:.06em}
+tr:hover td{background:#181409}
+.pass{color:var(--good)} .fail{color:var(--bad)} .na{color:var(--dim)}
+.pill{display:inline-block;padding:.05rem .45rem;border:1px solid var(--line);
+      border-radius:999px;font-size:.75rem;color:var(--dim)}
+.room{border-left:2px solid var(--line);padding:.1rem 0 .1rem 1rem;margin:1.4rem 0}
+.room .beat{margin:.5rem 0}
+.room .delib{color:#c9bda2;font-style:italic}
+.aside{color:var(--dim);font-style:italic}
+.fell{color:var(--bad)}
+.hurt{color:var(--warn)}
+.quote{border-left:3px solid var(--gold);padding-left:.9rem;color:#efe6d0;font-size:1.02rem}
+.back{display:inline-block;margin-bottom:1.4rem;font-size:.85rem}
+.bar{height:6px;background:#241d12;border-radius:3px;overflow:hidden;min-width:5rem}
+.bar > i{display:block;height:100%;background:var(--gold)}
+.note{color:var(--dim);font-size:.85rem}
+code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a86a}
+</style></head>
+<body><div class="wrap">
+    <a class="back" href="./index.html">← all logs</a>
+    <h1>the Root Cellar of the Bog Witch</h1>
+    <p class="sub">
+      easy · 10 rooms ·
+      came back ·
+      <span class="mono">seed log-easy-112</span>
+    </p>
+
+    <p class="meta">Who went down: ✨ John Dee (cleric), 🗡️ Johannes Trithemius (rogue), ⚔️ Tycho Brahe (fighter), ✨ Marsilio Ficino (cleric)</p>
+
+    <div class="panel"><p class="quote">🍲 The Bog Witch, delighted to have company for dinner drops the Witch's receipt-book: a scroll of the Witch's Receipt (utility, power 5), added to the grimoire.</p>
+      <p class="note" style="margin-top:.6rem">The line this delve would be retold by.</p></div>
+
+    <h2>The dramaturg reads it</h2>
+    <div class="panel">
+      <p class="note">7 of
+        9 values met.
+        A reading, not a grade — the score exists to sort logs, not to judge them.</p>
+      <table><thead><tr><th></th><th>Value</th><th>What the log shows</th></tr></thead>
+      <tbody>
+    <tr>
+      <td><span class="pass">met</span></td>
+      <td>A delve should be about somebody.</td>
+      <td class="note">Tycho Brahe carries it (2 mentions against 1); 2/4 named</td>
+    </tr>
+    <tr>
+      <td><span class="fail">missed</span></td>
+      <td>Rooms should be in the order they are for a reason.</td>
+      <td class="note">nothing any room did reaches any later room</td>
+    </tr>
+    <tr>
+      <td><span class="pass">met</span></td>
+      <td>Something must go wrong, and it should be legible when it does.</td>
+      <td class="note">1 room cost the party something</td>
+    </tr>
+    <tr>
+      <td><span class="pass">met</span></td>
+      <td>If every room is a beat, no room is.</td>
+      <td class="note">the loudest room runs 3.0× the median (peak 3, median 1)</td>
+    </tr>
+    <tr>
+      <td><span class="pass">met</span></td>
+      <td>A choice reads as a choice only when the alternatives are named.</td>
+      <td class="note">9 of 10 deliberations name a road not taken</td>
+    </tr>
+    <tr>
+      <td><span class="na">n/a</span></td>
+      <td>A death is only worth reading if the dead had a line first.</td>
+      <td class="note">nobody fell</td>
+    </tr>
+    <tr>
+      <td><span class="pass">met</span></td>
+      <td>Name the thing and state the number.</td>
+      <td class="note">9 of 10 resolutions state a number</td>
+    </tr>
+    <tr>
+      <td><span class="fail">missed</span></td>
+      <td>A resolution should be readable in one breath.</td>
+      <td class="note">1 of 10 resolutions run past 320 characters (longest 776)</td>
+    </tr>
+    <tr>
+      <td><span class="pass">met</span></td>
+      <td>The back half should cost more than the front half.</td>
+      <td class="note">front half 0, back half 0</td>
+    </tr>
+    <tr>
+      <td><span class="pass">met</span></td>
+      <td>The ending should answer the delve it ended.</td>
+      <td class="note">the epitaph names somebody who went down</td>
+    </tr></tbody></table>
+    </div>
+
+    <h2>The transcript</h2>
+    
+    <div class="room">
+      <div class="meta">🪐 Room 1 — situation</div>
+      <p class="beat">A connecting corridor. Nothing blocks the way; the party moves through.</p>
+      <p class="beat delib">They might have chosen to push through and take the hit — the Covetous counted what was in the room first. The party chose to bring the fever down.</p>
+      <p class="beat">💚 The fever breaks under the working's touch. John Dee is steady again. +15 score.</p>
+      
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">🌿 Room 2 — materials</div>
+      <p class="beat">A room of herbs, salts, and quicksilver — alchemy materials, free to gather. Somebody stacked supplies here and never came back for them.</p>
+      <p class="beat delib">They might have chosen to observe every detail, or divine what is hidden here — the Covetous refused to leave anything behind. The party chose to crack the crates open.</p>
+      <p class="beat">📦 The party cracks open stacked crates and barrels: 40 gold, 2 materials.</p>
+      
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">🕯️ Room 3 — shrine</div>
+      <p class="beat">A shrine. Resting here heals the party; the gold leaf on the altar could be stripped instead. A silvered mirror leans against the wall, and it shows the room more honestly than the room does. A font holds water that has been still a long time and is somehow clean. Pillars break the room into aisles — something to fight behind. A brazier burns in its bracket — nobody has been here to feed it, and it burns anyway.</p>
+      <p class="beat delib">They might have chosen to rest and heal, or strip the gold leaf — the Covetous counted what was in the room first. The party chose to bless the font and drink.</p>
+      <p class="beat">⛲ The cleric says the words over a stone font of still water and the party drinks: 5 health healed.</p>
+      
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">🌿 Room 4 — materials</div>
+      <p class="beat">A room of herbs, salts, and quicksilver — alchemy materials, free to gather. A boulder sits at the top of a slope, held by a wedge of rotten timber.</p>
+      <p class="beat delib">They might have chosen to move on — the Covetous refused to leave anything behind. The party chose to gather the materials.</p>
+      <p class="beat">🌿 The party gathers 1 bundle of alchemy materials.</p>
+      
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">🪜 Room 5 — stairs</div>
+      <p class="beat">A stair cut into the rock, going down. Cold air comes up it.</p>
+      <p class="beat delib">There was only one option: the party chose to take the stair down.</p>
+      <p class="beat">🪜 The party goes down the stair to the second floor, burning a march of oil on the climb.</p>
+      
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">🌿 Room 6 — materials</div>
+      <p class="beat">A room of herbs, salts, and quicksilver — alchemy materials, free to gather. A boulder sits at the top of a slope, held by a wedge of rotten timber. Somebody stacked supplies here and never came back for them.</p>
+      <p class="beat delib">They might have chosen to move on, or crack the crates open — the Covetous wanted the payout. The party chose to gather the materials.</p>
+      <p class="beat">🌿 The party gathers 1 bundle of alchemy materials.</p>
+      
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">⚗️ Room 7 — lab</div>
+      <p class="beat">An alchemy lab with a working bench. An alchemist with materials can brew or coat weapons here. Somebody stacked supplies here and never came back for them.</p>
+      <p class="beat delib">They might have chosen to move on — the Covetous wanted the payout. The party chose to crack the crates open.</p>
+      <p class="beat">📦 The party cracks open stacked crates and barrels: 40 gold, 2 materials.</p>
+      
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">📚 Room 8 — library</div>
+      <p class="beat">A library. The party can study here to learn spells. Pillars break the room into aisles — something to fight behind. A font holds water that has been still a long time and is somehow clean.</p>
+      <p class="beat delib">They might have chosen to reconstruct the mosaic from memory, or recognize the mosaic — the Covetous counted what was in the room first. The party chose to study the shelves.</p>
+      <p class="beat">📚 The party studies the shelves and learns 2 spells.</p>
+      
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">🌿 Room 9 — materials</div>
+      <p class="beat">A room of herbs, salts, and quicksilver — alchemy materials, free to gather.</p>
+      <p class="beat delib">They might have chosen to move on — the Covetous wanted the payout. The party chose to gather the materials.</p>
+      <p class="beat">🌿 The party gathers 2 bundles of alchemy materials.</p>
+      
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">🐉 Room 10 — boss</div>
+      <p class="beat">The boss chamber. The Bog Witch, delighted to have company for dinner waits at its center (attack 13, health 36); killing it clears the dungeon. Pillars break the room into aisles — something to fight behind. A pit takes up a third of the floor. The bottom is not visible.</p>
+      <p class="beat delib">They might have chosen to fall back, or pay the toll — Tycho Brahe made the case: &quot;Danger pay. Emphasis on pay.&quot; The party chose to stand and fight.</p>
+      <p class="beat">🪄 Tycho Brahe uses the Haunted Armor — The Ghost Objects: a summon adding 1 attack each round. ⚔️ The party kills the Bog Witch, delighted to have company for dinner in 1 round, taking 0 damage. 🔪 Six knives arrive before the party does: 4 damage before the first round. 🧱 The party fights from behind a row of squat pillars: 1 less damage per round. 🔺 The party drives in as a wedge, everything committed forward. A fifth more damage dealt, a third more taken, and three of them swinging instead of two. ⚔️ The party has the numbers and uses them: +1 damage a round. 🍲 The Bog Witch, delighted to have company for dinner drops the Witch's receipt-book: a scroll of the Witch's Receipt (utility, power 5), added to the grimoire. 🌿 Also in the hoard: 2 alchemy materials.</p>
+      
+      
+      
+    </div>
+
+    <h2>The way out</h2>
+      <p>the Root Cellar of the Bog Witch is cleared: the boss is dead and the party walks out. Survivors: John Dee, Johannes Trithemius, Tycho Brahe, Marsilio Ficino. Rooms cleared: 10. Trophies carried out: 1 (latest: 🍲 the Witch's receipt-book).</p>
+    <p class="meta" style="margin-top:1rem">
+      Rooms cleared 10 · Score 350 ·
+      Gold 80 · Trophies 1 · Survivors 4
+    </p>
+    <p class="note" style="margin-top:2rem">Regenerate this exact delve:
+      <code>npm run simulate -- --seed log-easy-112</code></p>
+  </div></body></html>

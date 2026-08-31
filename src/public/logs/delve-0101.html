@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Delve 101 — the Ice Caverns of the Mad Pyromancer</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='26'%3E%F0%9F%93%9C%3C/text%3E%3C/svg%3E">
+<style>
+:root{--ink:#e6ddc8;--dim:#8d8069;--gold:#d8a53f;--bg:#0b0a08;--panel:#14110c;
+      --line:#332a1c;--good:#6f9e5a;--bad:#b8523f;--warn:#b4863a}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:'Iowan Old Style',Georgia,serif;
+     line-height:1.6;padding:2rem 1.25rem 5rem}
+.wrap{max-width:52rem;margin:0 auto}
+.wide{max-width:70rem}
+a{color:var(--gold)}
+h1{font-size:1.7rem;color:var(--gold);margin-bottom:.3rem;letter-spacing:.01em}
+h2{font-size:1.15rem;color:var(--gold);margin:2.2rem 0 .7rem;
+   border-bottom:1px solid var(--line);padding-bottom:.3rem}
+h3{font-size:1rem;color:var(--ink);margin:1.6rem 0 .4rem}
+p{margin:.55rem 0}
+.sub{color:var(--dim);font-size:.9rem;margin-bottom:1.6rem}
+.mono{font-family:ui-monospace,'Courier New',monospace}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:4px;
+       padding:1rem 1.15rem;margin:1rem 0}
+.meta{color:var(--dim);font-size:.85rem}
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.9rem;margin-top:.6rem}
+th,td{text-align:left;padding:.42rem .5rem;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--dim);font-weight:normal;font-size:.8rem;text-transform:uppercase;letter-spacing:.06em}
+tr:hover td{background:#181409}
+.pass{color:var(--good)} .fail{color:var(--bad)} .na{color:var(--dim)}
+.pill{display:inline-block;padding:.05rem .45rem;border:1px solid var(--line);
+      border-radius:999px;font-size:.75rem;color:var(--dim)}
+.room{border-left:2px solid var(--line);padding:.1rem 0 .1rem 1rem;margin:1.4rem 0}
+.room .beat{margin:.5rem 0}
+.room .delib{color:#c9bda2;font-style:italic}
+.aside{color:var(--dim);font-style:italic}
+.fell{color:var(--bad)}
+.hurt{color:var(--warn)}
+.quote{border-left:3px solid var(--gold);padding-left:.9rem;color:#efe6d0;font-size:1.02rem}
+.back{display:inline-block;margin-bottom:1.4rem;font-size:.85rem}
+.bar{height:6px;background:#241d12;border-radius:3px;overflow:hidden;min-width:5rem}
+.bar > i{display:block;height:100%;background:var(--gold)}
+.note{color:var(--dim);font-size:.85rem}
+code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a86a}
+</style></head>
+<body><div class="wrap">
+    <a class="back" href="./index.html">← all logs</a>
+    <h1>the Ice Caverns of the Mad Pyromancer</h1>
+    <p class="sub">
+      easy · 9 rooms ·
+      came back ·
+      <span class="mono">seed log-easy-100</span>
+    </p>
+
+    <p class="meta">Who went down: 🔮 Margaret Cavendish (wizard), ⚗️ Isabella Cortese (alchemist), ⚗️ Paracelsus (alchemist), ⚔️ Michael Sendivogius (fighter)</p>
+
+    <div class="panel"><p class="quote">🧊 Frost sheets across a crack across the floor until it will bear weight — a bridge to fight from, and a bad place to slip: 2 cover, 1 damage.</p>
+      <p class="note" style="margin-top:.6rem">The line this delve would be retold by.</p></div>
+
+    <h2>The dramaturg reads it</h2>
+    <div class="panel">
+      <p class="note">7 of
+        9 values met.
+        A reading, not a grade — the score exists to sort logs, not to judge them.</p>
+      <table><thead><tr><th></th><th>Value</th><th>What the log shows</th></tr></thead>
+      <tbody>
+    <tr>
+      <td><span class="pass">met</span></td>
+      <td>A delve should be about somebody.</td>
+      <td class="note">Margaret Cavendish carries it (2 mentions against 1); 2/4 named</td>
+    </tr>
+    <tr>
+      <td><span class="fail">missed</span></td>
+      <td>Rooms should be in the order they are for a reason.</td>
+      <td class="note">1 of 9 rooms answer an earlier one (11%)</td>
+    </tr>
+    <tr>
+      <td><span class="pass">met</span></td>
+      <td>Something must go wrong, and it should be legible when it does.</td>
+      <td class="note">1 room cost the party something</td>
+    </tr>
+    <tr>
+      <td><span class="pass">met</span></td>
+      <td>If every room is a beat, no room is.</td>
+      <td class="note">the loudest room runs 4.0× the median (peak 4, median 1)</td>
+    </tr>
+    <tr>
+      <td><span class="pass">met</span></td>
+      <td>A choice reads as a choice only when the alternatives are named.</td>
+      <td class="note">8 of 9 deliberations name a road not taken</td>
+    </tr>
+    <tr>
+      <td><span class="na">n/a</span></td>
+      <td>A death is only worth reading if the dead had a line first.</td>
+      <td class="note">nobody fell</td>
+    </tr>
+    <tr>
+      <td><span class="pass">met</span></td>
+      <td>Name the thing and state the number.</td>
+      <td class="note">6 of 9 resolutions state a number</td>
+    </tr>
+    <tr>
+      <td><span class="fail">missed</span></td>
+      <td>A resolution should be readable in one breath.</td>
+      <td class="note">1 of 9 resolutions run past 320 characters (longest 1477)</td>
+    </tr>
+    <tr>
+      <td><span class="pass">met</span></td>
+      <td>The back half should cost more than the front half.</td>
+      <td class="note">front half 0, back half 0</td>
+    </tr>
+    <tr>
+      <td><span class="pass">met</span></td>
+      <td>The ending should answer the delve it ended.</td>
+      <td class="note">the epitaph names somebody who went down</td>
+    </tr></tbody></table>
+    </div>
+
+    <h2>The transcript</h2>
+    
+    <div class="room">
+      <div class="meta">🕯️ Room 1 — shrine</div>
+      <p class="beat">A shrine. Resting here heals the party; the gold leaf on the altar could be stripped instead. A brazier burns in its bracket — nobody has been here to feed it, and it burns anyway. A silvered mirror leans against the wall, and it shows the room more honestly than the room does. A sarcophagus stands against the wall with its lid slightly wrong.</p>
+      <p class="beat delib">They might have chosen to strip the gold leaf, or move on — the Devout would not hear of the other options. The party chose to rest and heal.</p>
+      <p class="beat">🕯️ The party rests at the shrine: 9 health healed per member.</p>
+      
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">⚗️ Room 2 — lab</div>
+      <p class="beat">An alchemy lab with a working bench. An alchemist with materials can brew or coat weapons here. A gargoyle spout drips something that is not water into a stained channel.</p>
+      <p class="beat delib">They might have chosen to harvest the spout — the Devout said the god would want it this way. The party chose to move on.</p>
+      <p class="beat">The party crosses the room and takes the far door.</p>
+      
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">🪐 Room 3 — situation</div>
+      <p class="beat">A connecting corridor. Nothing blocks the way; the party moves through.</p>
+      <p class="beat delib">They might have chosen to read the dust, or just walk it — the Devout called it the right thing to do. The party chose to cross in order.</p>
+      <p class="beat">🎯 One at a time, weight where the weight has already been tested. Slow, sound, and the party is in single file at the far end. +18 score.</p>
+      
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">🪜 Room 4 — stairs</div>
+      <p class="beat">The floor ends at a stairwell. Whatever is below has been waiting longer.</p>
+      <p class="beat delib">There was only one option: the party chose to take the stair down.</p>
+      <p class="beat">🪜 The party goes down the stair to the second floor, burning a march of oil on the climb.</p>
+      <p class="aside">🕳️ Margaret Cavendish finds a trapdoor in the floor. The party leaves it shut: the rooms it skips hold loot as well as danger.</p>
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">💰 Room 5 — treasure</div>
+      <p class="beat">A treasure chest sits in the room. It may hold gold; it may be a mimic. A silvered mirror leans against the wall, and it shows the room more honestly than the room does.</p>
+      <p class="beat delib">They might have chosen to observe every detail, or inspect it first — the Devout said the god would want it this way. The party chose to loot the treasure.</p>
+      <p class="beat">💰 The party loots the chest: 36 gold. 🌿 Also in the hoard: 2 alchemy materials.</p>
+      <p class="aside">🔒 The flooded wing is shut behind a sluice gate, wound shut. Nobody here can open it, and the party walks on.</p>
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">🌿 Room 6 — materials</div>
+      <p class="beat">A room of herbs, salts, and quicksilver — alchemy materials, free to gather. An anvil sits under a dead forge, still true.</p>
+      <p class="beat delib">They might have chosen to experiment with the assembly, or take one of the side passages — the Devout would not hear of the other options. The party chose to dissolve the lock.</p>
+      <p class="beat">⚗️ The lock dissolves. The mechanism doesn't open the door, but it doesn't need to now. +15 score.</p>
+      
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">🪐 Room 7 — situation</div>
+      <p class="beat">A connecting corridor. Nothing blocks the way; the party moves through.</p>
+      <p class="beat delib">They might have chosen to break through the wall — the Devout would not hear of the other options. The party chose to imagine what the image should be.</p>
+      <p class="beat">✨ Your creative instinct pieces together something that was never there but might have been. A hidden cache reveals itself. +10 gold, +16 score.</p>
+      
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">📚 Room 8 — library</div>
+      <p class="beat">A library. The party can study here to learn spells. Shelves sag under books nobody has audited in a century.</p>
+      <p class="beat delib">They might have chosen to read the place itself, or question the ghost gently — the Devout called it the right thing to do. The party chose to strip the shelves.</p>
+      <p class="beat">📚 The wizard strips sagging shelves: a scroll of Shelf-Found Working for the grimoire.</p>
+      
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">🐉 Room 9 — boss</div>
+      <p class="beat">The boss chamber. The Glacier's Heart, half-melted and wholly furious waits at its center (attack 13, health 40); killing it clears the dungeon. Plate and chitin cover it: the party's blows do 2 less damage each round. It keeps clear of the torches: weak to fire (fire damage ×1.5). A brazier burns in its bracket — nobody has been here to feed it, and it burns anyway. A crack runs the width of the room, wide enough to matter and too wide to jump twice.</p>
+      <p class="beat delib">They might have chosen to stand and fight, or fall back — Margaret Cavendish made the case: &quot;What that thing drops will fund a semester of research.&quot; The party chose to open with a combat spell.</p>
+      <p class="beat">🔥 Aegis of Ash opens the fight, but the monster resists the element: spell damage ×0.5. ⚔️ The party kills the Glacier's Heart, half-melted and wholly furious in 1 round, taking 0 damage. 🏛️ Fighting from the aisles: 3 less damage per round on top of the cover. ✨ Nothing is held back for later: the party looses everything it has, 3 workings in the one fight that matters. 💨 The working puts a brazier still burning out. Smoke to fight behind, and 2 marches of light gone with it. 🧊 Frost sheets across a crack across the floor until it will bear weight — a bridge to fight from, and a bad place to slip: 2 cover, 1 damage. 🛡️ The prayers on the inside of the buckler turn aside half of what the party set off. ⏸️ The cavern is too tight to spread out: the party files up, one blade forward. One blade forward and one thing able to reach it: nearly half the damage a round, and only the front rank swinging. 📐 The party came through the last room already in this shape, and meets what is here standing the way it left. 🛡️ The party closes ranks: 1 less damage a round. 🕸️ Every working leaves a ward behind it: 6 less damage a round. ✨ The working holds: +26 damage every round while the fight lasts. 💠 The Glacier's Heart, half-melted and wholly furious drops a splinter of the Heart: a trinket (+2 defense), now worn by Isabella Cortese. 🧪 Also in the hoard: a healing draught (heals 6), added to the satchel. 💥 The Reckless finish the fight with style: +5 score.</p>
+      
+      
+      
+    </div>
+
+    <h2>The way out</h2>
+      <p>the Ice Caverns of the Mad Pyromancer is cleared: the boss is dead and the party walks out. Survivors: Margaret Cavendish, Isabella Cortese, Paracelsus, Michael Sendivogius. Rooms cleared: 9. Trophies carried out: 1 (latest: 💠 a splinter of the Heart).</p>
+    <p class="meta" style="margin-top:1rem">
+      Rooms cleared 9 · Score 290 ·
+      Gold 46 · Trophies 1 · Survivors 4
+    </p>
+    <p class="note" style="margin-top:2rem">Regenerate this exact delve:
+      <code>npm run simulate -- --seed log-easy-100</code></p>
+  </div></body></html>

@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Delve 50 — the Castle of the Vampire Lord</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='26'%3E%F0%9F%93%9C%3C/text%3E%3C/svg%3E">
+<style>
+:root{--ink:#e6ddc8;--dim:#8d8069;--gold:#d8a53f;--bg:#0b0a08;--panel:#14110c;
+      --line:#332a1c;--good:#6f9e5a;--bad:#b8523f;--warn:#b4863a}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:'Iowan Old Style',Georgia,serif;
+     line-height:1.6;padding:2rem 1.25rem 5rem}
+.wrap{max-width:52rem;margin:0 auto}
+.wide{max-width:70rem}
+a{color:var(--gold)}
+h1{font-size:1.7rem;color:var(--gold);margin-bottom:.3rem;letter-spacing:.01em}
+h2{font-size:1.15rem;color:var(--gold);margin:2.2rem 0 .7rem;
+   border-bottom:1px solid var(--line);padding-bottom:.3rem}
+h3{font-size:1rem;color:var(--ink);margin:1.6rem 0 .4rem}
+p{margin:.55rem 0}
+.sub{color:var(--dim);font-size:.9rem;margin-bottom:1.6rem}
+.mono{font-family:ui-monospace,'Courier New',monospace}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:4px;
+       padding:1rem 1.15rem;margin:1rem 0}
+.meta{color:var(--dim);font-size:.85rem}
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.9rem;margin-top:.6rem}
+th,td{text-align:left;padding:.42rem .5rem;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--dim);font-weight:normal;font-size:.8rem;text-transform:uppercase;letter-spacing:.06em}
+tr:hover td{background:#181409}
+.pass{color:var(--good)} .fail{color:var(--bad)} .na{color:var(--dim)}
+.pill{display:inline-block;padding:.05rem .45rem;border:1px solid var(--line);
+      border-radius:999px;font-size:.75rem;color:var(--dim)}
+.room{border-left:2px solid var(--line);padding:.1rem 0 .1rem 1rem;margin:1.4rem 0}
+.room .beat{margin:.5rem 0}
+.room .delib{color:#c9bda2;font-style:italic}
+.aside{color:var(--dim);font-style:italic}
+.fell{color:var(--bad)}
+.hurt{color:var(--warn)}
+.quote{border-left:3px solid var(--gold);padding-left:.9rem;color:#efe6d0;font-size:1.02rem}
+.back{display:inline-block;margin-bottom:1.4rem;font-size:.85rem}
+.bar{height:6px;background:#241d12;border-radius:3px;overflow:hidden;min-width:5rem}
+.bar > i{display:block;height:100%;background:var(--gold)}
+.note{color:var(--dim);font-size:.85rem}
+code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a86a}
+</style></head>
+<body><div class="wrap">
+    <a class="back" href="./index.html">← all logs</a>
+    <h1>the Castle of the Vampire Lord</h1>
+    <p class="sub">
+      medium · 15 rooms ·
+      came back ·
+      <span class="mono">seed log-medium-49</span>
+    </p>
+
+    <p class="meta">Who went down: ✨ Marsilio Ficino (cleric), 🗡️ Kenelm Digby (rogue), 🔮 Giordano Bruno (wizard), 🗡️ Johannes Trithemius (rogue)</p>
+
+    <div class="panel"><p class="quote">🧊 Frost sheets across an open pit until it will bear weight — a bridge to fight from, and a bad place to slip: 2 cover, 1 damage.</p>
+      <p class="note" style="margin-top:.6rem">The line this delve would be retold by.</p></div>
+
+    <h2>The dramaturg reads it</h2>
+    <div class="panel">
+      <p class="note">7 of
+        9 values met.
+        A reading, not a grade — the score exists to sort logs, not to judge them.</p>
+      <table><thead><tr><th></th><th>Value</th><th>What the log shows</th></tr></thead>
+      <tbody>
+    <tr>
+      <td><span class="pass">met</span></td>
+      <td>A delve should be about somebody.</td>
+      <td class="note">Giordano Bruno carries it (2 mentions against 2); 2/4 named</td>
+    </tr>
+    <tr>
+      <td><span class="fail">missed</span></td>
+      <td>Rooms should be in the order they are for a reason.</td>
+      <td class="note">1 of 15 rooms answer an earlier one (7%)</td>
+    </tr>
+    <tr>
+      <td><span class="pass">met</span></td>
+      <td>Something must go wrong, and it should be legible when it does.</td>
+      <td class="note">4 rooms cost the party something</td>
+    </tr>
+    <tr>
+      <td><span class="pass">met</span></td>
+      <td>If every room is a beat, no room is.</td>
+      <td class="note">the loudest room runs 2.5× the median (peak 5, median 2)</td>
+    </tr>
+    <tr>
+      <td><span class="pass">met</span></td>
+      <td>A choice reads as a choice only when the alternatives are named.</td>
+      <td class="note">14 of 15 deliberations name a road not taken</td>
+    </tr>
+    <tr>
+      <td><span class="na">n/a</span></td>
+      <td>A death is only worth reading if the dead had a line first.</td>
+      <td class="note">nobody fell</td>
+    </tr>
+    <tr>
+      <td><span class="pass">met</span></td>
+      <td>Name the thing and state the number.</td>
+      <td class="note">13 of 15 resolutions state a number</td>
+    </tr>
+    <tr>
+      <td><span class="fail">missed</span></td>
+      <td>A resolution should be readable in one breath.</td>
+      <td class="note">2 of 15 resolutions run past 320 characters (longest 1244)</td>
+    </tr>
+    <tr>
+      <td><span class="pass">met</span></td>
+      <td>The back half should cost more than the front half.</td>
+      <td class="note">front half 4, back half 5</td>
+    </tr>
+    <tr>
+      <td><span class="pass">met</span></td>
+      <td>The ending should answer the delve it ended.</td>
+      <td class="note">the epitaph names somebody who went down</td>
+    </tr></tbody></table>
+    </div>
+
+    <h2>The transcript</h2>
+    
+    <div class="room">
+      <div class="meta">📚 Room 1 — library</div>
+      <p class="beat">A library. The party can study here to learn spells. A font holds water that has been still a long time and is somehow clean. Shelves sag under books nobody has audited in a century. Pillars break the room into aisles — something to fight behind. A brazier burns in its bracket — nobody has been here to feed it, and it burns anyway.</p>
+      <p class="beat delib">They might have chosen to reconstruct the mosaic from memory, or recognize the mosaic — the Reckless did not wait for a vote. The party chose to imagine what the image should be.</p>
+      <p class="beat">✨ Your creative instinct pieces together something that was never there but might have been. A hidden cache reveals itself. +10 gold, +16 score.</p>
+      <p class="aside">🕳️ Kenelm Digby finds a hidden door into the burial wing. Behind it: burial niches, most of them open. Its rooms join the route.</p>
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">🕯️ Room 2 — shrine</div>
+      <p class="beat">A shrine. Resting here heals the party; the gold leaf on the altar could be stripped instead. Pillars break the room into aisles — something to fight behind. A font holds water that has been still a long time and is somehow clean. A brazier burns in its bracket — nobody has been here to feed it, and it burns anyway.</p>
+      <p class="beat delib">They might have chosen to rest and heal, or strip the gold leaf — the Reckless did not wait for a vote. The party chose to bless the font and drink.</p>
+      <p class="beat">⛲ The cleric says the words over a stone font of still water and the party drinks: 5 health healed.</p>
+      
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">⚠️ Room 3 — trap</div>
+      <p class="beat">A trap blocks the corridor. The party must disarm it, avoid it, or take the hit. Half the ceiling is on the floor, in pieces worth stepping around. A bed of rusted spikes stands out of the floor, most of them still upright.</p>
+      <p class="beat delib">They might have chosen to disarm the trap, or search for a way around — the Reckless did not wait for a vote. The party chose to push through and take the hit.</p>
+      <p class="beat">💥 The party pushes through the trap, taking 4 damage.</p>
+      
+      <p class="hurt">✚ That one leaves a mark on Marsilio Ficino. Their ceiling drops to 12 for the rest of the delve. The Reckless do not stop to bind anything, and more of it stays with them.</p>
+      
+    </div>
+    <div class="room">
+      <div class="meta">⚠️ Room 4 — trap</div>
+      <p class="beat">A trap blocks the corridor. The party must disarm it, avoid it, or take the hit. A tripwire runs up the wall to a bell: an alarm trap. Little damage, but the next monster will be warned (+2 attack). Half the ceiling is on the floor, in pieces worth stepping around.</p>
+      <p class="beat delib">They might have chosen to disarm the trap, or push through and take the hit — the Reckless settled it by going first. The party chose to sift the rubble.</p>
+      <p class="beat">🪨 The party sifts a fall of rubble: 25 gold, 2 materials.</p>
+      
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">💎 Room 5 — vault</div>
+      <p class="beat">A hidden vault, stacked with treasure. Vaults always hold something beyond coin. A sarcophagus stands against the wall with its lid slightly wrong. A portcullis hangs raised above the passage, on a chain that still turns.</p>
+      <p class="beat delib">They might have chosen to open it with Knock, or loot the treasure — the Reckless were already moving. The party chose to pry the sarcophagus open.</p>
+      <p class="beat">⚰️ The party pries the lid off a stone sarcophagus: 55 gold.</p>
+      
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">🕯️ Room 6 — shrine</div>
+      <p class="beat">A shrine. Resting here heals the party; the gold leaf on the altar could be stripped instead. Pillars break the room into aisles — something to fight behind. A font holds water that has been still a long time and is somehow clean.</p>
+      <p class="beat delib">They might have chosen to bring the fever down, or push through and take the hit — the Reckless settled it by going first. The party chose to fill the waterskins.</p>
+      <p class="beat">⛲ The party fills its waterskins at a stone font of still water: 3 health healed.</p>
+      
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">🌿 Room 7 — materials</div>
+      <p class="beat">A room of herbs, salts, and quicksilver — alchemy materials, free to gather. A gargoyle spout drips something that is not water into a stained channel.</p>
+      <p class="beat delib">They might have chosen to gather the materials, or move on — the Reckless were already moving. The party chose to harvest the spout.</p>
+      <p class="beat">🗿 The alchemist bottles what drips from a gargoyle spout, dripping: 3 materials.</p>
+      
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">🪐 Room 8 — situation</div>
+      <p class="beat">A connecting corridor. Nothing blocks the way; the party moves through.</p>
+      <p class="beat delib">There was only one option: the party chose to just walk it.</p>
+      <p class="beat">💥 It is a floor for about six paces. 4 damage out of the ceiling, and the party finishes the crossing at a scattered run.</p>
+      <p class="aside">🕯️ The wick is well down the oil. 2 more marches of light, then none.</p>
+      <p class="hurt">✚ Marsilio Ficino is wounded again — 2 scars now, and nothing can heal them past 10 before town.</p>
+      
+    </div>
+    <div class="room">
+      <div class="meta">🪜 Room 9 — stairs</div>
+      <p class="beat">A stair cut into the rock, going down. Cold air comes up it.</p>
+      <p class="beat delib">They might have chosen to camp at the stairhead first — the Reckless were already moving. The party chose to take the stair down.</p>
+      <p class="beat">🪜 The party goes down the stair to the second floor, burning a march of oil on the climb.</p>
+      <p class="aside">🕯️ Someone checks the reservoir and does not like the answer: oil for 1 more march.</p>
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">👹 Room 10 — monster</div>
+      <p class="beat">A crimson mist that pours under the door holds the room (attack 11, health 15). The party must decide how to get past it. It is ethereal: weapons do only 60% damage unless a cleric blesses the blades. It will not face the cleric: undead take holy damage ×1.5. Shelves sag under books nobody has audited in a century.</p>
+      <p class="beat delib">They might have chosen to stand and fight, or fall back — Giordano Bruno made the case: &quot;The safety margin is where the good magic lives.&quot; The party chose to open with a combat spell.</p>
+      <p class="beat">🔥 Cause Fear opens the fight, softening the monster before the first blow. ⚔️ A crimson mist that pours under the door is dead before the party closes: it never gets a round. ✨ The cleric blesses the blades: the ethereal monster takes full weapon damage. 🌐 There is room enough in the hall to fight spread out, well apart. A little less given and a little less taken, and only half of any blast reaches the party. 📐 The party came through the last room already in this shape, and meets what is here standing the way it left. 🌫️ A crimson mist that pours under the door drops a phial of settled red: a potion (heals 8), added to the satchel. 💥 The Reckless finish the fight with style: +5 score.</p>
+      <p class="aside">💡 Dancing Light kindles in the empty air and the party walks on seeing. The dark takes nothing.</p>
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">🪐 Room 11 — situation</div>
+      <p class="beat">A connecting corridor. Nothing blocks the way; the party moves through.</p>
+      <p class="beat delib">They might have chosen to question the ghost gently, or leave him looking for it — the Reckless were already moving. The party chose to reconstruct his rounds.</p>
+      <p class="beat">🧠 He is asked to describe his rounds, all of them, and somebody holds the whole account at once until the shape closes. The map was behind the shelving. Two marches of oil saved. +28 score.</p>
+      <p class="aside">🧭 The party turns off into the flooded wing — a floor that slopes down into standing water. Its rooms join the route.</p>
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">⚠️ Room 12 — trap</div>
+      <p class="beat">A trap blocks the corridor. The party must disarm it, avoid it, or take the hit. A tripwire runs up the wall to a bell: an alarm trap. Little damage, but the next monster will be warned (+2 attack). Half the ceiling is on the floor, in pieces worth stepping around.</p>
+      <p class="beat delib">They might have chosen to disarm the trap, or push through and take the hit — the Reckless did not wait for a vote. The party chose to sift the rubble.</p>
+      <p class="beat">🪨 The party sifts a fall of rubble: 25 gold, 2 materials.</p>
+      <p class="aside">🕯️ The lantern is burning low: oil for 1 more march.</p>
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">💰 Room 13 — treasure</div>
+      <p class="beat">A treasure chest sits in the room. It may hold gold; it may be a mimic. A sarcophagus stands against the wall with its lid slightly wrong.</p>
+      <p class="beat delib">They might have chosen to open it with Knock, or loot the treasure — the Reckless did not wait for a vote. The party chose to leave it alone.</p>
+      <p class="beat">🚶 The party leaves the treasure untouched and moves on.</p>
+      <p class="aside">🕯️ The last of the oil goes. From here the party walks in the dark.</p>
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">⚗️ Room 14 — lab</div>
+      <p class="beat">An alchemy lab with a working bench. An alchemist with materials can brew or coat weapons here. A brazier burns in its bracket — nobody has been here to feed it, and it burns anyway. A gargoyle spout drips something that is not water into a stained channel. Somebody stacked supplies here and never came back for them. Shelves sag under books nobody has audited in a century.</p>
+      <p class="beat delib">They might have chosen to understand the mechanism and fix it, or take one of the side passages — the Reckless were already moving. The party chose to harvest the spout.</p>
+      <p class="beat">🗿 The alchemist bottles what drips from a gargoyle spout, dripping: 3 materials.</p>
+      
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">🐉 Room 15 — boss</div>
+      <p class="beat">The boss chamber. The Bride, who was here long before the Lord waits at its center (attack 17, health 46); killing it clears the dungeon. It is ethereal: weapons do only 60% damage unless a cleric blesses the blades. It will not face the cleric: undead take holy damage ×1.5. A silvered mirror leans against the wall, and it shows the room more honestly than the room does. A pit takes up a third of the floor. The bottom is not visible. Pillars break the room into aisles — something to fight behind. A portcullis hangs raised above the passage, on a chain that still turns.</p>
+      <p class="beat delib">They might have chosen to stand and fight, or fall back — Giordano Bruno made the case: &quot;Overchannel? I call it generous casting.&quot; The party chose to open with a combat spell.</p>
+      <p class="beat">🔥 Cause Fear opens the fight, softening the monster before the first blow. ⚔️ The party kills the Bride, who was here long before the Lord in 1 round, taking 0 damage. 🪞 A tall silvered mirror shows the ethereal where it truly stands: weapons do full damage. 🧱 The party fights from behind a row of squat pillars: 1 less damage per round. 🏛️ Fighting from the aisles: 2 less damage per round on top of the cover. ✨ Nothing is held back for later: the party looses everything it has, 2 workings in the one fight that matters. 🧊 Frost sheets across an open pit until it will bear weight — a bridge to fight from, and a bad place to slip: 2 cover, 1 damage. ❄️ Frost gets into a row of squat pillars and cracks it apart: 2 damage in splinters of cold stone. 🛡️ Shields lock along the front rank and the party stops trying to win quickly. A third less damage a round and a quarter less dealt — but packed tight, so anything with a blast radius hurts more. ✨ The working holds: +24 damage every round while the fight lasts. 👰 The Bride, who was here long before the Lord drops the Bride's veil: a trinket (+2 defense), now worn by Kenelm Digby. 🌿 Also in the hoard: 2 alchemy materials. 💥 The Reckless finish the fight with style: +5 score.</p>
+      
+      
+      
+    </div>
+
+    <h2>The way out</h2>
+      <p>the Castle of the Vampire Lord is cleared: the boss is dead and the party walks out. Survivors: Marsilio Ficino, Kenelm Digby, Giordano Bruno, Johannes Trithemius. Rooms cleared: 15. Trophies carried out: 2 (latest: 👰 the Bride's veil).</p>
+    <p class="meta" style="margin-top:1rem">
+      Rooms cleared 15 · Score 434 ·
+      Gold 115 · Trophies 2 · Survivors 4
+    </p>
+    <p class="note" style="margin-top:2rem">Regenerate this exact delve:
+      <code>npm run simulate -- --seed log-medium-49</code></p>
+  </div></body></html>

@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Delve 109 — the Cinder Galleries</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='26'%3E%F0%9F%93%9C%3C/text%3E%3C/svg%3E">
+<style>
+:root{--ink:#e6ddc8;--dim:#8d8069;--gold:#d8a53f;--bg:#0b0a08;--panel:#14110c;
+      --line:#332a1c;--good:#6f9e5a;--bad:#b8523f;--warn:#b4863a}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:'Iowan Old Style',Georgia,serif;
+     line-height:1.6;padding:2rem 1.25rem 5rem}
+.wrap{max-width:52rem;margin:0 auto}
+.wide{max-width:70rem}
+a{color:var(--gold)}
+h1{font-size:1.7rem;color:var(--gold);margin-bottom:.3rem;letter-spacing:.01em}
+h2{font-size:1.15rem;color:var(--gold);margin:2.2rem 0 .7rem;
+   border-bottom:1px solid var(--line);padding-bottom:.3rem}
+h3{font-size:1rem;color:var(--ink);margin:1.6rem 0 .4rem}
+p{margin:.55rem 0}
+.sub{color:var(--dim);font-size:.9rem;margin-bottom:1.6rem}
+.mono{font-family:ui-monospace,'Courier New',monospace}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:4px;
+       padding:1rem 1.15rem;margin:1rem 0}
+.meta{color:var(--dim);font-size:.85rem}
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.9rem;margin-top:.6rem}
+th,td{text-align:left;padding:.42rem .5rem;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--dim);font-weight:normal;font-size:.8rem;text-transform:uppercase;letter-spacing:.06em}
+tr:hover td{background:#181409}
+.pass{color:var(--good)} .fail{color:var(--bad)} .na{color:var(--dim)}
+.pill{display:inline-block;padding:.05rem .45rem;border:1px solid var(--line);
+      border-radius:999px;font-size:.75rem;color:var(--dim)}
+.room{border-left:2px solid var(--line);padding:.1rem 0 .1rem 1rem;margin:1.4rem 0}
+.room .beat{margin:.5rem 0}
+.room .delib{color:#c9bda2;font-style:italic}
+.aside{color:var(--dim);font-style:italic}
+.fell{color:var(--bad)}
+.hurt{color:var(--warn)}
+.quote{border-left:3px solid var(--gold);padding-left:.9rem;color:#efe6d0;font-size:1.02rem}
+.back{display:inline-block;margin-bottom:1.4rem;font-size:.85rem}
+.bar{height:6px;background:#241d12;border-radius:3px;overflow:hidden;min-width:5rem}
+.bar > i{display:block;height:100%;background:var(--gold)}
+.note{color:var(--dim);font-size:.85rem}
+code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a86a}
+</style></head>
+<body><div class="wrap">
+    <a class="back" href="./index.html">← all logs</a>
+    <h1>the Cinder Galleries</h1>
+    <p class="sub">
+      easy · 10 rooms ·
+      came back ·
+      <span class="mono">seed log-easy-108</span>
+    </p>
+
+    <p class="meta">Who went down: 🔮 Margaret Cavendish (wizard), ⚔️ John Napier (fighter), ✨ Marsilio Ficino (cleric), ⚗️ Michael Maier (alchemist)</p>
+
+    <div class="panel"><p class="quote">The chamber sings with one voice, the party heals 2 apiece, and they carry the chord out with them: the next fight comes 1 damage a round softer.</p>
+      <p class="note" style="margin-top:.6rem">The line this delve would be retold by.</p></div>
+
+    <h2>The dramaturg reads it</h2>
+    <div class="panel">
+      <p class="note">9 of
+        10 values met.
+        A reading, not a grade — the score exists to sort logs, not to judge them.</p>
+      <table><thead><tr><th></th><th>Value</th><th>What the log shows</th></tr></thead>
+      <tbody>
+    <tr>
+      <td><span class="pass">met</span></td>
+      <td>A delve should be about somebody.</td>
+      <td class="note">Margaret Cavendish carries it (2 mentions against 1); 4/4 named</td>
+    </tr>
+    <tr>
+      <td><span class="pass">met</span></td>
+      <td>Rooms should be in the order they are for a reason.</td>
+      <td class="note">2 of 10 rooms answer an earlier one (20%)</td>
+    </tr>
+    <tr>
+      <td><span class="pass">met</span></td>
+      <td>Something must go wrong, and it should be legible when it does.</td>
+      <td class="note">5 rooms cost the party something</td>
+    </tr>
+    <tr>
+      <td><span class="pass">met</span></td>
+      <td>If every room is a beat, no room is.</td>
+      <td class="note">the loudest room runs 3.5× the median (peak 7, median 2)</td>
+    </tr>
+    <tr>
+      <td><span class="pass">met</span></td>
+      <td>A choice reads as a choice only when the alternatives are named.</td>
+      <td class="note">10 of 10 deliberations name a road not taken</td>
+    </tr>
+    <tr>
+      <td><span class="pass">met</span></td>
+      <td>A death is only worth reading if the dead had a line first.</td>
+      <td class="note">2 deaths, each of somebody the reader had met</td>
+    </tr>
+    <tr>
+      <td><span class="pass">met</span></td>
+      <td>Name the thing and state the number.</td>
+      <td class="note">10 of 10 resolutions state a number</td>
+    </tr>
+    <tr>
+      <td><span class="fail">missed</span></td>
+      <td>A resolution should be readable in one breath.</td>
+      <td class="note">1 of 10 resolutions run past 320 characters (longest 925)</td>
+    </tr>
+    <tr>
+      <td><span class="pass">met</span></td>
+      <td>The back half should cost more than the front half.</td>
+      <td class="note">front half 3, back half 9</td>
+    </tr>
+    <tr>
+      <td><span class="pass">met</span></td>
+      <td>The ending should answer the delve it ended.</td>
+      <td class="note">the epitaph names somebody who went down</td>
+    </tr></tbody></table>
+    </div>
+
+    <h2>The transcript</h2>
+    
+    <div class="room">
+      <div class="meta">💰 Room 1 — treasure</div>
+      <p class="beat">A treasure chest sits in the room. It may hold gold; it may be a mimic. Somebody stacked supplies here and never came back for them. A sarcophagus stands against the wall with its lid slightly wrong. A silvered mirror leans against the wall, and it shows the room more honestly than the room does.</p>
+      <p class="beat delib">They might have chosen to loot the treasure, or inspect it first — the Bold wanted it settled here. The party chose to open it with Knock.</p>
+      <p class="beat">🚪 Knock opens the lock at range: 39 gold taken. The noise carries through the dungeon.</p>
+      
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">📚 Room 2 — library</div>
+      <p class="beat">A library. The party can study here to learn spells. Pillars break the room into aisles — something to fight behind. A font holds water that has been still a long time and is somehow clean.</p>
+      <p class="beat delib">They might have chosen to read the sealed texts, or study the shelves — the Bold saw no reason to be careful about it. The party chose to bless the font and drink.</p>
+      <p class="beat">⛲ The cleric says the words over a stone font of still water and the party drinks: 12 health healed.</p>
+      
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">🌿 Room 3 — materials</div>
+      <p class="beat">A room of herbs, salts, and quicksilver — alchemy materials, free to gather.</p>
+      <p class="beat delib">They might have chosen to move on — Michael Maier made the case: &quot;If it smokes, it works. If it screams, it works better.&quot; The party chose to gather the materials.</p>
+      <p class="beat">🌿 The party gathers 1 bundle of alchemy materials.</p>
+      
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">⚗️ Room 4 — lab</div>
+      <p class="beat">An alchemy lab with a working bench. An alchemist with materials can brew or coat weapons here. An anvil sits under a dead forge, still true. A gargoyle spout drips something that is not water into a stained channel. Somebody stacked supplies here and never came back for them.</p>
+      <p class="beat delib">They might have chosen to work the lab bench, or move on — the Bold voted to meet it head-on. The party chose to put an edge back on at the anvil.</p>
+      <p class="beat">🔨 The party works a cold anvil: anvil-set edge on John Napier's weapon (+3 attack).</p>
+      <p class="aside">🕳️ The floor gives way — a hidden trapdoor. The party lands on the second floor, 1 room past where they were, taking 4 damage, and the rooms between go unlooted.</p>
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">🕯️ Room 5 — shrine</div>
+      <p class="beat">A shrine. Resting here heals the party; the gold leaf on the altar could be stripped instead. A sarcophagus stands against the wall with its lid slightly wrong. Pillars break the room into aisles — something to fight behind. A font holds water that has been still a long time and is somehow clean. A brazier burns in its bracket — nobody has been here to feed it, and it burns anyway.</p>
+      <p class="beat delib">They might have chosen to apply a natural remedy, or push through and take the hit — the Bold saw no reason to be careful about it. The party chose to bring the fever down.</p>
+      <p class="beat">💚 The fever breaks under the working's touch. Margaret Cavendish is steady again. +15 score.</p>
+      <p class="aside">🗝️ Margaret Cavendish pockets a sluice crank. Somewhere below there is a door it belongs to.</p>
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">⚠️ Room 6 — trap</div>
+      <p class="beat">A trap blocks the corridor. The party must disarm it, avoid it, or take the hit. Scorch marks fan out from a seam in the floor: a fire trap. A frost spell can blunt it. Half the ceiling is on the floor, in pieces worth stepping around. A bed of rusted spikes stands out of the floor, most of them still upright. A pit takes up a third of the floor. The bottom is not visible.</p>
+      <p class="beat delib">They might have chosen to read the dust, or cross in order — the Bold wanted it settled here. The party chose to solve the progression.</p>
+      <p class="beat">📐 Every third square, then every fifth: the safe path is a sequence, and once it is written down the rest of the mechanism is legible too. The party crosses dry-shod and reads the next snare off the same logic. +30 score.</p>
+      <p class="aside">🗝️ A sluice gate, wound shut — and the party is carrying a sluice crank. The flooded wing opens. 🧭 The party turns off into the flooded wing — a floor that slopes down into standing water. Its rooms join the route.</p>
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">⚠️ Room 7 — trap</div>
+      <p class="beat">A trap blocks the corridor. The party must disarm it, avoid it, or take the hit. Scorch marks fan out from a seam in the floor: a fire trap. A frost spell can blunt it. A pit takes up a third of the floor. The bottom is not visible.</p>
+      <p class="beat delib">They might have chosen to search for a way around, or bypass it with a utility spell — the Bold saw no reason to be careful about it. The party chose to push through and take the hit.</p>
+      <p class="beat">💥 The party pushes through the trap, taking 3 damage. 🔮 This is the snare the party was told about: half the damage it would have done. ❄️ Frost Lance counters the flame jet: 2 less damage.</p>
+      
+      <p class="hurt">✚ John Napier is wounded again — 2 scars now, and nothing can heal them past 11 before town.</p>
+      
+    </div>
+    <div class="room">
+      <div class="meta">💰 Room 8 — treasure</div>
+      <p class="beat">A treasure chest sits in the room. It may hold gold; it may be a mimic. A silvered mirror leans against the wall, and it shows the room more honestly than the room does.</p>
+      <p class="beat delib">They might have chosen to open it with Knock, or inspect it first — the Bold wanted it settled here. The party chose to loot the treasure.</p>
+      <p class="beat">🦷 The chest is a mimic. It bites for 5 damage before the party kills it, recovering 19 gold.</p>
+      
+      <p class="hurt">✚ 3 wounds on John Napier, and the ceiling with them: 9, and no more.</p>
+      
+    </div>
+    <div class="room">
+      <div class="meta">🪐 Room 9 — situation</div>
+      <p class="beat">A connecting corridor. Nothing blocks the way; the party moves through.</p>
+      <p class="beat delib">They might have chosen to sing the third harmony, or link the three frequencies — the Bold saw no reason to be careful about it. The party chose to attune the resonances.</p>
+      <p class="beat">🎶 The resonances snap into attunement. The chamber sings with one voice, the party heals 2 apiece, and they carry the chord out with them: the next fight comes 1 damage a round softer. +22 score.</p>
+      
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">🐉 Room 10 — boss</div>
+      <p class="beat">The boss chamber. The Forge Tyrant, hammer still warm waits at its center (attack 15, health 36); killing it clears the dungeon. Plate and chitin cover it: the party's blows do 2 less damage each round. Pillars break the room into aisles — something to fight behind. A pit takes up a third of the floor. The bottom is not visible.</p>
+      <p class="beat delib">They might have chosen to fall back, or pay the toll — the Bold saw no reason to be careful about it. The party chose to stand and fight.</p>
+      <p class="beat">⚔️ The party kills the Forge Tyrant, hammer still warm in 3 rounds, taking 26 damage. 🔪 Six knives arrive before the party does: 4 damage before the first round. 🧱 The party fights from behind a row of squat pillars: 1 less damage per round. 🔺 The party drives in as a wedge, everything committed forward. A fifth more damage dealt, a third more taken, and three of them swinging instead of two. 🔭 The aspect is favourable and the party knows it: 1 less damage a round. 🛡️ The party closes ranks: 1 less damage a round. 💢 At half health, the Forge Tyrant, hammer still warm turns fierce: attack +2 for the rest of the fight. 🔨 The Forge Tyrant, hammer still warm drops the Tyrant's hammer-head: a trinket (+2 attack), now worn by Marsilio Ficino. 🧪 Also in the hoard: a healing draught (heals 6), added to the satchel. 💥 The Reckless finish the fight with style: +5 score. 💚 Purify the Font heals 9 after the fight.</p>
+      <p class="aside">🕯️ The wick is well down the oil. 2 more marches of light, then none.</p>
+      <p class="hurt">✚ Marsilio Ficino is opened up badly enough that the delve will keep it: 12 is as whole as they get until town. The Reckless do not stop to bind anything, and more of it stays with them.</p>
+      <p class="fell">☠️ Margaret Cavendish falls. The party's wizard is dead; the survivors march on.</p><p class="fell">☠️ John Napier falls. The party's fighter is dead; the survivors march on.</p>
+    </div>
+
+    <h2>The way out</h2>
+      <p>the Cinder Galleries is cleared: the boss is dead and the party walks out. Survivors: Marsilio Ficino, Michael Maier. Rooms cleared: 10. Trophies carried out: 1 (latest: 🔨 the Tyrant's hammer-head).</p>
+    <p class="meta" style="margin-top:1rem">
+      Rooms cleared 10 · Score 335 ·
+      Gold 58 · Trophies 1 · Survivors 2
+    </p>
+    <p class="note" style="margin-top:2rem">Regenerate this exact delve:
+      <code>npm run simulate -- --seed log-easy-108</code></p>
+  </div></body></html>

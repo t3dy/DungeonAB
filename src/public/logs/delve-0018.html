@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Delve 18 — the Ancient Crypt</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='26'%3E%F0%9F%93%9C%3C/text%3E%3C/svg%3E">
+<style>
+:root{--ink:#e6ddc8;--dim:#8d8069;--gold:#d8a53f;--bg:#0b0a08;--panel:#14110c;
+      --line:#332a1c;--good:#6f9e5a;--bad:#b8523f;--warn:#b4863a}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:'Iowan Old Style',Georgia,serif;
+     line-height:1.6;padding:2rem 1.25rem 5rem}
+.wrap{max-width:52rem;margin:0 auto}
+.wide{max-width:70rem}
+a{color:var(--gold)}
+h1{font-size:1.7rem;color:var(--gold);margin-bottom:.3rem;letter-spacing:.01em}
+h2{font-size:1.15rem;color:var(--gold);margin:2.2rem 0 .7rem;
+   border-bottom:1px solid var(--line);padding-bottom:.3rem}
+h3{font-size:1rem;color:var(--ink);margin:1.6rem 0 .4rem}
+p{margin:.55rem 0}
+.sub{color:var(--dim);font-size:.9rem;margin-bottom:1.6rem}
+.mono{font-family:ui-monospace,'Courier New',monospace}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:4px;
+       padding:1rem 1.15rem;margin:1rem 0}
+.meta{color:var(--dim);font-size:.85rem}
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.9rem;margin-top:.6rem}
+th,td{text-align:left;padding:.42rem .5rem;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--dim);font-weight:normal;font-size:.8rem;text-transform:uppercase;letter-spacing:.06em}
+tr:hover td{background:#181409}
+.pass{color:var(--good)} .fail{color:var(--bad)} .na{color:var(--dim)}
+.pill{display:inline-block;padding:.05rem .45rem;border:1px solid var(--line);
+      border-radius:999px;font-size:.75rem;color:var(--dim)}
+.room{border-left:2px solid var(--line);padding:.1rem 0 .1rem 1rem;margin:1.4rem 0}
+.room .beat{margin:.5rem 0}
+.room .delib{color:#c9bda2;font-style:italic}
+.aside{color:var(--dim);font-style:italic}
+.fell{color:var(--bad)}
+.hurt{color:var(--warn)}
+.quote{border-left:3px solid var(--gold);padding-left:.9rem;color:#efe6d0;font-size:1.02rem}
+.back{display:inline-block;margin-bottom:1.4rem;font-size:.85rem}
+.bar{height:6px;background:#241d12;border-radius:3px;overflow:hidden;min-width:5rem}
+.bar > i{display:block;height:100%;background:var(--gold)}
+.note{color:var(--dim);font-size:.85rem}
+code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a86a}
+</style></head>
+<body><div class="wrap">
+    <a class="back" href="./index.html">← all logs</a>
+    <h1>the Ancient Crypt</h1>
+    <p class="sub">
+      medium · 6 rooms ·
+      came back ·
+      <span class="mono">seed log-medium-17</span>
+    </p>
+
+    <p class="meta">Who went down: 🗡️ Kenelm Digby (rogue), 🔮 Giordano Bruno (wizard), ⚗️ Isabella Cortese (alchemist), ⚔️ Michael Sendivogius (fighter)</p>
+
+    <div class="panel"><p class="quote">📖 The Abbot of Worms, still preaching drops the Abbot's last sermon: a scroll of Final Benediction (combat, power 5), added to the grimoire.</p>
+      <p class="note" style="margin-top:.6rem">The line this delve would be retold by.</p></div>
+
+    <h2>The dramaturg reads it</h2>
+    <div class="panel">
+      <p class="note">5 of
+        9 values met.
+        A reading, not a grade — the score exists to sort logs, not to judge them.</p>
+      <table><thead><tr><th></th><th>Value</th><th>What the log shows</th></tr></thead>
+      <tbody>
+    <tr>
+      <td><span class="pass">met</span></td>
+      <td>A delve should be about somebody.</td>
+      <td class="note">Giordano Bruno carries it (2 mentions against 2); 3/4 named</td>
+    </tr>
+    <tr>
+      <td><span class="fail">missed</span></td>
+      <td>Rooms should be in the order they are for a reason.</td>
+      <td class="note">1 of 6 rooms answer an earlier one (17%)</td>
+    </tr>
+    <tr>
+      <td><span class="pass">met</span></td>
+      <td>Something must go wrong, and it should be legible when it does.</td>
+      <td class="note">2 rooms cost the party something</td>
+    </tr>
+    <tr>
+      <td><span class="fail">missed</span></td>
+      <td>If every room is a beat, no room is.</td>
+      <td class="note">flat: peak 3 against a median of 2 — no room stands out</td>
+    </tr>
+    <tr>
+      <td><span class="pass">met</span></td>
+      <td>A choice reads as a choice only when the alternatives are named.</td>
+      <td class="note">6 of 6 deliberations name a road not taken</td>
+    </tr>
+    <tr>
+      <td><span class="na">n/a</span></td>
+      <td>A death is only worth reading if the dead had a line first.</td>
+      <td class="note">nobody fell</td>
+    </tr>
+    <tr>
+      <td><span class="pass">met</span></td>
+      <td>Name the thing and state the number.</td>
+      <td class="note">6 of 6 resolutions state a number</td>
+    </tr>
+    <tr>
+      <td><span class="fail">missed</span></td>
+      <td>A resolution should be readable in one breath.</td>
+      <td class="note">1 of 6 resolutions run past 320 characters (longest 857)</td>
+    </tr>
+    <tr>
+      <td><span class="fail">missed</span></td>
+      <td>The back half should cost more than the front half.</td>
+      <td class="note">front half 1, back half 0</td>
+    </tr>
+    <tr>
+      <td><span class="pass">met</span></td>
+      <td>The ending should answer the delve it ended.</td>
+      <td class="note">the epitaph names somebody who went down</td>
+    </tr></tbody></table>
+    </div>
+
+    <h2>The transcript</h2>
+    
+    <div class="room">
+      <div class="meta">📚 Room 1 — library</div>
+      <p class="beat">A library. The party can study here to learn spells. A brazier burns in its bracket — nobody has been here to feed it, and it burns anyway.</p>
+      <p class="beat delib">They might have chosen to study the shelves, or move on — Giordano Bruno made the case: &quot;This will only take a syllable.&quot; The party chose to read the sealed texts.</p>
+      <p class="beat">🔏 The wizard reads the sealed texts: 2 spells learned, including a forbidden working. +50 score. 📖 The Grimoire of Low Whispers adds +1.5 to the reading roll.</p>
+      
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">🌿 Room 2 — materials</div>
+      <p class="beat">A room of herbs, salts, and quicksilver — alchemy materials, free to gather. A gargoyle spout drips something that is not water into a stained channel.</p>
+      <p class="beat delib">They might have chosen to move on, or harvest the spout — Isabella Cortese made the case: &quot;Don't breathe in until I say.&quot; The party chose to gather the materials.</p>
+      <p class="beat">🌿 The party gathers 1 bundle of alchemy materials.</p>
+      
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">🕯️ Room 3 — shrine</div>
+      <p class="beat">A shrine. Resting here heals the party; the gold leaf on the altar could be stripped instead. A sarcophagus stands against the wall with its lid slightly wrong. Pillars break the room into aisles — something to fight behind. A font holds water that has been still a long time and is somehow clean.</p>
+      <p class="beat delib">They might have chosen to rest and heal, or strip the gold leaf — nobody argued. The party chose to bless the font and drink.</p>
+      <p class="beat">⛲ The cleric says the words over a stone font of still water and the party drinks: 12 health healed.</p>
+      <p class="aside">🕳️ Kenelm Digby finds a hidden door into the barracks wing. Behind it: bunkrooms and a picked-over weapon rack. Its rooms join the route. 🕳️ Kenelm Digby finds a trapdoor in the floor. The party ropes down the shaft and lands on the second floor, skipping 6 rooms ahead and taking 3 damage.</p>
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">🪐 Room 4 — situation</div>
+      <p class="beat">A connecting corridor. Nothing blocks the way; the party moves through.</p>
+      <p class="beat delib">They might have chosen to recognize the cosmological model, or hold the stationary floor — nobody argued. The party chose to divine the unstable motion.</p>
+      <p class="beat">🔮 The dangerous motion is named before it completes. The party crosses untouched, and forewarned of the next snare in their path. +15 score.</p>
+      
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">⚗️ Room 5 — lab</div>
+      <p class="beat">An alchemy lab with a working bench. An alchemist with materials can brew or coat weapons here. A brazier burns in its bracket — nobody has been here to feed it, and it burns anyway.</p>
+      <p class="beat delib">They might have chosen to experiment with the assembly, or take one of the side passages — nobody argued. The party chose to dissolve the lock.</p>
+      <p class="beat">⚗️ The lock dissolves. The mechanism doesn't open the door, but it doesn't need to now. +15 score.</p>
+      
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">🐉 Room 6 — boss</div>
+      <p class="beat">The boss chamber. The Abbot of Worms, still preaching waits at its center (attack 14, health 51); killing it clears the dungeon. It is venomous: even a won fight leaves poison working, unless a cleric cures it. It will not face the cleric: undead take holy damage ×1.5. A sarcophagus stands against the wall with its lid slightly wrong. A brazier burns in its bracket — nobody has been here to feed it, and it burns anyway. Pillars break the room into aisles — something to fight behind.</p>
+      <p class="beat delib">They might have chosen to stand and fight, or fall back — Giordano Bruno made the case: &quot;Allow me.&quot; The party chose to open with a combat spell.</p>
+      <p class="beat">🔥 The caster opens with Radiant Lance, chosen precisely for the monster's holy weakness: spell damage ×1.5. ⚔️ The Abbot of Worms, still preaching is dead before the party closes: it never gets a round. 🔪 Six knives arrive before the party does: 4 damage before the first round. 🧱 The party fights from behind a row of squat pillars: 1 less damage per round. 🔨 The Blessed Mace sanctifies the room between swings: whatever was stirring in the stone settles. ✨ Nothing is held back for later: the party looses everything it has, 4 workings in the one fight that matters. 📖 The Abbot of Worms, still preaching drops the Abbot's last sermon: a scroll of Final Benediction (combat, power 5), added to the grimoire. 🐍 The Blade of the Adder has taught its bearer what venom tastes like: the party shrugs this off. 🌿 Also in the hoard: 2 alchemy materials.</p>
+      
+      
+      
+    </div>
+
+    <h2>The way out</h2>
+      <p>the Ancient Crypt is cleared: the boss is dead and the party walks out. Survivors: Kenelm Digby, Giordano Bruno, Isabella Cortese, Michael Sendivogius. Rooms cleared: 6. Trophies carried out: 1 (latest: 📖 the Abbot's last sermon).</p>
+    <p class="meta" style="margin-top:1rem">
+      Rooms cleared 6 · Score 335 ·
+      Gold 0 · Trophies 1 · Survivors 4
+    </p>
+    <p class="note" style="margin-top:2rem">Regenerate this exact delve:
+      <code>npm run simulate -- --seed log-medium-17</code></p>
+  </div></body></html>

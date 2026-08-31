@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Delve 65 — the Root Cellar of the Bog Witch</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='26'%3E%F0%9F%93%9C%3C/text%3E%3C/svg%3E">
+<style>
+:root{--ink:#e6ddc8;--dim:#8d8069;--gold:#d8a53f;--bg:#0b0a08;--panel:#14110c;
+      --line:#332a1c;--good:#6f9e5a;--bad:#b8523f;--warn:#b4863a}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:'Iowan Old Style',Georgia,serif;
+     line-height:1.6;padding:2rem 1.25rem 5rem}
+.wrap{max-width:52rem;margin:0 auto}
+.wide{max-width:70rem}
+a{color:var(--gold)}
+h1{font-size:1.7rem;color:var(--gold);margin-bottom:.3rem;letter-spacing:.01em}
+h2{font-size:1.15rem;color:var(--gold);margin:2.2rem 0 .7rem;
+   border-bottom:1px solid var(--line);padding-bottom:.3rem}
+h3{font-size:1rem;color:var(--ink);margin:1.6rem 0 .4rem}
+p{margin:.55rem 0}
+.sub{color:var(--dim);font-size:.9rem;margin-bottom:1.6rem}
+.mono{font-family:ui-monospace,'Courier New',monospace}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:4px;
+       padding:1rem 1.15rem;margin:1rem 0}
+.meta{color:var(--dim);font-size:.85rem}
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.9rem;margin-top:.6rem}
+th,td{text-align:left;padding:.42rem .5rem;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--dim);font-weight:normal;font-size:.8rem;text-transform:uppercase;letter-spacing:.06em}
+tr:hover td{background:#181409}
+.pass{color:var(--good)} .fail{color:var(--bad)} .na{color:var(--dim)}
+.pill{display:inline-block;padding:.05rem .45rem;border:1px solid var(--line);
+      border-radius:999px;font-size:.75rem;color:var(--dim)}
+.room{border-left:2px solid var(--line);padding:.1rem 0 .1rem 1rem;margin:1.4rem 0}
+.room .beat{margin:.5rem 0}
+.room .delib{color:#c9bda2;font-style:italic}
+.aside{color:var(--dim);font-style:italic}
+.fell{color:var(--bad)}
+.hurt{color:var(--warn)}
+.quote{border-left:3px solid var(--gold);padding-left:.9rem;color:#efe6d0;font-size:1.02rem}
+.back{display:inline-block;margin-bottom:1.4rem;font-size:.85rem}
+.bar{height:6px;background:#241d12;border-radius:3px;overflow:hidden;min-width:5rem}
+.bar > i{display:block;height:100%;background:var(--gold)}
+.note{color:var(--dim);font-size:.85rem}
+code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a86a}
+</style></head>
+<body><div class="wrap">
+    <a class="back" href="./index.html">← all logs</a>
+    <h1>the Root Cellar of the Bog Witch</h1>
+    <p class="sub">
+      easy · 6 rooms ·
+      came back ·
+      <span class="mono">seed log-easy-64</span>
+    </p>
+
+    <p class="meta">Who went down: ✨ Simon Forman (cleric), 🗡️ Johannes Trithemius (rogue), ⚔️ John Napier (fighter), ⚔️ Tycho Brahe (fighter)</p>
+
+    <div class="panel"><p class="quote">🍲 The Bog Witch, delighted to have company for dinner drops the Witch's receipt-book: a scroll of the Witch's Receipt (utility, power 5), added to the grimoire.</p>
+      <p class="note" style="margin-top:.6rem">The line this delve would be retold by.</p></div>
+
+    <h2>The dramaturg reads it</h2>
+    <div class="panel">
+      <p class="note">6 of
+        9 values met.
+        A reading, not a grade — the score exists to sort logs, not to judge them.</p>
+      <table><thead><tr><th></th><th>Value</th><th>What the log shows</th></tr></thead>
+      <tbody>
+    <tr>
+      <td><span class="pass">met</span></td>
+      <td>A delve should be about somebody.</td>
+      <td class="note">John Napier carries it (2 mentions against 1); 2/4 named</td>
+    </tr>
+    <tr>
+      <td><span class="fail">missed</span></td>
+      <td>Rooms should be in the order they are for a reason.</td>
+      <td class="note">nothing any room did reaches any later room</td>
+    </tr>
+    <tr>
+      <td><span class="pass">met</span></td>
+      <td>Something must go wrong, and it should be legible when it does.</td>
+      <td class="note">2 rooms cost the party something</td>
+    </tr>
+    <tr>
+      <td><span class="pass">met</span></td>
+      <td>If every room is a beat, no room is.</td>
+      <td class="note">the loudest room runs 2.0× the median (peak 4, median 2)</td>
+    </tr>
+    <tr>
+      <td><span class="pass">met</span></td>
+      <td>A choice reads as a choice only when the alternatives are named.</td>
+      <td class="note">6 of 6 deliberations name a road not taken</td>
+    </tr>
+    <tr>
+      <td><span class="na">n/a</span></td>
+      <td>A death is only worth reading if the dead had a line first.</td>
+      <td class="note">nobody fell</td>
+    </tr>
+    <tr>
+      <td><span class="pass">met</span></td>
+      <td>Name the thing and state the number.</td>
+      <td class="note">6 of 6 resolutions state a number</td>
+    </tr>
+    <tr>
+      <td><span class="fail">missed</span></td>
+      <td>A resolution should be readable in one breath.</td>
+      <td class="note">1 of 6 resolutions run past 320 characters (longest 1102)</td>
+    </tr>
+    <tr>
+      <td><span class="fail">missed</span></td>
+      <td>The back half should cost more than the front half.</td>
+      <td class="note">front half 3, back half 2</td>
+    </tr>
+    <tr>
+      <td><span class="pass">met</span></td>
+      <td>The ending should answer the delve it ended.</td>
+      <td class="note">the epitaph names somebody who went down</td>
+    </tr></tbody></table>
+    </div>
+
+    <h2>The transcript</h2>
+    
+    <div class="room">
+      <div class="meta">🕯️ Room 1 — shrine</div>
+      <p class="beat">A shrine. Resting here heals the party; the gold leaf on the altar could be stripped instead. A font holds water that has been still a long time and is somehow clean.</p>
+      <p class="beat delib">They might have chosen to bring the fever down, or push through and take the hit — the Cunning picked the safer angle. The party chose to diagnose and treat the fever.</p>
+      <p class="beat">💊 The diagnosis is swift: a blood imbalance, easily corrected. Medical knowledge and a minute's treatment restore full vigor. +18 score.</p>
+      <p class="aside">🕳️ Johannes Trithemius finds a trapdoor in the floor. The party ropes down the shaft and lands on the second floor, skipping 3 rooms ahead and taking 2 damage.</p>
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">🕯️ Room 2 — shrine</div>
+      <p class="beat">A shrine. Resting here heals the party; the gold leaf on the altar could be stripped instead. Pillars break the room into aisles — something to fight behind. A sarcophagus stands against the wall with its lid slightly wrong. A brazier burns in its bracket — nobody has been here to feed it, and it burns anyway.</p>
+      <p class="beat delib">They might have chosen to attune the resonances, or link the three frequencies — the Cunning had already worked out the odds. The party chose to pry the sarcophagus open.</p>
+      <p class="beat">⚰️ The party pries the lid off a stone sarcophagus: 55 gold.</p>
+      
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">📚 Room 3 — library</div>
+      <p class="beat">A library. The party can study here to learn spells. A font holds water that has been still a long time and is somehow clean. Shelves sag under books nobody has audited in a century.</p>
+      <p class="beat delib">They might have chosen to reconstruct the mosaic from memory, or recognize the mosaic — the Cunning had already worked out the odds. The party chose to study the shelves.</p>
+      <p class="beat">📚 The party studies the shelves and learns 2 spells.</p>
+      
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">🕯️ Room 4 — shrine</div>
+      <p class="beat">A shrine. Resting here heals the party; the gold leaf on the altar could be stripped instead. A silvered mirror leans against the wall, and it shows the room more honestly than the room does.</p>
+      <p class="beat delib">They might have chosen to rest and heal, or move on — the Cunning looked for the way that costs least. The party chose to strip the gold leaf.</p>
+      <p class="beat">⛏️ The party strips 30 gold of leaf from the altar. The next disaster will hit harder for it.</p>
+      
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">⚗️ Room 5 — lab</div>
+      <p class="beat">An alchemy lab with a working bench. An alchemist with materials can brew or coat weapons here. A brazier burns in its bracket — nobody has been here to feed it, and it burns anyway. Somebody stacked supplies here and never came back for them.</p>
+      <p class="beat delib">They might have chosen to move on — the Cunning had already worked out the odds. The party chose to crack the crates open.</p>
+      <p class="beat">📦 The party cracks open stacked crates and barrels: 40 gold, 2 materials.</p>
+      
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">🐉 Room 6 — boss</div>
+      <p class="beat">The boss chamber. The Bog Witch, delighted to have company for dinner waits at its center (attack 13, health 36); killing it clears the dungeon. A portcullis hangs raised above the passage, on a chain that still turns. A sarcophagus stands against the wall with its lid slightly wrong. A silvered mirror leans against the wall, and it shows the room more honestly than the room does.</p>
+      <p class="beat delib">They might have chosen to stand and fight, or fall back — the Cunning looked for the way that costs least. The party chose to drop the portcullis on it.</p>
+      <p class="beat">🚧 The winch lets go and a raised portcullis comes down across the monster: 14 damage. ⚔️ The party kills the Bog Witch, delighted to have company for dinner in 2 rounds, taking 10 damage. 🔪 Six knives arrive before the party does: 4 damage before the first round. 🪞 A tall silvered mirror shows the ethereal where it truly stands: weapons do full damage. 🔨 The Blessed Mace sanctifies the room between swings: whatever was stirring in the stone settles. 🌐 There is room enough in the hall to fight spread out, well apart. A little less given and a little less taken, and only half of any blast reaches the party. 💢 At half health, the Bog Witch, delighted to have company for dinner turns fierce: attack +2 for the rest of the fight. 💚 Mending Word closes John Napier's wounds mid-fight: 10 healed in round 1, then 5 a round while it holds. 🍲 The Bog Witch, delighted to have company for dinner drops the Witch's receipt-book: a scroll of the Witch's Receipt (utility, power 5), added to the grimoire. 🍀 Also in the hoard: a dead adventurer's belt buckle (+1 defense), now worn by John Napier.</p>
+      
+      <p class="hurt">✚ John Napier takes a wound that will not close down here. Healing can bring them back to 13, no further, until town.</p>
+      
+    </div>
+
+    <h2>The way out</h2>
+      <p>the Root Cellar of the Bog Witch is cleared: the boss is dead and the party walks out. Survivors: Simon Forman, Johannes Trithemius, John Napier, Tycho Brahe. Rooms cleared: 6. Trophies carried out: 1 (latest: 🍲 the Witch's receipt-book).</p>
+    <p class="meta" style="margin-top:1rem">
+      Rooms cleared 6 · Score 383 ·
+      Gold 125 · Trophies 1 · Survivors 4
+    </p>
+    <p class="note" style="margin-top:2rem">Regenerate this exact delve:
+      <code>npm run simulate -- --seed log-easy-64</code></p>
+  </div></body></html>

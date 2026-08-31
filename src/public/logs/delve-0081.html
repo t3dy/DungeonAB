@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Delve 81 — the Drowned Athenaeum</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='26'%3E%F0%9F%93%9C%3C/text%3E%3C/svg%3E">
+<style>
+:root{--ink:#e6ddc8;--dim:#8d8069;--gold:#d8a53f;--bg:#0b0a08;--panel:#14110c;
+      --line:#332a1c;--good:#6f9e5a;--bad:#b8523f;--warn:#b4863a}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:'Iowan Old Style',Georgia,serif;
+     line-height:1.6;padding:2rem 1.25rem 5rem}
+.wrap{max-width:52rem;margin:0 auto}
+.wide{max-width:70rem}
+a{color:var(--gold)}
+h1{font-size:1.7rem;color:var(--gold);margin-bottom:.3rem;letter-spacing:.01em}
+h2{font-size:1.15rem;color:var(--gold);margin:2.2rem 0 .7rem;
+   border-bottom:1px solid var(--line);padding-bottom:.3rem}
+h3{font-size:1rem;color:var(--ink);margin:1.6rem 0 .4rem}
+p{margin:.55rem 0}
+.sub{color:var(--dim);font-size:.9rem;margin-bottom:1.6rem}
+.mono{font-family:ui-monospace,'Courier New',monospace}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:4px;
+       padding:1rem 1.15rem;margin:1rem 0}
+.meta{color:var(--dim);font-size:.85rem}
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.9rem;margin-top:.6rem}
+th,td{text-align:left;padding:.42rem .5rem;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--dim);font-weight:normal;font-size:.8rem;text-transform:uppercase;letter-spacing:.06em}
+tr:hover td{background:#181409}
+.pass{color:var(--good)} .fail{color:var(--bad)} .na{color:var(--dim)}
+.pill{display:inline-block;padding:.05rem .45rem;border:1px solid var(--line);
+      border-radius:999px;font-size:.75rem;color:var(--dim)}
+.room{border-left:2px solid var(--line);padding:.1rem 0 .1rem 1rem;margin:1.4rem 0}
+.room .beat{margin:.5rem 0}
+.room .delib{color:#c9bda2;font-style:italic}
+.aside{color:var(--dim);font-style:italic}
+.fell{color:var(--bad)}
+.hurt{color:var(--warn)}
+.quote{border-left:3px solid var(--gold);padding-left:.9rem;color:#efe6d0;font-size:1.02rem}
+.back{display:inline-block;margin-bottom:1.4rem;font-size:.85rem}
+.bar{height:6px;background:#241d12;border-radius:3px;overflow:hidden;min-width:5rem}
+.bar > i{display:block;height:100%;background:var(--gold)}
+.note{color:var(--dim);font-size:.85rem}
+code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a86a}
+</style></head>
+<body><div class="wrap">
+    <a class="back" href="./index.html">← all logs</a>
+    <h1>the Drowned Athenaeum</h1>
+    <p class="sub">
+      easy · 13 rooms ·
+      came back ·
+      <span class="mono">seed log-easy-80</span>
+    </p>
+
+    <p class="meta">Who went down: 🔮 Giordano Bruno (wizard), ⚔️ Michael Sendivogius (fighter), ✨ Marsilio Ficino (cleric), ⚔️ Cornelius Agrippa (fighter)</p>
+
+    <div class="panel"><p class="quote">📝 The Grand Errata, a book that reads back drops the dearest correction: a trinket (+2 mind), now worn by Cornelius Agrippa.</p>
+      <p class="note" style="margin-top:.6rem">The line this delve would be retold by.</p></div>
+
+    <h2>The dramaturg reads it</h2>
+    <div class="panel">
+      <p class="note">4 of
+        9 values met.
+        A reading, not a grade — the score exists to sort logs, not to judge them.</p>
+      <table><thead><tr><th></th><th>Value</th><th>What the log shows</th></tr></thead>
+      <tbody>
+    <tr>
+      <td><span class="fail">missed</span></td>
+      <td>A delve should be about somebody.</td>
+      <td class="note">the most-named magus (Cornelius Agrippa) appears once — nobody emerges</td>
+    </tr>
+    <tr>
+      <td><span class="fail">missed</span></td>
+      <td>Rooms should be in the order they are for a reason.</td>
+      <td class="note">nothing any room did reaches any later room</td>
+    </tr>
+    <tr>
+      <td><span class="pass">met</span></td>
+      <td>Something must go wrong, and it should be legible when it does.</td>
+      <td class="note">3 rooms cost the party something</td>
+    </tr>
+    <tr>
+      <td><span class="pass">met</span></td>
+      <td>If every room is a beat, no room is.</td>
+      <td class="note">the loudest room runs 2.0× the median (peak 4, median 2)</td>
+    </tr>
+    <tr>
+      <td><span class="pass">met</span></td>
+      <td>A choice reads as a choice only when the alternatives are named.</td>
+      <td class="note">12 of 13 deliberations name a road not taken</td>
+    </tr>
+    <tr>
+      <td><span class="na">n/a</span></td>
+      <td>A death is only worth reading if the dead had a line first.</td>
+      <td class="note">nobody fell</td>
+    </tr>
+    <tr>
+      <td><span class="fail">missed</span></td>
+      <td>Name the thing and state the number.</td>
+      <td class="note">6 of 13 resolutions state a number</td>
+    </tr>
+    <tr>
+      <td><span class="fail">missed</span></td>
+      <td>A resolution should be readable in one breath.</td>
+      <td class="note">1 of 13 resolutions run past 320 characters (longest 1133)</td>
+    </tr>
+    <tr>
+      <td><span class="fail">missed</span></td>
+      <td>The back half should cost more than the front half.</td>
+      <td class="note">front half 6, back half 2</td>
+    </tr>
+    <tr>
+      <td><span class="pass">met</span></td>
+      <td>The ending should answer the delve it ended.</td>
+      <td class="note">the epitaph names somebody who went down</td>
+    </tr></tbody></table>
+    </div>
+
+    <h2>The transcript</h2>
+    
+    <div class="room">
+      <div class="meta">⚗️ Room 1 — lab</div>
+      <p class="beat">An alchemy lab with a working bench. An alchemist with materials can brew or coat weapons here. Somebody stacked supplies here and never came back for them. Shelves sag under books nobody has audited in a century. A gargoyle spout drips something that is not water into a stained channel.</p>
+      <p class="beat delib">They might have chosen to strip the shelves — the Covetous counted what was in the room first. The party chose to move on.</p>
+      <p class="beat">The party crosses the room and takes the far door.</p>
+      
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">📚 Room 2 — library</div>
+      <p class="beat">A library. The party can study here to learn spells. A brazier burns in its bracket — nobody has been here to feed it, and it burns anyway. Pillars break the room into aisles — something to fight behind. Shelves sag under books nobody has audited in a century.</p>
+      <p class="beat delib">They might have chosen to read the sealed texts, or study the shelves — the Covetous refused to leave anything behind. The party chose to move on.</p>
+      <p class="beat">Nothing here needs doing. The party walks on.</p>
+      <p class="aside">🧭 The party turns off into the flooded wing — a floor that slopes down into standing water. Its rooms join the route.</p>
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">🌋 Room 3 — disaster</div>
+      <p class="beat">The stacks collapse and the floodwater rises; falling shelves and water both do damage. The party must brace together or scatter.</p>
+      <p class="beat delib">They might have chosen to brace together — the Covetous wanted the payout. The party chose to scatter and regroup.</p>
+      <p class="beat">🌋 The party scatters; nearly everyone finds cover. Minimal damage.</p>
+      
+      <p class="hurt">✚ Giordano Bruno is opened up badly enough that the delve will keep it: 10 is as whole as they get until town. The Reckless do not stop to bind anything, and more of it stays with them.</p>
+      
+    </div>
+    <div class="room">
+      <div class="meta">⚠️ Room 4 — trap</div>
+      <p class="beat">A trap blocks the corridor. The party must disarm it, avoid it, or take the hit. A bed of rusted spikes stands out of the floor, most of them still upright. A pit takes up a third of the floor. The bottom is not visible.</p>
+      <p class="beat delib">They might have chosen to search for a way around, or bypass it with a utility spell — the Covetous counted what was in the room first. The party chose to push through and take the hit.</p>
+      <p class="beat">💥 The party pushes through the trap, taking 5 damage.</p>
+      
+      <p class="hurt">✚ Michael Sendivogius takes a wound that will not close down here. Healing can bring them back to 11, no further, until town. The Reckless do not stop to bind anything, and more of it stays with them.</p>
+      
+    </div>
+    <div class="room">
+      <div class="meta">💰 Room 5 — treasure</div>
+      <p class="beat">A treasure chest sits in the room. It may hold gold; it may be a mimic. A silvered mirror leans against the wall, and it shows the room more honestly than the room does. A sarcophagus stands against the wall with its lid slightly wrong.</p>
+      <p class="beat delib">They might have chosen to inspect it first, or leave it alone — the Covetous wanted the payout. The party chose to loot the treasure.</p>
+      <p class="beat">💰 The party loots the chest: 36 gold.</p>
+      
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">📚 Room 6 — library</div>
+      <p class="beat">A library. The party can study here to learn spells. Pillars break the room into aisles — something to fight behind. A brazier burns in its bracket — nobody has been here to feed it, and it burns anyway. A font holds water that has been still a long time and is somehow clean.</p>
+      <p class="beat delib">They might have chosen to reconstruct his rounds, or question the ghost gently — the Covetous counted what was in the room first. The party chose to bless the font and drink.</p>
+      <p class="beat">⛲ The cleric says the words over a stone font of still water and the party drinks: 12 health healed.</p>
+      
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">🪐 Room 7 — situation</div>
+      <p class="beat">A connecting corridor. Nothing blocks the way; the party moves through.</p>
+      <p class="beat delib">They might have chosen to cross in order, or just walk it — the Covetous wanted the payout. The party chose to ask which square is safe.</p>
+      <p class="beat">🔮 The question is put once, at the threshold, and answered squarely enough to cross on. +20 score.</p>
+      <p class="aside">🕳️ Giordano Bruno finds a trapdoor in the floor. The party leaves it shut: the rooms it skips hold loot as well as danger.</p>
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">🪜 Room 8 — stairs</div>
+      <p class="beat">Steps down, worn in the middle by traffic that stopped a long time ago.</p>
+      <p class="beat delib">They might have chosen to camp at the stairhead first — the Covetous wanted the payout. The party chose to take the stair down.</p>
+      <p class="beat">🪜 The party goes down the stair to the second floor, burning a march of oil on the climb.</p>
+      
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">⚗️ Room 9 — lab</div>
+      <p class="beat">An alchemy lab with a working bench. An alchemist with materials can brew or coat weapons here. A gargoyle spout drips something that is not water into a stained channel. Somebody stacked supplies here and never came back for them. An anvil sits under a dead forge, still true.</p>
+      <p class="beat delib">They might have chosen to put an edge back on at the anvil — the Covetous refused to leave anything behind. The party chose to move on.</p>
+      <p class="beat">The party files through and leaves the room behind.</p>
+      <p class="aside">🕯️ The lantern is burning low: oil for 2 more marches.</p>
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">🪐 Room 10 — situation</div>
+      <p class="beat">A connecting corridor. Nothing blocks the way; the party moves through.</p>
+      <p class="beat delib">They might have chosen to search the room methodically, or divine what is hidden here — the Covetous wanted the payout. The party chose to move along.</p>
+      <p class="beat">⏭️ Nothing here. You move on, and never know what you passed.</p>
+      <p class="aside">🕯️ The lantern is burning low: oil for 1 more march.</p>
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">⚗️ Room 11 — lab</div>
+      <p class="beat">An alchemy lab with a working bench. An alchemist with materials can brew or coat weapons here. Somebody stacked supplies here and never came back for them. A brazier burns in its bracket — nobody has been here to feed it, and it burns anyway.</p>
+      <p class="beat delib">There was only one option: the party chose to move on.</p>
+      <p class="beat">The party files through and leaves the room behind.</p>
+      <p class="aside">🕯️ The last of the oil goes. From here the party walks in the dark.</p>
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">🕯️ Room 12 — shrine</div>
+      <p class="beat">A shrine. Resting here heals the party; the gold leaf on the altar could be stripped instead. A brazier burns in its bracket — nobody has been here to feed it, and it burns anyway. Pillars break the room into aisles — something to fight behind. A sarcophagus stands against the wall with its lid slightly wrong. A silvered mirror leans against the wall, and it shows the room more honestly than the room does.</p>
+      <p class="beat delib">They might have chosen to rest and heal, or move on — the Covetous wanted the payout. The party chose to strip the gold leaf.</p>
+      <p class="beat">⛏️ The party strips 30 gold of leaf from the altar. The next disaster will hit harder for it.</p>
+      <p class="aside">👁️ Eyes of the Mouse leads them through whole — none of the usual 3 damage.</p>
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">🐉 Room 13 — boss</div>
+      <p class="beat">The boss chamber. The Grand Errata, a book that reads back waits at its center (attack 13, health 37); killing it clears the dungeon. Plate and chitin cover it: the party's blows do 2 less damage each round. It keeps clear of the torches: weak to fire (fire damage ×1.5). A brazier burns in its bracket — nobody has been here to feed it, and it burns anyway. A pit takes up a third of the floor. The bottom is not visible. Pillars break the room into aisles — something to fight behind. A silvered mirror leans against the wall, and it shows the room more honestly than the room does.</p>
+      <p class="beat delib">They might have chosen to stand and fight, or fall back — the Covetous counted what was in the room first. The party chose to shove it into the pit.</p>
+      <p class="beat">🕳️ The party shoves the monster into an open pit: 16 damage, and it has to climb back out. ⚔️ The party kills the Grand Errata, a book that reads back in 3 rounds, taking 4 damage. 🔧 The party knows how to swing what the room left lying about: +5 to the opening. 🗡️ The daggers land before the argument starts: nothing comes back in the first round. 🛡️ Aegis of Ash goes up before the first blow: 2 less damage every round. 🧱 The party fights from behind a row of squat pillars: 1 less damage per round. 🪞 A tall silvered mirror shows the ethereal where it truly stands: weapons do full damage. 🛡️ Shields lock along the front rank and the party stops trying to win quickly. A third less damage a round and a quarter less dealt — but packed tight, so anything with a blast radius hurts more. 💢 At half health, the Grand Errata, a book that reads back turns fierce: attack +2 for the rest of the fight. 📝 The Grand Errata, a book that reads back drops the dearest correction: a trinket (+2 mind), now worn by Cornelius Agrippa. 🌿 Also in the hoard: 2 alchemy materials. 💥 The Reckless finish the fight with style: +5 score.</p>
+      
+      <p class="hurt">✚ 2 wounds on Michael Sendivogius, and the ceiling with them: 9, and no more.</p>
+      
+    </div>
+
+    <h2>The way out</h2>
+      <p>the Drowned Athenaeum is cleared: the boss is dead and the party walks out. Survivors: Giordano Bruno, Michael Sendivogius, Marsilio Ficino, Cornelius Agrippa. Rooms cleared: 13. Trophies carried out: 1 (latest: 📝 the dearest correction).</p>
+    <p class="meta" style="margin-top:1rem">
+      Rooms cleared 13 · Score 294 ·
+      Gold 66 · Trophies 1 · Survivors 4
+    </p>
+    <p class="note" style="margin-top:2rem">Regenerate this exact delve:
+      <code>npm run simulate -- --seed log-easy-80</code></p>
+  </div></body></html>

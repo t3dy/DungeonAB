@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Delve 93 — the Mad Alchemist's Dungeon</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='26'%3E%F0%9F%93%9C%3C/text%3E%3C/svg%3E">
+<style>
+:root{--ink:#e6ddc8;--dim:#8d8069;--gold:#d8a53f;--bg:#0b0a08;--panel:#14110c;
+      --line:#332a1c;--good:#6f9e5a;--bad:#b8523f;--warn:#b4863a}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:'Iowan Old Style',Georgia,serif;
+     line-height:1.6;padding:2rem 1.25rem 5rem}
+.wrap{max-width:52rem;margin:0 auto}
+.wide{max-width:70rem}
+a{color:var(--gold)}
+h1{font-size:1.7rem;color:var(--gold);margin-bottom:.3rem;letter-spacing:.01em}
+h2{font-size:1.15rem;color:var(--gold);margin:2.2rem 0 .7rem;
+   border-bottom:1px solid var(--line);padding-bottom:.3rem}
+h3{font-size:1rem;color:var(--ink);margin:1.6rem 0 .4rem}
+p{margin:.55rem 0}
+.sub{color:var(--dim);font-size:.9rem;margin-bottom:1.6rem}
+.mono{font-family:ui-monospace,'Courier New',monospace}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:4px;
+       padding:1rem 1.15rem;margin:1rem 0}
+.meta{color:var(--dim);font-size:.85rem}
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.9rem;margin-top:.6rem}
+th,td{text-align:left;padding:.42rem .5rem;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--dim);font-weight:normal;font-size:.8rem;text-transform:uppercase;letter-spacing:.06em}
+tr:hover td{background:#181409}
+.pass{color:var(--good)} .fail{color:var(--bad)} .na{color:var(--dim)}
+.pill{display:inline-block;padding:.05rem .45rem;border:1px solid var(--line);
+      border-radius:999px;font-size:.75rem;color:var(--dim)}
+.room{border-left:2px solid var(--line);padding:.1rem 0 .1rem 1rem;margin:1.4rem 0}
+.room .beat{margin:.5rem 0}
+.room .delib{color:#c9bda2;font-style:italic}
+.aside{color:var(--dim);font-style:italic}
+.fell{color:var(--bad)}
+.hurt{color:var(--warn)}
+.quote{border-left:3px solid var(--gold);padding-left:.9rem;color:#efe6d0;font-size:1.02rem}
+.back{display:inline-block;margin-bottom:1.4rem;font-size:.85rem}
+.bar{height:6px;background:#241d12;border-radius:3px;overflow:hidden;min-width:5rem}
+.bar > i{display:block;height:100%;background:var(--gold)}
+.note{color:var(--dim);font-size:.85rem}
+code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a86a}
+</style></head>
+<body><div class="wrap">
+    <a class="back" href="./index.html">← all logs</a>
+    <h1>the Mad Alchemist's Dungeon</h1>
+    <p class="sub">
+      easy · 15 rooms ·
+      came back ·
+      <span class="mono">seed log-easy-92</span>
+    </p>
+
+    <p class="meta">Who went down: ⚗️ Isabella Cortese (alchemist), ⚗️ Michael Maier (alchemist), ✨ John Dee (cleric), ⚔️ Michael Sendivogius (fighter)</p>
+
+    <div class="panel"><p class="quote">⚗️ The Mad Alchemist, flask raised in welcome drops the masterwork draught: a potion (heals 12), added to the satchel.</p>
+      <p class="note" style="margin-top:.6rem">The line this delve would be retold by.</p></div>
+
+    <h2>The dramaturg reads it</h2>
+    <div class="panel">
+      <p class="note">7 of
+        9 values met.
+        A reading, not a grade — the score exists to sort logs, not to judge them.</p>
+      <table><thead><tr><th></th><th>Value</th><th>What the log shows</th></tr></thead>
+      <tbody>
+    <tr>
+      <td><span class="pass">met</span></td>
+      <td>A delve should be about somebody.</td>
+      <td class="note">Isabella Cortese carries it (5 mentions against 2); 2/4 named</td>
+    </tr>
+    <tr>
+      <td><span class="fail">missed</span></td>
+      <td>Rooms should be in the order they are for a reason.</td>
+      <td class="note">nothing any room did reaches any later room</td>
+    </tr>
+    <tr>
+      <td><span class="pass">met</span></td>
+      <td>Something must go wrong, and it should be legible when it does.</td>
+      <td class="note">3 rooms cost the party something</td>
+    </tr>
+    <tr>
+      <td><span class="pass">met</span></td>
+      <td>If every room is a beat, no room is.</td>
+      <td class="note">the loudest room runs 4.0× the median (peak 4, median 1)</td>
+    </tr>
+    <tr>
+      <td><span class="pass">met</span></td>
+      <td>A choice reads as a choice only when the alternatives are named.</td>
+      <td class="note">15 of 15 deliberations name a road not taken</td>
+    </tr>
+    <tr>
+      <td><span class="na">n/a</span></td>
+      <td>A death is only worth reading if the dead had a line first.</td>
+      <td class="note">nobody fell</td>
+    </tr>
+    <tr>
+      <td><span class="pass">met</span></td>
+      <td>Name the thing and state the number.</td>
+      <td class="note">12 of 15 resolutions state a number</td>
+    </tr>
+    <tr>
+      <td><span class="fail">missed</span></td>
+      <td>A resolution should be readable in one breath.</td>
+      <td class="note">2 of 15 resolutions run past 320 characters (longest 818)</td>
+    </tr>
+    <tr>
+      <td><span class="pass">met</span></td>
+      <td>The back half should cost more than the front half.</td>
+      <td class="note">front half 0, back half 2</td>
+    </tr>
+    <tr>
+      <td><span class="pass">met</span></td>
+      <td>The ending should answer the delve it ended.</td>
+      <td class="note">the epitaph names somebody who went down</td>
+    </tr></tbody></table>
+    </div>
+
+    <h2>The transcript</h2>
+    
+    <div class="room">
+      <div class="meta">⚗️ Room 1 — lab</div>
+      <p class="beat">An alchemy lab with a working bench. An alchemist with materials can brew or coat weapons here. A brazier burns in its bracket — nobody has been here to feed it, and it burns anyway. An anvil sits under a dead forge, still true. Shelves sag under books nobody has audited in a century. Somebody stacked supplies here and never came back for them.</p>
+      <p class="beat delib">They might have chosen to experiment with the assembly, or dissolve the lock — the Covetous wanted the payout. The party chose to crack the crates open.</p>
+      <p class="beat">📦 The party cracks open stacked crates and barrels: 40 gold, 2 materials.</p>
+      
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">⚗️ Room 2 — lab</div>
+      <p class="beat">An alchemy lab with a working bench. An alchemist with materials can brew or coat weapons here. Shelves sag under books nobody has audited in a century. A gargoyle spout drips something that is not water into a stained channel.</p>
+      <p class="beat delib">They might have chosen to work the lab bench, or move on — the Covetous refused to leave anything behind. The party chose to harvest the spout.</p>
+      <p class="beat">🗿 The alchemist bottles what drips from a gargoyle spout, dripping: 1 material.</p>
+      
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">🕯️ Room 3 — shrine</div>
+      <p class="beat">A shrine. Resting here heals the party; the gold leaf on the altar could be stripped instead. A sarcophagus stands against the wall with its lid slightly wrong. Pillars break the room into aisles — something to fight behind. A font holds water that has been still a long time and is somehow clean. A silvered mirror leans against the wall, and it shows the room more honestly than the room does.</p>
+      <p class="beat delib">They might have chosen to rest and heal, or strip the gold leaf — the Covetous refused to leave anything behind. The party chose to move on.</p>
+      <p class="beat">There is nothing to fight and nothing to take. The party keeps going.</p>
+      <p class="aside">🧭 The alchemist wanted the bench: the party turns off into the workshop wing. Its rooms join the route.</p>
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">🌿 Room 4 — materials</div>
+      <p class="beat">A room of herbs, salts, and quicksilver — alchemy materials, free to gather. A gargoyle spout drips something that is not water into a stained channel. Half the ceiling is on the floor, in pieces worth stepping around.</p>
+      <p class="beat delib">They might have chosen to gather the materials, or move on — the Covetous refused to leave anything behind. The party chose to harvest the spout.</p>
+      <p class="beat">🗿 The alchemist bottles what drips from a gargoyle spout, dripping: 1 material.</p>
+      
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">🌿 Room 5 — materials</div>
+      <p class="beat">A room of herbs, salts, and quicksilver — alchemy materials, free to gather. A boulder sits at the top of a slope, held by a wedge of rotten timber. A gargoyle spout drips something that is not water into a stained channel.</p>
+      <p class="beat delib">They might have chosen to move on, or harvest the spout — Isabella Cortese made the case: &quot;Everything in this room fits in my satchel if I believe.&quot; The party chose to gather the materials.</p>
+      <p class="beat">🌿 The party gathers 1 bundle of alchemy materials.</p>
+      
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">⚠️ Room 6 — trap</div>
+      <p class="beat">A trap blocks the corridor. The party must disarm it, avoid it, or take the hit. Dead beetles ring one tile: a poison trap. Light damage now, lingering venom later unless a cleric cures it. Half the ceiling is on the floor, in pieces worth stepping around.</p>
+      <p class="beat delib">They might have chosen to push through and take the hit, or search for a way around — the Covetous counted what was in the room first. The party chose to spring it with a smoke bomb.</p>
+      <p class="beat">⚗️ The alchemist spends 1 material on a smoke concoction and springs the trap from a safe distance. No damage taken.</p>
+      
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">🌿 Room 7 — materials</div>
+      <p class="beat">A room of herbs, salts, and quicksilver — alchemy materials, free to gather. A boulder sits at the top of a slope, held by a wedge of rotten timber. Somebody stacked supplies here and never came back for them.</p>
+      <p class="beat delib">They might have chosen to move on, or crack the crates open — Isabella Cortese made the case: &quot;Don't burn the carcass — half my income is in the glands.&quot; The party chose to gather the materials.</p>
+      <p class="beat">🌿 The party gathers 1 bundle of alchemy materials.</p>
+      
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">🪜 Room 8 — stairs</div>
+      <p class="beat">The floor ends at a stairwell. Whatever is below has been waiting longer.</p>
+      <p class="beat delib">They might have chosen to rope down the shaft beside it — the Covetous refused to leave anything behind. The party chose to take the stair down.</p>
+      <p class="beat">🪜 The party goes down the stair to the second floor, burning a march of oil on the climb.</p>
+      
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">⚗️ Room 9 — lab</div>
+      <p class="beat">An alchemy lab with a working bench. An alchemist with materials can brew or coat weapons here. A gargoyle spout drips something that is not water into a stained channel. A brazier burns in its bracket — nobody has been here to feed it, and it burns anyway.</p>
+      <p class="beat delib">They might have chosen to move on, or harvest the spout — Isabella Cortese made the case: &quot;I've drunk worse than whatever that is.&quot; The party chose to work the lab bench.</p>
+      <p class="beat">⚗️ The alchemist spends 1 material and brews a healing draught (heals 6) — two, in fact; Perenelle works in doubles.</p>
+      
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">⚗️ Room 10 — lab</div>
+      <p class="beat">An alchemy lab with a working bench. An alchemist with materials can brew or coat weapons here. Shelves sag under books nobody has audited in a century. An anvil sits under a dead forge, still true. A gargoyle spout drips something that is not water into a stained channel.</p>
+      <p class="beat delib">They might have chosen to work the lab bench, or move on — the Covetous counted what was in the room first. The party chose to harvest the spout.</p>
+      <p class="beat">🗿 The alchemist bottles what drips from a gargoyle spout, dripping: 1 material.</p>
+      
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">📚 Room 11 — library</div>
+      <p class="beat">A library. The party can study here to learn spells. Shelves sag under books nobody has audited in a century. A font holds water that has been still a long time and is somehow clean.</p>
+      <p class="beat delib">They might have chosen to read the place itself, or reconstruct his rounds — the Covetous refused to leave anything behind. The party chose to leave him looking for it.</p>
+      <p class="beat">🚶 The party leaves him looking for it and finds its own way round the long side. A march of oil for the privilege.</p>
+      
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">⚗️ Room 12 — lab</div>
+      <p class="beat">An alchemy lab with a working bench. An alchemist with materials can brew or coat weapons here. An anvil sits under a dead forge, still true. Somebody stacked supplies here and never came back for them.</p>
+      <p class="beat delib">They might have chosen to work the lab bench, or move on — the Covetous wanted the payout. The party chose to crack the crates open.</p>
+      <p class="beat">📦 The party cracks open stacked crates and barrels: 40 gold, 2 materials.</p>
+      <p class="aside">🧭 The Covetous wanted what gets buried with people: the party turns off into the burial wing. Its rooms join the route.</p>
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">👹 Room 13 — monster</div>
+      <p class="beat">A vine that learned grasping from a textbook holds the room (attack 6, health 15). The party must decide how to get past it. Plate and chitin cover it: the party's blows do 2 less damage each round. It keeps clear of the torches: weak to fire (fire damage ×1.5). A boulder sits at the top of a slope, held by a wedge of rotten timber. A brazier burns in its bracket — nobody has been here to feed it, and it burns anyway.</p>
+      <p class="beat delib">They might have chosen to fall back, or open with a combat spell — Michael Sendivogius made the case: &quot;Stand back — this is the part I'm for.&quot; The party chose to stand and fight.</p>
+      <p class="beat">🪄 Isabella Cortese uses the Wand of Embers — Accelerant Charge: 5 damage before round one. ⚔️ The party kills a vine that learned grasping from a textbook in 1 round, taking 0 damage. ➖ The party spreads into a line, two forward and two behind. The ordinary shape of a fight, and the one that leaves room to work round the sides. 🛡️ The party closes ranks: 1 less damage a round. 🌿 A vine that learned grasping from a textbook drops clipped mutant cuttings: 2 alchemy materials.</p>
+      
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">💰 Room 14 — treasure</div>
+      <p class="beat">A treasure chest sits in the room. It may hold gold; it may be a mimic. A silvered mirror leans against the wall, and it shows the room more honestly than the room does.</p>
+      <p class="beat delib">They might have chosen to open it with Knock, or inspect it first — the Covetous refused to leave anything behind. The party chose to loot the treasure.</p>
+      <p class="beat">💰 The party loots the chest: 30 gold.</p>
+      
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">🐉 Room 15 — boss</div>
+      <p class="beat">The boss chamber. The Mad Alchemist, flask raised in welcome waits at its center (attack 13, health 36); killing it clears the dungeon. It is venomous: even a won fight leaves poison working, unless a cleric cures it. A portcullis hangs raised above the passage, on a chain that still turns. A bed of rusted spikes stands out of the floor, most of them still upright. A brazier burns in its bracket — nobody has been here to feed it, and it burns anyway. A pit takes up a third of the floor. The bottom is not visible.</p>
+      <p class="beat delib">They might have chosen to fall back, or open with a combat spell — Michael Sendivogius made the case: &quot;Everything down here is carrying something. I collect.&quot; The party chose to stand and fight.</p>
+      <p class="beat">🪄 Isabella Cortese uses the Wand of Embers — Accelerant Charge: 5 damage before round one. ⚔️ The party kills the Mad Alchemist, flask raised in welcome in 4 rounds, taking 14 damage. 🛡️ Shields lock along the front rank and the party stops trying to win quickly. A third less damage a round and a quarter less dealt — but packed tight, so anything with a blast radius hurts more. 🛡️ The party closes ranks: 1 less damage a round. 💢 At half health, the Mad Alchemist, flask raised in welcome turns fierce: attack +2 for the rest of the fight. ⚗️ The Mad Alchemist, flask raised in welcome drops the masterwork draught: a potion (heals 12), added to the satchel. 🐍 The monster was venomous, but the cleric cures the poison before it can act. 🧪 Also in the hoard: a healing draught (heals 6), added to the satchel.</p>
+      
+      <p class="hurt">✚ 3 wounds on Michael Sendivogius, and the ceiling with them: 7, and no more.</p>
+      
+    </div>
+
+    <h2>The way out</h2>
+      <p>the Mad Alchemist's Dungeon is cleared: the boss is dead and the party walks out. Survivors: Isabella Cortese, Michael Maier, John Dee, Michael Sendivogius. Rooms cleared: 15. Trophies carried out: 2 (latest: ⚗️ the masterwork draught).</p>
+    <p class="meta" style="margin-top:1rem">
+      Rooms cleared 15 · Score 385 ·
+      Gold 110 · Trophies 2 · Survivors 4
+    </p>
+    <p class="note" style="margin-top:2rem">Regenerate this exact delve:
+      <code>npm run simulate -- --seed log-easy-92</code></p>
+  </div></body></html>

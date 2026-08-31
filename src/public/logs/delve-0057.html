@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Delve 57 — the Drowned Athenaeum</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='26'%3E%F0%9F%93%9C%3C/text%3E%3C/svg%3E">
+<style>
+:root{--ink:#e6ddc8;--dim:#8d8069;--gold:#d8a53f;--bg:#0b0a08;--panel:#14110c;
+      --line:#332a1c;--good:#6f9e5a;--bad:#b8523f;--warn:#b4863a}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:'Iowan Old Style',Georgia,serif;
+     line-height:1.6;padding:2rem 1.25rem 5rem}
+.wrap{max-width:52rem;margin:0 auto}
+.wide{max-width:70rem}
+a{color:var(--gold)}
+h1{font-size:1.7rem;color:var(--gold);margin-bottom:.3rem;letter-spacing:.01em}
+h2{font-size:1.15rem;color:var(--gold);margin:2.2rem 0 .7rem;
+   border-bottom:1px solid var(--line);padding-bottom:.3rem}
+h3{font-size:1rem;color:var(--ink);margin:1.6rem 0 .4rem}
+p{margin:.55rem 0}
+.sub{color:var(--dim);font-size:.9rem;margin-bottom:1.6rem}
+.mono{font-family:ui-monospace,'Courier New',monospace}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:4px;
+       padding:1rem 1.15rem;margin:1rem 0}
+.meta{color:var(--dim);font-size:.85rem}
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.9rem;margin-top:.6rem}
+th,td{text-align:left;padding:.42rem .5rem;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--dim);font-weight:normal;font-size:.8rem;text-transform:uppercase;letter-spacing:.06em}
+tr:hover td{background:#181409}
+.pass{color:var(--good)} .fail{color:var(--bad)} .na{color:var(--dim)}
+.pill{display:inline-block;padding:.05rem .45rem;border:1px solid var(--line);
+      border-radius:999px;font-size:.75rem;color:var(--dim)}
+.room{border-left:2px solid var(--line);padding:.1rem 0 .1rem 1rem;margin:1.4rem 0}
+.room .beat{margin:.5rem 0}
+.room .delib{color:#c9bda2;font-style:italic}
+.aside{color:var(--dim);font-style:italic}
+.fell{color:var(--bad)}
+.hurt{color:var(--warn)}
+.quote{border-left:3px solid var(--gold);padding-left:.9rem;color:#efe6d0;font-size:1.02rem}
+.back{display:inline-block;margin-bottom:1.4rem;font-size:.85rem}
+.bar{height:6px;background:#241d12;border-radius:3px;overflow:hidden;min-width:5rem}
+.bar > i{display:block;height:100%;background:var(--gold)}
+.note{color:var(--dim);font-size:.85rem}
+code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a86a}
+</style></head>
+<body><div class="wrap">
+    <a class="back" href="./index.html">← all logs</a>
+    <h1>the Drowned Athenaeum</h1>
+    <p class="sub">
+      easy · 9 rooms ·
+      came back ·
+      <span class="mono">seed log-easy-56</span>
+    </p>
+
+    <p class="meta">Who went down: 🗡️ Robert Fludd (rogue), ⚔️ Cornelius Agrippa (fighter), ✨ John Dee (cleric), 🔮 Pico della Mirandola (wizard)</p>
+
+    <div class="panel"><p class="quote">🏕️ The party makes camp at the stairhead and something climbs the stair into it: 6 healed each, 4 damage taken, and the second floor still to go.</p>
+      <p class="note" style="margin-top:.6rem">The line this delve would be retold by.</p></div>
+
+    <h2>The dramaturg reads it</h2>
+    <div class="panel">
+      <p class="note">6 of
+        9 values met.
+        A reading, not a grade — the score exists to sort logs, not to judge them.</p>
+      <table><thead><tr><th></th><th>Value</th><th>What the log shows</th></tr></thead>
+      <tbody>
+    <tr>
+      <td><span class="fail">missed</span></td>
+      <td>A delve should be about somebody.</td>
+      <td class="note">the most-named magus (Pico della Mirandola) appears once — nobody emerges</td>
+    </tr>
+    <tr>
+      <td><span class="fail">missed</span></td>
+      <td>Rooms should be in the order they are for a reason.</td>
+      <td class="note">1 of 9 rooms answer an earlier one (11%)</td>
+    </tr>
+    <tr>
+      <td><span class="pass">met</span></td>
+      <td>Something must go wrong, and it should be legible when it does.</td>
+      <td class="note">4 rooms cost the party something</td>
+    </tr>
+    <tr>
+      <td><span class="pass">met</span></td>
+      <td>If every room is a beat, no room is.</td>
+      <td class="note">the loudest room runs 2.0× the median (peak 4, median 2)</td>
+    </tr>
+    <tr>
+      <td><span class="pass">met</span></td>
+      <td>A choice reads as a choice only when the alternatives are named.</td>
+      <td class="note">9 of 9 deliberations name a road not taken</td>
+    </tr>
+    <tr>
+      <td><span class="na">n/a</span></td>
+      <td>A death is only worth reading if the dead had a line first.</td>
+      <td class="note">nobody fell</td>
+    </tr>
+    <tr>
+      <td><span class="pass">met</span></td>
+      <td>Name the thing and state the number.</td>
+      <td class="note">9 of 9 resolutions state a number</td>
+    </tr>
+    <tr>
+      <td><span class="fail">missed</span></td>
+      <td>A resolution should be readable in one breath.</td>
+      <td class="note">1 of 9 resolutions run past 320 characters (longest 1155)</td>
+    </tr>
+    <tr>
+      <td><span class="pass">met</span></td>
+      <td>The back half should cost more than the front half.</td>
+      <td class="note">front half 5, back half 6</td>
+    </tr>
+    <tr>
+      <td><span class="pass">met</span></td>
+      <td>The ending should answer the delve it ended.</td>
+      <td class="note">the epitaph names somebody who went down</td>
+    </tr></tbody></table>
+    </div>
+
+    <h2>The transcript</h2>
+    
+    <div class="room">
+      <div class="meta">💰 Room 1 — treasure</div>
+      <p class="beat">A treasure chest sits in the room. It may hold gold; it may be a mimic.</p>
+      <p class="beat delib">They might have chosen to open it with Knock, or inspect it first — the Cunning had already worked out the odds. The party chose to loot the treasure.</p>
+      <p class="beat">🦷 The chest is a mimic. It bites for 5 damage before the party kills it, recovering 11 gold.</p>
+      
+      <p class="hurt">✚ Cornelius Agrippa is opened up badly enough that the delve will keep it: 12 is as whole as they get until town.</p>
+      
+    </div>
+    <div class="room">
+      <div class="meta">🕯️ Room 2 — shrine</div>
+      <p class="beat">A shrine. Resting here heals the party; the gold leaf on the altar could be stripped instead. Pillars break the room into aisles — something to fight behind. A silvered mirror leans against the wall, and it shows the room more honestly than the room does. A brazier burns in its bracket — nobody has been here to feed it, and it burns anyway.</p>
+      <p class="beat delib">They might have chosen to strip the gold leaf, or move on — John Dee made the case: &quot;I have a strong feeling we should be elsewhere. Call it prophecy.&quot; The party chose to rest and heal.</p>
+      <p class="beat">🕯️ The party rests at the shrine: 5 health healed per member.</p>
+      <p class="aside">🗝️ Robert Fludd pockets the archivist's key. Somewhere below there is a door it belongs to.</p>
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">🪐 Room 3 — situation</div>
+      <p class="beat">A connecting corridor. Nothing blocks the way; the party moves through.</p>
+      <p class="beat delib">They might have chosen to attune the resonances, or link the three frequencies — the Cunning looked for the way that costs least. The party chose to endure the discord.</p>
+      <p class="beat">🔊 The discord tears at the ears and nerves, and the party comes out of it well apart, each of them having walked away from the sound in a different direction. 3 damage, and no line to speak of.</p>
+      <p class="aside">🗝️ A reading-room door, locked since the last audit — and the party is carrying the archivist's key. The archive wing opens. 🚶 The party looks into the archive wing (shelving stacked to the ceiling, half of it collapsed) and keeps to the main route.</p>
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">📚 Room 4 — library</div>
+      <p class="beat">A library. The party can study here to learn spells. A brazier burns in its bracket — nobody has been here to feed it, and it burns anyway. Shelves sag under books nobody has audited in a century.</p>
+      <p class="beat delib">They might have chosen to read the sealed texts, or move on — the Cunning had already worked out the odds. The party chose to study the shelves.</p>
+      <p class="beat">📚 The party studies the shelves and learns 1 spell.</p>
+      
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">🪜 Room 5 — stairs</div>
+      <p class="beat">Steps down, worn in the middle by traffic that stopped a long time ago.</p>
+      <p class="beat delib">They might have chosen to take the stair down — the Cunning picked the safer angle. The party chose to camp at the stairhead first.</p>
+      <p class="beat">🏕️ The party makes camp at the stairhead and something climbs the stair into it: 6 healed each, 4 damage taken, and the second floor still to go. A night off their feet sets one of Cornelius Agrippa's wounds.</p>
+      
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">📚 Room 6 — library</div>
+      <p class="beat">A library. The party can study here to learn spells. A brazier burns in its bracket — nobody has been here to feed it, and it burns anyway. Shelves sag under books nobody has audited in a century.</p>
+      <p class="beat delib">They might have chosen to read the place itself, or scry for the map — the Cunning had already worked out the odds. The party chose to study the shelves.</p>
+      <p class="beat">📚 The party studies the shelves and learns 1 spell.</p>
+      
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">🪐 Room 7 — situation</div>
+      <p class="beat">A connecting corridor. Nothing blocks the way; the party moves through.</p>
+      <p class="beat delib">They might have chosen to solve the progression, or ask which square is safe — the Cunning picked the safer angle. The party chose to read the dust.</p>
+      <p class="beat">👁️ Dust lies thick on the squares that never move. The party walks the dusty ones. +22 score.</p>
+      
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">🕯️ Room 8 — shrine</div>
+      <p class="beat">A shrine. Resting here heals the party; the gold leaf on the altar could be stripped instead. A font holds water that has been still a long time and is somehow clean.</p>
+      <p class="beat delib">They might have chosen to push through and take the hit, or rest and heal — the Cunning had already worked out the odds. The party chose to fill the waterskins.</p>
+      <p class="beat">⛲ The party fills its waterskins at a stone font of still water: 3 health healed.</p>
+      
+      
+      
+    </div>
+    <div class="room">
+      <div class="meta">🐉 Room 9 — boss</div>
+      <p class="beat">The boss chamber. The Grand Errata, a book that reads back waits at its center (attack 13, health 37); killing it clears the dungeon. Plate and chitin cover it: the party's blows do 2 less damage each round. It keeps clear of the torches: weak to fire (fire damage ×1.5). A crack runs the width of the room, wide enough to matter and too wide to jump twice. A bed of rusted spikes stands out of the floor, most of them still upright. A sarcophagus stands against the wall with its lid slightly wrong. A silvered mirror leans against the wall, and it shows the room more honestly than the room does.</p>
+      <p class="beat delib">They might have chosen to stand and fight, or fall back — the Cunning had already worked out the odds. The party chose to put it onto the floor spikes.</p>
+      <p class="beat">🔻 The party drives the monster back onto a bed of rusted floor spikes: 19 damage, and it has to pull itself off them. ⚔️ The party kills the Grand Errata, a book that reads back in 2 rounds, taking 8 damage. 🔧 The party knows how to swing what the room left lying about: +5 to the opening. 📌 They do not let it climb straight back out: 2 more damage from the room. 💢 Sunder reminds the plate it was ore: it stops turning blows for the rest of the fight. 🪞 A tall silvered mirror shows the ethereal where it truly stands: weapons do full damage. 🌐 There is room enough in the hall to fight spread out, well apart. A little less given and a little less taken, and only half of any blast reaches the party. 📐 The party came through the last room already in this shape, and meets what is here standing the way it left. 🛡️ The party closes ranks: 1 less damage a round. 💢 At half health, the Grand Errata, a book that reads back turns fierce: attack +2 for the rest of the fight. 📝 The Grand Errata, a book that reads back drops the dearest correction: a trinket (+2 mind), now worn by Pico della Mirandola. 🌿 Also in the hoard: 2 alchemy materials.</p>
+      
+      <p class="hurt">✚ Cornelius Agrippa is wounded again — 2 scars now, and nothing can heal them past 10 before town.</p>
+      
+    </div>
+
+    <h2>The way out</h2>
+      <p>the Drowned Athenaeum is cleared: the boss is dead and the party walks out. Survivors: Robert Fludd, Cornelius Agrippa, John Dee, Pico della Mirandola. Rooms cleared: 9. Trophies carried out: 1 (latest: 📝 the dearest correction).</p>
+    <p class="meta" style="margin-top:1rem">
+      Rooms cleared 9 · Score 273 ·
+      Gold 11 · Trophies 1 · Survivors 4
+    </p>
+    <p class="note" style="margin-top:2rem">Regenerate this exact delve:
+      <code>npm run simulate -- --seed log-easy-56</code></p>
+  </div></body></html>

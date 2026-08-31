@@ -1,7 +1,7 @@
 {
   "name": "dungeonab",
   "version": "6.0.0",
-  "description": "Dungeon-crawling autobattler \u2014 MTG-style pack draft, party of adventurers, emergent dungeon stories",
+  "description": "Dungeon-crawling autobattler — MTG-style pack draft, party of adventurers, emergent dungeon stories",
   "type": "module",
   "main": "src/main.js",
   "scripts": {
@@ -18,7 +18,8 @@
     "bless": "node tools/bless.mjs",
     "e2e": "node tools/e2e.mjs",
     "new-card": "node tools/new-card.mjs",
-    "census": "node tools/census.mjs"
+    "census": "node tools/census.mjs",
+    "simulate": "node tools/simulate.mjs"
   },
   "dependencies": {
     "three": "^0.170.0"
