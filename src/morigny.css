@@ -283,3 +283,11 @@ canvas.worldmap {
   #verso { border-right: none; border-bottom: 1px solid var(--gutter); }
   #margin { border-left: none; border-top: 1px dotted var(--gutter); }
 }
+
+/* ── published witness links (end of day) ───────────────────── */
+.witness-link { margin: 0 0 1rem; }
+.witness-label { font-variant: small-caps; letter-spacing: .08em; opacity: .75; font-size: .8rem; }
+.witness-link a { word-break: break-all; }
+.witness-note { font-size: .78rem; opacity: .6; font-style: italic; }
+.copy-btn { margin-left: .5rem; font: inherit; font-size: .75rem; cursor: pointer; background: none; border: 1px solid currentColor; border-radius: 2px; padding: 0 .4rem; color: inherit; opacity: .7; }
+.copy-btn:hover { opacity: 1; }

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A Witness — MORIGNY</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{--parchment:#f2ead7;--ink:#241d16;--faint:#7d6f5b;--rubric:#8f2d1d;--line:#cdbc98;}
+  @media (prefers-color-scheme:dark){:root{--parchment:#15120e;--ink:#e6dcc6;--faint:#8d8069;--rubric:#c8584a;--line:#393126;}}
+  @media (prefers-color-scheme:dark){:root{--line:#393126;}}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--parchment);color:var(--ink);font-family:'EB Garamond',Georgia,serif;line-height:1.65;font-size:18px}
+  .sheet{max-width:44rem;margin:0 auto;padding:3rem 1.4rem 6rem}
+  .head{text-align:center;margin-bottom:2.4rem}
+  .siglum{font-size:3rem;line-height:1;color:var(--rubric);font-weight:600}
+  h1{font-size:1.5rem;font-weight:600;margin:.4rem 0}
+  .sub{color:var(--faint);font-style:italic;font-size:.95rem}
+  .rule{display:flex;align-items:center;gap:.8rem;color:var(--rubric);font-variant:small-caps;letter-spacing:.14em;font-size:.78rem;margin:2rem 0 1.2rem}
+  .rule::before,.rule::after{content:'';flex:1;border-top:1px solid var(--line)}
+  .line{margin:0 0 .7rem;position:relative}
+  .line.bell{color:var(--rubric);font-variant:small-caps;letter-spacing:.06em}
+  .line.refused{font-style:italic}
+  .outcome{border:1px solid var(--line);padding:1rem 1.2rem;margin-top:2rem;background:rgba(0,0,0,.02)}
+  .outcome dl{display:grid;grid-template-columns:auto auto;gap:.2rem 1rem;font-size:.9rem}
+  .outcome dt{color:var(--faint);font-variant:small-caps;letter-spacing:.05em}
+  .outcome dd{text-align:right}
+  .colophon{margin-top:3rem;padding-top:1rem;border-top:1px solid var(--line);color:var(--faint);font-size:.82rem;font-style:italic;text-align:center}
+  .loading,.err{text-align:center;color:var(--faint);font-style:italic;padding:4rem 0}
+  .hand-note{text-align:center;color:var(--rubric);font-size:.85rem;font-variant:small-caps;letter-spacing:.08em;margin-bottom:1rem}
+</style>
+</head>
+<body>
+<div class="sheet" id="sheet"><p class="loading">Fetching the witness…</p></div>
+<script type="module">
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const params = new URLSearchParams(location.search);
+const id = params.get('id'), k = params.get('k');
+
+if (!id) {
+  $('sheet').innerHTML = '<p class="err">No witness named.</p>';
+} else {
+  const qs = new URLSearchParams({ id }); if (k) qs.set('k', k);
+  fetch('/api/witness?' + qs).then((r) => r.json()).then(({ witness: w, hand, error }) => {
+    if (error) { $('sheet').innerHTML = `<p class="err">${esc(error)}</p>`; return; }
+    const when = new Date(w.createdAt).toLocaleDateString(undefined, { year:'numeric', month:'long', day:'numeric' });
+    const lines = (w.narrative || []).map((n) =>
+      `<p class="line ${esc(n.kind || 'plain')}">${esc(n.text)}</p>`).join('');
+    const m = w.mechanical || {};
+    const facts = Object.entries({
+      seed: m.seed, suspicion: m.suspicion, despair: m.despair, disposition: m.disposition,
+      'the procedure': m.corrupt ? 'void' : (m.prayed ? 'kept' : 'unattempted'),
+      licentia: m.licentia ? 'received' : '—',
+    }).filter(([, v]) => v !== undefined && v !== null)
+      .map(([kk, v]) => `<dt>${esc(kk)}</dt><dd>${esc(v)}</dd>`).join('');
+
+    $('sheet').innerHTML = `
+      ${hand ? `<p class="hand-note">You hold the ${esc(hand)}’s key — editing arrives in the next build</p>` : ''}
+      <div class="head">
+        <div class="siglum">${esc(w.siglum || '·')}</div>
+        <h1>${esc(w.title || 'A Witness')}</h1>
+        <p class="sub">${esc(w.origin === 'simulated' ? 'a simulated witness' : 'a played witness')} · ${esc(when)}</p>
+      </div>
+      <div class="rule">THE DAY</div>
+      ${lines || '<p class="line">The leaf is blank.</p>'}
+      <div class="outcome"><dl>${facts}</dl></div>
+      <p class="colophon">MORIGNY · witness ${esc(w.id)} · the text stands as the game spoke it</p>`;
+    document.title = `Witness ${w.siglum || ''} — MORIGNY`;
+  }).catch((e) => { $('sheet').innerHTML = `<p class="err">Could not read the witness. ${esc(e.message)}</p>`; });
+}
+</script>
+</body>
+</html>

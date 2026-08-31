@@ -6,6 +6,12 @@ export default defineConfig({
   build: {
     outDir: '../dist',
     emptyOutDir: true,
+    rollupOptions: {
+      input: {
+        main: 'src/index.html',
+        witness: 'src/w.html',   // the public witness page
+      },
+    },
   },
   server: {
     port: 5176,

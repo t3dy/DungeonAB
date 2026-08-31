@@ -28,7 +28,7 @@ import {
   createExamination, answerQuestion, verdict,
 } from './engine/chronicle.js';
 import {
-  loadWitnesses, saveWitness as pushWitness, buildStemma, survivingWitness, corruptionsOf,
+  loadWitnesses, siglumFor, saveWitness as pushWitness, buildStemma, survivingWitness, corruptionsOf,
 } from './engine/stemma.js';
 import {
   MAPS, createWorld, move, keepOffice, missedOffices, adjacentNpc, npcAt, tileAt,
@@ -64,6 +64,10 @@ function log(text, cls) {
   const line = el('div', cls, text);
   $('log').appendChild(line);
   $('log').scrollTop = $('log').scrollHeight;
+  // The event record keeps its own prose: a witness must contain the text the
+  // game actually spoke, not a promise to regenerate it later. See
+  // docs/PLAYTHROUGH_WITNESS_ARCHITECTURE.md Part 1 item 10.
+  if (journal && !journal.sealed) (journal.narrative ||= []).push({ i: journal.narrative?.length ?? 0, kind: cls || 'plain', text });
 }
 
 // ── keyboard dispatch ─────────────────────────────────────────
@@ -214,7 +218,7 @@ function start(seed, opts = {}) {
   john = createJohn();
   chronicle = loadChronicle(storage());
   journal = {
-    seed, journey: !!opts.journey,
+    seed, journey: !!opts.journey, narrative: [],
     prayed: false, night: null, dream: null, confession: null,
     officesKept: null, talked: [],
   };
@@ -728,6 +732,9 @@ function reckoning() {
     log('Word of the book has travelled further than the book has. Something will come of it.', 'refused');
   }
 
+  act('P', 'Publish this witness. (A permanent copy, with a URL.)',
+    'A witness that leaves the house can be read by other hands.', () => publishWitness());
+
   act('J', 'Journal: write the day into the Liber.', 'He wrote it all down. That is why any of this exists.', () => {
     addDespair(john, -1); renderStatus();
     log('You write the day as it was, sparing no one, least of all yourself. The page holds it so you need not.', 'pencil-log');
@@ -881,3 +888,76 @@ function incipit() {
 }
 
 incipit();
+
+// ── publishing a witness ──────────────────────────────────────
+// The day becomes a permanent scholarly witness at its own URL. The mechanical
+// record and the narrated text are frozen here; editorial layers are added later,
+// through the API, and never touch what is written below.
+// docs/PLAYTHROUGH_WITNESS_ARCHITECTURE.md
+async function publishWitness() {
+  clearActs();
+  // Seal the record before any publishing chatter is logged: the witness must
+  // contain the day, not the act of copying it out.
+  journal.sealed = true;
+  log('Copying the witness out\u2026', 'bell');
+  const payload = {
+    game: 'morigny',
+    origin: 'played',
+    siglum: siglumFor(Math.max(0, loadWitnesses(storage()).length - 1)),
+    title: journal.journey ? 'A Road Day to \u00c9tampes' : 'A Day Inside the Walls',
+    mechanical: {
+      seed: journal.seed,
+      journey: !!journal.journey,
+      prayed: !!journal.prayed,
+      night: journal.night || null,
+      dream: journal.dream || null,
+      confession: journal.confession || null,
+      officesKept: journal.officesKept ?? null,
+      talked: journal.talked || [],
+      licentia: john.procedure.licentia,
+      corrupt: john.procedure.corrupt,
+      suspicion: john.suspicion,
+      despair: john.despair,
+      disposition: john.disposition,
+    },
+    narrative: journal.narrative || [],
+    meta: { day: chronicle ? chronicle.days : null, renown: chronicle ? chronicle.renown : null },
+  };
+  try {
+    const res = await fetch('/api/publish', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const out = await res.json();
+    if (!res.ok) throw new Error(out.error || 'refused');
+    showWitnessLinks(out);
+  } catch (err) {
+    log(`The copy failed: ${err.message}. (Publishing needs the deployed site; it does not work from a bare file.)`, 'refused');
+    act('B', 'Begin another day. (A new witness.)', '', () =>
+      start(`${day.seed}-${Math.floor(Math.random() * 1e6)}`));
+  }
+}
+
+function showWitnessLinks(out) {
+  log('The witness is copied out, and has a place in the world.', 'pencil-log');
+  const box = el('div', 'ledger');
+  const row = (label, url, note) => {
+    const wrap = el('div', 'witness-link');
+    wrap.appendChild(el('div', 'witness-label', label));
+    const a = el('a', null, url);
+    a.href = url; a.target = '_blank'; a.rel = 'noopener';
+    wrap.appendChild(a);
+    const btn = el('button', 'copy-btn', 'copy');
+    btn.onclick = () => { navigator.clipboard?.writeText(url); btn.textContent = 'copied'; };
+    wrap.appendChild(btn);
+    if (note) wrap.appendChild(el('div', 'witness-note', note));
+    box.appendChild(wrap);
+  };
+  row('The public witness \u2014 anyone may read it', out.publicUrl);
+  row('Your own hand \u2014 keep this one', out.playerEditUrl, 'Editing arrives in the next build; the key is already yours.');
+  row('The scholar\u2019s hand \u2014 send this to Matt', out.scholarEditUrl, 'Whoever holds this link edits as the scholar\u2019s hand.');
+  ui.body(box);
+  act('B', 'Begin another day. (A new witness.)', '', () =>
+    start(`${day.seed}-${Math.floor(Math.random() * 1e6)}`));
+}

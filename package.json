@@ -1,7 +1,7 @@
 {
   "name": "morigny",
   "version": "0.3.0",
-  "description": "MORIGNY — a monastic life & practice simulator of John of Morigny (fl. c. 1300–1323)",
+  "description": "MORIGNY \u2014 a monastic life & practice simulator of John of Morigny (fl. c. 1300\u20131323)",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -12,5 +12,8 @@
   },
   "devDependencies": {
     "vite": "^5.0.0"
+  },
+  "dependencies": {
+    "@vercel/blob": "^0.27.0"
   }
 }
