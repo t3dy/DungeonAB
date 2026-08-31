@@ -411,7 +411,19 @@ export class Party {
    */
   capabilities() {
     const caps = new Set();
-    for (const member of [...this.members, ...this.reserve]) {
+    // Only the people who are actually here. A magus waiting out the
+    // delve in the tavern cannot read the orrery, and neither can one
+    // lying in room four — so the reserve does not count, and the dead
+    // stop counting the moment they fall.
+    //
+    // This is a correctness point first and a balance one second, but
+    // the balance is large: counting the bench, a drafted pool held a
+    // median 19 of the 28 capabilities and `knowledge` was on 99% of
+    // parties, so a capability gate gated nothing and the draft could
+    // not be graded (DESIGN_DIALOGUE.md §N). It also gives losing a
+    // specialist a consequence past the stat line: when the diviner
+    // falls, the party stops being able to ask.
+    for (const member of this.living()) {
       const memberCaps = member.card?.capabilities || [];
       for (const cap of memberCaps) caps.add(cap);
       for (const eq of member.equipment) {
@@ -441,7 +453,10 @@ export class Party {
    */
   capabilityHolders(capId) {
     const holders = [];
-    for (const member of [...this.members, ...this.reserve]) {
+    // The same roster `capabilities()` reads: whoever is here and alive.
+    // These two must agree, or the writing credits an option to somebody
+    // who is not in the room.
+    for (const member of this.living()) {
       const memberCaps = member.card?.capabilities || [];
       if (memberCaps.includes(capId)) {
         holders.push({ member, source: 'character' });

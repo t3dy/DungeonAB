@@ -118,8 +118,8 @@ describe('Divination is information, not power', () => {
   });
 
   test('divination buys a reading; more sight buys a clearer one', () => {
-    const seer = new Party([byId('char-dee')]);                       // divination + astronomy
-    const sharper = new Party([byId('char-dee'), byId('char-brahe')]); // + observation
+    const seer = new Party([byId('char-dee'), byId('char-forman')]);   // divination + astronomy
+    const sharper = new Party([byId('char-dee'), byId('char-forman'), byId('char-brahe')]); // + observation
     assert.ok(clarityOf(seer) >= 3);
     assert.ok(clarityOf(sharper) > clarityOf(seer));
     const r1 = readOmens(seer, dungeon());

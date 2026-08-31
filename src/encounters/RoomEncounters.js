@@ -16,7 +16,7 @@ import {
 } from '../world/RoomFeatures.js';
 import { reactionsFor, foldReactions } from '../world/Reactions.js';
 import { tacticModifiers, activeTactics } from '../game/Tactics.js';
-import { chooseFormation, formationModifiers } from '../agents/Formation.js';
+import { chooseFormation, formationModifiers, availableFormations } from '../agents/Formation.js';
 import { getEncounterForRoom, evaluateOptions, resolveEncounterOption } from './EncounterEngine.js';
 import './Encounters.js';   // registers the data-driven situations
 
@@ -149,10 +149,45 @@ export function getRoomOptions(room, party) {
   // engine instead of a hand-written case (encounters/Encounters.js).
   // Its furniture still contributes its own actions.
   const def = getEncounterForRoom(room);
-  if (def) {
-    return [...evaluateOptions(def, party, room), ...getFeatureOptions(room, party)];
-  }
-  return [...baseRoomOptions(room, party), ...getFeatureOptions(room, party)];
+  if (!def) return [...baseRoomOptions(room, party), ...getFeatureOptions(room, party)];
+
+  const engine = evaluateOptions(def, party, room);
+  const base = baseRoomOptions(room, party);
+
+  /*
+   * A definition either OWNS a room or RIDES one.
+   *
+   * It owns the room when it governs the whole type (`trap-room`, whose
+   * options are the hand-written trap options re-declared as capability
+   * gates) or when the room has no job of its own — a situation room's
+   * entire content is its encounter, and merging would hand it a
+   * `proceed` escape hatch that skips the examination.
+   *
+   * Otherwise it rides: a treasure room stamped with an appraisal
+   * problem is still a treasure room, and still offers to loot, inspect
+   * and leave it. This is what lets a capability test happen without
+   * spending a room on it — and the room budget is zero-sum, so a test
+   * that costs a room is a test bought with a monster
+   * (DESIGN_DIALOGUE.md §N).
+   */
+  const bare = base.length === 1 && base[0].id === 'proceed';
+  const rides = !!room.encounterId && def.roomType !== room.type && !bare;
+  if (!rides) return [...engine, ...getFeatureOptions(room, party)];
+
+  /*
+   * A riding definition drops its own bare fallback. It exists so that
+   * a party with none of the capabilities still has a way out of a
+   * SITUATION room, whose whole content is the encounter. A ridden room
+   * already offers one -- pass by, leave it, gather -- so keeping both
+   * puts a strictly worse no-op on the menu next to a real one, and
+   * `tests/prose` measures exactly that as a dead option.
+   */
+  const owned = new Set(engine.map(o => o.id));
+  return [
+    ...engine.filter(o => !o.onlyWhenOwned),
+    ...base.filter(o => !owned.has(o.id)),
+    ...getFeatureOptions(room, party),
+  ];
 }
 
 function baseRoomOptions(room, party) {
@@ -391,6 +426,20 @@ export function decideRoomAction(room, party) {
       if (table && table[opt.id] !== undefined) w += table[opt.id];
     }
 
+    // What a capability option's own definition says it is worth
+    // (encounters/EncounterEngine.js). Declared on every situation
+    // option since the first one was written and, until now, read
+    // nowhere: `weight: 2` on "reconstruct the mosaic from memory" did
+    // nothing at all, and against a library's own furniture the option
+    // was offered 41 times and taken once (tests/prose holds exactly
+    // this shape of dead option).
+    //
+    // It wants a real pull rather than a nudge. An option only on the
+    // menu because of who the party drafted is the draft paying out,
+    // and a party that walks past it every time is a party whose draft
+    // did not matter.
+    if (opt.weight !== undefined) w += opt.weight;
+
     // Instincts independent of personality
     if (opt.id === 'alchemy') w += 3;                       // Benches get used
     if (opt.id === 'gather') w += 2;                        // Satchels get filled
@@ -448,6 +497,18 @@ export function decideRoomAction(room, party) {
       if (share < 0.4) w += 4;
       else if (share < 0.65) w += 1.5;
       if (party.supply === 0) w += 1.5;      // no light to fight a mimic by
+    }
+    // Walking away from an optional fight, for the same reason. Now that
+    // a capability option carries its declared weight, the four skilled
+    // answers to a duellist outbid a plain refusal every time — offered
+    // 42 times and taken once, which is the shape tests/prose exists to
+    // catch. A party with nothing left does not want the duel at all,
+    // however well it could fence.
+    if (opt.id === 'push-past-duellist') {
+      const share = party.totalHealth() / party.totalMaxHealth();
+      if (share < 0.4) w += 5;
+      else if (share < 0.65) w += 2;
+      if (party.hasPersonality('craven')) w += 2;
     }
 
     return { opt, w: Math.max(0.1, w) };
@@ -895,13 +956,46 @@ export function resolveRoomAction(room, party, optionId, options = null) {
       // Where the party stands, and what this room's floor allowed it to
       // choose (agents/Formation.js). A passage six by two permits one
       // shape; a boss cavern permits all of them.
-      const form = formationModifiers(
-        options?.formation || chooseFormation(party, room), room,
-      );
+      //
+      // A situation can decide this instead. That is what makes a
+      // capability worth drafting: reading the orrery correctly buys the
+      // shape you want for the fight after it, and blundering through
+      // leaves you in the shape the room forced on you. Formation scales
+      // incoming damage between 0.55x and 1.3x across every round of a
+      // fight, so it is worth far more than the two or three points of
+      // flat damage a situation used to trade in — which is precisely why
+      // situations were not grading the draft (MINING: win rate sat at
+      // 91/91/87/90 across party sizes two through nine).
+      //
+      // Consumed here, whatever happens: a stance held for one fight.
+      const forced = party.forcedFormation;
+      delete party.forcedFormation;
+      const chosen = options?.formation
+        || (forced && availableFormations(room).includes(forced) ? forced : null)
+        || chooseFormation(party, room);
+      const form = formationModifiers(chosen, room);
       preps.push({
         source: form.name,
         text: `${form.icon} ${form.tell} ${form.effect}`,
       });
+      if (forced === chosen) {
+        preps.push({
+          source: 'the room before this one',
+          text: `📐 The party came through the last room already in this shape, and meets what is here standing the way it left.`,
+        });
+      }
+
+      // A reading of the corrected heavens, spent on the next fight it
+      // finds. Set by situations (encounters/Encounters.js) that were
+      // promising a ward and, until now, delivering nothing.
+      const starBlessed = !!party.starBlessed;
+      if (starBlessed) {
+        party.starBlessed = false;
+        preps.push({
+          source: 'the corrected heavens',
+          text: '🔭 The aspect is favourable and the party knows it: 1 less damage a round.',
+        });
+      }
 
       // Learned technique (game/Tactics.js). Gated by capability, not
       // class: every class swings at something, so the whole party
@@ -984,7 +1078,7 @@ export function resolveRoomAction(room, party, optionId, options = null) {
         // The slow strike last, and so does anything the quicksilver
         // daggers got in front of: no incoming damage on the first round
         if ((monster.trait === 'slow' || quicksilver) && rounds === 1) continue;
-        const incoming = Math.max(1, Math.round((monsterAtk - Math.floor(party.totalDefense() / 3) - ward - cover - tac.cover - castWard) * form.incomingMult));
+        const incoming = Math.max(1, Math.round((monsterAtk - Math.floor(party.totalDefense() / 3) - ward - cover - tac.cover - castWard - (starBlessed ? 1 : 0)) * form.incomingMult));
         party.takeDamage(incoming);
         partyDamageTaken += incoming;
         // Mend the badly hurt while the fight is still on — a working
@@ -1287,6 +1381,16 @@ export function resolveRoomAction(room, party, optionId, options = null) {
       const preps = [];
       if (prep.trapSoak > 0) preps.push({ source: prep.notes.trapSoak, text: '🏮 The Everburning Lantern showed the pressure plates: 1 less damage.' });
 
+      // A warning bought in an earlier room, spent on the snare it was
+      // about. Divination promises this and, until it was wired here,
+      // delivered nothing at all: the flag was set in four places and
+      // read in none.
+      const warned = !!party.forewarned;
+      if (warned) {
+        party.forewarned = false;
+        preps.push({ source: 'the warning', text: '🔮 This is the snare the party was told about: half the damage it would have done.' });
+      }
+
       // The trap's kind decides what pushing through costs (Bestiary
       // for rooms, as it were): fire burns unless frost answers it,
       // poison is patient, an alarm mostly just *tells on you*
@@ -1324,6 +1428,7 @@ export function resolveRoomAction(room, party, optionId, options = null) {
         preps.push({ source: 'the alarm', text: '🔔 The alarm rings through the dungeon: the next monster will attack with +2.' });
       }
 
+      if (warned) dmg = Math.max(1, Math.ceil(dmg / 2));
       party.takeDamage(dmg);
       room.cleared = true;
       return { success: true, damage: dmg, spotted: spotter > 0, trapType, preps };

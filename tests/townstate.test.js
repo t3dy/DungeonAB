@@ -96,8 +96,11 @@ describe('Town situations run on the capability engine', () => {
   });
 
   test('capabilities open town options the same way dungeon ones do', () => {
-    const digby = campaignWith([byId('char-digby')]);   // diplomacy, antiquarian, appraisal
-    const ids = digby.townOptions('town-bookseller').map(o => o.id);
+    // Cortese carries antiquarian since the ownership rebalance took it
+    // off Digby (he kept appraisal and gained back the fencing his
+    // privateering always implied); together they cover the window.
+    const collectors = campaignWith([byId('char-digby'), byId('char-cortese')]);
+    const ids = collectors.townOptions('town-bookseller').map(o => o.id);
     assert.ok(ids.includes('recognize-significance'), 'antiquarian reads the window');
     assert.ok(ids.includes('appraise-price'), 'appraisal prices it');
     assert.ok(!ids.includes('divine-contents'), 'nobody here scries');
@@ -107,7 +110,7 @@ describe('Town situations run on the capability engine', () => {
   });
 
   test('an outcome writes to the town, and the town keeps it', () => {
-    const c = campaignWith([byId('char-digby')]);
+    const c = campaignWith([byId('char-cortese')]);   // the pool's antiquarian
     c._townOffers = ['town-bookseller'];
     c._offerDepth = c.depth;
     const before = c.town.standing('scholars');

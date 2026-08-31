@@ -1477,3 +1477,89 @@ would have locked a wing whose key no longer existed anywhere in it.
 That gate has now caught four fields in four sessions — trapType,
 floor, wing, key — which is a good argument for writing the general
 check instead of the specific one.
+
+## §N. Why the dungeon still does not grade the draft
+
+Nine capability tests are written, the consequences are wired, and the
+dungeon examines a party several times a delve. It still cannot tell a
+good draft from a bad one, and the reason turned out not to be any of
+the three things it looked like.
+
+### It was not frequency, though frequency was real
+
+A situation room costs a room, and the room budget is zero-sum: a spine
+is ~11 weighted picks with four already spent on guarantees, so every
+extra situation is bought with a monster. Measured, a three-situation
+guarantee stripped the Ice Caverns from 1.0 disasters a delve to 0.25;
+excluding theme-boosted rooms from conversion fixed that and cost the
+Greatsword its swarms (promised writing on 0% of delves, under the 10%
+floor `tests/assets` holds); weight 4.5 bought situations with monsters
+directly; weight 6 squeezed every other type onto its guarantee floor
+until the castle and the plain delve held the same rooms as each other.
+
+The way out was to stop buying rooms. A definition now either **owns** a
+room or **rides** one: a treasure room stamped with an appraisal problem
+is still a treasure room, still offers to loot, inspect and leave it, and
+*also* offers to appraise the three chests if anybody drafted appraisal.
+Tests per delve went 1.03 → 2.75 with room counts, theme identity and the
+difficulty curve all untouched. Frequency is solved.
+
+### Nor was it that consequences were too small — they were absent
+
+Three declarations were being written and never read.
+
+- `starBlessed` and `forewarned` were set in **seven** places across
+  `Encounters.js` and `TownEncounters.js` and read in **zero**. The
+  writing promised "the next fight begins under a favourable aspect" and
+  "forewarned of the next snare" and neither did anything.
+- `opt.weight` — declared on every situation option since the first one
+  was written — was read nowhere. `weight: 2` on "reconstruct the mosaic
+  from memory" did nothing, and against a library's own furniture that
+  option was offered 41 times and taken once. `tests/prose` caught it.
+
+All three are now wired, along with `party.forcedFormation`, which lets a
+situation hand the party a stance for the fight after it. Formation is
+the right currency because it is the only one already priced across a
+whole fight — 0.55× to 1.3× incoming every round, against the two or
+three points of flat damage a situation used to trade in. It is also not
+a strictly-better button: forcing a shield wall *cost* damage on a
+seeded fight (8 against a plain 7), because its 0.75× attack multiplier
+makes the fight run longer. A stance is a trade, which is what makes
+handing one over worth a capability.
+
+### It is that a capability gate gates nothing
+
+The pool is saturated. A drafted party held a median **19 of 28**
+capabilities, and `knowledge` was on 99% of parties. Some of that was a
+plain bug — `capabilities()` counted the reserve and the dead, so a magus
+waiting out the delve in the tavern was lending the party his divination,
+and so was one lying in room four. Reading only the living marchers took
+the median to 16 and thinned the tail considerably.
+
+It is not enough. `knowledge` is still on 94% of parties and `alchemy` on
+83%, and the residue is arithmetic rather than a defect: four marchers
+carrying four capabilities each is sixteen slots against twenty-eight
+capabilities, drawn from fifteen characters that share the common tags.
+**An option 94% of parties can take is not a decision, it is flavour.**
+
+Measured against outcomes, capability breadth predicts nothing. At `hard`
+and n=160 the narrow half won 64% against the broad half's 80%, which
+looked like the result this whole line of work was after; at n=480 the
+same comparison is 68.1% against 71.6%, a gap of 3.5 points and 0.8
+sigma. Noise. Medium has no headroom to show anything at all — the
+overall win rate is 89%, and nothing can differentiate when nine runs in
+ten succeed regardless.
+
+### So draft economics is the prerequisite, not the sequel
+
+The plan had reworking the draft last, after learning which capabilities
+matter. That order cannot run: which capabilities matter is unmeasurable
+while every party holds most of them. Scarcity has to come first —
+fewer capabilities per character, less overlap between characters, a
+smaller marching roster, or a cost for using one — and only then does the
+examination layer have anything to examine.
+
+**A note on measurement, earned twice.** A party-size or capability
+bucket needs several hundred delves before it says anything. Two separate
+claims of success in this work — "67% against 100%" and "64% against
+80%" — were both noise at n≈150 that vanished at n≈500.

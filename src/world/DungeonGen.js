@@ -175,6 +175,27 @@ const ROOM_ICONS = {
  * Room type distribution by difficulty (spine rooms, excluding
  * entrance/boss). Weights, not counts.
  */
+/*
+ * Situations sit at weight 3, and that is currently too few: a delve
+ * holds 1.03 of them and a run reaches 0.80, so the six encounters
+ * written to test six different capabilities meet a given party at most
+ * once, and win rate sits flat at 91/91/87/90 across party sizes five
+ * through eight. The dungeon does not yet examine the draft.
+ *
+ * Raising it is not a one-line change, which is why it is not made here.
+ * The room budget is zero-sum and already fully allocated: a spine is
+ * ~11 weighted picks and four of them are spent on guarantees, so every
+ * extra situation is bought with a monster. Measured, weight 4.5 cost
+ * the Greatsword its swarms (its promised writing fell to 5% of delves,
+ * under the 10% floor tests/assets holds) and cost the condition wagers
+ * their damage totals; a three-situation guarantee instead stripped the
+ * Ice Caverns from 1.0 disasters a delve to 0.25; weight 6 squeezed
+ * every other type onto its guarantee floor until the castle and the
+ * plain delve held the same rooms as each other.
+ *
+ * So situation frequency wants a deliberate re-calibration of the room
+ * budget and the benchmark that rests on it, not a nudged constant.
+ */
 const TYPE_WEIGHTS = {
   easy: { monster: 2, trap: 1, treasure: 2, library: 1, shrine: 1.5, lab: 1, materials: 2, disaster: 0.5, corridor: 1, situation: 3 },
   medium: { monster: 3, trap: 1.5, treasure: 2, library: 1, shrine: 1, lab: 1, materials: 1.5, disaster: 1, corridor: 1, situation: 3 },
@@ -371,6 +392,42 @@ export function generateDungeon(seed, difficulty = 'medium', opts = {}) {
     ensureRoomType(rooms, ROOM_TYPES.MATERIALS, rng, theme, depth, floorScale, condition, weights, 1);
   }
 
+  // Each situation asks a different question. Dealt without replacement
+  // because the same orrery twice in one delve is a bug the player can
+  // see, and three draws from nine collide about a third of the time.
+  const pool = SITUATION_ROOMS.slice();
+  const dealt = new Set();
+  for (const room of rooms) {
+    if (room.type !== ROOM_TYPES.SITUATION) continue;
+    if (pool.length === 0) pool.push(...SITUATION_ROOMS);
+    room.encounterId = pool.splice(Math.floor(rng.next() * pool.length), 1)[0];
+    dealt.add(room.encounterId);
+  }
+
+  /*
+   * Riders: capability tests stamped onto rooms that already have a job.
+   *
+   * A situation room costs a room, and the room budget is zero-sum — a
+   * spine is ~11 weighted picks with four already spent on guarantees, so
+   * every extra situation is bought with a monster. Measured, buying them
+   * that way cost the Greatsword its swarms and the Ice Caverns their
+   * disasters (DESIGN_DIALOGUE.md §N).
+   *
+   * A rider costs nothing. The treasure room stays a treasure room and
+   * still offers to loot, inspect and leave it; it *also* offers to
+   * appraise the three chests, if anybody drafted appraisal. Room counts,
+   * theme identity and the difficulty curve are all untouched, and the
+   * draft gets examined several times a delve instead of once.
+   */
+  for (const room of rooms) {
+    if (room.encounterId || !RIDERS_BY_ROOM[room.type]) continue;
+    if (rng.next() > RIDER_CHANCE) continue;
+    const open = RIDERS_BY_ROOM[room.type].filter(id => !dealt.has(id));
+    if (open.length === 0) continue;
+    room.encounterId = open[Math.floor(rng.next() * open.length)];
+    dealt.add(room.encounterId);
+  }
+
   const boss = makeRoom(rooms.length, ROOM_TYPES.BOSS, rng, theme, depth, floorScale(floorCount - 1), condition);
   boss.floor = floorCount - 1;
   rooms.push(boss);
@@ -551,7 +608,12 @@ function ensureRoomType(rooms, type, rng, theme, depth, floorScale, condition, w
     // Convert the type most over-represented against the theme's own
     // intent — a guarantee should never eat a theme's identity rooms
     // (the castle keeps its hoard; the caverns keep their disasters)
-    const candidates = rooms.filter(r => !PROTECTED_TYPES.has(r.type));
+    // Never convert a room into the type it already is: a self-swap
+    // costs an iteration and delivers nothing, so a guarantee that hits
+    // one quietly under-delivers. Situations made this visible — asked
+    // for three, a delve averaged two and sometimes got one.
+    //
+    const candidates = rooms.filter(r => !PROTECTED_TYPES.has(r.type) && r.type !== type);
     if (candidates.length === 0) break;
     let worstType = null;
     let worstScore = -1;
@@ -629,7 +691,44 @@ function makeRoom(index, type, rng, theme, depth = 1, statScale = 1, condition =
 }
 
 /** Situations that can furnish an otherwise empty corridor. */
-const SITUATION_ROOMS = ['astronomers-chamber', 'sealed-laboratory', 'monster-grievance'];
+const SITUATION_ROOMS = [
+  'astronomers-chamber', 'sealed-laboratory', 'monster-grievance',
+  'appraiser-test', 'experimental-crossroads', 'healer-trial',
+  'memory-reconstruction', 'musician-harmony', 'observer-secret',
+  'haunted-armour', 'duellists-challenge', 'chessboard-floor',
+  'cartographers-ghost', 'severed-council',
+];
+
+/**
+ * How often a room that already has a job also carries a capability
+ * test. Read with RIDERS_BY_ROOM below: a rider is free, so this is
+ * tuned for how often the draft should be examined rather than for
+ * what the room budget can afford.
+ */
+const RIDER_CHANCE = 0.5;
+
+/**
+ * Which capability tests each room type can carry.
+ *
+ * Held here as plain data rather than read out of the engine, because
+ * generation must not depend on whether `Encounters.js` happens to have
+ * been imported yet — an empty registry would silently produce dungeons
+ * with no riders at all. `tests/riders` holds this against the
+ * encounters' own `rides` declarations so the two cannot drift.
+ */
+export const RIDERS_BY_ROOM = {
+  treasure: ['appraiser-test', 'observer-secret'],
+  vault: ['appraiser-test'],
+  lab: ['experimental-crossroads'],
+  materials: ['experimental-crossroads', 'observer-secret'],
+  shrine: ['healer-trial', 'musician-harmony'],
+  corridor: ['healer-trial', 'observer-secret', 'haunted-armour', 'duellists-challenge',
+    'chessboard-floor', 'cartographers-ghost', 'severed-council'],
+  library: ['memory-reconstruction', 'cartographers-ghost'],
+  disaster: ['musician-harmony', 'severed-council'],
+  monster: ['haunted-armour', 'duellists-challenge'],
+  trap: ['chessboard-floor'],
+};
 
 /* ------------------------------------------------------------------ */
 /* Dungeon themes — each delve has a face (Megabase: different         */

@@ -136,6 +136,9 @@ export function evaluateOptions(def, party, ctx) {
         name: opt.name,
         desc: opt.desc,
         weight: opt.weight,
+        // A fallback that exists only because a situation room has no
+        // other way out; see RoomEncounters' ride path.
+        onlyWhenOwned: !!opt.onlyWhenOwned,
         unlockedBy: requires.map(cap => ({
           capability: cap,
           holders: party.capabilityHolders(cap).map(h =>

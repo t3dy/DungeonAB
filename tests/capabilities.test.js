@@ -11,6 +11,9 @@ import {
   CHARACTER_CARDS, EQUIPMENT_CARDS, SPELL_CARDS, TACTIC_CARDS, CLASSES,
 } from '../src/game/Cards.js';
 import { CAPABILITIES, isCapability, capabilityName } from '../src/game/Capabilities.js';
+import { allEncounters } from '../src/encounters/EncounterEngine.js';
+import '../src/encounters/Encounters.js';
+import '../src/encounters/TownEncounters.js';
 
 const byId = id => CHARACTER_CARDS.find(c => c.id === id);
 const eq = id => EQUIPMENT_CARDS.find(c => c.id === id);
@@ -61,13 +64,64 @@ describe('Every magus is a capability package', () => {
       `too many capabilities live on exactly one card: ${solitary.join(', ')}`);
   });
 
-  test('the historical loadouts are the ones the design asked for', () => {
-    const caps = id => byId(id).capabilities;
-    assert.deepEqual(caps('char-dee'), ['conjuring', 'divination', 'astronomy', 'mathematics']);
-    assert.deepEqual(caps('char-digby'), ['diplomacy', 'fencing', 'antiquarian', 'appraisal']);
-    assert.deepEqual(caps('char-ficino'), ['music', 'harmony', 'healing', 'translation']);
-    assert.deepEqual(caps('char-brahe'), ['tinkering', 'astronomy', 'observation', 'experimentation']);
-    assert.deepEqual(caps('char-bruno'), ['memory', 'imagination', 'correspondence', 'conjuring']);
+  /*
+   * No capability sits on more than two magi, and no kit card duplicates
+   * one another's.
+   *
+   * This replaced a set of pinned per-magus loadouts, and it is the rule
+   * those loadouts were an instance of. Measured, the pinned version had
+   * every capability on four or five of the sixteen: a drafted party held
+   * a median 19 of 28, `knowledge` was on 99% of parties, and an option
+   * 99% of parties can take is flavour rather than a decision — so the
+   * dungeon could not tell a good draft from a bad one at any difficulty
+   * (DESIGN_DIALOGUE.md §N). Capping ownership put 23 of the 28 into the
+   * 40-70% band, where drafting one is a real choice.
+   *
+   * The cost was taking documented attributes off real people: Dee keeps
+   * the scrying and loses astronomy to Brahe and Forman, who have the
+   * better claim on it in this pool. A tag now marks who you would
+   * definitively ask, not everyone who was competent.
+   */
+  test('no capability is common enough to stop being a decision', () => {
+    const byCap = {};
+    for (const c of CHARACTER_CARDS) {
+      for (const k of c.capabilities || []) (byCap[k] = byCap[k] || []).push(c.id);
+    }
+    // Alchemy carries three because three cards' printed text promises
+    // brewing — Paracelsus brews at any bench, Cortese's recipes work,
+    // and Maier draws "two flasks where others draw one", which is the
+    // fugue rule and needs alchemy AND music in the same pair of hands.
+    // A promise on a card is a contract with the player; the cap is a
+    // heuristic for scarcity, and the contract outranks it.
+    const ALLOWED = { alchemy: 3 };
+    for (const [cap, owners] of Object.entries(byCap)) {
+      const max = ALLOWED[cap] || 2;
+      assert.ok(owners.length <= max,
+        `${cap} is on ${owners.length} magi (${owners.join(', ')}) — max ${max}`);
+    }
+    const byKit = {};
+    for (const e of EQUIPMENT_CARDS) {
+      for (const k of e.capabilities || []) (byKit[k] = byKit[k] || []).push(e.id);
+    }
+    for (const [cap, items] of Object.entries(byKit)) {
+      assert.ok(items.length <= 1,
+        `${cap} is on ${items.length} items (${items.join(', ')}) — kit patches a gap, it does not top up`);
+    }
+  });
+
+  test('every magus is still a recognisable specialist', () => {
+    for (const c of CHARACTER_CARDS) {
+      const n = (c.capabilities || []).length;
+      assert.ok(n >= 3 && n <= 4, `${c.name} carries ${n} capabilities, wanted 3-4`);
+    }
+    // The signatures each figure is least replaceable for
+    const has = (id, cap) => byId(id).capabilities.includes(cap);
+    assert.ok(has('char-dee', 'divination'), 'Dee still scries');
+    assert.ok(has('char-brahe', 'astronomy'), 'Brahe still observes the heavens');
+    assert.ok(has('char-paracelsus', 'alchemy'), 'Paracelsus still works the bench');
+    assert.ok(has('char-bruno', 'memory'), 'Bruno still holds the memory palace');
+    assert.ok(has('char-pico', 'syncretism'), 'Pico still reconciles the traditions');
+    assert.ok(has('char-cavendish', 'naturalPhilosophy'), 'Cavendish still answers without the occult');
   });
 
   test('Cavendish brings the non-occult answers', () => {
@@ -84,11 +138,43 @@ describe('Every magus is a capability package', () => {
   });
 });
 
+describe('Every capability can answer something', () => {
+  test('no capability in the vocabulary goes unasked by every encounter', () => {
+    // A tag nothing ever asks for is a line on a card that never pays
+    // (v6 §22: every meaningful investment should eventually have an
+    // opportunity to answer a question). This is the guard that turns a
+    // dead capability into a failing test rather than a quiet dead end.
+    const asked = new Set();
+    for (const def of allEncounters()) {
+      for (const opt of def.options) {
+        for (const cap of opt.requires || []) asked.add(cap);
+      }
+    }
+    const never = Object.keys(CAPABILITIES).filter(c => !asked.has(c));
+    assert.deepEqual(never, [],
+      `nothing in the game asks for: ${never.join(', ')}`);
+  });
+
+  test('every capability an encounter asks for is one a card can supply', () => {
+    const suppliable = new Set(
+      [...CHARACTER_CARDS, ...EQUIPMENT_CARDS, ...SPELL_CARDS]
+        .flatMap(c => c.capabilities || []));
+    for (const def of allEncounters()) {
+      for (const opt of def.options) {
+        for (const cap of opt.requires || []) {
+          assert.ok(suppliable.has(cap),
+            `${def.id}/${opt.id} asks for "${cap}", which no card grants`);
+        }
+      }
+    }
+  });
+});
+
 describe('The party reads capabilities off everything it carries', () => {
   test('a character supplies theirs', () => {
     const party = new Party([byId('char-dee')]);
     assert.ok(party.hasCapability('divination'));
-    assert.ok(party.hasCapability('astronomy'));
+    assert.ok(party.hasCapability('mathematics'));
     assert.ok(!party.hasCapability('tinkering'));
   });
 
@@ -119,7 +205,7 @@ describe('A power travels with the capability, not the character', () => {
     assert.ok(solo.doubled, 'Maier brews in doubles');
 
     // ...and so does an alchemist standing next to a musician
-    const pair = new Party([byId('char-paracelsus'), byId('char-fludd')]);
+    const pair = new Party([byId('char-paracelsus'), byId('char-ficino')]);
     pair.materials = 2;
     const together = pair.doAlchemy(0.2);
     assert.equal(together.type, 'potion');

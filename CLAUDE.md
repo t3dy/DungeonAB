@@ -88,3 +88,9 @@ tests/                   ← Node test runner suites
    appear in a real seeded transcript. `tests/prose.test.js` is the gate.
    *Why it is a rule:* Aegis of Ash read "blunts the first blow in each fight" while the
    resolver warded every round, and a player who believed the card drafted it wrong.
+14. **One session per working tree**: parallel Claude sessions must not share this
+   directory — each takes its own worktree (`git worktree add ../DungeonAB-v7 -b v7`).
+   *Why it is a rule:* the v6/v7 tangle of 2026-08-31. Two sessions edited `main`'s tree at
+   once; each saw the other's half-finished edits land mid-turn, neither could tell
+   committed work from uncommitted, and the sorting-out needed its own handoff document
+   (`HANDOFF_V6_TO_V7.md`).
