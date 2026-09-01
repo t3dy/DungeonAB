@@ -103,10 +103,19 @@ describe('Town situations run on the capability engine', () => {
     const ids = collectors.townOptions('town-bookseller').map(o => o.id);
     assert.ok(ids.includes('recognize-significance'), 'antiquarian reads the window');
     assert.ok(ids.includes('appraise-price'), 'appraisal prices it');
-    assert.ok(!ids.includes('divine-contents'), 'nobody here scries');
+    // Digby and Cortese hold appraisal, antiquarian and observation
+    // between them — observation is one of divination's neighbours, but
+    // one is not two, so the scrying stays shut to them
+    // (game/Capabilities.js AFFINITIES needs two to improvise).
+    assert.ok(!ids.includes('divine-contents'), 'one adjacent discipline is not enough to scry');
 
-    const brahe = campaignWith([byId('char-brahe')]);   // none of those
-    assert.deepEqual(brahe.townOptions('town-bookseller').map(o => o.id), ['browse-on']);
+    // Brahe holds none of the bookseller's own disciplines, but
+    // astronomy and observation are two of divination's neighbours, so
+    // the scrying is open to him as an improvisation and nothing else
+    // is (game/Capabilities.js AFFINITIES).
+    const brahe = campaignWith([byId('char-brahe')]);
+    assert.deepEqual(brahe.townOptions('town-bookseller').map(o => o.id),
+      ['divine-contents', 'browse-on']);
   });
 
   test('an outcome writes to the town, and the town keeps it', () => {
@@ -121,11 +130,24 @@ describe('Town situations run on the capability engine', () => {
     assert.ok(c.town.knows('bookseller'));
   });
 
-  test('an option the party cannot reach cannot be taken', () => {
+  /*
+   * Reach now has two ways in: hold what the option asks for, or hold
+   * two of its neighbouring disciplines and improvise
+   * (game/Capabilities.js AFFINITIES). Brahe reaches `divine-contents`
+   * the second way — an astronomer with an eye and a sense of direction
+   * may attempt a scrying, badly — which is the change working, not a
+   * regression. What must still be closed is a problem he is nowhere
+   * near: `recognize-significance` wants antiquarian, whose neighbours
+   * are knowledge, appraisal and translation, and Brahe holds none.
+   */
+  test('an option the party is nowhere near cannot be taken', () => {
     const c = campaignWith([byId('char-brahe')]);
     c._townOffers = ['town-bookseller'];
     c._offerDepth = c.depth;
     assert.equal(c.resolveTownOption('town-bookseller', 'recognize-significance'), null);
+    const ids = c.townOptions('town-bookseller').map(o => o.id);
+    assert.ok(!ids.includes('recognize-significance'), 'and it is not even offered');
+    assert.ok(ids.includes('divine-contents'), 'but an adjacent discipline may try');
   });
 
   test('a resolved situation leaves the board', () => {

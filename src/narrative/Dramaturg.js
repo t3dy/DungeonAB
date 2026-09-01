@@ -355,7 +355,14 @@ export const POETICS = {
       for (const r of delve.rooms) {
         const n = (r.resolution || '').length;
         if (!n) continue;
-        const cap = (r.room === 'monster' || r.room === 'boss') ? 650 : 320;
+        // A situation says three earned things now — what happened, how
+        // well the party's disciplines answered it, and what that
+        // taught (EncounterEngine MASTERY, Party.wayIn) — so it gets
+        // room for three sentences rather than one. Still a bound, and
+        // still testing that the editor ran.
+        const cap = (r.room === 'monster' || r.room === 'boss') ? 650
+          : r.room === 'situation' ? 400
+            : 320;
         if (n > cap) over.push({ turn: r.turn, n, cap });
       }
       if (!delve.rooms.some(r => r.resolution)) return { pass: null, note: 'no resolutions' };

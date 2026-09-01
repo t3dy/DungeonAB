@@ -72,12 +72,12 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
     <tr>
       <td><span class="fail">missed</span></td>
       <td>Rooms should be in the order they are for a reason.</td>
-      <td class="note">1 of 12 rooms answer an earlier one (8%)</td>
+      <td class="note">nothing any room did reaches any later room</td>
     </tr>
     <tr>
       <td><span class="pass">met</span></td>
       <td>Something must go wrong, and it should be legible when it does.</td>
-      <td class="note">4 rooms cost the party something</td>
+      <td class="note">3 rooms cost the party something</td>
     </tr>
     <tr>
       <td><span class="pass">met</span></td>
@@ -100,14 +100,14 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
       <td class="note">11 of 12 resolutions state a number</td>
     </tr>
     <tr>
-      <td><span class="pass">met</span></td>
+      <td><span class="fail">missed</span></td>
       <td>A resolution should be readable in one breath.</td>
-      <td class="note">every resolution inside its budget</td>
+      <td class="note">1 resolution over budget (worst: room 6, 354 chars against 320)</td>
     </tr>
     <tr>
-      <td><span class="fail">missed</span></td>
+      <td><span class="pass">met</span></td>
       <td>The back half should cost more than the front half.</td>
-      <td class="note">front half 4, back half 1</td>
+      <td class="note">front half 0, back half 0</td>
     </tr>
     <tr>
       <td><span class="pass">met</span></td>
@@ -139,8 +139,8 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
     <div class="room">
       <div class="meta">🪐 Room 3 — situation</div>
       <p class="beat">A connecting corridor. Nothing blocks the way; the party moves through.</p>
-      <p class="beat delib">There was only one option: the party chose to put the armour down.</p>
-      <p class="beat">⚔️ Empty armour does dent like full armour, and hits back like it too. 4 damage, a great deal of noise, and the party comes out of it spread across the passage.</p>
+      <p class="beat delib">They might have chosen to speak with whatever wears the armour, or name the armour by its heraldry — the Cunning picked the safer angle. The party chose to strip the insignia off it.</p>
+      <p class="beat">🗡️ The binding is three rivets and a sealed strip of vellum. Out they come, and the plate is only plate again — with a strip of very old vellum worth keeping. +1 material, +20 score. 🎓 Done by people who do something near it: 10 renown less than a clean job.</p>
       
       
       
@@ -148,7 +148,7 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
     <div class="room">
       <div class="meta">⚗️ Room 4 — lab</div>
       <p class="beat">An alchemy lab with a working bench. An alchemist with materials can brew or coat weapons here. Shelves sag under books nobody has audited in a century. Somebody stacked supplies here and never came back for them. An anvil sits under a dead forge, still true.</p>
-      <p class="beat delib">They might have chosen to work the lab bench, or move on — the Cunning looked for the way that costs least. The party chose to put an edge back on at the anvil.</p>
+      <p class="beat delib">They might have chosen to work the lab bench, or move on — the Cunning had already worked out the odds. The party chose to put an edge back on at the anvil.</p>
       <p class="beat">🔨 The party works a cold anvil: anvil-set edge on Robert Fludd's weapon (+3 attack).</p>
       
       
@@ -156,8 +156,8 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
     </div>
     <div class="room">
       <div class="meta">🪜 Room 5 — stairs</div>
-      <p class="beat">Steps down, worn in the middle by traffic that stopped a long time ago.</p>
-      <p class="beat delib">They might have chosen to camp at the stairhead first — the Cunning picked the safer angle. The party chose to take the stair down.</p>
+      <p class="beat">A stair cut into the rock, going down. Cold air comes up it.</p>
+      <p class="beat delib">There was only one option: the party chose to take the stair down.</p>
       <p class="beat">🪜 The party goes down the stair to the second floor, burning a march of oil on the climb.</p>
       
       
@@ -166,8 +166,8 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
     <div class="room">
       <div class="meta">📚 Room 6 — library</div>
       <p class="beat">A library. The party can study here to learn spells. A brazier burns in its bracket — nobody has been here to feed it, and it burns anyway. Pillars break the room into aisles — something to fight behind. Shelves sag under books nobody has audited in a century.</p>
-      <p class="beat delib">They might have chosen to question the ghost gently, or scry for the map — the Cunning had already worked out the odds. The party chose to reconstruct his rounds.</p>
-      <p class="beat">🧠 He is asked to describe his rounds, all of them, and somebody holds the whole account at once until the shape closes. The map was behind the shelving. Two marches of oil saved. +28 score. 🗝️ And the shape of the place gives itself away: something sealed further down will open to what was learned here.</p>
+      <p class="beat delib">They might have chosen to read the place itself, or question the ghost gently — the Cunning had already worked out the odds. The party chose to reconstruct his rounds.</p>
+      <p class="beat">🧠 He is asked to describe his rounds, all of them, and somebody holds the whole account at once until the shape closes. The map was behind the shelving. Two marches of oil saved. +28 score. 🎓 Three disciplines on one problem, none of them guessing: +25 renown. 🗝️ And the shape of the place gives itself away: something sealed below will open to this.</p>
       
       
       
@@ -220,8 +220,8 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
     <div class="room">
       <div class="meta">🐉 Room 12 — boss</div>
       <p class="beat">The boss chamber. The Dragon Whelp of the Deep Vault waits at its center (attack 13, health 36); killing it clears the dungeon. It flinches from the cold: weak to frost (frost damage ×1.5). A brazier burns in its bracket — nobody has been here to feed it, and it burns anyway. A silvered mirror leans against the wall, and it shows the room more honestly than the room does.</p>
-      <p class="beat delib">They might have chosen to stand and fight, or fall back — Margaret Cavendish made the case: &quot;Magic is prayer with better handwriting.&quot; The party chose to open with a combat spell.</p>
-      <p class="beat">🔥 The caster opens with Frost Lance, chosen precisely for the monster's frost weakness: spell damage ×1.5. ⚔️ The Dragon Whelp of the Deep Vault is dead before the party closes: it never gets a round. 📐 The party meets it standing as the last room left them. 🪞 A tall silvered mirror shows the ethereal where it truly stands: weapons do full damage. 📜 Also in the hoard: a scroll of Firebolt, added to the grimoire. 🎒 3 more preparations hold besides — the ledger keeps them.</p>
+      <p class="beat delib">They might have chosen to stand and fight, or fall back — Margaret Cavendish made the case: &quot;I asked permission for this spell. Twice.&quot; The party chose to open with a combat spell.</p>
+      <p class="beat">🔥 The caster opens with Frost Lance, chosen precisely for the monster's frost weakness: spell damage ×1.5. ⚔️ The Dragon Whelp of the Deep Vault is dead before the party closes: it never gets a round. 🪞 A tall silvered mirror shows the ethereal where it truly stands: weapons do full damage. 📜 Also in the hoard: a scroll of Shatter, added to the grimoire. 🎒 3 more preparations hold besides — the ledger keeps them.</p>
       
       
       
@@ -230,7 +230,7 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
     <h2>The way out</h2>
       <p>the Old Delve is cleared: the boss is dead and the party walks out. Survivors: Paracelsus, Margaret Cavendish, Simon Forman, Robert Fludd. Rooms cleared: 12. Trophies carried out: 1 (latest: 🔥 a vial of whelp-fire).</p>
     <p class="meta" style="margin-top:1rem">
-      Rooms cleared 12 · Score 388 ·
+      Rooms cleared 12 · Score 423 ·
       Gold 130 · Trophies 1 · Survivors 4
     </p>
     <p class="note" style="margin-top:2rem">Regenerate this exact delve:

@@ -59,7 +59,7 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
 
     <h2>The dramaturg reads it</h2>
     <div class="panel">
-      <p class="note">8 of
+      <p class="note">7 of
         9 values met.
         A reading, not a grade — the score exists to sort logs, not to judge them.</p>
       <table><thead><tr><th></th><th>Value</th><th>What the log shows</th></tr></thead>
@@ -72,7 +72,7 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
     <tr>
       <td><span class="fail">missed</span></td>
       <td>Rooms should be in the order they are for a reason.</td>
-      <td class="note">1 of 12 rooms answer an earlier one (8%)</td>
+      <td class="note">nothing any room did reaches any later room</td>
     </tr>
     <tr>
       <td><span class="pass">met</span></td>
@@ -80,9 +80,9 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
       <td class="note">3 rooms cost the party something</td>
     </tr>
     <tr>
-      <td><span class="pass">met</span></td>
+      <td><span class="fail">missed</span></td>
       <td>If every room is a beat, no room is.</td>
-      <td class="note">the loudest room runs 2.5× the median (peak 5, median 2)</td>
+      <td class="note">flat: peak 3 against a median of 2 — no room stands out</td>
     </tr>
     <tr>
       <td><span class="pass">met</span></td>
@@ -107,7 +107,7 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
     <tr>
       <td><span class="pass">met</span></td>
       <td>The back half should cost more than the front half.</td>
-      <td class="note">front half 4, back half 5</td>
+      <td class="note">front half 4, back half 7</td>
     </tr>
     <tr>
       <td><span class="pass">met</span></td>
@@ -131,7 +131,7 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
       <div class="meta">🪐 Room 2 — situation</div>
       <p class="beat">A connecting corridor. Nothing blocks the way; the party moves through.</p>
       <p class="beat delib">They might have chosen to read the place itself, or question the ghost gently — the Cunning picked the safer angle. The party chose to scry for the map.</p>
-      <p class="beat">🔮 The map is under the flagstone he has been standing on for two centuries. He takes this news hard. +20 score, a march of oil saved. 🗝️ And the shape of the place gives itself away: something sealed further down will open to what was learned here.</p>
+      <p class="beat">🔮 The map is under the flagstone he has been standing on for two centuries. He takes this news hard. +20 score, a march of oil saved. 🗝️ And the shape of the place gives itself away: something sealed below will open to this.</p>
       
       
       
@@ -193,45 +193,45 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
     <div class="room">
       <div class="meta">📚 Room 9 — library</div>
       <p class="beat">A library. The party can study here to learn spells. Pillars break the room into aisles — something to fight behind. A brazier burns in its bracket — nobody has been here to feed it, and it burns anyway.</p>
-      <p class="beat delib">They might have chosen to break through the wall, or move on — the Cunning looked for the way that costs least. The party chose to study the shelves.</p>
-      <p class="beat">📚 The party studies the shelves and learns 1 spell.</p>
+      <p class="beat delib">They might have chosen to study the shelves, or move on — the Cunning had already worked out the odds. The party chose to break through the wall.</p>
+      <p class="beat">💥 The wall yields to force and the ceiling comes with it. 3 damage, a march of oil spent clearing the rubble, and what is left is a hole the party can only go through one at a time.</p>
       
-      
+      <p class="hurt">✚ 2 wounds on John Napier, and the ceiling with them: 11, and no more.</p>
       
     </div>
     <div class="room">
       <div class="meta">🌿 Room 10 — materials</div>
       <p class="beat">A room of herbs, salts, and quicksilver — alchemy materials, free to gather. Somebody stacked supplies here and never came back for them.</p>
-      <p class="beat delib">They might have chosen to gather the materials, or move on — the Cunning had already worked out the odds. The party chose to crack the crates open.</p>
+      <p class="beat delib">They might have chosen to gather the materials, or move on — the Cunning picked the safer angle. The party chose to crack the crates open.</p>
       <p class="beat">📦 The party cracks open stacked crates and barrels: 12 gold, 1 material.</p>
-      
+      <p class="aside">🕯️ The wick is well down the oil. 2 more marches of light, then none.</p>
       
       
     </div>
     <div class="room">
       <div class="meta">💰 Room 11 — treasure</div>
       <p class="beat">A treasure chest sits in the room. It may hold gold; it may be a mimic. A silvered mirror leans against the wall, and it shows the room more honestly than the room does. Somebody stacked supplies here and never came back for them.</p>
-      <p class="beat delib">They might have chosen to loot the treasure, or inspect it first — the Cunning looked for the way that costs least. The party chose to divine what is hidden here.</p>
-      <p class="beat">🔮 Divine sense finds what mortal eyes miss: a handful of coin scattered in crevices. +8 gold, +10 score. 🗝️ And the shape of the place gives itself away: something sealed further down will open to what was learned here.</p>
-      <p class="aside">🕯️ The lantern is burning low: oil for 2 more marches.</p>
+      <p class="beat delib">They might have chosen to observe every detail, or search the room methodically — the Cunning picked the safer angle. The party chose to loot the treasure.</p>
+      <p class="beat">💰 The party loots the chest: 34 gold. 🌿 Also in the hoard: 2 alchemy materials.</p>
+      <p class="aside">🕯️ Someone checks the reservoir and does not like the answer: oil for 1 more march.</p>
       
       
     </div>
     <div class="room">
       <div class="meta">🐉 Room 12 — boss</div>
       <p class="beat">The boss chamber. The Mad Alchemist, flask raised in welcome waits at its center (attack 13, health 36); killing it clears the dungeon. It is venomous: even a won fight leaves poison working, unless a cleric cures it. A crack runs the width of the room, wide enough to matter and too wide to jump twice. A sarcophagus stands against the wall with its lid slightly wrong. A portcullis hangs raised above the passage, on a chain that still turns.</p>
-      <p class="beat delib">They might have chosen to fall back, or open with a combat spell — John Napier made the case: &quot;Last one in buys the ale!&quot; The party chose to stand and fight.</p>
-      <p class="beat">⚔️ The party kills the Mad Alchemist, flask raised in welcome in 2 rounds, taking 0 damage. 📐 The party meets it standing as the last room left them. 🔪 Six knives arrive before the party does: 4 damage before the first round. 🗡️ The daggers land before the argument starts: nothing comes back in the first round. 🛡️ Aegis of Ash goes up before the first blow: 2 less damage every round. 🎒 7 more preparations hold besides — the ledger keeps them.</p>
-      <p class="aside">🛡️ John Napier walks in front, which is where the blows land first. 🕯️ The wick is well down the oil. 1 more march of light, then none.</p>
+      <p class="beat delib">They might have chosen to stand and fight, or fall back — the Cunning picked the safer angle. The party chose to pry the sarcophagus open.</p>
+      <p class="beat">⚰️ The party pries the lid off a stone sarcophagus: 20 gold.</p>
+      <p class="aside">🛡️ The order settles with John Napier at the head of it: whatever comes, comes to them. 🕯️ The last of the oil goes. From here the party walks in the dark.</p>
       
       
     </div>
 
     <h2>The way out</h2>
-      <p>the Mad Alchemist's Dungeon is cleared: the boss is dead and the party walks out. Survivors: John Dee, Kenelm Digby, Isabella Cortese, John Napier. Rooms cleared: 12. Trophies carried out: 1 (latest: ⚗️ the masterwork draught).</p>
+      <p>the Mad Alchemist's Dungeon is cleared: the boss is dead and the party walks out. Survivors: John Dee, Kenelm Digby, Isabella Cortese, John Napier. Rooms cleared: 12.</p>
     <p class="meta" style="margin-top:1rem">
-      Rooms cleared 12 · Score 317 ·
-      Gold 40 · Trophies 1 · Survivors 4
+      Rooms cleared 12 · Score 236 ·
+      Gold 86 · Trophies 0 · Survivors 4
     </p>
     <p class="note" style="margin-top:2rem">Regenerate this exact delve:
       <code>npm run simulate -- --seed log-easy-40</code></p>

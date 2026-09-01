@@ -283,11 +283,31 @@ export class Simulator {
     // line: an earned advantage the player never reads is a dead
     // declaration, whatever the ledger says. Situations often carry no
     // preps at all, so this makes the array rather than assuming it.
+    /*
+     * How much the party brought to bear, said in its own sentence with
+     * its own number (encounters/EncounterEngine.js MASTERY). Additive
+     * and separately stated, because the encounter's own line already
+     * claimed its own figures and quietly changing them would make
+     * every one of those lines a lie.
+     */
+    if (result.mastery) {
+      const m = result.mastery;
+      result.preps = result.preps || [];
+      result.preps.push({
+        source: 'the reckoning',
+        text: m.score < 0
+          ? `🎓 Done by people who do something near it: ${-m.score} renown less than a clean job.`
+          : m.depth >= 3
+            ? `🎓 Three disciplines on one problem, none of them guessing: +${m.score} renown.`
+            : `🎓 A second pair of hands that knows what it sees: +${m.score} renown.`,
+      });
+    }
+
     if (result.taughtWayIn) {
       result.preps = result.preps || [];
       result.preps.push({
         source: 'the reading',
-        text: '🗝️ And the shape of the place gives itself away: something sealed further down will open to what was learned here.',
+        text: '🗝️ And the shape of the place gives itself away: something sealed below will open to this.',
       });
     }
 

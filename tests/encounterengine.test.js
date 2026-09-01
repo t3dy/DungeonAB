@@ -72,7 +72,15 @@ describe('Capabilities open options, and their absence closes them', () => {
     const ids = getRoomOptions(chamber(), brahe).map(o => o.id);
     assert.ok(ids.includes('repair-gears'), 'tinkering repairs it');
     assert.ok(ids.includes('correct-orrery'), 'astronomy corrects it');
-    assert.ok(!ids.includes('divine-instability'), 'he is no diviner');
+    // He is no diviner — but an astronomer with an eye and a sense of
+    // direction holds two of divination's neighbours, so he may attempt
+    // it and the result is graded down for improvising
+    // (game/Capabilities.js AFFINITIES, EncounterEngine MASTERY).
+    const divine = getRoomOptions(chamber(), brahe).find(o => o.id === 'divine-instability');
+    assert.ok(divine, 'adjacent disciplines may attempt it');
+    assert.ok(divine.improvised, 'and the engine knows he is improvising');
+    const proper = getRoomOptions(chamber(), brahe).find(o => o.id === 'correct-orrery');
+    assert.ok(!proper.improvised, 'where the orrery is his own discipline');
     assert.ok(ids.includes('hurry-through'), 'the blunt option is always there');
   });
 
@@ -142,7 +150,11 @@ describe('The debug trace answers the balancing question', () => {
     const trace = getEncounterTrace();
     const evaluated = trace.find(t => t.kind === 'evaluate' && t.encounterId === 'astronomers-chamber');
     assert.ok(evaluated.capabilitiesPresent.includes('tinkering'));
-    assert.ok(evaluated.gatedOut.some(o => o.missingCaps.includes('divination')),
+    // Divination is now reachable for him by adjacency, so the trace's
+    // gatedOut list is asked about something he is nowhere near:
+    // knowledge, whose neighbours are antiquarian, translation and
+    // memory, none of which Brahe holds.
+    assert.ok(evaluated.gatedOut.some(o => o.missingCaps.includes('knowledge')),
       'the trace explains the options that did NOT appear');
 
     const summary = capabilityUsageSummary();

@@ -53,6 +53,79 @@ export const CAPABILITIES = {
   telepathy: { name: 'Telepathy', icon: '📡', text: 'A link to minds that carry their own capabilities.' },
 };
 
+/**
+ * What else bears on a problem.
+ *
+ * A capability gate used to be a lock: hold `astronomy` or the orrery
+ * option is not on the menu. Measured, that lock opened for 93% of
+ * narrow parties and 100% of broad ones, because each situation asks
+ * "do you hold any of these four?" and against four independent draws
+ * even a thin party nearly always holds one. A gate 93% of parties pass
+ * is not a gate, and every payoff downstream of it was capped by that
+ * seven-point gap (DESIGN_DIALOGUE.md §P).
+ *
+ * So the lock becomes a slope. These are the neighbours of each
+ * capability — the tags a person would actually want beside them on
+ * that problem. They do two jobs:
+ *
+ *   1. **Adjacency opens the door.** A mathematician may attempt the
+ *      orrery. They are not an astronomer and the writing says so, but
+ *      the option is on the menu, which is what makes an encounter a
+ *      question rather than a key-check.
+ *   2. **Depth grades the answer.** How many of the bearing tags the
+ *      party holds decides how well it goes — one is a rough job, three
+ *      is mastery. This is the discrimination the binary gate could not
+ *      provide, and unlike a gate it cannot saturate: there is always a
+ *      further tag to hold.
+ *
+ * House doctrine caught up with, rather than departed from: standing
+ * rule 4 has always been gradient outcomes, not binary win/lose. The
+ * encounters were the last place still doing it the old way.
+ *
+ * Symmetry is not required and not enforced — `medicine` leans on
+ * `healing` more than `healing` leans on `medicine` — but the relation
+ * should be one a player could guess before reading this table.
+ */
+export const AFFINITIES = {
+  tinkering: ['mathematics', 'experimentation', 'observation'],
+  diplomacy: ['debate', 'translation', 'appraisal'],
+  rogue: ['observation', 'tinkering', 'navigation'],
+  fencing: ['tactics', 'observation'],
+  tactics: ['observation', 'navigation', 'fencing'],
+  conjuring: ['correspondence', 'divination', 'syncretism'],
+  divination: ['astronomy', 'observation', 'correspondence'],
+  alchemy: ['experimentation', 'medicine', 'naturalPhilosophy'],
+  healing: ['medicine', 'harmony', 'alchemy'],
+  knowledge: ['antiquarian', 'translation', 'memory'],
+  appraisal: ['antiquarian', 'knowledge', 'observation'],
+  translation: ['knowledge', 'correspondence', 'memory'],
+  observation: ['divination', 'naturalPhilosophy', 'appraisal'],
+  experimentation: ['naturalPhilosophy', 'alchemy', 'tinkering'],
+  correspondence: ['syncretism', 'astronomy', 'harmony'],
+  memory: ['knowledge', 'imagination', 'music'],
+  mathematics: ['astronomy', 'harmony', 'tinkering'],
+  astronomy: ['mathematics', 'divination', 'navigation'],
+  navigation: ['astronomy', 'mathematics', 'observation'],
+  harmony: ['music', 'mathematics', 'correspondence'],
+  music: ['harmony', 'memory', 'imagination'],
+  imagination: ['memory', 'music', 'syncretism'],
+  syncretism: ['correspondence', 'translation', 'debate'],
+  antiquarian: ['knowledge', 'appraisal', 'translation'],
+  debate: ['knowledge', 'diplomacy', 'syncretism'],
+  naturalPhilosophy: ['experimentation', 'observation', 'medicine'],
+  medicine: ['healing', 'alchemy', 'naturalPhilosophy'],
+  telepathy: ['conjuring', 'divination', 'diplomacy'],
+};
+
+/** Everything that bears on an option asking for these capabilities. */
+export function bearingOn(requires = []) {
+  const set = new Set(requires);
+  for (const cap of requires) {
+    for (const near of AFFINITIES[cap] || []) set.add(near);
+  }
+  return set;
+}
+
 export function isCapability(id) {
   return Object.prototype.hasOwnProperty.call(CAPABILITIES, id);
 }

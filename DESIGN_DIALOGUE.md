@@ -1675,3 +1675,57 @@ party's 14" in room 9. Deaths of somebody the reader had met went from
 the systemic list entirely. The residue is mass death in wipes, where
 the back rank dies in the same room it is first named — a structural
 limit, not a writing failure, and not worth weakening the probe over.
+
+## §Q. The lock becomes a slope
+
+The gate that did not gate (§P) is gone. An encounter option is no
+longer a key-check; it is a question the party answers with whatever
+disciplines it can bring, and how much it brings decides how well it
+goes.
+
+**Adjacency opens the door.** `game/Capabilities.js` now carries
+`AFFINITIES`: for each of the 28 capabilities, the two or three
+neighbours a person would actually want beside them on that problem.
+Holding what an option asks for is still the clean way in; holding two
+of its neighbours gets you in as an improviser. A mathematician with a
+sense of direction may attempt an orrery.
+
+**Depth grades the answer.** `depth` is how many bearing tags the party
+holds, and it prices the outcome in an ADDITIVE band with its own
+narrated line: improvising costs 10 renown against a clean job, a second
+informed pair of hands pays 10, three disciplines on one problem pay 25.
+
+Additive rather than multiplicative on purpose, and this is the whole
+reason the change was affordable. Each of the 86 gated options states
+its own figures in its own writing ("+40 gold, +25 score"); scaling
+those quietly would make every one of those sentences a lie, which
+`tests/prose` gates and which is the Aegis of Ash failure (rule 13). A
+separate effect with a separate sentence stating its own number is
+honest — and it composed with all 86 options without editing any of
+them.
+
+**Measured, at last it discriminates.** Score by draft breadth:
+
+| | before §Q | after §Q |
+|---|---|---|
+| narrow / broad score | 386.9 / 395.4 | **386.9 / 420.3** |
+| pearson r | 0.084 | **0.124** |
+| mastery events a delve | — | 0.47 narrow / **1.02 broad** |
+
+On wider-spread random pools the gap is +16%. And the telling line:
+*situations answered* went from 45%/54% to 48%/51% — the gap **narrowed**,
+which is the point. Discrimination moved off "whether you could" and onto
+"how well you did", where it is continuous and cannot saturate. There is
+always one more relevant tag to hold; there was never one more lock to
+pass.
+
+**What it cost.** Three fixtures asserted the binary model and now assert
+the graded one (Brahe is still no diviner, but he may try, and the engine
+records that he is improvising). Fallbacks got squeezed a third time —
+wider availability outbids the blunt answer — so the per-option patches
+became one `BLUNT_ANSWERS` table: a party in trouble stops being clever,
+and a fresh party with a temper does not bother, so both ends of the
+health curve want the blunt answer and the tidy middle is where expertise
+gets spent. Concision regressed to 53% and came back to 21% by trimming
+the two new lines and giving situations a 400-character cap, because a
+situation now says three earned things rather than one.

@@ -413,6 +413,26 @@ export function natureAdjustments(party, room) {
   return adj;
 }
 
+/**
+ * Situation fallbacks and what makes each one attractive.
+ *
+ * `spent` is the pull when the party is badly hurt, `fresh` when it is
+ * barely scratched, `tempers` the archetypes who reach for it anyway.
+ * Add a new situation's blunt option here when `tests/prose` reports it
+ * offered often and taken never — that report is the signal this table
+ * exists to answer.
+ */
+const BLUNT_ANSWERS = new Map([
+  ['push-past-duellist', { spent: 5, fresh: 0, tempers: { craven: 2 } }],
+  ['put-it-down', { spent: 2, fresh: 3, tempers: { reckless: 2, brave: 1 } }],
+  ['endure-discord', { spent: 3, fresh: 2, tempers: { reckless: 2, brave: 1 } }],
+  ['guess-heavy', { spent: 2, fresh: 2, tempers: { greedy: 2, reckless: 1 } }],
+  ['smash-wall', { spent: 2, fresh: 3, tempers: { reckless: 2, brave: 1 } }],
+  ['hurry-past', { spent: 4, fresh: 0, tempers: { craven: 2 } }],
+  ['take-detour', { spent: 3, fresh: 0, tempers: { craven: 2, cunning: 1 } }],
+  ['push-through', { spent: 0, fresh: 2, tempers: { reckless: 2, brave: 1 } }],
+]);
+
 export function decideRoomAction(room, party) {
   const options = getRoomOptions(room, party);
   if (options.length === 0) return null;
@@ -498,17 +518,32 @@ export function decideRoomAction(room, party) {
       else if (share < 0.65) w += 1.5;
       if (party.supply === 0) w += 1.5;      // no light to fight a mimic by
     }
-    // Walking away from an optional fight, for the same reason. Now that
-    // a capability option carries its declared weight, the four skilled
-    // answers to a duellist outbid a plain refusal every time — offered
-    // 42 times and taken once, which is the shape tests/prose exists to
-    // catch. A party with nothing left does not want the duel at all,
-    // however well it could fence.
-    if (opt.id === 'push-past-duellist') {
+    /*
+     * The blunt answer to a situation — shoulder past, hit it until it
+     * stops, endure it — has to stay live, and it kept dying.
+     *
+     * Twice now a change has pushed these under: honouring `opt.weight`
+     * gave the skilled answers a real pull, and adjacency
+     * (game/Capabilities.js AFFINITIES) then put more of those answers
+     * in front of every party. Each time, tests/prose caught a fallback
+     * offered forty times and taken once, and each time the fix was the
+     * same shape as `leave-it` above — so it is written once here
+     * rather than a third time per option.
+     *
+     * The rule underneath: a party in trouble stops being clever, and a
+     * fresh party with a temper does not bother being clever. Both ends
+     * of the health curve want the blunt answer; the tidy middle is
+     * where expertise gets used.
+     */
+    if (BLUNT_ANSWERS.has(opt.id)) {
       const share = party.totalHealth() / party.totalMaxHealth();
-      if (share < 0.4) w += 5;
-      else if (share < 0.65) w += 2;
-      if (party.hasPersonality('craven')) w += 2;
+      const b = BLUNT_ANSWERS.get(opt.id);
+      if (share < 0.4) w += b.spent;
+      else if (share < 0.65) w += b.spent * 0.4;
+      else if (share > 0.8) w += b.fresh;
+      for (const [trait, bonus] of Object.entries(b.tempers || {})) {
+        if (party.hasPersonality(trait)) w += bonus;
+      }
     }
 
     return { opt, w: Math.max(0.1, w) };

@@ -37,6 +37,7 @@
  */
 
 import { roomFeatures } from '../world/RoomFeatures.js';
+import { bearingOn } from '../game/Capabilities.js';
 
 const REGISTRY = new Map();       // id → definition
 const BY_ROOM_TYPE = new Map();   // roomType → definition
@@ -130,12 +131,35 @@ export function evaluateOptions(def, party, ctx) {
     const missingAffordances = (opt.affordances || []).filter(a => !afforded.has(a));
     const whenOk = opt.when ? !!opt.when(party, ctx) : true;
 
-    if (missingCaps.length === 0 && missingAffordances.length === 0 && whenOk) {
+    /*
+     * Adjacency opens the door (game/Capabilities.js AFFINITIES).
+     *
+     * Holding what the option asks for is still the clean way in. But a
+     * party that holds two of the neighbouring tags may attempt it as
+     * well — a mathematician and a navigator between them can have a go
+     * at an orrery — and how well it goes is decided by `depth` below
+     * rather than by whether the door opened at all.
+     *
+     * Two neighbours rather than one on purpose: one adjacency would
+     * put nearly every option in front of nearly every party, which is
+     * the saturation this change exists to escape, only worse.
+     */
+    const bearing = requires.length ? bearingOn(requires) : new Set();
+    const depth = [...bearing].filter(c => partyCaps.has(c)).length;
+    const adjacent = missingCaps.length > 0 && depth >= 2;
+    const capsOk = missingCaps.length === 0 || adjacent;
+
+    if (capsOk && missingAffordances.length === 0 && whenOk) {
       available.push({
         id: opt.id,
         name: opt.name,
         desc: opt.desc,
         weight: opt.weight,
+        // How much the party brings to bear, and whether it is doing
+        // this properly or improvising from a neighbouring discipline
+        depth,
+        bearing: [...bearing],
+        improvised: adjacent,
         // A fallback that exists only because a situation room has no
         // other way out; see RoomEncounters' ride path.
         onlyWhenOwned: !!opt.onlyWhenOwned,
@@ -174,9 +198,65 @@ export function evaluateOptions(def, party, ctx) {
  */
 export const WAY_IN_CAP = 2;
 
-export function resolveEncounterOption(def, optionId, party, ctx) {
+/*
+ * What depth is worth.
+ *
+ * The band is ADDITIVE and gets its own narrated line, rather than
+ * scaling what the encounter already awarded. That is not squeamishness:
+ * an encounter's own writing states its own numbers ("+40 gold, +25
+ * score"), and quietly multiplying them would make every one of those
+ * lines a lie — which `tests/prose` gates on and which is the exact
+ * failure that made Aegis of Ash unreadable (CLAUDE.md rule 13). A
+ * separate effect with a separate sentence stating its own figure is
+ * honest, and it composes with the 86 existing options without editing
+ * any of them.
+ *
+ * Improvising from a neighbouring discipline costs; bringing three
+ * relevant hands to a problem pays. The middle — doing it properly with
+ * one specialist — is the baseline and says nothing extra, because a
+ * line that fires on every option in the game is noise.
+ */
+const MASTERY = {
+  improvised: { score: -10, label: 'improvised' },
+  1: { score: 0, label: null },
+  2: { score: 10, label: 'assisted' },
+  3: { score: 25, label: 'mastered' },
+};
+
+function masteryFor(depth, improvised) {
+  if (improvised) return MASTERY.improvised;
+  return MASTERY[Math.min(3, depth)] || MASTERY[1];
+}
+
+export function resolveEncounterOption(def, optionId, party, ctx, opts = {}) {
   const option = def.options.find(o => o.id === optionId);
   const result = def.resolveOption(optionId, party, ctx);
+
+  /*
+   * How much the party brought to bear, priced. `opts.depth` comes from
+   * the evaluated option when the caller has it; recomputing is the
+   * fallback so a direct call (tests, tools) still grades.
+   */
+  if ((option?.requires || []).length > 0 && result?.success !== false) {
+    const caps = party.capabilities();
+    const bearing = bearingOn(option.requires);
+    const depth = opts.depth ?? [...bearing].filter(c => caps.has(c)).length;
+    const improvised = opts.improvised
+      ?? option.requires.some(c => !caps.has(c));
+    const band = masteryFor(depth, improvised);
+    if (band.score) {
+      // A botched improvisation can cost more renown than the room
+      // paid, but it cannot put the party in debt to the world: a
+      // negative running score is a number with no meaning here.
+      const applied = band.score < 0
+        ? -Math.min(-band.score, party.score)
+        : band.score;
+      if (applied) {
+        party.addScore(applied);
+        result.mastery = { ...band, depth, score: applied };
+      }
+    }
+  }
 
   /*
    * A situation answered with a drafted capability teaches the party
@@ -194,7 +274,10 @@ export function resolveEncounterOption(def, optionId, party, ctx) {
    * heaviest chest, hurrying through — teach nothing. That asymmetry
    * IS the payoff.
    */
-  if (result?.success !== false && (option?.requires || []).length > 0) {
+  // Improvising past a problem does not teach you how the place was
+  // built — you got through it without ever understanding it, which is
+  // the whole difference the mastery band prices.
+  if (result?.success !== false && (option?.requires || []).length > 0 && !result.mastery?.label?.includes('improvised')) {
     const held = party.wayIn || 0;
     if (held < WAY_IN_CAP) {
       party.wayIn = held + 1;
