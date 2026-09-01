@@ -20,7 +20,8 @@
     "new-card": "node tools/new-card.mjs",
     "census": "node tools/census.mjs",
     "simulate": "node tools/simulate.mjs",
-    "margins": "node tools/margins.mjs"
+    "margins": "node tools/margins.mjs",
+    "audit": "node tools/audit.mjs"
   },
   "dependencies": {
     "three": "^0.170.0"

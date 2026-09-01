@@ -22,13 +22,30 @@ Read these before concluding something is fine, and add to them as you
 go — they are kept live rather than written up at the end, because the
 entries that get lost are the ones that looked small at the time.
 
+Every one has a sister `…PROPOSAL.md` holding ranked options with a
+recommendation for each entry. Read the problem, then its proposal; do
+not invent a third approach without saying why the ranked ones were
+rejected.
+
 | File | Holds |
 |---|---|
-| `PROBLEMS.md` | Broken or unfinished, with how it is known and its status |
+| `BUGS.md` | Defects — things that do the wrong thing |
+| `PROBLEMS.md` | Unfinished, with how it is known and its status |
 | `PERPLEXITIES.md` | Open design questions with no obvious answer |
 | `BALANCEISSUES.md` | Measured numbers that look wrong, with the measurement |
-| `ROUGHEDGES.md` | Papercuts, debt, and traps for the next session |
+| `SIMULATIONFINDINGS.md` | What running it thousands of times taught |
+| `DRAMATURGISSUES.md` | Defects in the critic — contaminates every finding taken with it |
+| `ARCHITECTURE.md` | How it fits, and where the seams leak |
+| `DATACONTRACTS.md` | What must agree with what, and which agreements are ungated |
+| `CONTENTREACH.md` | What players actually meet vs what was built |
+| `MEASUREMENT.md` | How to measure without fooling yourself — **read before quoting a number** |
+| `ROUGHEDGES.md` | Papercuts, debt, and traps |
 | `DESIGN_DIALOGUE.md` | The narrative of why things are the way they are (§N–§Q) |
+
+`npm run audit` regenerates the measurable facts these cite (dead
+exports, unread fields, contract drift, hand-synced tables). It is an
+**instrument, not a gate** — a finding usually means something is
+unfinished, where a `npm test` failure means something is broken.
 
 ## Structure
 
