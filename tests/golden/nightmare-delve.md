@@ -147,7 +147,7 @@ An obsidian golem with a slow fuse holds the room (attack 17, health 43). The pa
 
 They might have chosen to accept the duel, or negotiate the terms — Margaret Cavendish made the case: "The safety margin is where the good magic lives." The party chose to open with a combat spell.
 
-🔥 Shatter opens the fight, softening the monster before the first blow. ⚔️ The party kills an obsidian golem with a slow fuse in 1 round, taking 0 damage. 🔪 Six knives arrive before the party does: 4 damage before the first round. 🪞 A tall silvered mirror shows the ethereal where it truly stands: weapons do full damage. 🌡️ A bed of rusted floor spikes glows and spits where the working lands: 2 damage to whatever is near it. 🌡️ A raised portcullis glows and spits where the working lands: 2 damage to whatever is near it. 🔺 The party drives in as a wedge, everything committed forward. A fifth more damage dealt, a third more taken, and three of them swinging instead of two. ⚔️ The party has the numbers and uses them: +3 damage a round. ✨ The working holds: +21 damage every round while the fight lasts. 🗿 An obsidian golem with a slow fuse drops an obsidian heart-shard: a trinket (+1 defense), now worn by Paracelsus. 💥 The Reckless finish the fight with style: +5 score.
+🔥 Shatter opens the fight, softening the monster before the first blow. ⚔️ The party kills an obsidian golem with a slow fuse in 1 round, taking 0 damage. 🔪 Six knives arrive before the party does: 4 damage before the first round. 💥 The Reckless finish the fight with style: +5 score. 🎒 7 more preparations hold besides — the ledger keeps them.
 
 <details><summary>Ledger</summary>
 
@@ -157,6 +157,13 @@ They might have chosen to accept the duel, or negotiate the terms — Margaret C
 - 🚪 1 more room behind them.
 - 🪜 The party descends a floor: everything below hits harder.
 - · 👹 Room 9: monster — spell-strike
+- 🎒 🪞 A tall silvered mirror shows the ethereal where it truly stands: weapons do full damage.
+- 🎒 🌡️ A bed of rusted floor spikes glows and spits where the working lands: 2 damage to whatever is near it.
+- 🎒 🌡️ A raised portcullis glows and spits where the working lands: 2 damage to whatever is near it.
+- 🎒 🔺 The party drives in as a wedge, everything committed forward.
+- 🎒 ⚔️ The party has the numbers and uses them: +3 damage a round.
+- 🎒 ✨ The working holds: +21 damage every round while the fight lasts.
+- 🎒 🗿 An obsidian golem with a slow fuse drops an obsidian heart-shard: a trinket (+1 defense), now worn by Paracelsus.
 
 </details>
 
@@ -208,9 +215,9 @@ A salamander the size of a mistake holds the room (attack 15, health 30). The pa
 
 They might have chosen to fall back, or open with a combat spell — Michael Sendivogius made the case: "My shield has a saint on it. She's watching. Form up." The party chose to stand and fight.
 
-🪄 Michael Sendivogius uses the Haunted Armor — The Ghost Objects: a summon adding 1 attack each round. ⚔️ The party kills a salamander the size of a mistake in 3 rounds, taking 10 damage. 🔪 Six knives arrive before the party does: 4 damage before the first round. 🛡️ Shields lock along the front rank and the party stops trying to win quickly. A third less damage a round and a quarter less dealt — but packed tight, so anything with a blast radius hurts more. 💚 Balm of Hours closes Michael Sendivogius's wounds mid-fight: 13 healed in round 2, then 7 a round while it holds. 🦎 A salamander the size of a mistake drops a salamander gland: a weapon coating (+2 attack, fire), applied to Margaret Cavendish's weapon. 💥 The Reckless finish the fight with style: +5 score.
+🪄 Michael Sendivogius uses the Haunted Armor — The Ghost Objects: a summon adding 1 attack each round. ⚔️ The party kills a salamander the size of a mistake in 3 rounds, taking 10 damage. 🩸 Michael Sendivogius takes the worst of it: 4 of the party's 10. 🔪 Six knives arrive before the party does: 4 damage before the first round. 🛡️ Shields lock along the front rank and the party stops trying to win quickly. 🎒 3 more preparations hold besides — the ledger keeps them.
 
-- ✚ Michael Sendivogius is wounded again — 2 scars now, and nothing can heal them past 9 before town.
+- ✚ 2 wounds on Michael Sendivogius, and the ceiling with them: 9, and no more.
 
 <details><summary>Ledger</summary>
 
@@ -221,6 +228,9 @@ They might have chosen to fall back, or open with a combat spell — Michael Sen
 - ⚗️ 1 blade coated at the bench.
 - 🚪 1 more room behind them.
 - · 👹 Room 12: monster — fight
+- 🎒 💚 Balm of Hours closes Michael Sendivogius's wounds mid-fight: 13 healed in round 2, then 7 a round while it holds.
+- 🎒 🦎 A salamander the size of a mistake drops a salamander gland: a weapon coating (+2 attack, fire), applied to Margaret Cavendish's weapon.
+- 🎒 💥 The Reckless finish the fight with style: +5 score.
 
 </details>
 
@@ -228,17 +238,18 @@ They might have chosen to fall back, or open with a combat spell — Michael Sen
 
 A trap blocks the corridor. The party must disarm it, avoid it, or take the hit. A pit takes up a third of the floor. The bottom is not visible. Half the ceiling is on the floor, in pieces worth stepping around.
 
-They might have chosen to push through and take the hit, or search for a way around — the Craven pushed for the safest option. The party chose to sift the rubble.
+They might have chosen to search for a way around, or bypass it with a utility spell — the Craven pushed for the safest option. The party chose to push through and take the hit.
 
-🪨 The party sifts a fall of rubble: 5 gold, 1 material.
+💥 The party pushes through the trap, taking 6 damage. The Craven spotted the tripwire first: 1 less damage. 🏮 The Everburning Lantern showed the pressure plates: 1 less damage.
+
+- ✚ Michael Sendivogius is wounded again — 3 scars now, and nothing can heal them past 7 before town.
 
 <details><summary>Ledger</summary>
 
-- 💰 The purse is 5 heavier.
-- 🏅 5 renown earned.
-- 🌿 1 more alchemical materials in the satchel.
+- ❤️ 6 health taken.
+- ✚ 1 wound that will not close down here.
 - 🚪 1 more room behind them.
-- · ⚠️ Room 13: trap — sift-rubble
+- · ⚠️ Room 13: trap — push-through
 
 </details>
 
@@ -246,14 +257,18 @@ They might have chosen to push through and take the hit, or search for a way aro
 
 A library. The party can study here to learn spells. Pillars break the room into aisles — something to fight behind. A brazier burns in its bracket — nobody has been here to feed it, and it burns anyway. A font holds water that has been still a long time and is somehow clean. Shelves sag under books nobody has audited in a century.
 
-They might have chosen to read the sealed texts, or study the shelves — the Craven argued for whatever kept a door behind them. The party chose to move on.
+They might have chosen to read the sealed texts, or move on — the Craven argued for whatever kept a door behind them. The party chose to study the shelves.
 
-The party moves on to the next room.
+📚 The party studies the shelves and learns 1 spell.
 
 <details><summary>Ledger</summary>
 
+- 🏅 20 renown earned.
+- 📖 1 new working copied into the grimoire.
+- 📜 The grimoire grows by 1.
+- ❤️ 1 health mended.
 - 🚪 1 more room behind them.
-- · 📚 Room 14: library — pass-by
+- · 📚 Room 14: library — study
 
 </details>
 
@@ -261,9 +276,9 @@ The party moves on to the next room.
 
 The boss chamber. The Forge Tyrant, hammer still warm waits at its center (attack 30, health 73); killing it clears the dungeon. Plate and chitin cover it: the party's blows do 2 less damage each round. A brazier burns in its bracket — nobody has been here to feed it, and it burns anyway. A sarcophagus stands against the wall with its lid slightly wrong. A bed of rusted spikes stands out of the floor, most of them still upright.
 
-They might have chosen to stand and fight, or fall back — the Craven pushed for the safest option. The party chose to shove it into the brazier.
+They might have chosen to stand and fight, or fall back — the Craven argued for whatever kept a door behind them. The party chose to put it onto the floor spikes.
 
-🔥 The party drives the monster into a brazier still burning: 21 fire damage. ☠️ Even so, the Forge Tyrant, hammer still warm beats the party down. 🔧 The party knows how to swing what the room left lying about: +5 to the opening. 🔪 Six knives arrive before the party does: 4 damage before the first round. 🔺 The party drives in as a wedge, everything committed forward. A fifth more damage dealt, a third more taken, and three of them swinging instead of two. ⚔️ The party has the numbers and uses them: +3 damage a round. 💢 At half health, the Forge Tyrant, hammer still warm turns fierce: attack +2 for the rest of the fight. 💚 Balm of Hours closes Paracelsus's wounds mid-fight: 11 healed in round 1, then 6 a round while it holds.
+🔻 The party drives the monster back onto a bed of rusted floor spikes: 17 damage, and it has to pull itself off them. ☠️ Even so, the Forge Tyrant, hammer still warm beats the party down. 🩸 It is Paracelsus standing in front of it: 13 of the 68 the party takes. 🔧 The party knows how to swing what the room left lying about: +5 to the opening. 🔪 Six knives arrive before the party does: 4 damage before the first round. 🎒 2 more preparations hold besides — the ledger keeps them.
 
 - ☠️ Margaret Cavendish falls. The party's wizard is dead; the survivors march on.
 - ☠️ Paracelsus falls. The party's alchemist is dead; the survivors march on.
@@ -273,10 +288,12 @@ They might have chosen to stand and fight, or fall back — the Craven pushed fo
 <details><summary>Ledger</summary>
 
 - ☠️ 4 of the party are down.
-- ❤️ 47 health taken.
-- ✚ 1 wound that will not close down here.
-- · 🐉 Room 15: boss — shove-into-brazier
+- ❤️ 42 health taken.
+- ✚ 3 wounds that will not close down here.
+- · 🐉 Room 15: boss — shove-onto-spikes
 - · ☠️ The party has fallen.
+- 🎒 🛡️ Shields lock along the front rank and the party stops trying to win quickly.
+- 🎒 💚 Balm of Hours closes Margaret Cavendish's wounds mid-fight: 13 healed in round 1, then 7 a round while it holds.
 
 </details>
 
@@ -284,4 +301,4 @@ They might have chosen to stand and fight, or fall back — the Craven pushed fo
 
 The party is wiped out in the Cinder Galleries. The dead: Margaret Cavendish, Paracelsus, Michael Sendivogius, John Dee. Rooms cleared: 14. Trophies lost with them: 2 (latest: 🦎 a salamander gland).
 
-**Rooms cleared:** 14 · **Score:** 115 · **Gold:** 10 · **Trophies:** 2 · **Survivors:** 0
+**Rooms cleared:** 14 · **Score:** 130 · **Gold:** 5 · **Trophies:** 2 · **Survivors:** 0

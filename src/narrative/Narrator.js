@@ -13,7 +13,7 @@
 
 import { ROOM_TYPES } from '../world/DungeonGen.js';
 import { getEncounter } from '../encounters/EncounterEngine.js';
-import { CLASSES } from '../game/Cards.js';
+import { CLASSES, getAllCards } from '../game/Cards.js';
 import { getBark } from './Barks.js';
 import { roomFeatures, getFeature, FEATURE_ACTIONS } from '../world/RoomFeatures.js';
 
@@ -467,6 +467,100 @@ const PROCEED_LINES = [
   'The party files through and leaves the room behind.',
 ];
 
+/* ------------------------------------------------------------------ */
+/* The editor — a resolution has a budget                              */
+/* ------------------------------------------------------------------ */
+
+/*
+ * This is the failure a generated game arrives at by addition. Every
+ * ward, cover bonus, tactic and coating pushes its own prep line, each
+ * individually correct and in voice — and measured over 120 transcripts,
+ * the median BOSS resolution ran 1113 characters, with the actual event
+ * buried in the middle (narrative/Dramaturg.js, `concision`). Nobody
+ * wrote that paragraph. It accumulated.
+ *
+ * So the resolution gets an editor. Three classes of prep line, in
+ * priority order:
+ *
+ *   carries  — a consequence arriving from an earlier room (a stance
+ *              held, a favourable aspect, a tripped alarm). Always
+ *              inline: continuity is the point of these lines, and a
+ *              callback the reader never reads is not a callback.
+ *   cards    — a line fulfilling a drafted card's promise, matched by
+ *              source name against the card pool. Two slots: a card
+ *              visibly working is why anyone drafts one (the Eyes of
+ *              the Mouse lesson, CLAUDE.md rule 9).
+ *   generic  — terrain cover, formation, footwork. Two slots, first
+ *              come; the formation tell is pushed first by the resolver
+ *              and so survives when the room is quiet.
+ *
+ * Everything past the budget folds into one clause, and the Simulator
+ * files the folded lines in the ledger — which has been the place for
+ * complete accounting since the Chronicle was two layers.
+ */
+const CARD_NAMES = new Set(getAllCards().map(c => c.name.toLowerCase()));
+const CARRY_SOURCES = new Set([
+  'the room before this one', 'the corrected heavens', 'the warning', 'the alarm',
+]);
+// One budget, not two pools: the approved policy (2026-08-31) is
+// "outcome plus the two or three most consequential preparations, cards
+// first" — and a first draft with separate card and generic budgets
+// quietly summed to five, which measured out at a 683-character median
+// boss resolution. Three total, with card lines outranking generic
+// ones rather than drawing from their own pool: a fight where three
+// drafted cards fire shows all three and no terrain; a quiet fight
+// keeps its formation tell. Carries ride free — a callback the reader
+// never reads is not a callback.
+const PREP_BUDGET = 3;
+
+/**
+ * @param reserved  card lines the composer will print that do not live
+ *                  in the preps array — a spell-strike opening, an item
+ *                  lead ("🪄 … uses the Haunted Armor"). They are card
+ *                  promises too, and they spend the same budget; without
+ *                  this, spell-strike fights ran ~150 characters past
+ *                  every other fight for carrying a fourth card line.
+ */
+export function editPreps(preps = [], reserved = 0) {
+  const budget = Math.max(2, PREP_BUDGET - reserved);
+  const inline = [];
+  const rest = [];
+  for (const p of preps) {
+    const source = String(p.source || '').toLowerCase();
+    if (CARRY_SOURCES.has(source)) { inline.push(p); continue; }
+    const isCard = CARD_NAMES.has(source) || CARD_NAMES.has(source.replace(/^the /, ''));
+    rest.push({ p, isCard });
+  }
+  // Cards outrank generics; order of play holds within each class
+  const ranked = [...rest.filter(x => x.isCard), ...rest.filter(x => !x.isCard)];
+  const kept = new Set(ranked.slice(0, budget).map(x => x.p));
+  const folded = [];
+  for (const { p } of rest) (kept.has(p) ? inline : folded).push(p);
+  return { inline, folded };
+}
+
+/** The clause standing in for everything the editor cut. */
+function foldClause(n) {
+  return `🎒 ${n} more preparation${n === 1 ? ' holds' : 's hold'} besides — the ledger keeps ${n === 1 ? 'it' : 'them'}.`;
+}
+
+/**
+ * Who bore the fight, when it is worth a line. The resolver measures
+ * health lost per member (mechanically true — blows go to the front
+ * rank first), and the line prints only when the brunt is a real blow:
+ * rationing, and it is exactly the hard fights, where people die, that
+ * clear the bar — so the fallen have been named before they fall.
+ */
+function bruntLine(result) {
+  const b = result.brunt;
+  if (!b || !result.rounds || b.lost < 4 || b.lost > result.damage) return null;
+  return pick([
+    `🩸 ${b.name} takes the worst of it: ${b.lost} of the party's ${result.damage}.`,
+    `🩸 Most of that lands on ${b.name} — ${b.lost} of the ${result.damage} taken.`,
+    `🩸 It is ${b.name} standing in front of it: ${b.lost} of the ${result.damage} the party takes.`,
+  ]);
+}
+
 export function composeResolution(room, optionId, result, party) {
   const bits = [];
 
@@ -474,6 +568,7 @@ export function composeResolution(room, optionId, result, party) {
   if (result?.narrative) {
     bits.push(result.narrative);
     for (const prep of result.preps || []) bits.push(prep.text);
+    if (result.foldedPreps) bits.push(foldClause(result.foldedPreps));
     return bits.join(' ');
   }
 
@@ -488,8 +583,11 @@ export function composeResolution(room, optionId, result, party) {
             ? `⚔️ ${capitalize(result.monster)} is finished before it can strike back.`
             : killLine(result))
         : `☠️ Even so, ${result.monster} beats the party down.`);
+      const brunt = bruntLine(result);
+      if (brunt) bits.push(brunt);
     }
     for (const prep of result.preps || []) bits.push(prep.text);
+    if (result.foldedPreps) bits.push(foldClause(result.foldedPreps));
     return bits.join(' ');
   }
 
@@ -639,11 +737,18 @@ export function composeResolution(room, optionId, result, party) {
       bits.push(pick(PROCEED_LINES));
   }
 
+  // Whoever bore the fight is named — spell-strike and the other
+  // delegating options carry `brunt` through from the fight resolver,
+  // so this covers every road into a fight, not just 'fight'.
+  const brunt = bruntLine(result);
+  if (brunt) bits.push(brunt);
+
   // Preparation pays, and the log says so by name (the FTL lesson:
   // the encounter must notice how you came equipped)
   for (const prep of result.preps || []) {
     bits.push(prep.text);
   }
+  if (result.foldedPreps) bits.push(foldClause(result.foldedPreps));
 
   return bits.join(' ');
 }

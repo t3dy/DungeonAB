@@ -1563,3 +1563,59 @@ examination layer have anything to examine.
 bucket needs several hundred delves before it says anything. Two separate
 claims of success in this work — "67% against 100%" and "64% against
 80%" — were both noise at n≈150 that vanished at n≈500.
+
+## §O. What a good draft buys, and the resolution gets an editor
+
+Three decisions (2026-08-31, all Ted's):
+
+**A good draft buys margins and access, not win rate.** The difficulty
+curve (99/88/71/45) is calibrated and enforced — `npm run calibrate`
+holds it, `tests/balance-gate` gates it — so aggregate win rate is a
+controlled variable and can never express draft quality. The readout is
+score, survivors, trophies, and what the party gets to see and answer.
+`npm run margins` measures it. Baseline at n=600, medium, quartile
+split on capability breadth:
+
+| | narrow | broad | r |
+|---|---|---|---|
+| score | 369.5 | 391.6 | 0.119 |
+| survivors | 3.1 | 3.4 | 0.155 |
+| situations answered | 43.4% | 54.2% | — |
+| vaults reached | 0.3 | 0.5 | 0.072 |
+
+Direction right everywhere, magnitude weak: the 370-point score base is
+dominated by draft-insensitive sources. **Strengthening the payoffs is
+the named next project.** The clean access lever is the one that reuses
+existing plumbing: situation successes granting wing KEYS (keys are
+already found, carried, narrated, chronicled, and open wings). Do not
+half-wire it — that is the dead-declaration bug class.
+
+**The resolution has a budget** (the concision fix, dramaturg finding at
+96%). One budget of three prep slots, cards outrank generics, continuity
+carries ride free, spell/item lead lines spend a slot, everything else
+folds to one clause and the ledger keeps it whole. Two prose trims came
+out of it: the formation `effect` gloss (static rules text repeating
+verbatim every fight) is gone from prose, and the forced-formation carry
+line was shortened. Measured: fight resolutions median 1113 → 393
+characters, max 2290 → 642; non-fight rooms all under 320. Concision is
+off the dramaturg's systemic list.
+
+**Spotlight is narrated mechanical truth.** The fight resolver measures
+health lost per member (blows go to the front rank first) and names the
+brunt when it is a real blow (≥4): "🩸 Paracelsus takes the worst of it:
+13 of the 68 the party takes." Rationing by threshold means it is
+exactly the hard fights — where people die — that clear the bar.
+
+**What the brunt line did not fix:** mortalityEarned still fails ~85% of
+delves with deaths, because the doomed usually take their first notable
+brunt in the fight that kills them — same room, not an earlier one. The
+fix is pre-fight presence, which is Barks work (fighters bark too), not
+resolver work. Continuity (~86%) needs more carry *sources* reaching
+prose, not better wiring: the wired carries fire ~once a delve against a
+probe that wants two.
+
+**A probe broke twice more while this landed** — shortening the carry
+line's text broke its marker, and the venom aside was a real carry the
+probe couldn't see. Both caught by tests/dramaturg. The lesson stands:
+when a mechanic's writing changes, its marker in `CARRY_MARKERS` changes
+with it, and the test that refuses all-false probes is load-bearing.

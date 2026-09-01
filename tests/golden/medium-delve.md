@@ -31,7 +31,7 @@ A boil of grave mites holds the room (attack 5, health 11). The party must decid
 
 They might have chosen to recognize his school, or push past him — Pico della Mirandola made the case: "I asked permission for this spell. Twice." The party chose to open with a combat spell.
 
-🔥 The caster opens with Firebolt, chosen precisely for the monster's fire weakness: spell damage ×1.5. ⚔️ A boil of grave mites is dead before the party closes: it never gets a round. ⛲ The working settles into a gargoyle spout, dripping and stays there. The party drinks: 4 healed. 🧊 A gargoyle spout, dripping freezes and the glaze spreads across the floor. The monster cannot keep its feet: -3 to what it hits for. Neither can the party, quite: 1 damage. 🛡️ The prayers on the inside of the buckler turn aside half of what the party set off. 🔺 The party drives in as a wedge, everything committed forward. A fifth more damage dealt, a third more taken, and three of them swinging instead of two. 🟠 A boil of grave mites drops a handful of grave-amber: 2 alchemy materials.
+🔥 The caster opens with Firebolt, chosen precisely for the monster's fire weakness: spell damage ×1.5. ⚔️ A boil of grave mites is dead before the party closes: it never gets a round. ⛲ The working settles into a gargoyle spout, dripping and stays there. The party drinks: 4 healed. 🛡️ The prayers on the inside of the buckler turn aside half of what the party set off. 🎒 3 more preparations hold besides — the ledger keeps them.
 
 <details><summary>Ledger</summary>
 
@@ -41,6 +41,9 @@ They might have chosen to recognize his school, or push past him — Pico della 
 - 🏆 1 trophy taken from the dead.
 - 🚪 1 more room behind them.
 - · 👹 Room 2: monster — spell-strike
+- 🎒 🧊 A gargoyle spout, dripping freezes and the glaze spreads across the floor. The monster cannot keep its feet: -3 to what it hits for. Neither can the party, quite: 1 damage.
+- 🎒 🔺 The party drives in as a wedge, everything committed forward.
+- 🎒 🟠 A boil of grave mites drops a handful of grave-amber: 2 alchemy materials.
 
 </details>
 
@@ -220,7 +223,7 @@ The boss chamber. The Abbot of Worms, still preaching waits at its center (attac
 
 They might have chosen to stand and fight, or fall back — the Scholarly wanted a closer look before anything else. The party chose to put it onto the floor spikes.
 
-🔻 The party drives the monster back onto a bed of rusted floor spikes: 17 damage, and it has to pull itself off them. ⚔️ The party kills the Abbot of Worms, still preaching in 3 rounds, taking 14 damage. 🔧 The party knows how to swing what the room left lying about: +5 to the opening. 🪞 A tall silvered mirror shows the ethereal where it truly stands: weapons do full damage. 🛡️ Shields lock along the front rank and the party stops trying to win quickly. A third less damage a round and a quarter less dealt — but packed tight, so anything with a blast radius hurts more. 🛡️ The party closes ranks: 1 less damage a round. 💢 At half health, the Abbot of Worms, still preaching turns fierce: attack +2 for the rest of the fight. 📖 The Abbot of Worms, still preaching drops the Abbot's last sermon: a scroll of Final Benediction (combat, power 5), added to the grimoire. 🐍 The monster was venomous, but the cleric cures the poison before it can act. 🌿 Also in the hoard: 2 alchemy materials.
+🔻 The party drives the monster back onto a bed of rusted floor spikes: 17 damage, and it has to pull itself off them. ⚔️ The party kills the Abbot of Worms, still preaching in 3 rounds, taking 14 damage. 🩸 Tycho Brahe takes the worst of it: 13 of the party's 14. 🔧 The party knows how to swing what the room left lying about: +5 to the opening. 🛡️ Shields lock along the front rank and the party stops trying to win quickly. 🎒 6 more preparations hold besides — the ledger keeps them.
 
 _💡 Dancing Light carries the march instead of oil: none of the 3 damage the dark would have taken._
 
@@ -239,6 +242,12 @@ _💡 Dancing Light carries the march instead of oil: none of the 3 damage the d
 - · 💡 Dancing Light carries the march instead of oil: none of the 3 damage the dark would have taken.
 - · 🐉 Room 12: boss — shove-onto-spikes
 - · 🏆 The dungeon is beaten!
+- 🎒 🪞 A tall silvered mirror shows the ethereal where it truly stands: weapons do full damage.
+- 🎒 🛡️ The party closes ranks: 1 less damage a round.
+- 🎒 💢 At half health, the Abbot of Worms, still preaching turns fierce: attack +2 for the rest of the fight.
+- 🎒 📖 The Abbot of Worms, still preaching drops the Abbot's last sermon: a scroll of Final Benediction (combat, power 5), added to the grimoire.
+- 🎒 🐍 The monster was venomous, but the cleric cures the poison before it can act.
+- 🎒 🌿 Also in the hoard: 2 alchemy materials.
 
 </details>
 

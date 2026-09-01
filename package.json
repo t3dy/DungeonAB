@@ -19,7 +19,8 @@
     "e2e": "node tools/e2e.mjs",
     "new-card": "node tools/new-card.mjs",
     "census": "node tools/census.mjs",
-    "simulate": "node tools/simulate.mjs"
+    "simulate": "node tools/simulate.mjs",
+    "margins": "node tools/margins.mjs"
   },
   "dependencies": {
     "three": "^0.170.0"

@@ -52,6 +52,7 @@
 export const CARRY_MARKERS = [
   'the room before this one',
   'came through the last room',
+  'as the last room left them',
   'the corrected heavens',
   'the aspect is favourable',
   'the snare the party was told about',
@@ -60,6 +61,7 @@ export const CARRY_MARKERS = [
   'the alarm',
   'alarmed',
   'poison damage next room',
+  'venom carried from the last room',
   'the warning',
 ];
 
@@ -336,15 +338,33 @@ export const POETICS = {
       'narrative/Chronicle.js SALIENCE — the ledger is already the place for these',
     ],
     probe(delve) {
-      const lengths = delve.rooms.map(r => (r.resolution || '').length).filter(Boolean);
-      if (lengths.length === 0) return { pass: null, note: 'no resolutions' };
-      const longest = Math.max(...lengths);
-      const overlong = lengths.filter(l => l > 320).length;
+      /*
+       * Two budgets, because the editorial policy trades against rule 9
+       * on purpose: a drafted card must visibly work, three card lines
+       * are ~300 characters by themselves, and the fight where they all
+       * fire is the biggest beat of the delve. So a fight room gets 550
+       * characters — outcome, the brunt, three card-or-generic slots,
+       * free continuity carries, the fold — and every other room gets
+       * one breath (320). The caps are the editorial policy's own
+       * worst case plus margin, so this probe tests that the editor
+       * (Narrator.js editPreps) actually ran, not whether the budget
+       * should be smaller: a quiet room past 320 or a fight past 650
+       * means a line got into the prose without paying for a slot.
+       */
+      const over = [];
+      for (const r of delve.rooms) {
+        const n = (r.resolution || '').length;
+        if (!n) continue;
+        const cap = (r.room === 'monster' || r.room === 'boss') ? 650 : 320;
+        if (n > cap) over.push({ turn: r.turn, n, cap });
+      }
+      if (!delve.rooms.some(r => r.resolution)) return { pass: null, note: 'no resolutions' };
       return {
-        pass: overlong === 0,
-        note: overlong
-          ? `${overlong} of ${lengths.length} resolutions run past 320 characters (longest ${longest})`
-          : `longest resolution ${longest} characters`,
+        pass: over.length === 0,
+        note: over.length
+          ? `${over.length} resolution${over.length === 1 ? '' : 's'} over budget (worst: room ${over[0].turn}, ${over[0].n} chars against ${over[0].cap})`
+          : 'every resolution inside its budget',
+        evidence: over.map(o => o.turn),
       };
     },
   },

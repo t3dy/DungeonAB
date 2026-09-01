@@ -866,6 +866,16 @@ export function resolveRoomAction(room, party, optionId, options = null) {
       let monsterHealth = monster.health;
       let partyDamageTaken = 0;
 
+      // Who is actually being hit. Party.takeDamage sends blows to the
+      // front rank first, so one body absorbs most of a fight — and
+      // until this was recorded, the prose could not say so. Fighters
+      // went unnamed until the line that killed them: measured over 120
+      // transcripts, 78% of deaths were of somebody the reader had
+      // never met (narrative/Dramaturg.js, mortalityEarned). The fix is
+      // not to invent color; it is to narrate what the mechanics
+      // already decide. Snapshot health here, diff at the end.
+      const bruntBefore = new Map(party.members.map(m => [m.name, m.health]));
+
       // Class-keyed items act first: openings land before round one,
       // wards blunt every round, summons swing alongside the party
       const itemActions = party.combatItemActions();
@@ -974,14 +984,19 @@ export function resolveRoomAction(room, party, optionId, options = null) {
         || (forced && availableFormations(room).includes(forced) ? forced : null)
         || chooseFormation(party, room);
       const form = formationModifiers(chosen, room);
+      // The tell alone: the effect gloss ("a third less damage a
+      // round...") is static rules text that repeated verbatim in every
+      // fight a formation appeared in — the stuck-record failure, and a
+      // third of the line's length. The numbers it glossed are already
+      // in the fight's arithmetic; the help screen documents the rest.
       preps.push({
         source: form.name,
-        text: `${form.icon} ${form.tell} ${form.effect}`,
+        text: `${form.icon} ${form.tell}`,
       });
       if (forced === chosen) {
         preps.push({
           source: 'the room before this one',
-          text: `📐 The party came through the last room already in this shape, and meets what is here standing the way it left.`,
+          text: `📐 The party meets it standing as the last room left them.`,
         });
       }
 
@@ -1150,7 +1165,16 @@ export function resolveRoomAction(room, party, optionId, options = null) {
         }
       }
       party.recordEncounter('fight', won);
-      return { success: won, rounds, damage: partyDamageTaken, monster: monster.name, itemActions, preps, drop, bossPhased: phased, formation: form.id };
+      // The member who bore the worst of the fight, by measured health
+      // lost — mechanically true by construction, so the line that
+      // names them can state the number without inventing one.
+      let brunt = null;
+      for (const m of party.members) {
+        const lost = (bruntBefore.get(m.name) ?? m.health) - Math.max(0, m.health);
+        if (lost > 0 && (!brunt || lost > brunt.lost)) brunt = { name: m.name, lost };
+      }
+
+      return { success: won, rounds, damage: partyDamageTaken, monster: monster.name, itemActions, preps, drop, bossPhased: phased, formation: form.id, brunt };
     }
 
     case 'cause-fear': {

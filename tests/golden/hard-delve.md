@@ -47,7 +47,7 @@ A thrall footman, polite and bloodless holds the room (attack 9, health 19). The
 
 They might have chosen to name the armour by its heraldry, or strip the insignia off it — Michael Sendivogius made the case: "I hit hardest from the side nobody's watching." The party chose to stand and fight.
 
-🪄 Michael Sendivogius uses the Haunted Armor — The Ghost Objects: a summon adding 1 attack each round. ⚔️ The party kills a thrall footman, polite and bloodless in 2 rounds, taking 1 damage. 🛡️ Aegis of Ash goes up before the first blow: 2 less damage every round. 🧱 The party fights from behind a row of squat pillars: 1 less damage per round. 🧱 The party fights from behind a fall of rubble: 1 less damage per round. 🧱 The party fights from behind stacked crates and barrels: 1 less damage per round. 🛡️ Shields lock along the front rank and the party stops trying to win quickly. A third less damage a round and a quarter less dealt — but packed tight, so anything with a blast radius hurts more. 📐 The party came through the last room already in this shape, and meets what is here standing the way it left. 🪙 A thrall footman, polite and bloodless drops the footman's wages: 12 gold.
+🪄 Michael Sendivogius uses the Haunted Armor — The Ghost Objects: a summon adding 1 attack each round. ⚔️ The party kills a thrall footman, polite and bloodless in 2 rounds, taking 1 damage. 📐 The party meets it standing as the last room left them. 🛡️ Aegis of Ash goes up before the first blow: 2 less damage every round. 🛡️ Shields lock along the front rank and the party stops trying to win quickly. 🎒 4 more preparations hold besides — the ledger keeps them.
 
 <details><summary>Ledger</summary>
 
@@ -58,6 +58,10 @@ They might have chosen to name the armour by its heraldry, or strip the insignia
 - ❤️ 1 health taken.
 - 🚪 1 more room behind them.
 - · 👹 Room 3: monster — fight
+- 🎒 🧱 The party fights from behind a row of squat pillars: 1 less damage per round.
+- 🎒 🧱 The party fights from behind a fall of rubble: 1 less damage per round.
+- 🎒 🧱 The party fights from behind stacked crates and barrels: 1 less damage per round.
+- 🎒 🪙 A thrall footman, polite and bloodless drops the footman's wages: 12 gold.
 
 </details>
 
@@ -147,7 +151,7 @@ The boss chamber. The Bride, who was here long before the Lord waits at its cent
 
 They might have chosen to stand and fight, or fall back — the Cunning had already worked out the odds. The party chose to open with a combat spell.
 
-🔥 The caster opens with Dawnbreak, chosen precisely for the monster's holy weakness: spell damage ×1.5. ⚔️ The party kills the Bride, who was here long before the Lord in 1 round, taking 0 damage. 🪞 The Silvered Hand-Mirror catches the ethereal thing where it truly stands: weapons do full damage. 🧱 The party fights from behind a row of squat pillars: 1 less damage per round. 🏛️ Fighting from the aisles: -1 less damage per round on top of the cover. 👻 The monster is ethereal and the party's blows pass through it: weapon damage ×0.6 (no cleric to bless the blades). ✨ Nothing is held back for later: the party looses everything it has, 5 workings in the one fight that matters. 🌟 The light soaks into a row of squat pillars. Whatever was going to rise out of it stays put, and the working bites for 3. 🪞 A tall silvered mirror catches the light and throws it everywhere at once: 2 damage, and nothing in the room can hide behind being half-there. 🪞 A tall silvered mirror shivers, flashes and comes apart: 2 damage in flying silver. 🕳️ The working earths itself down a crack across the floor, and the whole floor jumps: the monster fights off-balance for 2 less, and everyone who felt it takes 1. 💥 A brazier still burning takes the working like a bellows and erupts: 6 damage, and the flare throws a march of light down the passage. It burns its fuel doing it — the bracket is cold afterwards. 🌋 The fire finds a crack across the floor and the shaft draws like a chimney: 3 damage in the updraft, and nothing to shelter behind while it roars. ⏸️ The cavern is too tight to spread out: the party files up, one blade forward. One blade forward and one thing able to reach it: nearly half the damage a round, and only the front rank swinging. 📐 The party came through the last room already in this shape, and meets what is here standing the way it left. ✨ The working holds: +26 damage every round while the fight lasts. 👰 The Bride, who was here long before the Lord drops the Bride's veil: a trinket (+2 defense), now worn by Paracelsus. 📜 Also in the hoard: a scroll of Purify the Font, added to the grimoire.
+🔥 The caster opens with Dawnbreak, chosen precisely for the monster's holy weakness: spell damage ×1.5. ⚔️ The party kills the Bride, who was here long before the Lord in 1 round, taking 0 damage. 📐 The party meets it standing as the last room left them. 🪞 The Silvered Hand-Mirror catches the ethereal thing where it truly stands: weapons do full damage. 📜 Also in the hoard: a scroll of Purify the Font, added to the grimoire. 🎒 13 more preparations hold besides — the ledger keeps them.
 
 <details><summary>Ledger</summary>
 
@@ -160,6 +164,19 @@ They might have chosen to stand and fight, or fall back — the Cunning had alre
 - 🚪 1 more room behind them.
 - · 🐉 Room 8: boss — spell-strike
 - · 🏆 The dungeon is beaten!
+- 🎒 🧱 The party fights from behind a row of squat pillars: 1 less damage per round.
+- 🎒 🏛️ Fighting from the aisles: -1 less damage per round on top of the cover.
+- 🎒 👻 The monster is ethereal and the party's blows pass through it: weapon damage ×0.6 (no cleric to bless the blades).
+- 🎒 ✨ Nothing is held back for later: the party looses everything it has, 5 workings in the one fight that matters.
+- 🎒 🌟 The light soaks into a row of squat pillars. Whatever was going to rise out of it stays put, and the working bites for 3.
+- 🎒 🪞 A tall silvered mirror catches the light and throws it everywhere at once: 2 damage, and nothing in the room can hide behind being half-there.
+- 🎒 🪞 A tall silvered mirror shivers, flashes and comes apart: 2 damage in flying silver.
+- 🎒 🕳️ The working earths itself down a crack across the floor, and the whole floor jumps: the monster fights off-balance for 2 less, and everyone who felt it takes 1.
+- 🎒 💥 A brazier still burning takes the working like a bellows and erupts: 6 damage, and the flare throws a march of light down the passage. It burns its fuel doing it — the bracket is cold afterwards.
+- 🎒 🌋 The fire finds a crack across the floor and the shaft draws like a chimney: 3 damage in the updraft, and nothing to shelter behind while it roars.
+- 🎒 ⏸️ The cavern is too tight to spread out: the party files up, one blade forward.
+- 🎒 ✨ The working holds: +26 damage every round while the fight lasts.
+- 🎒 👰 The Bride, who was here long before the Lord drops the Bride's veil: a trinket (+2 defense), now worn by Paracelsus.
 
 </details>
 

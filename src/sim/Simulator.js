@@ -19,7 +19,7 @@ import {
   detectTrapdoor, decideTrapdoor,
 } from '../encounters/RoomEncounters.js';
 import {
-  composePredicament, composeDeliberation, composeResolution,
+  composePredicament, composeDeliberation, composeResolution, editPreps,
   composeWipe, composeVictory, composeFall,
   composeSecretFound, composeDetour, composeTrapdoor, composeKeyFound, composeLockedWing,
   composeSupply, composeWound, composeDormant, composeTactics, composeProvision,
@@ -66,6 +66,10 @@ export class Simulator {
     this.epitaph = null;
     this.lastNarration = null;
     this.log = [];
+    // Prep lines the resolution's editor cut for length; recordTick
+    // files them in the ledger, where complete accounting has always
+    // lived (narrative/Narrator.js editPreps)
+    this.pendingLedger = [];
 
     // The chronicle spans the campaign, not the delve: a party that
     // descends again appends a chapter rather than starting over
@@ -154,6 +158,15 @@ export class Simulator {
         icon: '·', text, salience: SALIENCE.BEAT, described: true,
       });
     }
+    // Preps the resolution's editor folded: recorded whole, read by
+    // whoever opens the ledger — the two-layer bargain the Chronicle
+    // was built on
+    for (const text of this.pendingLedger.splice(0)) {
+      events.push({
+        turn: this.turn, room: this.lastNarration?.room || null, field: null,
+        icon: '🎒', text, salience: SALIENCE.LEDGER, described: true,
+      });
+    }
     this.stateBefore = after;
     this.lastEvents = events;
     if (this.lastNarration) this.chronicle.recordRoom(this.lastNarration, events);
@@ -238,6 +251,23 @@ export class Simulator {
     const chosen = decideRoomAction(room, this.party);
     const result = resolveRoomAction(room, this.party, chosen);
     this.lastResult = result;   // structured outcome, for analytics/mining
+
+    // The editor's pass: the resolution prose keeps the preps worth a
+    // sentence (carries, card promises, the two best generics) and the
+    // rest go to the ledger whole. The mechanics already applied every
+    // one of them — this cuts nothing but column inches.
+    if (result.preps?.length) {
+      // Lead lines the composer prints outside the preps array are card
+      // promises too, and spend the same budget (Narrator.js editPreps)
+      const reserved = (result.spell ? 1 : 0)
+        + (result.itemActions?.some(a => a.opening || a.vsUndead || a.summonAttack) ? 1 : 0);
+      const edited = editPreps(result.preps, reserved);
+      if (edited.folded.length) {
+        this.pendingLedger.push(...edited.folded.map(p => p.text));
+        result.preps = edited.inline;
+        result.foldedPreps = edited.folded.length;
+      }
+    }
     // Where the party stood, so the renderer can draw what the maths did
     if (result.formation) this.lastFormation = result.formation;
 
