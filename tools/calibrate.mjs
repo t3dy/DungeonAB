@@ -20,7 +20,7 @@
 import fs from 'fs';
 import path from 'path';
 import { execFileSync } from 'child_process';
-import { fileURLToPath } from 'url';
+import { fileURLToPath, pathToFileURL } from 'url';
 import { runMining } from './mine.js';
 import { STAT_SCALE } from '../src/world/DungeonGen.js';
 
@@ -31,6 +31,24 @@ const GEN = path.join(ROOT, 'src/world/DungeonGen.js');
  * The curve the game is designed around. Easy is a tutorial, medium is
  * the default experience, hard is where evaluation skill starts to
  * matter, nightmare is a coin-flip for a good draft.
+ *
+ * These numbers have survived the boss floor of 2026-09-01, and the
+ * near-miss is worth recording. Giving bosses a floor so they always get
+ * to act (RoomEncounters.bossFloor) dropped easy to 86%, and a sweep
+ * appeared to show it pinned at 86-88% whatever the monster scale — from
+ * which the conclusion was drawn that 99 had only ever been achievable
+ * because the last room was free, and the target was moved to 90.
+ *
+ * The sweep was editing `src/game/Progression.js`. STAT_SCALE lives in
+ * `src/world/DungeonGen.js`. Every reading in it was taken at an
+ * unchanged constant, so the "plateau" was one number measured four
+ * times. Easy reaches 98.7% at scale 0.35, the target was never
+ * unreachable, and it is 99 again.
+ *
+ * Two lessons, both already in MEASUREMENT.md and both re-earned here:
+ * verify that a sweep is actually moving the thing it claims to move,
+ * and be most suspicious of a measurement that conveniently justifies
+ * changing a design commitment.
  */
 export const TARGET = { easy: 99, medium: 88, hard: 71, nightmare: 45 };
 
@@ -70,7 +88,13 @@ export function solve(difficulty, { tables = 500, probes = 6 } = {}) {
     // The module cache holds the old constant, so measure in a child
     return parseFloat(execFileSync('node', [
       '-e',
-      `import('${path.join(ROOT, 'tools/mine.js').replace(/\\/g, '/')}').then(async m => {`
+      // pathToFileURL, not a slash-swapped path: on Windows a bare
+      // `C:/...` specifier is not a valid ESM scheme and the child dies
+      // with ERR_UNSUPPORTED_ESM_URL_SCHEME. It failed silently enough
+      // that `npm run calibrate` had apparently never completed on a
+      // Windows checkout — which makes standing rule 10 ("balance is
+      // measured, not judged") aspirational on the machine it matters on.
+      `import('${pathToFileURL(path.join(ROOT, 'tools/mine.js')).href}').then(async m => {`
       + ` const g = m.runMining({ tables: ${tables}, difficulty: '${difficulty}' }).games;`
       + ` console.log((g.filter(x => x.victory).length / g.length * 100).toFixed(2)); });`,
     ], { encoding: 'utf8' }).trim());

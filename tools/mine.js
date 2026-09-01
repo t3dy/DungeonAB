@@ -20,6 +20,7 @@
  * correlational, not causal. Sample widely before trusting deltas.
  */
 
+import { pathToFileURL } from 'url';
 import { STAT_SCALE } from '../src/world/DungeonGen.js';
 import { PackDraft, PILOT_PERSONAS, aiPick } from '../src/draft/PackDraft.js';
 import { Simulator } from '../src/sim/Simulator.js';
@@ -341,6 +342,18 @@ async function main() {
   console.error(`Done in ${((Date.now() - t0) / 1000).toFixed(1)}s → ${outPath}`);
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+/*
+ * `file://${process.argv[1]}` never matches on Windows: argv[1] is
+ * `C:\Dev\...\mine.js` and import.meta.url is `file:///C:/Dev/.../mine.js`,
+ * so main() simply never ran and `npm run bench` exited 0 having written
+ * nothing. MINING_REPORT.md sat stamped with constants from a week
+ * earlier while the gate that checks it kept passing, because the gate
+ * compares the stamp to STAT_SCALE and both were stale together.
+ *
+ * Second bug of this exact family in `tools/` (see calibrate.mjs and its
+ * ERR_UNSUPPORTED_ESM_URL_SCHEME). Any tool comparing a path to a URL,
+ * or building one by concatenation, is suspect here.
+ */
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   main();
 }

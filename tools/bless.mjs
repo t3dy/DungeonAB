@@ -40,7 +40,11 @@ export const CASES = [
   // writing are never exercised by a golden at all.
   // Re-picked when rooms got bigger and the hazards got teeth: the old
   // seed started winning, and three victories freeze no defeat at all.
-  { name: 'nightmare-delve', seed: 'golden-fall-1', difficulty: 'nightmare' },
+  // Re-picked again (2026-09-01) after the boss floor and the
+  // recalibration that followed it — `golden-fall-1` survived the new
+  // curve. This case exists to freeze a wipe, so when it stops wiping,
+  // find a seed that does rather than accepting three victories.
+  { name: 'nightmare-delve', seed: 'golden-fall-2', difficulty: 'nightmare' },
 ];
 
 /**

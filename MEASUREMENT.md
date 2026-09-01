@@ -119,3 +119,47 @@ fix. `mortalityEarned` went 85%→64% and the residue is deaths in wipes.
 Score discrimination doubled and is still r=0.124. The habit exists
 because a claim without a residue reads as finished, and none of these
 are.
+
+---
+
+## M9. Verify that a sweep moves the thing it claims to move
+
+The most expensive error of 2026-09-01, and it nearly changed a design
+pillar.
+
+Giving bosses a floor so they always act dropped `easy` from 99% to 86%.
+A scale sweep then appeared to show easy pinned at 86–88% at scales 0.9,
+0.6, 0.4 and 0.25 alike — no response to monster strength whatsoever.
+That is a striking result, and it supported a clean story: the 99%
+target had only ever been achievable because the last room was free, so
+the target should move to 90.
+
+The target was moved. Three paragraphs of justification were written
+into `tools/calibrate.mjs` and `tests/balance-gate.test.js`, the standing
+rule in `CLAUDE.md` was edited, and the whole thing was reported as a
+considered design decision.
+
+**The sweep had been editing `src/game/Progression.js`. `STAT_SCALE`
+lives in `src/world/DungeonGen.js`.** Every reading was taken at an
+unchanged constant: one number, measured four times, presented as a
+plateau. Easy reaches **98.7% at scale 0.35**. The target was never
+unreachable and is 99 again.
+
+Three habits come out of it:
+
+1. **Before trusting a sweep, prove it moves the constant.** Print the
+   value the run actually used, or vary it far enough that a *no-op*
+   would be obvious. Four identical readings should have been the tell —
+   a real plateau in a noisy simulation does not repeat to one decimal.
+2. **Be most suspicious of a measurement that licenses changing a design
+   commitment.** The elaborateness of the argument was the warning sign,
+   not the reassurance. Nothing in this project was ever wrong in a way
+   that came with three tidy paragraphs.
+3. **A related trap in the same family:** `import('./x.js?v=1')` does not
+   cache-bust nested imports, so an in-process sweep silently reuses the
+   first-loaded module graph. Measure constants in child processes, the
+   way `tools/calibrate.mjs` does.
+
+This is the sixth instrument in this project to report a confident
+finding that was its own bug (see M4). It is the first to nearly move a
+design pillar on the strength of one.

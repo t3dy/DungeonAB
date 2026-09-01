@@ -149,6 +149,59 @@ describe('Every probe can fire in both directions', () => {
     assert.equal(POETICS.mortalityEarned.probe(met).pass, true);
   });
 
+  /* The three values written FROM the reading pass, fixtured like the rest. */
+
+  test('freshVoices: people arguing, versus one borrowed temper', () => {
+    const said = v => ({ deliberation: `They might have chosen to flee — ${v}. The party chose to fight.` });
+    const peopled = delve({
+      rooms: [
+        room(1, said('Tycho Brahe made the case: "so"')),
+        room(2, said('Giordano Bruno made the case: "so"')),
+        room(3, said('Tycho Brahe made the case: "so"')),
+        room(4, said('Giordano Bruno made the case: "so"')),
+      ],
+    });
+    assert.equal(POETICS.freshVoices.probe(peopled).pass, true);
+    const oneVoice = delve({
+      rooms: [1, 2, 3, 4].map(t => room(t, said('the Reckless were already moving'))),
+    });
+    assert.equal(POETICS.freshVoices.probe(oneVoice).pass, false,
+      'a party that argues only in its own temper is the corpus\'s worst fault');
+  });
+
+  test('freshLines: an effect line said twice is caught', () => {
+    const twice = delve({
+      rooms: [
+        room(1, { resolution: 'It opens. 🎓 A second pair of hands: +10 renown.' }),
+        room(2), room(3),
+        room(4, { resolution: 'It opens. 🎓 A second pair of hands: +10 renown.' }),
+      ],
+    });
+    assert.equal(POETICS.freshLines.probe(twice).pass, false);
+    const varied = delve({
+      rooms: [
+        room(1, { resolution: 'It opens. 🎓 A second pair of hands: +10 renown.' }),
+        room(2), room(3),
+        room(4, { resolution: 'It opens. 🎓 Somebody checks the work: +10 renown.' }),
+      ],
+    });
+    assert.equal(POETICS.freshLines.probe(varied).pass, true);
+  });
+
+  test('climax: a boss that acts, versus one that evaporates', () => {
+    const fought = delve({
+      rooms: [room(1), room(2), room(3),
+        room(4, { room: 'boss', resolution: 'The party kills it in 5 rounds, taking 40 damage.' })],
+    });
+    assert.equal(POETICS.climax.probe(fought).pass, true);
+    const evaporated = delve({
+      rooms: [room(1), room(2), room(3),
+        room(4, { room: 'boss', resolution: 'It is dead before the party closes: it never gets a round.' })],
+    });
+    assert.equal(POETICS.climax.probe(evaporated).pass, false);
+    assert.equal(POETICS.climax.probe(delve()).pass, null, 'no throne room, no verdict');
+  });
+
   test('specificity: numbers in the resolutions', () => {
     const numeric = delve({ rooms: [1, 2, 3, 4].map(t => room(t, { resolution: 'The party takes 4 damage.' })) });
     assert.equal(POETICS.specificity.probe(numeric).pass, true);

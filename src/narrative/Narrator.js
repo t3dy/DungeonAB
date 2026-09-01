@@ -294,6 +294,15 @@ const OPTION_PHRASES = {
  * tests/prose.js counts as a repetition and a reader counts as a stuck
  * record. Several each, so the same party argues in different words.
  */
+/**
+ * Rotates which magus speaks when no class owns the decision, so the
+ * same mouth does not argue for everything. Reset per delve alongside
+ * the bark history (`resetBarks`), which is module state for the same
+ * reason.
+ */
+let deliberationTurn = 0;
+export function resetDeliberation() { deliberationTurn = 0; }
+
 const ARCHETYPE_VOICES = {
   brave: [
     'the Bold voted to meet it head-on',
@@ -352,16 +361,51 @@ export function composeDeliberation(chosenId, options, party) {
     .slice(0, 2)
     .map(o => OPTION_PHRASES[o.id] || o.id);
 
-  // Who argued for this? A class advocate if one lives, else personality
+  /*
+   * Who argued for this — and it should be a person wherever one can be
+   * found.
+   *
+   * Read as a reader, the archetype voice was the worst thing in the
+   * corpus: "the Reckless were already moving" six times in nine rooms,
+   * "the Cunning picked the safer angle" five times in eight. Three
+   * variants per archetype were not enough, and more would not have
+   * fixed it, because every one of them opens "the <Archetype>" and so
+   * they read as one sentence however the tail differs. A party of one
+   * temper narrated its whole delve in a single voice belonging to
+   * nobody.
+   *
+   * Meanwhile the class path was producing the best lines in the game —
+   * "Margaret Cavendish made the case: 'Fundamentals of Sorcery, volume
+   * three, page ninety: this exact mistake.'" — and only fired when the
+   * option happened to be in `CLASS_ADVOCATES`.
+   *
+   * So: a class advocate first, then ANY living magus with something to
+   * say, and the archetype abstraction only when nobody is left to say
+   * it. Naming people also feeds the two values the reading pass and
+   * the dramaturg both want — a delve about somebody, and deaths of
+   * somebody the reader had met.
+   */
   let voice = null;
   const advocateClass = CLASS_ADVOCATES[chosenId];
+  const speak = (m) => {
+    const bark = getBark(m.class, party.personalities);
+    return bark ? `${m.name} made the case: "${bark}"` : null;
+  };
+
   if (advocateClass && party.hasClass(advocateClass)) {
     const advocate = party.living().find(m => m.class === advocateClass);
-    const bark = getBark(advocate.class, party.personalities);
-    voice = bark
-      ? `${advocate.name} made the case: "${bark}"`
-      : `${advocate.name} made the case`;
-  } else {
+    voice = speak(advocate) || `${advocate.name} made the case`;
+  }
+  // No class owns this decision: let somebody in the party own it
+  // anyway. Rotated by turn so it is not always the same mouth.
+  if (!voice) {
+    const living = party.living();
+    for (let i = 0; i < living.length && !voice; i++) {
+      voice = speak(living[(deliberationTurn + i) % living.length]);
+    }
+  }
+  deliberationTurn++;
+  if (!voice) {
     for (const archetype of party.personalities) {
       if (ARCHETYPE_VOICES[archetype]) {
         voice = pick(ARCHETYPE_VOICES[archetype]);
@@ -954,8 +998,25 @@ export function composeTactics(live) {
   return `The party has drilled: ${names}.`;
 }
 
-export function composeFall(member) {
-  return `☠️ ${member.name} falls. The party's ${member.class} is dead; the survivors march on.`;
+/**
+ * A death, reported by name.
+ *
+ * `remaining` is how many are still standing AFTER this fall, and it is
+ * not decoration: read as a reader, a wipe printed four identical lines
+ * ending "the survivors march on" — when the fourth had left nobody to
+ * march. The prose stated something untrue at the most consequential
+ * moment in the delve (standing rule 13: a line states what the
+ * mechanic did and invents nothing).
+ *
+ * Four deaths in one room also read as one death copied four times, so
+ * the last of a party is written as the last of a party.
+ */
+export function composeFall(member, remaining = null) {
+  const who = `☠️ ${member.name} falls. The party's ${member.class} is dead`;
+  if (remaining === null) return `${who}.`;
+  if (remaining <= 0) return `${who}, and there is nobody left to carry them out.`;
+  if (remaining === 1) return `${who}; one of them is still standing.`;
+  return `${who}; the ${remaining} still standing march on.`;
 }
 
 /* ------------------------------------------------------------------ */
@@ -1069,11 +1130,29 @@ export function composePredicament(room, theme = null) {
 /**
  * What the room is furnished with, named so the player can see why an
  * option exists. Each feature states its own tell (RoomFeatures).
+ *
+ * Two of them, not five.
+ *
+ * Read as a reader, this was the resolution's accumulation problem in
+ * the predicament beat: a monster room opened with a brazier, pillars, a
+ * sarcophagus and a pit listed in one paragraph before the fight was
+ * mentioned, and the same four pieces of furniture recurred across
+ * rooms, so a dungeon read as one room redecorated. The tells are each
+ * well written and there were simply too many.
+ *
+ * Two is enough to explain the options the room offers — and the ones
+ * that get named are the ones the party can *act* on, since a tell whose
+ * whole job is to justify an option should not be cut in favour of
+ * scenery.
  */
+const FEATURE_TELL_BUDGET = 2;
+
 function featureTells(room) {
   const features = roomFeatures(room);
   if (features.length === 0) return '';
-  return ' ' + features.map(f => f.tell).join(' ');
+  const actionable = features.filter(f => FEATURE_ACTIONS[f.action] || f.action);
+  const ranked = [...actionable, ...features.filter(f => !actionable.includes(f))];
+  return ' ' + ranked.slice(0, FEATURE_TELL_BUDGET).map(f => f.tell).join(' ');
 }
 
 /* The monster's nature, stated as facts the party can plan around */

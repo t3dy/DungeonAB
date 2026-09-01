@@ -848,6 +848,46 @@ export function wingAppeal(party, wing) {
  *
  * Returns { opened, how, noisy } so the writing can say which.
  */
+/**
+ * A boss cannot be killed before it turns.
+ *
+ * The throne room was the flattest thing in the game to read. Measured
+ * across a stratified sample of transcripts: bosses died in ONE round,
+ * taking 0 damage, repeatedly — a 65-health monster with attack 20
+ * evaporating before it swung, because opening damage plus one party
+ * swing cleared its whole health bar and the loop `break`s on death
+ * before the monster acts. The delve's third act did not exist.
+ *
+ * A boss already has a second act written for it: at half health it
+ * turns fierce (+2 attack, and a line). That phase was being skipped
+ * whenever the party could clear the bar in one blow, which against a
+ * well-drafted party is most of the time.
+ *
+ * So a boss gets a floor: damage that would kill it outright in one
+ * round instead leaves it on its last quarter, the phase fires, and it
+ * gets its round. It can die on any round after that.
+ *
+ * A QUARTER, not a half, and the difference is the whole tuning. At a
+ * half, a devastating opening — the thing a party drafts and prepares
+ * for — was thrown away: the boss was pinned at 50% and the party had to
+ * grind the rest down with ordinary swings, taking four or five rounds
+ * of boss attacks on the way. Measured, that put `easy` at 70% against a
+ * 99% target and no monster scaling could recover it, because the losses
+ * were not about monster strength at all. At a quarter the opening still
+ * very nearly kills, and it costs the party exactly one round of being
+ * hit back — which is the point, and is affordable.
+ *
+ * Ordinary monsters are untouched: a rout is a legitimate outcome and
+ * "dead before the party closes" is one of the better lines in the game.
+ */
+export const BOSS_FLOOR_SHARE = 0.25;
+
+export function bossFloor(monster, health, alreadyPhased) {
+  if (!monster?.isBoss || alreadyPhased) return health;
+  const turn = Math.max(1, Math.ceil(monster.health * BOSS_FLOOR_SHARE));
+  return health < turn ? turn : health;
+}
+
 export function openLockedWing(party, wing, rollValue = roll()) {
   if (party.hasKey(wing)) return { opened: true, how: 'key', noisy: false };
 
@@ -950,6 +990,7 @@ export function resolveRoomAction(room, party, optionId, options = null) {
         summon += a.summonAttack || 0;
       }
       monsterHealth -= opening;
+      monsterHealth = bossFloor(monster, monsterHealth, false);
 
       // Natures shape the fight (see Bestiary): the armored shave
       // blows; the ethereal ignore steel unless faith gives the
@@ -1145,6 +1186,7 @@ export function resolveRoomAction(room, party, optionId, options = null) {
         const tactical = (flanking ? tac.flankDamage : 0) + armorEdge + cleaves;
         const swing = Math.max(1, Math.round((party.combatAttack(form.frontage) + summon + coating.bonus + spellSustain + tactical + Math.floor(roll() / 3)) * etherealMult * form.attackMult) - armorShave);
         monsterHealth -= swing;
+        monsterHealth = bossFloor(monster, monsterHealth, phased);
         if (monsterHealth <= 0) break;
         if (monster.isBoss && !phased && monsterHealth <= monster.health / 2) {
           phased = true;

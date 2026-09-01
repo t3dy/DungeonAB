@@ -114,3 +114,54 @@ Every claim about whether the writing is *good* currently rests on
 proxies. The poetics is a hypothesis with a test suite attached, and the
 experiment that would validate it — a person reading a stratified sample
 and saying which logs they would tell someone about — has not been run.
+
+---
+
+# UPDATE — the reading pass happened
+
+D1 and D6 have been acted on. Five transcripts were read end to end
+(best, worst, two medians, a wipe, chosen by the instrument's own
+ranking over sixty delves). Full account in `DESIGN_DIALOGUE.md` §R.
+
+## The verdict on the instrument
+
+**It had scored the sample 56% to 100%. Every log had the same three
+faults and it detected none of them.** The 100% log was no easier to
+read than the 56% one. D1's worry — that the values had become an
+optimisation target measuring the wrong things — is confirmed, not
+merely suspected.
+
+What it missed:
+- the party arguing in one borrowed voice, 6 times in 9 rooms
+- rooms opening with four pieces of furniture listed before the event
+- bosses dying in one round without ever swinging
+- a wipe printing "the survivors march on" with no survivors
+
+What it *did* catch remains real — concision, the point-man fix, the
+carries — but none of it was what made these hard to read.
+
+## What changed as a result
+
+Three values written **from** the reading rather than from a theory,
+each fixtured both ways in `tests/dramaturg`:
+
+| value | catches |
+|---|---|
+| `freshVoices` | deliberations argued by a temper rather than a person |
+| `freshLines` | an effect line printed verbatim twice in one delve |
+| `climax` | a boss that dies without acting |
+
+`freshLines` is pointed squarely at my own work: the mastery band and
+the reading-of-the-building lines, both added while fixing repetition
+elsewhere, were themselves repeating.
+
+## What this does NOT resolve
+
+D3 (probes matching prose that moves) is untouched and now larger:
+`freshVoices` and `climax` are both string-matching. D5 stands.
+
+And the deeper point survives the fix: **three new values do not make
+the instrument trustworthy, they make it trustworthy about three more
+things.** The reading pass is the only channel that is not an
+optimisation target. It should be re-run — on a fresh sample, not this
+one — before the next narrative change is called done.

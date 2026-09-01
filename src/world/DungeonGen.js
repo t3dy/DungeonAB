@@ -909,10 +909,10 @@ export const DUNGEON_THEMES = {
  * how much of the walk each difficulty spends in the dark.
  */
 export const STAT_SCALE = {
-  easy: 0.9,
-  medium: 1.19,
-  hard: 1.44,
-  nightmare: 1.83,
+  easy: 0.35,
+  medium: 0.83,
+  hard: 1.21,
+  nightmare: 1.64,
 };
 
 /* ------------------------------------------------------------------ */

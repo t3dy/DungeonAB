@@ -1729,3 +1729,73 @@ health curve want the blunt answer and the tidy middle is where expertise
 gets spent. Concision regressed to 53% and came back to 21% by trimming
 the two new lines and giving situations a 400-character cap, because a
 situation now says three earned things rather than one.
+
+## §R. Somebody read the transcripts
+
+Three separate proposal documents converged on the same outstanding
+item: every claim about whether the writing was good rested on proxies,
+and nobody had read the logs as a reader. So five were read end to end —
+the best-scoring, the worst, two medians and a wipe, chosen by the
+dramaturg's own ranking across sixty delves.
+
+**The instrument had scored them 56% to 100%. They had the same three
+faults, and it saw none of them.** That is the strongest evidence this
+project has produced about the limits of automated judgement, and it
+arrived within a session of the instrument being built.
+
+### What a reader sees that no probe did
+
+**The party argues in one voice.** "The Reckless were already moving"
+six times in nine rooms; "the Cunning picked the safer angle" five times
+in eight. The deliberation beat fell back to the party's *temper* — an
+abstraction belonging to nobody — whenever no class owned the decision.
+Line-level repetition checks missed it because the sentences differ
+slightly. A reader does not miss it for a moment. Fixed by preferring a
+named magus with a bark over the archetype: the same delve now runs 15
+of 16 deliberations in four distinct voices.
+
+**Rooms are furniture inventories.** A monster room opened by listing a
+brazier, pillars, a sarcophagus and a pit before the fight was
+mentioned, and the same four pieces recurred across rooms, so the
+dungeon read as one room redecorated. This is the resolution's
+accumulation failure in the predicament beat — a place the concision
+editor never looked. Now budgeted at two tells, actionable ones first.
+
+**The climax is an anticlimax.** Bosses died in ONE round taking ZERO
+damage: a 65-health monster with attack 20 evaporating before it swung,
+because opening damage plus one party swing cleared the bar and the
+resolver `break`s on death before the monster acts. The boss's second
+act — it turns fierce at half health, with a line written for it — was
+being skipped entirely. **No amount of prose could have fixed this**;
+it is a mechanical fact presenting as the flattest writing in the log.
+
+### And two things that were simply wrong
+
+**The prose lied at the most consequential moment.** A wipe printed the
+same sentence four times, the last announcing that "the survivors march
+on" with nobody left to march. Deaths are now counted down through the
+group, and the last of a party is written as the last of a party.
+
+**The lines added this session to fix repetition were themselves
+repeating.** The mastery band and the reading-of-the-building both
+printed verbatim twice in a good delve.
+
+### What it cost, and what it changes
+
+The boss floor moved the curve hard — easy 99% → 70.6%, medium 88% →
+46.8% — because bosses now deal about 43 damage where they dealt none.
+That is the calibration machinery working as designed: the curve is a
+target to re-hit, not a reason to leave a broken climax alone.
+
+`npm run calibrate` then turned out **not to run on Windows at all**
+(`ERR_UNSUPPORTED_ESM_URL_SCHEME` — a bare `C:/...` specifier is not a
+valid ESM scheme). Standing rule 10 says balance is measured and not
+judged; on the machine this is developed on, the measuring half had
+never worked.
+
+Three new values were written into the dramaturg **from** the reading
+rather than from a theory — `freshVoices`, `freshLines`, `climax` — so
+the next reading pass finds something new instead of these again. The
+older lesson stands and is now load-bearing: **the reading pass is the
+only channel that is not an optimisation target, and it should be run
+before any narrative work is called done.**

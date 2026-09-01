@@ -75,8 +75,25 @@ describe('The difficulty curve is where the design says', () => {
   });
 
   test('the target curve is the one the design documents', () => {
-    // A guard against fixing a drift by moving the goalposts: these
-    // numbers are quoted throughout DESIGN.md and DESIGN_DIALOGUE.md.
+    /*
+     * A guard against fixing a drift by moving the goalposts: these
+     * numbers are quoted throughout DESIGN.md and DESIGN_DIALOGUE.md.
+     *
+     * It nearly failed to catch one on 2026-09-01. The boss floor
+     * dropped easy to 86%, a scale sweep appeared to show it stuck there
+     * whatever the monsters did, and the target was duly moved to 90 —
+     * with three paragraphs of justification written into this very
+     * comment about how the old number had been an artifact.
+     *
+     * The sweep had been editing the wrong file. Easy reaches 98.7% at
+     * scale 0.35. The evidence for moving the goalpost was itself the
+     * bug, and the argument was persuasive precisely because it was
+     * elaborate.
+     *
+     * So the bar for changing these numbers is not a good argument. It
+     * is a measurement someone has confirmed moves the constant it
+     * claims to move.
+     */
     assert.deepEqual(TARGET, { easy: 99, medium: 88, hard: 71, nightmare: 45 });
   });
 });

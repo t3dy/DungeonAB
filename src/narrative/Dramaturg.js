@@ -319,6 +319,128 @@ export const POETICS = {
     },
   },
 
+  /*
+   * The three values below were written FROM a reading rather than from
+   * a theory, and they are the ones that matter most.
+   *
+   * A stratified sample of five transcripts — best, worst, median and a
+   * wipe — was read end to end. The instrument had scored them from 56%
+   * to 100%, and every one of them had the same three faults, none of
+   * which any probe could see. The 100% log was no easier to read than
+   * the 56% one.
+   *
+   * That is the strongest evidence in this project for the limits of
+   * automated judgement, and the values here exist so the next reading
+   * pass finds something new rather than these again.
+   */
+
+  freshVoices: {
+    id: 'freshVoices',
+    statement: 'The party should not argue in one voice.',
+    because:
+      'The worst thing in the corpus, by a distance. "The Reckless were '
+      + 'already moving" appeared six times in nine rooms; "the Cunning '
+      + 'picked the safer angle" five times in eight. The deliberation '
+      + 'beat fell back to the party\'s TEMPER — an abstraction belonging '
+      + 'to nobody — whenever no class owned the decision, so a party of '
+      + 'one temper narrated its entire delve in a single borrowed voice. '
+      + 'Line-level repetition checks missed it because the sentences '
+      + 'differ slightly; a reader does not miss it for a moment.',
+    mechanisms: ['narrative/Narrator.js composeDeliberation', 'narrative/Barks.js'],
+    probe(delve) {
+      const voices = delve.rooms
+        .map(r => (r.deliberation || '').match(/—\s*(.+?)(?:\.\s|\s*The party chose)/)?.[1])
+        .filter(Boolean);
+      if (voices.length < 4) return { pass: null, note: 'too few deliberations to judge' };
+      const abstractions = voices.filter(v => /^the [A-Z]/.test(v)).length;
+      const distinct = new Set(voices.map(v => v.split(' made the case')[0])).size;
+      const share = abstractions / voices.length;
+      return {
+        pass: share <= 0.34 && distinct >= 2,
+        note: share > 0.34
+          ? `${abstractions} of ${voices.length} deliberations are argued by a temper rather than a person`
+          : `${distinct} distinct voices across ${voices.length} deliberations`,
+        evidence: distinct,
+      };
+    },
+  },
+
+  freshLines: {
+    id: 'freshLines',
+    statement: 'No sentence should appear twice in one delve, verbatim.',
+    because:
+      'The existing repetition gate allows a line up to three times, '
+      + 'which was tuned for room-type templates that must introduce '
+      + 'themselves. For an EFFECT line — a mastery band, a reading of the '
+      + 'building, a death — twice is already once too many, and the '
+      + 'session that added two such lines while fixing repetition '
+      + 'elsewhere reintroduced the fault immediately. Reads as a machine '
+      + 'showing its seams.',
+    mechanisms: ['sim/Simulator.js pickLine', 'narrative/Narrator.js pick'],
+    probe(delve) {
+      /*
+       * NARRATION effects only, and the distinction matters.
+       *
+       * A drafted card's prep line fires every fight because the card
+       * works every fight — "the daggers land before the argument
+       * starts" appearing in each of four fights is the card doing its
+       * job, and standing rule 9 requires exactly that visibility. A
+       * first version of this probe flagged those and would have argued
+       * for silencing the thing the player drafted.
+       *
+       * What must not repeat is the game speaking in its own voice
+       * about a one-off event: a grading, a reading of the building, who
+       * took the worst of it. Those are keyed by their opening icon.
+       */
+      const NARRATION = ['🎓', '🗝️', '🩸'];
+      const counts = new Map();
+      for (const r of delve.rooms) {
+        for (const line of [r.resolution, r.aside].filter(Boolean)) {
+          for (const s of line.split(/(?<=[.!?])\s+/)) {
+            const t = s.trim();
+            if (!NARRATION.some(icon => t.startsWith(icon))) continue;
+            counts.set(t, (counts.get(t) || 0) + 1);
+          }
+        }
+      }
+      const repeated = [...counts.entries()].filter(([, n]) => n > 1);
+      return {
+        pass: repeated.length === 0,
+        note: repeated.length
+          ? `${repeated.length} effect line${repeated.length === 1 ? '' : 's'} printed verbatim more than once (worst ×${Math.max(...repeated.map(r => r[1]))})`
+          : 'every effect line is said once',
+        evidence: repeated.map(r => r[0].slice(0, 50)),
+      };
+    },
+  },
+
+  climax: {
+    id: 'climax',
+    statement: 'The boss should get to be a boss.',
+    because:
+      'Measured across the sample, bosses died in ONE round taking ZERO '
+      + 'damage — a 65-health monster with attack 20 evaporating before it '
+      + 'swung, because opening damage plus one party swing cleared the '
+      + 'bar and the resolver breaks on death before the monster acts. '
+      + 'The delve had no third act. This is a mechanical fact that '
+      + 'presents as the flattest writing in the log, and no amount of '
+      + 'prose could have fixed it.',
+    mechanisms: ['encounters/RoomEncounters.js bossFloor', 'world/DungeonGen.js boss stats'],
+    probe(delve) {
+      const boss = delve.rooms.find(r => r.room === 'boss');
+      if (!boss) return { pass: null, note: 'the party never reached the throne room' };
+      const text = [boss.resolution, boss.deliberation].filter(Boolean).join(' ');
+      const rounds = Number(text.match(/in (\d+) rounds?/)?.[1] || 0);
+      const never = /never gets a round|before it can strike back|dead before the party closes/.test(text);
+      return {
+        pass: !never && rounds !== 1,
+        note: never
+          ? 'the boss died without acting — the delve has no climax'
+          : `the throne room ran ${rounds || 'an unstated number of'} rounds`,
+      };
+    },
+  },
+
   concision: {
     id: 'concision',
     statement: 'A resolution should be readable in one breath.',

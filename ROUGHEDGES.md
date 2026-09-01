@@ -145,3 +145,28 @@ delve after every regeneration. Links into the corpus rot immediately.
 
 Seeds are stable and printed on each page, so the content is
 reproducible — but a URL is not a permalink.
+
+---
+
+## R13. `npm run calibrate` did not run on Windows at all
+
+`ERR_UNSUPPORTED_ESM_URL_SCHEME`. The tool measures a candidate constant
+by spawning a child that dynamically imports `mine.js`, and it built the
+specifier as `C:/Dev/.../mine.js` — a bare drive path, which is not a
+valid ESM scheme. Fixed with `pathToFileURL`.
+
+Standing rule 10 is *"balance is measured, not judged"*. On the machine
+this is developed on, the measuring half had never worked, and the
+failure was buried in a spawned child's stderr where nothing surfaced it.
+
+**Generalises:** any tool that spawns a child with a constructed path is
+suspect on Windows. `tools/` has several.
+
+## R14. Editing source while a long background job reads it
+
+A `calibrate --write` run died with `ReferenceError: deliberationTurn is
+not defined` because a `Narrator.js` edit landed between the declaration
+and its use while the job was importing. Entirely self-inflicted.
+
+**Rule: finish all source edits before starting a long measurement.**
+Docs and tests are safe to edit during; anything under `src/` is not.

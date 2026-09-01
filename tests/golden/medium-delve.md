@@ -8,42 +8,41 @@
 
 ### 👹 Room 1 — monster
 
-A bone warden on its rounds holds the room (attack 7, health 18). The party must decide how to get past it. Plate and chitin cover it: the party's blows do 2 less damage each round. It will not face the cleric: undead take holy damage ×1.5. Shelves sag under books nobody has audited in a century. A pit takes up a third of the floor. The bottom is not visible. Somebody stacked supplies here and never came back for them.
+A bone warden on its rounds holds the room (attack 5, health 12). The party must decide how to get past it. Plate and chitin cover it: the party's blows do 2 less damage each round. It will not face the cleric: undead take holy damage ×1.5. Shelves sag under books nobody has audited in a century. A pit takes up a third of the floor. The bottom is not visible.
 
-They might have chosen to speak with whatever wears the armour, or name the armour by its heraldry — the Scholarly wanted a closer look before anything else. The party chose to put the armour down.
+They might have chosen to speak with whatever wears the armour, or name the armour by its heraldry — Tycho Brahe made the case: "Stand back — this is the part I'm for." The party chose to stand and fight.
 
-⚔️ Empty armour does dent like full armour, and hits back like it too. 4 damage, a great deal of noise, and the party comes out of it spread across the passage.
+🪄 Tycho Brahe uses the Haunted Armor — The Ghost Objects: a summon adding 1 attack each round. ⚔️ The party kills a bone warden on its rounds in 1 round, taking 0 damage. 🧱 The party fights from behind stacked crates and barrels: 1 less damage per round. 🛡️ The party closes ranks: 1 less damage a round. 🎒 2 more preparations hold besides — the ledger keeps them.
 
 _🛡️ Tycho Brahe takes the front of the march, and the rest fall in behind._
 
 <details><summary>Ledger</summary>
 
+- 🏅 25 renown earned.
 - 🕯️ 1 march of oil burned.
-- ❤️ 4 health taken.
+- 🏆 1 trophy taken from the dead.
+- 🎒 1 piece of kit taken up.
 - 🚪 1 more room behind them.
-- · 👹 Room 1: monster — put-it-down
+- · 👹 Room 1: monster — fight
+- 🎒 🔺 The party drives in as a wedge, everything committed forward.
+- 🎒 🦴 A bone warden on its rounds drops a pauldron of century bone: a trinket (+1 defense), now worn by Giordano Bruno.
 
 </details>
 
 ### 👹 Room 2 — monster
 
-A boil of grave mites holds the room (attack 5, health 11). The party must decide how to get past it. It is a swarm: spell openings hit it ×1.5. It keeps clear of the torches: weak to fire (fire damage ×1.5). A gargoyle spout drips something that is not water into a stained channel.
+A boil of grave mites holds the room (attack 3, health 7). The party must decide how to get past it. It is a swarm: spell openings hit it ×1.5. It keeps clear of the torches: weak to fire (fire damage ×1.5). A gargoyle spout drips something that is not water into a stained channel.
 
-They might have chosen to negotiate the terms, or recognize his school — Tycho Brahe made the case: "The body is a temple. Mine's a fortress." The party chose to stand and fight.
+They might have chosen to negotiate the terms, or recognize his school — Pico della Mirandola made the case: "I did not memorize this spell to whisper it." The party chose to cast Cause Fear.
 
-🪄 Tycho Brahe uses the Haunted Armor — The Ghost Objects: a summon adding 1 attack each round. ⚔️ The party kills a boil of grave mites in 1 round, taking 0 damage. 📐 The party meets it standing as the last room left them. 🗡️ The greatsword takes a whole rank of them at a stroke: 3 more damage a round. 🛡️ The party closes ranks: 1 less damage a round. 🎒 2 more preparations hold besides — the ledger keeps them.
+😱 Cause Fear routs a boil of grave mites: the room clears without a fight. +20 score.
 
 <details><summary>Ledger</summary>
 
-- 🏅 25 renown earned.
-- 🌿 2 more alchemical materials in the satchel.
+- 🏅 20 renown earned.
 - 🕯️ 1 march of oil burned.
-- 🏆 1 trophy taken from the dead.
-- ❤️ 1 health mended.
 - 🚪 1 more room behind them.
-- · 👹 Room 2: monster — fight
-- 🎒 🌐 There is room enough in the chamber to fight spread out, well apart.
-- 🎒 🟠 A boil of grave mites drops a handful of grave-amber: 2 alchemy materials.
+- · 👹 Room 2: monster — cause-fear
 
 </details>
 
@@ -51,7 +50,7 @@ They might have chosen to negotiate the terms, or recognize his school — Tycho
 
 A shrine. Resting here heals the party; the gold leaf on the altar could be stripped instead. Pillars break the room into aisles — something to fight behind. A brazier burns in its bracket — nobody has been here to feed it, and it burns anyway.
 
-They might have chosen to sing the third harmony, or endure the discord — the Scholarly wanted the knowledge. The party chose to link the three frequencies.
+They might have chosen to sing the third harmony, or endure the discord — Giordano Bruno made the case: "Range is a suggestion. Watch." The party chose to link the three frequencies.
 
 🔗 The three principles understand each other. Tension dissolves; the frequencies fade into silence, and the walls steady. +16 score. 🎓 Done by people who do something near it: 10 renown less than a clean job.
 
@@ -59,7 +58,6 @@ They might have chosen to sing the third harmony, or endure the discord — the 
 
 - 🏅 6 renown earned.
 - 🕯️ 1 march of oil burned.
-- ❤️ 1 health mended.
 - 🚪 1 more room behind them.
 - · 🕯️ Room 3: shrine — correspondence-solve
 
@@ -69,25 +67,23 @@ They might have chosen to sing the third harmony, or endure the discord — the 
 
 A connecting corridor. Nothing blocks the way; the party moves through.
 
-They might have chosen to read the correspondences, or work the planetary sequence — the Scholarly wanted the knowledge. The party chose to reconcile the traditions.
+They might have chosen to work the planetary sequence, or reconcile the traditions — John Dee made the case: "The commentaries disagree. I don't." The party chose to read the correspondences.
 
-☯️ Two traditions are quarrelling on one door; reconciled, they agree to open it. +2 materials, +35 score. 🎓 Three disciplines on one problem, none of them guessing: +25 renown. 🗝️ And the shape of the place gives itself away: something sealed below will open to this.
+🔗 The signs are not a lock but an argument, and it can be followed to its conclusion. The door opens on a working laboratory: +2 materials, +35 score. 🎓 Near enough to the discipline to try, not near enough to be paid for it: 10 renown short.
 
 <details><summary>Ledger</summary>
 
-- 🏅 60 renown earned.
+- 🏅 25 renown earned.
 - 🌿 2 more alchemical materials in the satchel.
 - 🕯️ 1 march of oil burned.
-- ❤️ 1 health mended.
-- 🗝️ A reading of how this place was put together.
 - 🚪 1 more room behind them.
-- · 🪐 Room 4: situation — reconcile-traditions
+- · 🪐 Room 4: situation — read-correspondences
 
 </details>
 
 ### 🪜 Room 5 — stairs
 
-A stair cut into the rock, going down. Cold air comes up it.
+Steps down, worn in the middle by traffic that stopped a long time ago.
 
 There was only one option: the party chose to take the stair down.
 
@@ -96,7 +92,6 @@ There was only one option: the party chose to take the stair down.
 <details><summary>Ledger</summary>
 
 - 🕯️ 2 marches of oil burned.
-- ❤️ 1 health mended.
 - 🚪 1 more room behind them.
 - · 🪜 Room 5: stairs — descend
 
@@ -104,9 +99,9 @@ There was only one option: the party chose to take the stair down.
 
 ### 📚 Room 6 — library
 
-A library. The party can study here to learn spells. A brazier burns in its bracket — nobody has been here to feed it, and it burns anyway. Shelves sag under books nobody has audited in a century. Pillars break the room into aisles — something to fight behind.
+A library. The party can study here to learn spells. A brazier burns in its bracket — nobody has been here to feed it, and it burns anyway. Shelves sag under books nobody has audited in a century.
 
-They might have chosen to reconstruct the mosaic from memory, or imagine what the image should be — the Scholarly argued from what the books say about this. The party chose to strip the shelves.
+They might have chosen to reconstruct the mosaic from memory, or imagine what the image should be — Pico della Mirandola made the case: "Fascinating. Everyone stand behind me while I annotate." The party chose to strip the shelves.
 
 📚 The wizard strips sagging shelves: a scroll of Shelf-Found Working for the grimoire.
 
@@ -124,11 +119,11 @@ They might have chosen to reconstruct the mosaic from memory, or imagine what th
 
 A library. The party can study here to learn spells. Pillars break the room into aisles — something to fight behind.
 
-They might have chosen to study the shelves, or move on — Pico della Mirandola made the case: "Magic is prayer with better handwriting." The party chose to read the sealed texts.
+They might have chosen to study the shelves, or move on — Pico della Mirandola made the case: "I did not memorize this spell to whisper it." The party chose to read the sealed texts.
 
 🔏 The wizard reads the sealed texts: 2 spells learned, including a forbidden working. +50 score.
 
-_🕯️ The wick is well down the oil. 2 more marches of light, then none._
+_🕯️ The lantern is burning low: oil for 2 more marches._
 
 <details><summary>Ledger</summary>
 
@@ -137,7 +132,7 @@ _🕯️ The wick is well down the oil. 2 more marches of light, then none._
 - 📖 2 new workings copied into the grimoire.
 - 📜 The grimoire grows by 1.
 - 🚪 1 more room behind them.
-- · 🕯️ The wick is well down the oil. 2 more marches of light, then none.
+- · 🕯️ The lantern is burning low: oil for 2 more marches.
 - · 📚 Room 7: library — deep-study
 
 </details>
@@ -146,39 +141,41 @@ _🕯️ The wick is well down the oil. 2 more marches of light, then none._
 
 A connecting corridor. Nothing blocks the way; the party moves through.
 
-They might have chosen to read the place itself, or question the ghost gently — the Scholarly wanted a closer look before anything else. The party chose to reconstruct his rounds.
+They might have chosen to reconstruct his rounds, or question the ghost gently — John Dee made the case: "We are exactly where we are meant to be. Regrettably." The party chose to read the place itself.
 
-🧠 He is asked to describe his rounds, all of them, and somebody holds the whole account at once until the shape closes. The map was behind the shelving. Two marches of oil saved. +28 score. 🎓 Three disciplines on one problem, none of them guessing: +25 renown. 🗝️ And the shape of the place gives itself away: something sealed below will open to this.
+🧭 The map is unnecessary: the place was laid out by someone with habits, and habits can be read off three corridors. The party stops doubling back — two marches of oil saved, and the next snare is on the route before they reach it. +30 score. 🎓 It is answered from three directions at once and stays answered: +25 renown. 🗝️ And the shape of the place gives itself away: something sealed below will open to this.
 
 _🕯️ The wick is well down the oil. 1 more march of light, then none._
 
 <details><summary>Ledger</summary>
 
-- 🏅 53 renown earned.
+- 🏅 55 renown earned.
 - 🕯️ 1 more march of oil found.
 - 🗝️ A reading of how this place was put together.
 - 🚪 1 more room behind them.
 - · 🕯️ The wick is well down the oil. 1 more march of light, then none.
-- · 🪐 Room 8: situation — reconstruct-his-rounds
+- · 🪐 Room 8: situation — read-the-plan
 
 </details>
 
 ### 🌿 Room 9 — materials
 
-A room of herbs, salts, and quicksilver — alchemy materials, free to gather. Somebody stacked supplies here and never came back for them. A gargoyle spout drips something that is not water into a stained channel. A boulder sits at the top of a slope, held by a wedge of rotten timber.
+A room of herbs, salts, and quicksilver — alchemy materials, free to gather. Somebody stacked supplies here and never came back for them. A gargoyle spout drips something that is not water into a stained channel.
 
-They might have chosen to gather the materials — the Scholarly wanted the knowledge. The party chose to move on.
+They might have chosen to move on — Tycho Brahe made the case: "I read a treatise on this maneuver. Chapter three. Brace." The party chose to gather the materials.
 
-There is nothing to fight and nothing to take. The party keeps going.
+🌿 The party gathers 2 bundles of alchemy materials.
 
 _🕯️ The wick is well down the oil. 2 more marches of light, then none. 🧭 The Devout did not like leaving the dead untended: the party turns off into the burial wing. Its rooms join the route._
 
 <details><summary>Ledger</summary>
 
+- 🏅 5 renown earned.
+- 🌿 2 more alchemical materials in the satchel.
 - 🕯️ 1 march of oil burned.
 - 🚪 1 more room behind them.
 - · 🕯️ The wick is well down the oil. 2 more marches of light, then none.
-- · 🌿 Room 9: materials — pass-by
+- · 🌿 Room 9: materials — gather
 
 </details>
 
@@ -186,17 +183,17 @@ _🕯️ The wick is well down the oil. 2 more marches of light, then none. 🧭
 
 A shrine. Resting here heals the party; the gold leaf on the altar could be stripped instead. Pillars break the room into aisles — something to fight behind.
 
-They might have chosen to strip the gold leaf, or move on — John Dee made the case: "Faith walks in front. So do I." The party chose to rest and heal.
+They might have chosen to strip the gold leaf, or move on — John Dee made the case: "The liturgy has a verse for this. Several, actually." The party chose to rest and heal.
 
 🕯️ The party rests at the shrine: 9 health healed per member.
 
-_🕯️ The lantern is burning low: oil for 1 more march._
+_🕯️ The wick is well down the oil. 1 more march of light, then none._
 
 <details><summary>Ledger</summary>
 
 - 🕯️ 1 march of oil burned.
 - 🚪 1 more room behind them.
-- · 🕯️ The lantern is burning low: oil for 1 more march.
+- · 🕯️ The wick is well down the oil. 1 more march of light, then none.
 - · 🕯️ Room 10: shrine — rest
 
 </details>
@@ -205,60 +202,45 @@ _🕯️ The lantern is burning low: oil for 1 more march._
 
 A treasure chest sits in the room. It may hold gold; it may be a mimic. A silvered mirror leans against the wall, and it shows the room more honestly than the room does. Somebody stacked supplies here and never came back for them.
 
-They might have chosen to loot the treasure, or leave it alone — the Scholarly wanted a closer look before anything else. The party chose to inspect it first.
+They might have chosen to loot the treasure, or inspect it first — Giordano Bruno made the case: "Fundamentals of Sorcery, volume three, page ninety: this exact mistake." The party chose to leave it alone.
 
-🔍 The party checks for mimics and curses first, then takes 32 gold safely. 🧪 Also in the hoard: a healing draught (heals 6), added to the satchel.
+🚶 The party leaves the treasure untouched and moves on.
 
 _🕯️ The flame stands up, thins, and is gone. The party is out of oil._
 
 <details><summary>Ledger</summary>
 
-- 💰 The purse is 32 heavier.
-- 🏅 32 renown earned.
-- 🧪 1 more draught corked and stowed.
 - 🕯️ 1 march of oil burned.
 - 🚪 1 more room behind them.
 - · 🕯️ The flame stands up, thins, and is gone. The party is out of oil.
-- · 💰 Room 11: treasure — inspect
+- · 💰 Room 11: treasure — leave-it
 
 </details>
 
 ### 🐉 Room 12 — boss
 
-The boss chamber. The Abbot of Worms, still preaching waits at its center (attack 14, health 51); killing it clears the dungeon. It is venomous: even a won fight leaves poison working, unless a cleric cures it. It will not face the cleric: undead take holy damage ×1.5. A silvered mirror leans against the wall, and it shows the room more honestly than the room does. A bed of rusted spikes stands out of the floor, most of them still upright.
+The boss chamber. The Abbot of Worms, still preaching waits at its center (attack 10, health 35); killing it clears the dungeon. It is venomous: even a won fight leaves poison working, unless a cleric cures it. It will not face the cleric: undead take holy damage ×1.5. A silvered mirror leans against the wall, and it shows the room more honestly than the room does. A bed of rusted spikes stands out of the floor, most of them still upright.
 
-They might have chosen to stand and fight, or fall back — the Scholarly wanted a closer look before anything else. The party chose to put it onto the floor spikes.
+They might have chosen to stand and fight, or fall back — John Dee made the case: "Faith walks in front. So do I." The party chose to turn the undead.
 
-🔻 The party drives the monster back onto a bed of rusted floor spikes: 17 damage, and it has to pull itself off them. ⚔️ The party kills the Abbot of Worms, still preaching in 3 rounds, taking 14 damage. 🩸 Tycho Brahe takes the worst of it: 13 of the party's 14. 🔧 The party knows how to swing what the room left lying about: +5 to the opening. 🛡️ Shields lock along the front rank and the party stops trying to win quickly. 🎒 6 more preparations hold besides — the ledger keeps them.
+✨ The cleric turns the undead: the Abbot of Worms, still preaching crumbles. +30 score. 📖 The Abbot of Worms, still preaching drops the Abbot's last sermon: a scroll of Final Benediction (combat, power 5), added to the grimoire.
 
-_💡 Dancing Light carries the march instead of oil: none of the 3 damage the dark would have taken._
-
-- ☠️ Tycho Brahe falls. The party's fighter is dead; the survivors march on.
+_💡 No oil left, so Dancing Light does the work — light enough to walk by, and 3 damage nobody pays._
 
 <details><summary>Ledger</summary>
 
-- 🏅 250 renown earned.
-- 🌿 2 more alchemical materials in the satchel.
+- 🏅 180 renown earned.
 - 🏆 1 trophy taken from the dead.
 - 📜 The grimoire grows by 1.
-- ☠️ 1 of the party is down.
-- ❤️ 14 health taken.
-- ✚ 1 wound that will not close down here.
 - 🚪 1 more room behind them.
-- · 💡 Dancing Light carries the march instead of oil: none of the 3 damage the dark would have taken.
-- · 🐉 Room 12: boss — shove-onto-spikes
+- · 💡 No oil left, so Dancing Light does the work — light enough to walk by, and 3 damage nobody pays.
+- · 🐉 Room 12: boss — turn-undead
 - · 🏆 The dungeon is beaten!
-- 🎒 🪞 A tall silvered mirror shows the ethereal where it truly stands: weapons do full damage.
-- 🎒 🛡️ The party closes ranks: 1 less damage a round.
-- 🎒 💢 At half health, the Abbot of Worms, still preaching turns fierce: attack +2 for the rest of the fight.
-- 🎒 📖 The Abbot of Worms, still preaching drops the Abbot's last sermon: a scroll of Final Benediction (combat, power 5), added to the grimoire.
-- 🎒 🐍 The monster was venomous, but the cleric cures the poison before it can act.
-- 🎒 🌿 Also in the hoard: 2 alchemy materials.
 
 </details>
 
 ### 🏆 The way out
 
-the Ancient Crypt is cleared: the boss is dead and the party walks out. Survivors: Pico della Mirandola, Giordano Bruno, John Dee. Rooms cleared: 12. Trophies carried out: 2 (latest: 📖 the Abbot's last sermon).
+the Ancient Crypt is cleared: the boss is dead and the party walks out. Survivors: Tycho Brahe, Pico della Mirandola, Giordano Bruno, John Dee. Rooms cleared: 12. Trophies carried out: 2 (latest: 📖 the Abbot's last sermon).
 
-**Rooms cleared:** 12 · **Score:** 476 · **Gold:** 32 · **Trophies:** 2 · **Survivors:** 3
+**Rooms cleared:** 12 · **Score:** 366 · **Gold:** 0 · **Trophies:** 2 · **Survivors:** 4

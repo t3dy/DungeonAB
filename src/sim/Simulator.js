@@ -23,8 +23,49 @@ import {
   composeWipe, composeVictory, composeFall,
   composeSecretFound, composeDetour, composeTrapdoor, composeKeyFound, composeLockedWing,
   composeSupply, composeWound, composeDormant, composeTactics, composeProvision,
+  resetDeliberation,
 } from '../narrative/Narrator.js';
 import { resetBarks } from '../narrative/Barks.js';
+
+/**
+ * Fall lines for a group who died together, each told how many were
+ * still standing when they went down.
+ *
+ * A wipe used to print the same sentence once per body, the last of them
+ * announcing that "the survivors march on" with nobody left to march.
+ * Deaths are counted down through the group so the last of a party is
+ * written as the last of a party (narrative/Narrator.js composeFall).
+ */
+/**
+ * One of several phrasings, avoiding the one used last.
+ *
+ * Kept here rather than imported because `Narrator.pick` is module-
+ * private; the requirement is only that a line firing twice in a delve
+ * does not read as a stuck record.
+ */
+const lastLine = new Map();
+
+/*
+ * Cleared per delve. Module state that survives between runs makes the
+ * seeded harness non-deterministic: the same case rendered twice picked
+ * differently the second time, because this map still remembered the
+ * first — which `tests/golden` catches by rendering every case twice.
+ */
+function resetLines() { lastLine.clear(); }
+
+function pickLine(variants) {
+  const key = variants[0];
+  const previous = lastLine.get(key);
+  const pool = variants.filter(v => v !== previous);
+  const chosen = pool[Math.floor(Math.random() * pool.length)] || variants[0];
+  lastLine.set(key, chosen);
+  return chosen;
+}
+
+function fallLines(party, dead) {
+  const standing = party.living().length;
+  return dead.map((m, i) => composeFall(m, standing + (dead.length - 1 - i)));
+}
 
 export class Simulator {
   /**
@@ -84,6 +125,8 @@ export class Simulator {
     // A fresh delve starts with nothing said yet: bark history is module
     // state and would otherwise leak from the last run (narrative/Barks.js)
     resetBarks();
+    resetDeliberation();
+    resetLines();
     this.chronicle.beginDelve({
       seed, difficulty, depth: this.depth,
       theme: this.dungeon.theme?.name || null,
@@ -210,7 +253,7 @@ export class Simulator {
         predicament: composePredicament(room, this.dungeon.theme),
         deliberation: 'There is no light left to decide anything by.',
         resolution: supplyLine + ' The last of the party does not get up.',
-        falls: this.party.members.filter(m => !m.isAlive()).map(m => composeFall(m)),
+        falls: fallLines(this.party, this.party.members.filter(m => !m.isAlive())),
         aside: null,
       };
       this.finish(false);
@@ -223,7 +266,7 @@ export class Simulator {
     // the room's own report.
     const marchDeadList = rosterBefore.filter(m => !m.isAlive());
     const marchDead = new Set(marchDeadList.map(m => m.name));
-    const marchFalls = marchDeadList.map(m => composeFall(m));
+    const marchFalls = fallLines(this.party, marchDeadList);
     for (const line of marchFalls) this.addLog(line);
 
     // Poison taken last room works now (the venomous are patient)
@@ -236,7 +279,7 @@ export class Simulator {
         predicament: composePredicament(room, this.dungeon.theme),
         deliberation: 'The lingering venom acts before anything can be decided.',
         resolution: `🐍 The venom carried from the last fight deals ${linger.damage} damage, and the last of the party falls.`,
-        falls: livingBefore.filter(m => !m.isAlive()).map(m => composeFall(m)),
+        falls: fallLines(this.party, livingBefore.filter(m => !m.isAlive())),
         aside: null,
       };
       this.finish(false);
@@ -295,11 +338,26 @@ export class Simulator {
       result.preps = result.preps || [];
       result.preps.push({
         source: 'the reckoning',
+        // Variants because these fire twice in a good delve and read as
+        // a stuck record otherwise — the failure this session spent an
+        // afternoon fixing elsewhere, reintroduced by the fix.
         text: m.score < 0
-          ? `🎓 Done by people who do something near it: ${-m.score} renown less than a clean job.`
+          ? pickLine([
+              `🎓 Done by people who do something near it: ${-m.score} renown less than a clean job.`,
+              `🎓 Near enough to the discipline to try, not near enough to be paid for it: ${-m.score} renown short.`,
+              `🎓 Nobody here is the person you would send. It shows, by ${-m.score} renown.`,
+            ])
           : m.depth >= 3
-            ? `🎓 Three disciplines on one problem, none of them guessing: +${m.score} renown.`
-            : `🎓 A second pair of hands that knows what it sees: +${m.score} renown.`,
+            ? pickLine([
+                `🎓 Three disciplines on one problem, none of them guessing: +${m.score} renown.`,
+                `🎓 Everything this asks for, the party happens to have brought: +${m.score} renown.`,
+                `🎓 It is answered from three directions at once and stays answered: +${m.score} renown.`,
+              ])
+            : pickLine([
+                `🎓 A second pair of hands that knows what it sees: +${m.score} renown.`,
+                `🎓 Somebody checks the work who is qualified to: +${m.score} renown.`,
+                `🎓 Not done alone, and better for it: +${m.score} renown.`,
+              ]),
       });
     }
 
@@ -307,7 +365,11 @@ export class Simulator {
       result.preps = result.preps || [];
       result.preps.push({
         source: 'the reading',
-        text: '🗝️ And the shape of the place gives itself away: something sealed below will open to this.',
+        text: pickLine([
+          '🗝️ And the shape of the place gives itself away: something sealed below will open to this.',
+          '🗝️ Whoever built this had habits, and the party has just learned one of them.',
+          '🗝️ The trick of the place is understood now. Somewhere below is a door that does not know that yet.',
+        ]),
       });
     }
 
@@ -348,7 +410,7 @@ export class Simulator {
       predicament,
       deliberation: composeDeliberation(chosen, options, this.party),
       resolution: composeResolution(room, chosen, result, this.party),
-      falls: [...marchFalls, ...fallen.map(m => composeFall(m))],
+      falls: [...marchFalls, ...fallLines(this.party, fallen)],
       wounds: this.party.members
         .filter(m => m.isAlive() && m.wounds > (woundsBefore.get(m.name) ?? 0))
         .map(m => composeWound(m, personalityModifiers(this.party).woundNotes)),
@@ -500,7 +562,7 @@ export class Simulator {
     ].filter(Boolean).join(' ');
     this.lastNarration.falls = [
       ...(this.lastNarration.falls || []),
-      ...livingBefore.filter(m => !m.isAlive()).map(m => composeFall(m)),
+      ...fallLines(this.party, livingBefore.filter(m => !m.isAlive())),
     ];
     this.addLog(`🕳️ Trapdoor: ${skipped} room${skipped === 1 ? '' : 's'} skipped, ${damage} damage.`);
 
