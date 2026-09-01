@@ -8,7 +8,6 @@
 
 import { CARD_TYPES, CLASSES } from '../game/Cards.js';
 import { Adventurer, makeTavernVolunteer } from './Adventurer.js';
-import { tacticModifiers } from '../game/Tactics.js';
 import { personalityModifiers } from '../game/Personalities.js';
 
 /**
@@ -95,20 +94,6 @@ export class Party {
     // Which workings have been spent in the current room (cleared on
     // the march between rooms by restStep)
     this.castThisRoom = new Set();
-
-    // Learned technique. A tactic is live only when the party has the
-    // capability it asks for and holds its prerequisite (game/Tactics.js).
-    //
-    // Deduplicated by id: a tactic is knowledge, and knowing it twice is
-    // knowing it once. The same card can be opened in two packs, and
-    // without this a party that drafted three Quickenings would have
-    // loosed three extra workings a room.
-    const seenTactics = new Set();
-    this.tactics = pool
-      .filter(c => c.type === 'tactic')
-      .filter(c => !seenTactics.has(c.id) && seenTactics.add(c.id))
-      .map(c => ({ ...c }));
-    this.duplicateTactics = pool.filter(c => c.type === 'tactic').length - this.tactics.length;
 
     // Personality archetypes (party-wide)
     this.personalities = pool
@@ -328,7 +313,6 @@ export class Party {
       members: this.members.map(m => m.toJSON()),
       reserve: this.reserve.map(m => m.toJSON()),
       grimoire: this.grimoire.map(s => ({ ...s })),
-      tactics: this.tactics.map(t => ({ ...t })),
       personalities: [...this.personalities],
       trophies: this.trophies.map(t => ({ ...t })),
       gold: this.gold,
@@ -373,7 +357,6 @@ export class Party {
     // carry synthetic ids and used to vanish on load without a word.
     const rehydrate = c => (c && { ...(lookup(c.id) || {}), ...c });
     party.grimoire = (saved.grimoire || []).map(rehydrate).filter(Boolean);
-    party.tactics = (saved.tactics || []).map(rehydrate).filter(Boolean);
     party.personalities = [...(saved.personalities || [])];
     party.trophies = (saved.trophies || []).map(t => ({ ...t }));
     party.gold = saved.gold || 0;
@@ -788,7 +771,7 @@ export class Party {
     const share = SUPPLY_COVERAGE[difficulty] ?? SUPPLY_COVERAGE.medium;
     // Rationing is learned technique, not more oil: the same lamp,
     // trimmed and measured (game/Tactics.js)
-    const rationed = tacticModifiers(this).supply;
+    const rationed = 0;
     // ...and so does the party's temper: the Craven overpack, the
     // Cunning ration without being told (game/Personalities.js)
     const temper = personalityModifiers(this);

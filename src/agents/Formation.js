@@ -142,7 +142,6 @@ export function chooseFormation(party, room, rng = Math.random) {
   if (options.length > 1) weights.column = hurt ? 2 : 0.15;
 
   const monster = room?.monster;
-  const holds = id => party.tactics?.some(t => t.id === id);
 
   // The foe shapes the choice
   if (monster?.trait === 'swarm' && weights.loose) weights.loose += 3;   // spread beats numbers
@@ -155,11 +154,6 @@ export function chooseFormation(party, room, rng = Math.random) {
   if (party.hasPersonality?.('reckless') && weights.wedge) weights.wedge += 3;
   if (party.hasPersonality?.('craven') && weights.shieldwall) weights.shieldwall += 3;
   if (party.hasPersonality?.('cunning') && weights.loose) weights.loose += 2;
-
-  // And what it has drilled
-  if (holds('tac-shieldwall') && weights.shieldwall) weights.shieldwall += 2.5;
-  if (holds('tac-flanking') && weights.wedge) weights.wedge += 2;
-  if (holds('tac-firewatch') && weights.loose) weights.loose += 1.5;
 
   // A thin party cannot afford a wedge
   if (party.living().length <= 2 && weights.wedge) weights.wedge *= 0.3;

@@ -199,7 +199,6 @@ function stateContract() {
 async function tableDrift() {
   const engine = await import('../src/encounters/EncounterEngine.js');
   await import('../src/encounters/Encounters.js');
-  await import('../src/encounters/TownEncounters.js');
   const gen = await import('../src/world/DungeonGen.js');
   const narrator = await import('../src/narrative/Narrator.js');
   const dram = await import('../src/narrative/Dramaturg.js');

@@ -37,7 +37,6 @@ export const CARD_TYPE_HELP = [
   { type: 'character', label: 'Character', text: 'A named hero of one of five classes. Four march — the rest wait in town as reserves, ready to replace the dead.' },
   { type: 'equipment', label: 'Equipment', text: 'Auto-assigns to the best-fit member. Some items do different things per class.' },
   { type: 'spell', label: 'Spell', text: 'A prepared working in the shared grimoire: reusable, but spent for the room once cast. Power scales with the party\'s sharpest mind, and a loosed working keeps working for the rest of the fight — combat workings go on biting, healing ones go on mending, and a heal fires the moment someone is failing rather than after the dust settles. A wizard amplifies it and opens ordinary fights with two — and at the boss the party looses every working it has. Scrolls found in the dungeon still burn.' },
-  { type: 'tactic', label: 'Tactic', text: 'Learned technique, gated by what the party can DO rather than by class — everyone swings at something, so anyone benefits from Flanking. Tactics form a small tree: a tier-two card does nothing without the tier-one it grows from.' },
   { type: 'personality', label: 'Personality', text: 'Biases the whole party\'s decisions. Some look weak but hide an upside.' },
 ];
 

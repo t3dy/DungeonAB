@@ -30,7 +30,6 @@ import { Simulator } from '../src/sim/Simulator.js';
 import {
   CHARACTER_CARDS, EQUIPMENT_CARDS, SPELL_CARDS, getCard,
 } from '../src/game/Cards.js';
-import { getTactic } from '../src/game/Tactics.js';
 import { costCard } from '../src/game/Costing.js';
 
 /*
@@ -100,15 +99,7 @@ export function measureCard(id, opts = {}) {
   if (!card) return { id, error: 'no such card' };
 
   const extra = [card];
-  let note = null;
-  const tactic = getTactic(id);
-  if (tactic?.requires) {
-    const root = getCard(tactic.requires);
-    if (root) {
-      extra.unshift(root);
-      note = `measured with its root, ${root.name}`;
-    }
-  }
+  const note = null;
 
   const baseline = winRate([], opts);
   const withCard = winRate(extra, opts);

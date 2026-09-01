@@ -15,7 +15,6 @@ import {
   isFeatureAction, getFeature, roomFeatures, actionTier,
 } from '../world/RoomFeatures.js';
 import { reactionsFor, foldReactions } from '../world/Reactions.js';
-import { tacticModifiers, activeTactics } from '../game/Tactics.js';
 import { chooseFormation, formationModifiers, availableFormations } from '../agents/Formation.js';
 import { getEncounterForRoom, evaluateOptions, resolveEncounterOption } from './EncounterEngine.js';
 import './Encounters.js';   // registers the data-driven situations
@@ -127,7 +126,7 @@ export function getFeatureOptions(room, party) {
   return featureActions(room, party, {
     item: id => hasItem(party, id),
     spell: id => hasSpell(party, id),
-    tactic: id => activeTactics(party).some(t => t.id === id),
+    tactic: () => false,
   });
 }
 
@@ -339,6 +338,21 @@ function baseRoomOptions(room, party) {
   }
 }
 
+
+/*
+ * v8: the tactic tree is cut. The fight resolver consulted drilled
+ * tactics at eight sites; every read now gets this neutral answer,
+ * which is exactly what an undrilled party always got. The dead
+ * branches below it are stripped as they are touched.
+ */
+const NO_TACTICS = Object.freeze({
+  flankDamage: 0, flankMin: 99, vsArmored: 0, cover: 0, wardPerCast: 0,
+  monsterAtk: 0, extraCast: 0, sustainFull: false, allSpellsArea: false,
+  noSelfHarm: false, fireTrapSoak: 0, mendAtShrine: 0, campSupply: 0,
+  campWatched: false, featureOpener: 0, hazardDamage: 0, supply: 0,
+});
+const tacticModifiers = () => NO_TACTICS;
+
 /* ------------------------------------------------------------------ */
 /* Personality weighting — archetypes bias the party's choice          */
 /* ------------------------------------------------------------------ */
@@ -499,7 +513,7 @@ export function decideRoomAction(room, party) {
       // Camping burns oil, and camping without oil to spare is how a
       // party ends up marching the next floor in the dark. Cold Camp
       // halves the bill, so it does not fear the lamp the same way.
-      const camped = tacticModifiers(party);
+      const camped = { campSupply: 0 };
       if (party.supply <= (camped.campSupply ? 2 : 4)) w -= 4;
     }
     // A rope down the shaft costs nothing at all, so it wins on the
@@ -514,9 +528,13 @@ export function decideRoomAction(room, party) {
     // option existed and the party had no state in which it wanted it.
     if (opt.id === 'leave-it') {
       const share = party.totalHealth() / party.totalMaxHealth();
-      if (share < 0.4) w += 4;
-      else if (share < 0.65) w += 1.5;
+      if (share < 0.4) w += 5;
+      else if (share < 0.7) w += 2;
       if (party.supply === 0) w += 1.5;      // no light to fight a mimic by
+      // Cowards do not gamble on mimics however healthy they are —
+      // and without this the option starved at 3 takes in 123 offers
+      // when the tactic cut shifted the decision weights around it
+      if (party.hasPersonality('craven')) w += 2;
     }
     /*
      * The blunt answer to a situation — shoulder past, hit it until it
@@ -623,7 +641,7 @@ export function resolveFeatureAction(room, party, optionId, options = {}) {
   const action = actionTier(optionId, party, {
     item: id => hasItem(party, id),
     spell: id => hasSpell(party, id),
-    tactic: id => activeTactics(party).some(t => t.id === id),
+    tactic: () => false,
   });
   const feature = getFeature(action.feature);
   const preps = [];

@@ -29,7 +29,7 @@ const memory = () => {
 
 const POOL = [
   ...CHARACTER_CARDS.slice(0, 4), ...EQUIPMENT_CARDS.slice(0, 3),
-  SPELL_CARDS.find(s => s.id === 'sp-firebolt'), getCard('tac-flanking'),
+  SPELL_CARDS.find(s => s.id === 'sp-firebolt'), getCard('eq-tower-shield'),
 ];
 
 function delve(seed, difficulty = 'easy', opts = {}) {
@@ -103,7 +103,6 @@ describe('The same party goes down again', () => {
     assert.equal(back.party.gold, 77, 'the purse comes back');
     assert.equal(back.party.members[0].wounds, 2, 'and so do the scars');
     assert.equal(back.party.trophies.length, sim.party.trophies.length, 'and the trophy case');
-    assert.equal(back.party.tactics.length, sim.party.tactics.length, 'and the drills');
     assert.equal(back.party.grimoire.length, sim.party.grimoire.length, 'and the grimoire');
     assert.deepEqual(
       back.party.members.map(m => m.name), sim.party.members.map(m => m.name),

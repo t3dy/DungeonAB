@@ -17,7 +17,6 @@ const BASE_BY_TYPE = {
   [CARD_TYPES.EQUIPMENT]: EQUIPMENT_CARDS,
   [CARD_TYPES.SPELL]: SPELL_CARDS,
   [CARD_TYPES.PERSONALITY]: PERSONALITY_CARDS,
-  [CARD_TYPES.TACTIC]: TACTIC_CARDS,
 };
 
 /* Stat budgets keep player-made cards honest (costed design) */

@@ -9,7 +9,6 @@
 
 import { generateDungeon, dungeonFromLayout, ROOM_TYPES } from '../world/DungeonGen.js';
 import { Party } from '../agents/Party.js';
-import { activeTactics, dormantTactics } from '../game/Tactics.js';
 import { personalityModifiers } from '../game/Personalities.js';
 import { Chronicle, snapshotState, diffEvents, SALIENCE } from '../narrative/Chronicle.js';
 import { CLASSES } from '../game/Cards.js';
@@ -147,13 +146,6 @@ export class Simulator {
     // idle line reaching the panel and nothing else).
     const packed = composeProvision(this.party.provisionNotes);
     if (packed) { this.log.push(packed); this.chronicle.recordAside(packed); }
-    const drilled = composeTactics(activeTactics(this.party));
-    if (drilled) { this.log.push(drilled); this.chronicle.recordAside(drilled); }
-    for (const idle of dormantTactics(this.party)) {
-      const line = composeDormant(idle);
-      this.log.push(line);
-      this.chronicle.recordAside(line);
-    }
 
     // Score multiplier: difficulty (mirrors SnakeAB progression), then
     // the condition's wager on top — a meaner dungeon pays out more.
@@ -643,8 +635,8 @@ export class Simulator {
         spellsLearned: this.party.spellsLearned,
         personalities: this.party.personalities,
         formation: this.lastFormation || 'line',
-        tactics: activeTactics(this.party).map(t => ({ name: t.name, icon: t.icon })),
-        dormantTactics: dormantTactics(this.party).map(d => composeDormant(d)),
+        tactics: [],
+        dormantTactics: [],
       },
       gameOver: this.gameOver,
       victory: this.victory,

@@ -30,7 +30,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const MECHANIC_SOURCES = [
   'src/encounters/RoomEncounters.js', 'src/agents/Party.js', 'src/agents/Adventurer.js',
   'src/world/RoomFeatures.js', 'src/world/Reactions.js', 'src/game/Drops.js',
-  'src/game/Tactics.js', 'src/game/Campaign.js', 'src/game/Personalities.js',
+  'src/game/Personalities.js',
   'src/narrative/Narrator.js', 'src/draft/PackDraft.js',
 ];
 
@@ -44,7 +44,6 @@ function reach(card) {
   if (card.element) hooks.push('element');
   if (card.aoe) hooks.push('area/reactions');
   if (card.classActions) hooks.push('class-keyed');
-  if (card.type === CARD_TYPES.TACTIC) hooks.push('tactic tree');
   if (card.archetype && STANCES[card.archetype]) hooks.push('attrition stance');
   if (card.use === 'heal') hooks.push('mid-fight mending');
   if (SRC.includes(`'${card.id}'`)) hooks.push('named by a mechanic');

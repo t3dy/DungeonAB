@@ -45,7 +45,6 @@ export const CAPABILITIES = {
   astronomy: { name: 'Astronomy', icon: '🔭', text: 'Reads the sky and what moves by it.' },
   naturalPhilosophy: { name: 'Natural Philosophy', icon: '🌿', text: 'Non-occult explanations for magical problems.' },
   imagination: { name: 'Imagination', icon: '✨', text: 'Unconventional associations, novel solutions.' },
-  debate: { name: 'Debate', icon: '💬', text: 'Challenges an argument\'s assumptions.' },
   syncretism: { name: 'Syncretism', icon: '☯️', text: 'Reconciles competing traditions.' },
   music: { name: 'Music', icon: '🎵', text: 'Performance as persuasion, distraction, or balm.' },
   harmony: { name: 'Harmony', icon: '🎶', text: 'Strengthens what already works together.' },
@@ -88,7 +87,7 @@ export const CAPABILITIES = {
  */
 export const AFFINITIES = {
   tinkering: ['mathematics', 'experimentation', 'observation'],
-  diplomacy: ['debate', 'translation', 'appraisal'],
+  diplomacy: ['translation', 'appraisal', 'telepathy'],
   rogue: ['observation', 'tinkering', 'navigation'],
   fencing: ['tactics', 'observation'],
   tactics: ['observation', 'navigation', 'fencing'],
@@ -109,9 +108,8 @@ export const AFFINITIES = {
   harmony: ['music', 'mathematics', 'correspondence'],
   music: ['harmony', 'memory', 'imagination'],
   imagination: ['memory', 'music', 'syncretism'],
-  syncretism: ['correspondence', 'translation', 'debate'],
+  syncretism: ['correspondence', 'translation', 'knowledge'],
   antiquarian: ['knowledge', 'appraisal', 'translation'],
-  debate: ['knowledge', 'diplomacy', 'syncretism'],
   naturalPhilosophy: ['experimentation', 'observation', 'medicine'],
   medicine: ['healing', 'alchemy', 'naturalPhilosophy'],
   telepathy: ['conjuring', 'divination', 'diplomacy'],

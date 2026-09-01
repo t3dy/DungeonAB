@@ -8,26 +8,18 @@
  * the depth the player attempted) and the scores line up side by side.
  */
 
-import { Campaign } from './Campaign.js';
-import { getCondition, combineConditions } from './Conditions.js';
+import { Simulator } from '../sim/Simulator.js';
 
 /**
- * Run one seat's pool through up to `targetDepth` dungeons, headless,
- * and return { score, depthReached }.
+ * Run one seat's pool through its dungeon, headless, and return
+ * { score, depthReached }. One draft, one delve (v8): the rivals play
+ * the same game the player does.
  */
-function runRival(pool, { seed, difficulty, condition, targetDepth }) {
-  const campaign = new Campaign(pool.map(c => ({ ...c })), { seed, difficulty, condition });
-  let depthReached = 0;
-  for (let d = 0; d < targetDepth; d++) {
-    const sim = campaign.nextDelve();
-    if (!sim) break;
-    let guard = 0;
-    while (!sim.gameOver && guard++ < 500) sim.tick();
-    campaign.recordDelve(sim);
-    depthReached++;
-    if (campaign.over) break; // a wipe ends the rival's night
-  }
-  return { score: campaign.party.score, depthReached };
+function runRival(pool, { seed, difficulty }) {
+  const sim = new Simulator(pool.map(c => ({ ...c })), seed, difficulty);
+  let guard = 0;
+  while (!sim.gameOver && guard++ < 500) sim.tick();
+  return { score: sim.party.score, depthReached: 1 };
 }
 
 /**
@@ -38,36 +30,26 @@ function runRival(pool, { seed, difficulty, condition, targetDepth }) {
  * @param opts    { seed, difficulty, condition, hexes } — condition is
  *                the table's shared wager; hexes maps a seat id to a
  *                condition id laid on that rival's run
- * @returns sorted array of { name, icon, score, depthReached, isPlayer, place, hexIcon }
+ * @returns sorted array of { name, icon, score, depthReached, isPlayer, place }
  */
 export function computeStandings(draft, player, opts = {}) {
-  const { seed = 'table', difficulty = 'medium', condition = 'none', hexes = {} } = opts;
-  const targetDepth = Math.max(1, player.depth || 1);
+  const { seed = 'table', difficulty = 'medium' } = opts;
 
   const rows = [];
 
-  // The rivals actually delve their drafts — hexed where hexed
+  // The rivals actually delve their drafts
   for (const seat of draft.seats.filter(s => s.isAI)) {
-    const hex = hexes[seat.id] ? getCondition(hexes[seat.id]) : null;
-    const seatCondition = hex ? combineConditions(condition, hex) : condition;
     const result = runRival(seat.pool, {
       seed: `${seed}-rival-${seat.id}`,
       difficulty,
-      condition: seatCondition,
-      targetDepth,
     });
-    rows.push({
-      name: seat.name, icon: seat.icon, isPlayer: false,
-      hexIcon: hex && hex.id !== 'none' ? hex.icon : null,
-      ...result,
-    });
+    rows.push({ name: seat.name, icon: seat.icon, isPlayer: false, ...result });
   }
 
-  // The player's real run (hexIcon shows the hex a rival laid on them)
+  // The player's real run
   rows.push({
     name: 'You', icon: '🗡️', isPlayer: true,
-    score: player.score, depthReached: targetDepth,
-    hexIcon: player.hexIcon || null,
+    score: player.score, depthReached: 1,
   });
 
   // Rank by score, then by how deep they got

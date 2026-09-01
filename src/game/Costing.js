@@ -24,10 +24,8 @@
  * rounds and most of a party's health is spent there.
  */
 
-import { TACTICS } from './Tactics.js';
 
 /** Tactic effects live on the tree, not on the card-shaped export. */
-const TACTIC_EFFECTS = new Map(TACTICS.map(t => [t.id, t.effect]));
 
 /** How long the fight that decides the run actually runs. */
 export const ROUNDS_THAT_MATTER = 12;
@@ -216,11 +214,6 @@ export function costCard(card) {
         damage: power,
         sustain: card.use === 'utility' ? 0 : power * 0.5,
       });
-    }
-    case 'tactic': {
-      // The card-shaped export carries no effect bag; the tree does
-      const effect = card.effect || TACTIC_EFFECTS.get(card.id) || {};
-      return costEffects(effect);
     }
     default:
       return costEffects({});

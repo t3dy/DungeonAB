@@ -12,7 +12,6 @@ import { resolveRoomAction, decideRoomAction } from '../src/encounters/RoomEncou
 import { composeVictory, composeWipe } from '../src/narrative/Narrator.js';
 import { describeTickEvents, ROOM_HELP } from '../src/ui/GameGuide.js';
 import { Simulator } from '../src/sim/Simulator.js';
-import { Campaign } from '../src/game/Campaign.js';
 import { ROOM_TYPES } from '../src/world/DungeonGen.js';
 import { CHARACTER_CARDS, CLASSES } from '../src/game/Cards.js';
 
@@ -35,14 +34,6 @@ describe('The trophy case — party memory', () => {
     assert.equal(party.trophies[1].name, 'a grave-cold ribbon');
   });
 
-  test('trophies persist across campaign depths with the party', () => {
-    const campaign = new Campaign([fighter], { seed: 'trophy-run' });
-    campaign.nextDelve();
-    claimDrop(campaign.party, { kind: 'skeleton', name: 'a rattling skeleton patrol' });
-    campaign.nextDelve(); // a new dungeon, the same party
-    assert.equal(campaign.party.trophies.length, 1, 'the case rides along');
-    assert.equal(campaign.getSummary().trophies, 1, 'and the summary counts it');
-  });
 });
 
 describe('The trophy case — simulator surfaces', () => {

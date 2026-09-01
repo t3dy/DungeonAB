@@ -21,7 +21,6 @@
  * lies about the mechanic.
  */
 
-import { getTactic } from '../game/Tactics.js';
 
 const SLOTS = ['weapon', 'armor', 'focus', 'tool', 'boots', 'trinket'];
 
@@ -141,18 +140,6 @@ export function renderOutfitting(container, party, { onChange = () => {}, onDone
           </div>`;
       }).join('')}`;
   container.appendChild(book);
-
-  /* ---- Drills: party-wide, and honest about it ----------------------- */
-  if (party.tactics.length > 0) {
-    const drills = document.createElement('div');
-    drills.style.cssText = `${panel}margin-bottom:0.7rem;`;
-    drills.innerHTML = `
-      <div style="${label}margin-bottom:0.4rem;">🎓 Drills — trained together, carried by everyone</div>
-      <div style="font-size:0.8rem;color:#e8d9b3;">
-        ${party.tactics.map(t => `${esc(getTactic(t.id)?.icon || '')} ${esc(t.name)}`).join(' · ')}
-      </div>`;
-    container.appendChild(drills);
-  }
 
   /* ---- Wiring -------------------------------------------------------- */
   container.querySelectorAll('.outfit-off').forEach(btn => {

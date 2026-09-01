@@ -20,7 +20,6 @@ import {
   CONVERSION, GOOD_WHEN_NEGATIVE, FLAG_WORTH, ROUNDS_THAT_MATTER,
 } from '../src/game/Costing.js';
 import { getAllCards, getCard } from '../src/game/Cards.js';
-import { TACTICS } from '../src/game/Tactics.js';
 
 describe('The model encodes how effects scale', () => {
   test('a per-round point is worth far more than a one-shot point', () => {
@@ -51,9 +50,6 @@ describe('The model encodes how effects scale', () => {
     assert.ok(costEffects({ selfHarm: -1 }).total > 0, 'so is taking less back');
     assert.ok(costEffects({ selfHarm: 1 }).total < 0, 'and taking more is a cost');
 
-    const encircle = TACTICS.find(t => t.id === 'tac-encircle');
-    assert.ok(costCard({ type: 'tactic', id: encircle.id }).total > 20,
-      'Encirclement is not a zero-cost card');
   });
 
   test('only the wearer\'s class action fires, so it is not summed', () => {
@@ -87,16 +83,6 @@ describe('Nothing enters the pool uncosted', () => {
       `every effect is costed (${report.unknown.map(u => `${u.name}: ${u.keys}`).join('; ')})`);
   });
 
-  test('every tactic effect key is known to the model', () => {
-    for (const t of TACTICS) {
-      for (const key of Object.keys(t.effect || {})) {
-        if (key === 'flankMin') continue;
-        const known = EFFECT_SCALING[key] || FLAG_WORTH[key] !== undefined;
-        assert.ok(known, `${t.name}'s "${key}" has a scaling`);
-      }
-    }
-  });
-
   test('the model runs over the whole live pool without throwing', () => {
     for (const card of getAllCards()) {
       const r = costCard(card);
@@ -113,12 +99,10 @@ describe('Outliers are found by distance from their own peers', () => {
     // from a type's own distribution needs nobody to know the right
     // number in advance -- which is how Rationing, at +13.8 win points
     // against about +3 for every other tactic, would have been caught.
+    const mk = (id, name, mind) => ({ type: 'equipment', id, name, slot: 'tool', bonus: { mind } });
     const pool = [
-      { type: 'tactic', id: 'a', name: 'Ordinary A', effect: { cover: 1 } },
-      { type: 'tactic', id: 'b', name: 'Ordinary B', effect: { cover: 1 } },
-      { type: 'tactic', id: 'c', name: 'Ordinary C', effect: { flankDamage: 1 } },
-      { type: 'tactic', id: 'd', name: 'Ordinary D', effect: { cover: 1 } },
-      { type: 'tactic', id: 'e', name: 'The Bomb', effect: { cover: 8 } },
+      mk('a', 'Ordinary A', 1), mk('b', 'Ordinary B', 1), mk('c', 'Ordinary C', 1),
+      mk('d', 'Ordinary D', 1), mk('e', 'The Bomb', 9),
     ];
     const { outliers } = costOutliers(pool, { sigmas: 1.5 });
     assert.equal(outliers.length, 1, 'exactly the bomb');

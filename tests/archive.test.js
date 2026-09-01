@@ -10,7 +10,6 @@ import {
 } from '../src/world/DungeonGen.js';
 import { ArchiveManager } from '../src/game/Archive.js';
 import { Simulator } from '../src/sim/Simulator.js';
-import { Campaign } from '../src/game/Campaign.js';
 import { retypeRoom } from '../src/ui/ArchiveUI.js';
 import { CHARACTER_CARDS, CLASSES } from '../src/game/Cards.js';
 
@@ -111,16 +110,12 @@ describe('Layouts as data', () => {
     assert.equal(rebuilt.rooms.length, d.rooms.length);
   });
 
-  test('the simulator and campaign replay a layout exactly', () => {
+  test('the simulator replays a layout exactly', () => {
     const original = generateDungeon('arch-4', 'medium', { theme: 'library' });
     const layout = serializeDungeon(original);
 
     const sim = new Simulator([fighter], 'ignored-seed', 'medium', { layout });
     assert.deepEqual(sim.dungeon.rooms.map(r => r.type), original.rooms.map(r => r.type));
-
-    const campaign = new Campaign([fighter], { seed: 'c', layout });
-    const d1 = campaign.nextDelve();
-    assert.deepEqual(d1.dungeon.rooms.map(r => r.type), original.rooms.map(r => r.type), 'depth 1 replays the design');
   });
 
   test('retyping a room gets a sane default payload', () => {

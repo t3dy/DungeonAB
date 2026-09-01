@@ -337,15 +337,6 @@ export function generateDungeon(seed, difficulty = 'medium', opts = {}) {
   for (const [type, tweak] of Object.entries(condition.weightTweaks || {})) {
     weights[type] = Math.max(0.1, (weights[type] || 0) + tweak);
   }
-  // Providence: the world leans, slightly and not always, toward tests
-  // of what the player said this party was trying to become. Rolled off
-  // the same seeded rng, so a previewed dungeon and the dungeon actually
-  // entered are the same dungeon.
-  if (opts.providence?.hasThemes?.()) {
-    for (const [type, tweak] of Object.entries(opts.providence.weightTweaks(rng.next()))) {
-      weights[type] = Math.max(0.1, (weights[type] || 0) + tweak);
-    }
-  }
 
   // Difficulty sharpens the monsters themselves, not just the map
   const statScale = STAT_SCALE[difficulty] || 1;

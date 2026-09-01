@@ -8,7 +8,6 @@ import { strict as assert } from 'assert';
 import { DUNGEON_CONDITIONS, getCondition, combineConditions } from '../src/game/Conditions.js';
 import { generateDungeon, ROOM_TYPES } from '../src/world/DungeonGen.js';
 import { Simulator } from '../src/sim/Simulator.js';
-import { Campaign } from '../src/game/Campaign.js';
 import { CHARACTER_CARDS, CLASSES } from '../src/game/Cards.js';
 
 const fighter = CHARACTER_CARDS.find(c => c.class === CLASSES.FIGHTER);
@@ -163,14 +162,6 @@ describe('Conditions in the run', () => {
     assert.equal(sim.getState().condition, null);
   });
 
-  test('the campaign applies its condition to every depth', () => {
-    const campaign = new Campaign([fighter], { seed: 'camp-cond', condition: 'traps' });
-    const d1 = campaign.nextDelve('delve');
-    assert.equal(d1.condition.id, 'traps');
-    d1.victory = true; campaign.recordDelve(d1);
-    const d2 = campaign.nextDelve('delve');
-    assert.equal(d2.condition.id, 'traps', 'the wager rides the whole campaign');
-  });
 });
 
 function test(name, fn) {

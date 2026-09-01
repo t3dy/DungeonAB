@@ -48,29 +48,15 @@ describe('Rival standings', () => {
 
   test('the player row reflects the real result; rivals earn their own', () => {
     const draft = draftedTable('stand-3');
-    const rows = computeStandings(draft, { score: 321, depth: 2 }, { seed: 'stand-3', difficulty: 'medium' });
+    const rows = computeStandings(draft, { score: 321 }, { seed: 'stand-3', difficulty: 'medium' });
     const you = rows.find(r => r.isPlayer);
     assert.equal(you.score, 321, 'the player keeps their actual score');
-    assert.equal(you.depthReached, 2, 'and their actual depth');
+    assert.equal(you.depthReached, 1, 'one draft, one delve (v8)');
     for (const r of rows.filter(r => !r.isPlayer)) {
       assert.ok(r.score >= 0, 'rivals post a real, non-negative score');
     }
   });
 
-  test('a hex lands on its target rival and is marked in the row', () => {
-    const draft = draftedTable('stand-hex');
-    const victim = draft.seats.find(s => s.isAI);
-    const rows = computeStandings(
-      draft,
-      { score: 100, depth: 1, hexIcon: '🌑' },
-      { seed: 'stand-hex', difficulty: 'easy', hexes: { [victim.id]: 'traps' } },
-    );
-    const hexedRow = rows.find(r => r.name === victim.name);
-    assert.equal(hexedRow.hexIcon, getConditionIcon('traps'), 'the victim wears the hex');
-    const cleanRivals = rows.filter(r => !r.isPlayer && r.name !== victim.name);
-    assert.ok(cleanRivals.every(r => !r.hexIcon), 'the others delve unhexed');
-    assert.equal(rows.find(r => r.isPlayer).hexIcon, '🌑', 'the player wears theirs too');
-  });
 
   test('rivals delve deeper when the player set a higher target', () => {
     const draft = draftedTable('stand-4');

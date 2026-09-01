@@ -7,12 +7,9 @@
  * scholarly one.
  */
 
-/* Tactic cards are defined in Tactics.js, beside the tree that gives
- * them meaning, and re-exported here so the draft pool stays one list.
- * Tactics.js deliberately does NOT import back from this file -- see the
- * note on TACTIC_TYPE there. */
-import { TACTIC_CARDS } from './Tactics.js';
-export { TACTIC_CARDS };
+/* v8: the tactic tree is cut; the pool is characters, equipment,
+ * spells and personalities. */
+export const TACTIC_CARDS = [];
 
 export const CARD_TYPES = {
   CHARACTER: 'character',
@@ -21,7 +18,6 @@ export const CARD_TYPES = {
   PERSONALITY: 'personality',
   // Learned technique, gated by what a party can do rather than by
   // class, and arranged in a small skill tree (game/Tactics.js)
-  TACTIC: 'tactic',
 };
 
 export const CLASSES = {
@@ -56,8 +52,8 @@ export const DISCIPLINES = {
  * being worth more than the magus beside them. */
 export const CHARACTER_CARDS = [
   // Fighters — front line, high health
-  { id: 'char-agrippa', type: CARD_TYPES.CHARACTER, class: CLASSES.FIGHTER, discipline: DISCIPLINES.SIGIL, name: 'Cornelius Agrippa', icon: '⚔️', stats: { health: 14, attack: 4, defense: 3, mind: 2 }, trait: 'A soldier\'s occult philosophy: everything answers to something else, and he will argue the point with anyone who says otherwise.', capabilities: ['correspondence', 'debate', 'telepathy'] },
-  { id: 'char-sendivogius', type: CARD_TYPES.CHARACTER, class: CLASSES.FIGHTER, discipline: DISCIPLINES.ESCAPE, name: 'Michael Sendivogius', icon: '⚔️', stats: { health: 13, attack: 4, defense: 4, mind: 1 }, trait: 'Has talked and cut his way out of worse than this dungeon. Twice out of the same castle.', capabilities: ['tactics', 'diplomacy', 'rogue', 'fencing'] },
+  { id: 'char-agrippa', type: CARD_TYPES.CHARACTER, class: CLASSES.FIGHTER, discipline: DISCIPLINES.SIGIL, name: 'Cornelius Agrippa', icon: '⚔️', stats: { health: 14, attack: 4, defense: 3, mind: 2 }, trait: 'A soldier\'s occult philosophy: everything answers to something else, and he will argue the point with anyone who says otherwise.', capabilities: ['correspondence', 'fencing', 'telepathy'] },
+  { id: 'char-sendivogius', type: CARD_TYPES.CHARACTER, class: CLASSES.FIGHTER, discipline: DISCIPLINES.ESCAPE, name: 'Michael Sendivogius', icon: '⚔️', stats: { health: 13, attack: 4, defense: 4, mind: 1 }, trait: 'Has talked and cut his way out of worse than this dungeon. Twice out of the same castle.', capabilities: ['tactics', 'diplomacy', 'rogue'] },
   { id: 'char-brahe', type: CARD_TYPES.CHARACTER, class: CLASSES.FIGHTER, discipline: DISCIPLINES.ASTROLOGY, name: 'Tycho Brahe', icon: '⚔️', stats: { health: 13, attack: 5, defense: 2, mind: 3 }, trait: 'As quick to duel over a star-chart as to draw one. The false nose has never slowed his sword arm.', capabilities: ['astronomy', 'observation', 'navigation', 'tinkering'] },
   { id: 'char-napier', type: CARD_TYPES.CHARACTER, class: CLASSES.FIGHTER, discipline: DISCIPLINES.NUMEROLOGY, name: 'John Napier', icon: '⚔️', stats: { health: 15, attack: 3, defense: 3, mind: 3 }, trait: 'The Laird of Merchiston defends his own estate. The neighbours whisper of a black familiar; he keeps better numbers.', capabilities: ['tactics', 'mathematics', 'tinkering'] },
 
@@ -68,7 +64,7 @@ export const CHARACTER_CARDS = [
 
   // Wizards — spell power, fragile
   { id: 'char-bruno', type: CARD_TYPES.CHARACTER, class: CLASSES.WIZARD, discipline: DISCIPLINES.MEMORY, name: 'Giordano Bruno', icon: '🔮', stats: { health: 12, attack: 2, defense: 2, mind: 10 }, trait: 'His memory palace has room for one more working than anyone else\'s head.', capabilities: ['conjuring', 'imagination', 'memory'] },
-  { id: 'char-pico', type: CARD_TYPES.CHARACTER, class: CLASSES.WIZARD, discipline: DISCIPLINES.CORRESPONDENCE, name: 'Pico della Mirandola', icon: '🔮', stats: { health: 13, attack: 2, defense: 2, mind: 9 }, trait: 'Finds the thread joining every school of magic, and pulls it.', capabilities: ['knowledge', 'translation', 'debate', 'syncretism'] },
+  { id: 'char-pico', type: CARD_TYPES.CHARACTER, class: CLASSES.WIZARD, discipline: DISCIPLINES.CORRESPONDENCE, name: 'Pico della Mirandola', icon: '🔮', stats: { health: 13, attack: 2, defense: 2, mind: 9 }, trait: 'Finds the thread joining every school of magic, and pulls it.', capabilities: ['knowledge', 'translation', 'syncretism'] },
   { id: 'char-cavendish', type: CARD_TYPES.CHARACTER, class: CLASSES.WIZARD, discipline: DISCIPLINES.NATURAL, name: 'Margaret Cavendish', icon: '🔮', stats: { health: 12, attack: 2, defense: 3, mind: 8 }, trait: 'Trusts the microscope as much as the grimoire — a non-occult answer for half the dungeon\'s magical problems.', capabilities: ['experimentation', 'observation', 'imagination', 'naturalPhilosophy'] },
 
   // Rogues — traps, locks, scouting, treasure
@@ -219,7 +215,7 @@ export const SPELL_CARDS = [
   { id: 'sp-fireball', type: CARD_TYPES.SPELL, name: 'Fireball', icon: '🔥', school: 'evocation', element: 'fire', power: 5, use: 'combat', aoe: true, text: 'It does not stop at the monster. Whatever else in the room will burn, burns.' },
   { id: 'sp-hoarfrost', type: CARD_TYPES.SPELL, name: 'Hoarfrost', icon: '🧊', school: 'evocation', element: 'frost', power: 4, use: 'combat', aoe: true, text: 'The cold goes everywhere at once: into the water, into the fire, into the cracks in the stone.' },
   { id: 'sp-dawnbreak', type: CARD_TYPES.SPELL, name: 'Dawnbreak', icon: '🌟', school: 'theurgy', element: 'holy', power: 4, use: 'combat', aoe: true, text: 'Noon, indoors, all at once. Old stone and old glass both answer it.', capabilities: ['syncretism'] },
-  { id: 'sp-purify', type: CARD_TYPES.SPELL, name: 'Purify the Font', icon: '⛲', school: 'theurgy', power: 4, use: 'heal', text: 'Still water, said over and made willing — poured out when someone is failing, and again each round after. Best where the dungeon left a font.', capabilities: ['debate', 'healing'] },
+  { id: 'sp-purify', type: CARD_TYPES.SPELL, name: 'Purify the Font', icon: '⛲', school: 'theurgy', power: 4, use: 'heal', text: 'Still water, said over and made willing — poured out when someone is failing, and again each round after. Best where the dungeon left a font.', capabilities: ['diplomacy', 'healing'] },
 ];
 
 /* ------------------------------------------------------------------ */

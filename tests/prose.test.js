@@ -36,7 +36,6 @@ import { composeResolution } from '../src/narrative/Narrator.js';
 const byClassName = cls => CHARACTER_CARDS.find(c => c.class === cls);
 import { Adventurer } from '../src/agents/Adventurer.js';
 import { REACTIONS } from '../src/world/Reactions.js';
-import { TACTICS } from '../src/game/Tactics.js';
 import { FEATURES } from '../src/world/RoomFeatures.js';
 
 const ALL = getAllCards();
@@ -122,54 +121,6 @@ describe('The line says the number the mechanic applied', () => {
     }
   });
 
-  test('every number a tactic claims is one the effect can produce', () => {
-    // Deliberately checks derivability rather than identity. Focused
-    // Fire's effect is vsArmored:3 plus flankDamage:1, and its card
-    // correctly advertises the player-facing total, +4. A total is
-    // better writing than an internal field name, so the gate asks the
-    // useful question -- is this number invented? -- rather than
-    // demanding the text mirror the data structure.
-    for (const t of TACTICS) {
-      // A branch card correctly advertises the total WITH its root --
-      // Encirclement's "+3 a round" is Flanking's 1 plus its own 2 --
-      // so the root's values are part of what its text may claim.
-      const payouts = tac => Object.entries(tac?.effect || {})
-        .filter(([k, v]) => k !== 'flankMin' && typeof v === 'number' && v !== 0)
-        .map(([, v]) => Math.abs(v));
-      // A threshold is not a payout, but it IS a real figure the card is
-      // entitled to state ("while at least three still stand"), so it
-      // counts as reachable without counting as something the tactic does.
-      const thresholds = tac => Object.entries(tac?.effect || {})
-        .filter(([k, v]) => k === 'flankMin' && typeof v === 'number')
-        .map(([, v]) => v);
-      const root = t.requires ? TACTICS.find(x => x.id === t.requires) : null;
-      const bagOf = payouts;
-      const values = [...payouts(t), ...payouts(root), ...thresholds(t), ...thresholds(root)];
-      if (values.length === 0) continue;
-
-      // Every value, and every sum of a subset of them
-      const reachable = new Set([0]);
-      for (const v of values) {
-        for (const r of [...reachable]) reachable.add(r + v);
-      }
-
-      const claimed = numbersIn(t.text).filter(n => n > 1);
-      for (const n of claimed) {
-        assert.ok(reachable.has(n),
-          `${t.name} claims ${n}, which its effect cannot produce: "${t.text}" (effect ${JSON.stringify(t.effect)})`);
-      }
-      // And the biggest thing it does should be findable in the text
-      const biggest = Math.max(...bagOf(t));
-      if (biggest > 1) {
-        const stated = numbersIn(t.text);
-        assert.ok(stated.some(n => n >= biggest),
-          `${t.name} does ${biggest} but its text never mentions a figure that large: "${t.text}"`);
-      }
-    }
-  });
-});
-
-describe('A line never describes something that did not happen', () => {
   test('a fight the openers ended does not report rounds or per-round effects', () => {
     // Found by reading a golden diff: thrown knives and a loosed working
     // can kill a monster before a single round is fought, and the
@@ -285,21 +236,6 @@ describe('Every line can actually be reached', () => {
     }
     assert.deepEqual([...seen].sort(), ['dark', 'guttered', 'low', 'wound'],
       `some writing is unreachable in practice (found ${[...seen].join(', ')})`);
-  });
-
-  test('an idle tactic and a drilled one both have reachable prose', () => {
-    const party = new Party([CHARACTER_CARDS[0], getCard('tac-encircle')]);
-    const idle = composeDormant({
-      tactic: TACTICS.find(t => t.id === 'tac-encircle'),
-      reason: 'requires',
-      missing: TACTICS.find(t => t.id === 'tac-flanking'),
-    });
-    assert.ok(idle && idle.length > 30, 'the idle line exists');
-    assert.deepEqual(lintLine(idle), [], 'and is in voice');
-
-    const drilled = composeTactics([TACTICS[0]]);
-    assert.ok(drilled, 'so does the drilled line');
-    assert.deepEqual(lintLine(drilled), []);
   });
 
   test('every option the party can choose has a phrase to say it with', () => {

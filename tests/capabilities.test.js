@@ -13,7 +13,6 @@ import {
 import { CAPABILITIES, isCapability, capabilityName } from '../src/game/Capabilities.js';
 import { allEncounters } from '../src/encounters/EncounterEngine.js';
 import '../src/encounters/Encounters.js';
-import '../src/encounters/TownEncounters.js';
 
 const byId = id => CHARACTER_CARDS.find(c => c.id === id);
 const eq = id => EQUIPMENT_CARDS.find(c => c.id === id);

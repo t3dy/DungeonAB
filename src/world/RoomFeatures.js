@@ -181,7 +181,7 @@ export const FEATURES = {
 export const FEATURE_ACTIONS = {
   'shove-into-pit': {
     feature: 'pit', name: 'Shove It In', desc: 'Put the pit between you and it',
-    gates: [{ cls: CLASSES.FIGHTER }, { tactic: 'tac-shove' }, { item: 'eq-grapple' }],
+    gates: [{ cls: CLASSES.FIGHTER }, { item: 'eq-grapple' }],
     fightOnly: true, openerDamage: 11,
     // Roped and braced, you can put your weight into it and not follow
     tool: { openerDamage: 18 },
@@ -189,7 +189,7 @@ export const FEATURE_ACTIONS = {
   },
   'shove-onto-spikes': {
     feature: 'spikes', name: 'Put It On the Spikes', desc: 'The floor is already armed',
-    gates: [{ cls: CLASSES.FIGHTER }, { tactic: 'tac-shove' }, { item: 'eq-tower-shield' }],
+    gates: [{ cls: CLASSES.FIGHTER }, { item: 'eq-tower-shield' }],
     fightOnly: true, openerDamage: 12,
     // A shield is a shovel for people: you drive it back rather than
     // wrestle it, and you are not the one who ends up on the spikes
@@ -198,7 +198,7 @@ export const FEATURE_ACTIONS = {
   },
   'shove-into-chasm': {
     feature: 'chasm', name: 'Put It In the Crack', desc: 'The floor already opened once',
-    gates: [{ cls: CLASSES.FIGHTER }, { tactic: 'tac-shove' }, { item: 'eq-grapple' }],
+    gates: [{ cls: CLASSES.FIGHTER }, { item: 'eq-grapple' }],
     fightOnly: true, openerDamage: 13,
     // Roped, the party can commit its whole weight and still stop
     tool: { openerDamage: 21 },
@@ -214,7 +214,7 @@ export const FEATURE_ACTIONS = {
   },
   'shove-into-brazier': {
     feature: 'brazier', name: 'Shove It Into the Fire', desc: 'The brazier is right there',
-    gates: [{ cls: CLASSES.FIGHTER }, { tactic: 'tac-shove' }, { item: 'eq-tinderbox' }, { spell: 'sp-kindle' }],
+    gates: [{ cls: CLASSES.FIGHTER }, { item: 'eq-tinderbox' }, { spell: 'sp-kindle' }],
     fightOnly: true, openerDamage: 10, element: 'fire',
     // With an accelerant the brazier stops being a brazier
     tool: { openerDamage: 16 },

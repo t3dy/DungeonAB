@@ -23,7 +23,6 @@ import { composePredicament, composeDeliberation, composeResolution } from '../s
 import { getFeatureTile } from '../src/ui/SpriteAtlas.js';
 import { featureSlots, roomHalf, partySlots, monsterSpot } from '../src/ui/RoomLayout.js';
 import { validateCard } from '../src/game/CardPacks.js';
-import { getTactic } from '../src/game/Tactics.js';
 import { Party, PARTY_CAP } from '../src/agents/Party.js';
 import {
   CHARACTER_CARDS, EQUIPMENT_CARDS, SPELL_CARDS, PERSONALITY_CARDS, CLASSES, getCard,
@@ -110,10 +109,6 @@ describe('Every interaction is reachable, and reachable by a card', () => {
           const card = getCard(gate.spell);
           assert.ok(card, `${id} gate spell ${gate.spell} is a real card`);
           assert.equal(card.type, 'spell');
-        } else if (gate.tactic) {
-          // Training is the fourth key: a drilled party opens the
-          // architecture without the class or the tool (game/Tactics.js)
-          assert.ok(getTactic(gate.tactic), `${id} gate tactic ${gate.tactic} is a real tactic`);
         } else {
           assert.fail(`${id} has an empty gate`);
         }
@@ -121,23 +116,27 @@ describe('Every interaction is reachable, and reachable by a card', () => {
     }
   });
 
-  test('the hazards open to training, not only to muscle and rope', () => {
+  test('the hazards open to kit, not only to muscle', () => {
     // A party of four casters used to walk past every pit in the
-    // dungeon. Shove is a card, so the architecture is draftable.
+    // dungeon. The gate cards are draftable, so the architecture is too
+    // (v8: the tactic route went with the tactic tree; each hazard now
+    // opens to a fighter or to one specific piece of kit).
     const hazards = ['shove-into-pit', 'shove-onto-spikes', 'shove-into-chasm', 'shove-into-brazier'];
     for (const id of hazards) {
       assert.ok(FEATURE_ACTIONS[id], `${id} exists`);
-      assert.ok(FEATURE_ACTIONS[id].gates.some(g => g.tactic === 'tac-shove'),
-        `${id} opens to Shove`);
+      assert.ok(FEATURE_ACTIONS[id].gates.some(g => g.item),
+        `${id} opens to some piece of kit`);
     }
     const room = furnished(ROOM_TYPES.MONSTER, ['pit', 'spikes']);
     const casters = new Party([wizard, cleric]);
-    assert.equal(getFeatureOptions(room, casters).length, 0, 'untrained, the floor is scenery');
+    assert.equal(getFeatureOptions(room, casters).length, 0, 'bare-handed, the floor is scenery');
 
-    const drilled = new Party([wizard, cleric, getCard('tac-shove')]);
-    const opened = getFeatureOptions(room, drilled).map(o => o.id).sort();
-    assert.deepEqual(opened, ['shove-into-pit', 'shove-onto-spikes'],
-      'drilled, both hazards are weapons');
+    const roped = new Party([wizard, cleric, getCard('eq-grapple')]);
+    assert.deepEqual(getFeatureOptions(room, roped).map(o => o.id), ['shove-into-pit'],
+      'the grapple opens the pit');
+    const shielded = new Party([wizard, cleric, getCard('eq-tower-shield')]);
+    assert.deepEqual(getFeatureOptions(room, shielded).map(o => o.id), ['shove-onto-spikes'],
+      'the shield drives things onto the spikes');
   });
 
   test('at least one gate on every action is a draftable card, not just a class', () => {

@@ -64,8 +64,8 @@ describe('The pack registry', () => {
     const pack = buildPack(rng);
     assert.equal(pack.length, 9);
     assert.ok(pack.filter(c => c.type === 'character').length >= 2, 'coverage holds');
-    assert.equal(pack.filter(c => c.type === 'tactic').length, 1,
-      'and a content pack does not crowd out the tactic slot');
+    assert.equal(pack.filter(c => c.type === 'equipment').length, 4,
+      'and a content pack does not crowd out the kit slots');
     _resetPacks();
   });
 });

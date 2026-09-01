@@ -8,11 +8,9 @@ import { DraftUI } from './ui/DraftUI.js';
 import { DungeonRenderer } from './ui/DungeonRenderer.js';
 import { IsoDungeonRenderer } from './ui/IsoDungeonRenderer.js';
 import { renderOutfitting } from './ui/OutfitUI.js';
-import { Campaign, TOWN_PRICES } from './game/Campaign.js';
-import { PARTY_CAP } from './agents/Party.js';
-import { composeTownInterlude } from './narrative/Narrator.js';
+import { Simulator } from './sim/Simulator.js';
+import { Party, PARTY_CAP } from './agents/Party.js';
 import { progression, DIFFICULTIES } from './game/Progression.js';
-import { getCondition, combineConditions, DUNGEON_CONDITIONS } from './game/Conditions.js';
 import { computeStandings } from './game/Standings.js';
 import { SeededRandom } from './draft/PackDraft.js';
 import { archive } from './game/Archive.js';
@@ -87,7 +85,6 @@ const HELP_SEEN_KEY = 'dungeonab_help_seen';
 const appState = {
   draft: null,
   draftUI: null,
-  campaign: null,
   simulator: null,
   renderer: null,
   gameRunning: false,
@@ -187,7 +184,7 @@ function setupRecords() {
     const runRows = runs.length
       ? runs.map(r => {
           const diff = DIFFICULTIES[(r.difficulty || '').toUpperCase()] || { icon: '•' };
-          const cond = r.condition ? getCondition(r.condition) : null;
+          const cond = null;
           const outcome = r.victory ? '🏆' : '☠️';
           const condTag = cond && cond.id !== 'none' ? ` · ${cond.icon}` : '';
           return `<div class="records-run">
@@ -362,8 +359,8 @@ function startNewDraft() {
   document.getElementById('ui-container').style.display = 'none';
 }
 
-function startDelve({ pool, difficulty, seed, condition, hexTarget, hexCondition }) {
-  console.log(`Campaign begins: difficulty=${difficulty}, seed=${seed}, condition=${condition}`);
+function startDelve({ pool, difficulty, seed }) {
+  console.log(`Delve begins: difficulty=${difficulty}, seed=${seed}`);
 
   const draftContainer = document.getElementById('draft-container');
   draftContainer.innerHTML = '';
@@ -371,62 +368,39 @@ function startDelve({ pool, difficulty, seed, condition, hexTarget, hexCondition
   document.getElementById('world-container').style.display = 'flex';
   document.getElementById('ui-container').style.display = 'flex';
 
-  // The hex exchange (Megabase v2 variant): the player may have laid a
-  // hex on a rival; one seeded rival lays one back. Telegraphed, and
-  // the hex's score premium is the victim's to keep — take-that with
-  // counterplay, not a cliff.
-  const hexRng = new SeededRandom(`${seed}-hexes`);
-  const rivals = appState.draft.seats.filter(s => s.isAI);
-  const hexer = hexRng.pick(rivals);
-  const hexIds = Object.keys(DUNGEON_CONDITIONS).filter(id => id !== 'none');
-  const hexOnPlayer = getCondition(hexRng.pick(hexIds));
-  appState.sabotage = {
-    tableWager: condition,
-    byPlayer: hexCondition && hexCondition !== 'none' ? { seatId: hexTarget, conditionId: hexCondition } : null,
-    onPlayer: { rivalName: hexer.name, rivalIcon: hexer.icon, condition: hexOnPlayer },
-  };
-
-  const playerCondition = combineConditions(getCondition(condition), hexOnPlayer);
-
-  // An archived/edited design replays as depth 1 of this campaign
+  // An archived/edited design replays instead of a generated dungeon
   const replay = appState.pendingReplay || null;
   appState.pendingReplay = null;
   if (replay) showToast('🗺️', `Delving the archived design: "${replay.name}"`, 'room');
 
-  appState.campaign = new Campaign(pool, {
-    seed, difficulty, condition: playerCondition,
-    layout: replay ? replay.layout : null,
-  });
+  // One draft, one dungeon (v8): the party is built here, mustered, and
+  // marched. There is no town and no second descent — the delve is the
+  // run, and what it costs is what it cost.
+  const party = new Party(pool);
   appState.difficulty = difficulty;
   appState.runRecorded = false;
-  appState.standings = null;            // recomputed when this campaign ends
-  appState.seenRoomTypes = new Set();   // explain each room once per campaign
-
-  showToast(hexer.icon, `${hexer.name} hexes your run: ${hexOnPlayer.name}. Its score premium is yours to keep.`, 'death');
-  if (appState.sabotage.byPlayer) {
-    const laid = getCondition(hexCondition);
-    const victim = rivals.find(s => s.id === hexTarget);
-    showToast(laid.icon, `Your hex — ${laid.name} — settles over ${victim?.name || 'a rival'}'s run.`, 'boss');
-  }
+  appState.standings = null;            // recomputed when the run ends
+  appState.seenRoomTypes = new Set();   // explain each room once per run
 
   // The muster: kit is dealt out by best fit, and this is where the
   // player overrules that, says who prepares which working, and names
-  // their own (ui/OutfitUI.js). Skippable in one click, and reachable
-  // again from town before every delve after this one.
-  showMuster(appState.campaign, '⛏️ March on the Dungeon', () => {
-    beginDelve(appState.campaign.nextDelve());
+  // their own (ui/OutfitUI.js). Skippable in one click.
+  showMuster(party, '⛏️ March on the Dungeon', () => {
+    beginDelve(new Simulator(party, seed, difficulty, {
+      layout: replay ? replay.layout : null,
+    }));
   });
 }
 
 /**
  * The outfitting screen, over the same panel the town uses.
  */
-function showMuster(campaign, doneLabel, onDone) {
+function showMuster(party, doneLabel, onDone) {
   const display = document.getElementById('gameover-display');
   display.innerHTML = '';
   const body = document.createElement('div');
   display.appendChild(body);
-  renderOutfitting(body, campaign.party, {
+  renderOutfitting(body, party, {
     doneLabel,
     onChange: () => {
       if (appState.simulator) updateUI(appState.simulator.getState());
@@ -458,10 +432,7 @@ function beginDelve(sim) {
 
   const state = sim.getState();
   appState.prevState = state;   // baseline for event diffing this delve
-  resetStory(state.theme, state.depth, state.condition);
-  if (state.condition) {
-    showToast(state.condition.icon, `Wager: ${state.condition.name}. ${state.condition.text}`, 'boss');
-  }
+  resetStory(state.theme);
   document.getElementById('pause-btn').disabled = false;
   document.getElementById('step-btn').disabled = false;
   document.getElementById('pause-btn').textContent = 'Pause';
@@ -661,7 +632,8 @@ function appendStory(narration, roomIndex) {
   panel.scrollTop = panel.scrollHeight;
 }
 
-function resetStory(theme = null, depth = 1, condition = null) {
+function resetStory(theme = null) {
+  const depth = 1, condition = null;
   const depthBadge = depth > 1 ? ` — Depth ${depth}` : '';
   const conditionLine = condition
     ? `<div style="margin-top:0.4rem;font-size:0.8rem;color:#e8724a;">${condition.icon} Wager — ${escapeHtml(condition.name)}</div>`
@@ -682,8 +654,6 @@ function endGame(state) {
   document.getElementById('pause-btn').disabled = true;
   document.getElementById('step-btn').disabled = true;
 
-  appState.campaign.recordDelve(appState.simulator);
-
   // Every finished dungeon's design joins the archive
   archive.save({
     name: `${state.theme.name} — depth ${state.depth}`,
@@ -697,336 +667,15 @@ function endGame(state) {
   // the whole story, which is the same silence problem one layer up.
   saveChronicle();
 
-  if (state.victory && !appState.campaign.over) {
-    showTown(state);
-  } else {
-    showFinal(state);
-  }
-}
-
-/**
- * The town between dungeons: heal for gold, stock potions, then
- * choose — deeper, or out with the score
- */
-function showTown(state) {
-  const campaign = appState.campaign;
-  const result = appState.simulator.getRunResult();
-  const display = document.getElementById('gameover-display');
-
-  // The chronicle is safe on the shelf before anything in town happens
-  if (appState.sagaId) {
-    const saga = chronicles.get(appState.sagaId);
-    if (saga) {
-      showToast('📜', `The chronicle is kept — delve ${saga.delves} written down.`);
-    }
-  }
-
-  // The interlude joins the chronicle
-  appendStory({
-    room: 'town', icon: '🏘️',
-    predicament: composeTownInterlude(campaign.party, campaign.depth),
-    deliberation: '', resolution: '',
-  }, `— after depth ${campaign.depth}`);
-
-  const render = () => {
-    const healCost = campaign.healCost();
-    const missing = campaign.missingHealth();
-    const gold = campaign.party.gold;
-    const pious = campaign.party.hasPersonality('pious');
-
-    display.innerHTML = `
-      <h2 style="color:#3ddc84;font-size:1.35rem;margin-bottom:0.5rem;text-align:center;">
-        🏘️ The Town Between
-      </h2>
-      <div style="text-align:center;color:#887755;margin-bottom:1rem;">Depth ${campaign.depth} cleared — the road down continues</div>
-      <div style="margin-bottom:1.25rem;padding:0.9rem;background:#151b10;border-left:3px solid #3ddc84;border-radius:4px;color:#d8c9a3;font-style:italic;line-height:1.6;">
-        ${escapeHtml(result.epitaph || '')}
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem 1.5rem;font-size:0.92rem;">
-        <span style="color:#887755;">Campaign score</span><strong style="color:#d8a53f;text-align:right;">${campaign.party.score}</strong>
-        <span style="color:#887755;">Gold</span><strong style="text-align:right;">${gold}</strong>
-        <span style="color:#887755;">Survivors</span><strong style="text-align:right;">${campaign.party.living().length} / ${campaign.party.members.length}</strong>
-        <span style="color:#887755;">Potions</span><strong style="text-align:right;">${campaign.party.potions.length}</strong>
-        <span style="color:#887755;">Trophies</span><strong style="text-align:right;">${campaign.party.trophies.length}</strong>
-      </div>
-    `;
-
-    const btn = (label, enabled, onClick, style = '') => {
-      const b = document.createElement('button');
-      b.textContent = label;
-      b.disabled = !enabled;
-      b.style.cssText = `width:100%;margin-top:0.5rem;padding:0.8rem;font-size:0.95rem;${style}${enabled ? '' : 'opacity:0.45;cursor:default;'}`;
-      b.addEventListener('click', onClick);
-      display.appendChild(b);
-      return b;
-    };
-
-    btn(
-      missing === 0 ? '💤 Everyone Is Rested' : `🛏️ Rest & Heal All — ${healCost}g${pious ? ' (temple rate)' : ''}`,
-      missing > 0 && gold >= healCost,
-      () => {
-        // The surgeon's report: wounds closed is news, and the delve
-        // never told the player they would be (Narrator.composeMend)
-        const result = campaign.healAll();
-        const line = composeMend(result?.mended);
-        if (line) showToast('✚', line.replace(/^✚\s*/, ''));
-        render();
-      },
-    );
-    const potionCost = campaign.potionCost();
-    btn(
-      `🧪 Buy a Healing Draught — ${potionCost}g`,
-      gold >= potionCost,
-      () => { campaign.buyPotion(); render(); },
-    );
-
-    // The situations the town puts in front of the party — where the
-    // capabilities that never swing a sword earn their draft slot
-    renderTownEncounters(display, campaign, render);
-
-    // The reserve — adventurers you drafted but couldn't field. Free,
-    // and the whole reason a fifth character pick is worth anything.
-    const bench = campaign.party.reserve;
-    const roomToMarch = campaign.party.living().length < PARTY_CAP;
-    if (bench.length > 0) {
-      const benchLabel = document.createElement('div');
-      benchLabel.style.cssText = 'margin-top:1rem;color:#887755;font-size:0.78rem;border-top:1px dashed #3a2f1e;padding-top:0.7rem;';
-      benchLabel.textContent = roomToMarch
-        ? `🛡️ Your reserve — a place has opened in the party (${bench.length} waiting):`
-        : `🛡️ Your reserve — ${bench.length} waiting for a place in the four:`;
-      display.appendChild(benchLabel);
-      const next = bench[0];
-      btn(
-        roomToMarch
-          ? `${next.icon} Call up ${next.name} (${next.class}) — free`
-          : `${next.icon} ${next.name} (${next.class}) waits — the four still stand`,
-        roomToMarch,
-        () => {
-          const m = campaign.callUpReserve();
-          if (m) showToast(m.icon, `${m.name} joins the party from the reserve.`, 'room');
-          render();
-        },
-        'font-size:0.82rem;padding:0.6rem;background:#17231a;color:#a8d5b0;',
-      );
-    }
-
-    // The hiring board — replace the fallen, or just field a bigger band
-    const label = document.createElement('div');
-    label.style.cssText = 'margin-top:1rem;color:#887755;font-size:0.78rem;border-top:1px dashed #3a2f1e;padding-top:0.7rem;';
-    label.textContent = '🪧 The hiring board — adventurers looking for work:';
-    display.appendChild(label);
-
-    for (const offer of campaign.recruitOffers()) {
-      const s = offer.card.stats;
-      btn(
-        `${offer.card.icon} Hire ${offer.card.name} (${offer.card.class}) — ${offer.cost}g`,
-        gold >= offer.cost,
-        () => {
-          const m = campaign.recruit(offer.card.id);
-          if (m) showToast(offer.card.icon, `${m.name} joins the party.`, 'room');
-          render();
-        },
-        `font-size:0.82rem;padding:0.6rem;background:#1a2617;color:#a8d5b0;`,
-      ).title = `❤️${s.health} ⚔️${s.attack} 🛡️${s.defense} 🧠${s.mind}`;
-    }
-
-    // The blacksmith — sharpen the hardest hitter's weapon
-    const forgeCost = campaign.forgeCost();
-    const striker = campaign.party.living().reduce((a, b) => (a.attack >= b.attack ? a : b));
-    btn(
-      `🔨 Sharpen ${striker.name}'s weapon (+${TOWN_PRICES.forgeMod.attack} atk) — ${forgeCost}g`,
-      gold >= forgeCost,
-      () => {
-        const r = campaign.forge();
-        if (r) showToast('🔨', `The smith sets ${TOWN_PRICES.forgeMod.name} to ${r.target}'s blade.`, 'room');
-        render();
-      },
-      `font-size:0.82rem;padding:0.6rem;background:#26200f;color:#e0c88a;`,
-    );
-
-    // The quartermaster: a shelf of three, priced by what each card
-    // actually does (Campaign.shopPrice) and gone once bought
-    const offers = campaign.shopOffers();
-    if (offers.length > 0) {
-      const shopLabel = document.createElement('div');
-      shopLabel.style.cssText = 'margin-top:1rem;color:#887755;font-size:0.8rem;';
-      shopLabel.textContent = '🏪 The quartermaster — what the road down is selling:';
-      display.appendChild(shopLabel);
-
-      for (const offer of offers) {
-        const c = offer.card;
-        const kind = c.type === 'spell' ? 'a working for the grimoire' : `${c.slot || 'trinket'}`;
-        btn(
-          `${c.icon} ${c.name} (${kind}) — ${offer.price}g`,
-          gold >= offer.price,
-          () => {
-            const sale = campaign.buyFromShop(c.id);
-            if (sale) {
-              showToast(c.icon, sale.wearer
-                ? `${sale.card.name} bought, and handed to ${sale.wearer.name}.`
-                : `${sale.card.name} bought and copied into the grimoire.`, 'room');
-            }
-            render();
-          },
-          'font-size:0.82rem;padding:0.6rem;background:#1b2119;color:#a8c8a0;',
-        );
-      }
-    }
-
-    // ...and the muster, so a purchase can be put in the right hands
-    btn(
-      '🎒 The Muster — kit, workings, and who they are',
-      true,
-      () => {
-        showMuster(campaign, '🏘️ Back to Town', () => {
-          display.classList.add('active');
-          render();
-        });
-      },
-      'margin-top:0.8rem;font-size:0.86rem;padding:0.65rem;background:#22201a;color:#d8c9a3;',
-    );
-
-    // What the party's name is worth now, and what the diviners can see
-    // of the descent ahead — both read before committing to it
-    renderTownStandings(display, campaign);
-    renderOmens(display, campaign);
-
-    btn(
-      `⛏️ Delve Deeper — depth ${campaign.depth + 1} awaits`,
-      true,
-      () => {
-        display.classList.remove('active');
-        beginDelve(campaign.nextDelve());
-      },
-      'margin-top:1.25rem;font-size:1rem;padding:0.9rem;',
-    );
-    btn(
-      '🏡 Retire & Bank the Score',
-      true,
-      () => {
-        campaign.retire();
-        showFinal(appState.simulator.getState());
-      },
-      'background:#2a2213;color:#d8a53f;',
-    );
-
-    // Keep the side panels (roster, gold) in step with town purchases
-    updateUI(appState.simulator.getState());
-  };
-
-  render();
-  display.classList.add('active');
-}
-
-/* ------------------------------------------------------------------ */
-/* The town's v6 surfaces — situations, standing, omens                */
-/* ------------------------------------------------------------------ */
-
-/**
- * The town's situations. Each option prints the capability that opened
- * it, so the player can see their draft paying off — or see the option
- * they are missing, and why.
- */
-function renderTownEncounters(display, campaign, rerender) {
-  const offers = campaign.townOffers();
-  if (offers.length === 0) return;
-
-  const label = document.createElement('div');
-  label.style.cssText = 'margin-top:1rem;color:#887755;font-size:0.78rem;border-top:1px dashed #3a2f1e;padding-top:0.7rem;';
-  label.textContent = '🏘️ In town this visit:';
-  display.appendChild(label);
-
-  for (const def of offers) {
-    const card = document.createElement('div');
-    card.style.cssText = 'margin-top:0.6rem;padding:0.7rem;background:#141110;border:1px solid #3a2f1e;border-radius:4px;';
-    card.innerHTML = `
-      <div style="color:#c8b088;font-weight:bold;font-size:0.9rem;">${escapeHtml(def.title)}</div>
-      <div style="color:#998866;font-size:0.82rem;margin:0.3rem 0 0.5rem;line-height:1.5;">${escapeHtml(def.situation || '')}</div>
-    `;
-
-    for (const opt of campaign.townOptions(def.id)) {
-      const gatedBy = opt.unlockedBy?.length
-        ? opt.unlockedBy.map(u => CAPABILITIES[u.capability]?.name || u.capability).join(' + ')
-        : null;
-      const b = document.createElement('button');
-      b.style.cssText = 'width:100%;margin-top:0.35rem;padding:0.55rem;font-size:0.82rem;text-align:left;'
-        + (gatedBy
-          ? 'background:#16211a;color:#9fc4a8;border:1px solid #3a4a3e;'
-          : 'background:#1b1713;color:#b8a888;');
-      b.innerHTML = `<strong>${escapeHtml(opt.name)}</strong>`
-        + (gatedBy ? ` <span style="color:#7fae8c;font-size:0.72rem;">· ${escapeHtml(gatedBy)}</span>` : '')
-        + `<br><span style="color:#887755;font-size:0.74rem;">${escapeHtml(opt.desc || '')}</span>`;
-      if (opt.unlockedBy?.length) {
-        b.title = opt.unlockedBy
-          .map(u => `${CAPABILITIES[u.capability]?.name || u.capability}: ${u.holders.join(', ')}`)
-          .join('\n');
-      }
-      b.addEventListener('click', () => {
-        const result = campaign.resolveTownOption(def.id, opt.id);
-        if (result) {
-          showToast(result.success === false ? '⚠️' : '🏘️', result.narrative || def.title, 'room');
-          appendStory({
-            room: 'town', icon: '🏘️',
-            predicament: def.situation || def.title,
-            deliberation: `The party chose: ${opt.name}.`,
-            resolution: result.narrative || '',
-          }, def.title);
-        }
-        rerender();
-      });
-      card.appendChild(b);
-    }
-    display.appendChild(card);
-  }
-}
-
-/** Where the party stands with the town, and what that standing costs. */
-function renderTownStandings(display, campaign) {
-  const summary = campaign.town.summary();
-  const moved = summary.factions.filter(f => f.value !== 0);
-  if (moved.length === 0 && summary.log.length === 0) return;
-
-  const priceNote = summary.priceMultiplier === 1
-    ? ''
-    : summary.priceMultiplier < 1
-      ? ` · prices ×${summary.priceMultiplier} (your name is worth money)`
-      : ` · prices ×${summary.priceMultiplier} (your name is costing you)`;
-
-  const box = document.createElement('div');
-  box.style.cssText = 'margin-top:1rem;padding:0.7rem;background:#12100e;border-left:3px solid #6a5a3a;border-radius:4px;';
-  box.innerHTML = `<div style="color:#887755;font-size:0.78rem;margin-bottom:0.4rem;">📜 The town's opinion${priceNote}</div>`
-    + (moved.length
-      ? '<div style="display:flex;flex-wrap:wrap;gap:0.4rem;">' + moved.map(f =>
-          `<span style="font-size:0.75rem;padding:0.15rem 0.4rem;border-radius:3px;border:1px solid #3a2f1e;color:${f.value > 0 ? '#9fc4a8' : '#d99a8a'};">${f.icon} ${escapeHtml(f.name)}: ${f.label}</span>`
-        ).join('') + '</div>'
-      : '<div style="color:#665544;font-size:0.75rem;">No faction has made up its mind yet.</div>')
-    + (summary.hostility > 0.2
-      ? '<div style="color:#d99a8a;font-size:0.75rem;margin-top:0.4rem;">⚠️ The streets are not safe for this party.</div>'
-      : '');
-  display.appendChild(box);
-}
-
-/** What the diviners see of the descent ahead — information to prepare against. */
-function renderOmens(display, campaign) {
-  const reading = campaign.previewNextDelve();
-  if (!reading) return;
-
-  const box = document.createElement('div');
-  box.style.cssText = `margin-top:0.8rem;padding:0.7rem;background:#0f1016;border-left:3px solid ${reading.blind ? '#4a4458' : '#7a6ad8'};border-radius:4px;`;
-  box.innerHTML = `<div style="color:#887799;font-size:0.78rem;margin-bottom:0.4rem;">🔮 ${escapeHtml(reading.headline)}</div>`
-    + reading.lines.map(l =>
-        `<div style="color:#b0a8c8;font-size:0.8rem;line-height:1.55;">${escapeHtml(l)}</div>`
-      ).join('');
-  display.appendChild(box);
+  showFinal(state);
 }
 
 /**
  * The campaign's last page: a wipe, or a retirement with the loot
  */
 function showFinal(state) {
-  const campaign = appState.campaign;
-  const summary = campaign.getSummary();
   const result = appState.simulator.getRunResult();
+  const summary = { ...result, depth: 1, retired: result.victory };
   const retired = summary.retired;
 
   // Record the campaign once
@@ -1040,7 +689,6 @@ function showFinal(state) {
       survivors: summary.survivors,
       partySize: summary.partySize,
       depth: summary.depth,
-      condition: appState.campaign.condition !== 'none' ? appState.campaign.condition : null,
     });
   }
   const best = progression.bestScores[appState.difficulty] || 0;
@@ -1051,22 +699,16 @@ function showFinal(state) {
   // The player's hex lands on its target; the hex laid on the player is
   // already baked into their real run.
   if (!appState.standings && appState.draft) {
-    const sab = appState.sabotage || {};
     appState.standings = computeStandings(
       appState.draft,
-      { score: summary.score, depth: summary.depth, hexIcon: sab.onPlayer?.condition?.icon || null },
-      {
-        seed: campaign.seed,
-        difficulty: campaign.difficulty,
-        condition: sab.tableWager ?? campaign.condition,
-        hexes: sab.byPlayer ? { [sab.byPlayer.seatId]: sab.byPlayer.conditionId } : {},
-      },
+      { score: summary.score, depth: summary.depth },
+      { seed: appState.simulator.seed, difficulty: appState.difficulty },
     );
   }
   const standingsRows = (appState.standings || []).map(r => `
     <div style="display:flex;gap:0.5rem;align-items:baseline;padding:0.28rem 0;border-bottom:1px dashed #2a2318;${r.isPlayer ? 'color:#d8a53f;font-weight:bold;' : 'color:#b0a080;'}">
       <span style="width:1.6rem;">${placeLabel(r.place)}</span>
-      <span>${r.icon} ${escapeHtml(r.name)}${r.hexIcon ? ` <span title="hexed">${r.hexIcon}</span>` : ''}</span>
+      <span>${r.icon} ${escapeHtml(r.name)}</span>
       <span style="margin-left:auto;">${r.score} <span style="color:#776;font-size:0.82em;">· depth ${r.depthReached}</span></span>
     </div>`).join('');
 
@@ -1074,23 +716,22 @@ function showFinal(state) {
 
   display.innerHTML = `
     <h2 style="color:${retired ? '#3ddc84' : '#e05555'};font-size:1.35rem;margin-bottom:1rem;text-align:center;">
-      ${retired ? '🏆 Retired in Glory' : '☠️ The Campaign Ends in the Dark'}
+      ${retired ? '🏆 Out of the Dungeon, Alive' : '☠️ The Run Ends in the Dark'}
     </h2>
     <div style="margin-bottom:1.25rem;padding:0.9rem;background:#151b10;border-left:3px solid ${retired ? '#3ddc84' : '#aa5544'};border-radius:4px;color:#d8c9a3;font-style:italic;line-height:1.6;">
       ${escapeHtml(result.epitaph || '')}
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem 1.5rem;font-size:0.92rem;">
-      <span style="color:#887755;">Campaign score</span><strong style="color:#d8a53f;text-align:right;">${summary.score}${isNewBest ? ' ⭐ New Best!' : ''}</strong>
-      <span style="color:#887755;">Depth reached</span><strong style="text-align:right;">${summary.depth}</strong>
+      <span style="color:#887755;">Score</span><strong style="color:#d8a53f;text-align:right;">${summary.score}${isNewBest ? ' ⭐ New Best!' : ''}</strong>
       <span style="color:#887755;">Gold</span><strong style="text-align:right;">${summary.gold}</strong>
       <span style="color:#887755;">Rooms conquered</span><strong style="text-align:right;">${summary.roomsCleared}</strong>
       <span style="color:#887755;">Survivors</span><strong style="text-align:right;">${summary.survivors} / ${summary.partySize}</strong>
       <span style="color:#887755;">Spells learned</span><strong style="text-align:right;">${summary.spellsLearned}</strong>
       <span style="color:#887755;">Trophies claimed</span><strong style="text-align:right;">${summary.trophies}</strong>
       <span style="color:#887755;">Best on ${appState.difficulty}</span><strong style="text-align:right;">${Math.max(best, summary.score)}</strong>
-      <span style="color:#887755;">Career</span><strong style="text-align:right;">${stats.totalVictories} retirements / ${stats.totalRuns} campaigns</strong>
+      <span style="color:#887755;">Career</span><strong style="text-align:right;">${stats.totalVictories} escapes / ${stats.totalRuns} runs</strong>
     </div>
-    ${trophyCaseHtml(campaign.party.trophies, retired)}
+    ${trophyCaseHtml(appState.simulator.party.trophies, retired)}
     <div style="margin-top:1.25rem;">
       <div style="color:#d8a53f;font-size:0.85rem;margin-bottom:0.4rem;border-top:1px solid #3a2f1e;padding-top:0.8rem;">🎲 At the Table — how the draft played out</div>
       ${standingsRows}

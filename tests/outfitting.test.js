@@ -16,7 +16,6 @@ import { Party } from '../src/agents/Party.js';
 import {
   CHARACTER_CARDS, EQUIPMENT_CARDS, SPELL_CARDS, CLASSES, getCard, getAllCards,
 } from '../src/game/Cards.js';
-import { Campaign, shopPrice } from '../src/game/Campaign.js';
 
 const byClass = cls => CHARACTER_CARDS.find(c => c.class === cls);
 const fighter = byClass(CLASSES.FIGHTER);
@@ -179,75 +178,6 @@ describe('A character the player named', () => {
   });
 });
 
-describe('The quartermaster keeps a shop, not a vending machine', () => {
-  test('stock is priced by what a card does, and in reach of a real purse', () => {
-    // A party leaves a delve with a median of 67 gold and a hire asks
-    // 42, so kit has to be buyable in ones — not a shopping spree, and
-    // not out of reach either.
-    const prices = [...EQUIPMENT_CARDS, ...SPELL_CARDS].map(c => shopPrice(c, 1));
-    assert.ok(Math.min(...prices) >= 35, 'nothing is nearly free');
-    assert.ok(Math.max(...prices) <= 200, `nothing is unreachable (dearest ${Math.max(...prices)})`);
-    // ...and the model, not a hand-written table, decides the order
-    assert.ok(shopPrice(getCard('sp-fireball'), 1) > shopPrice(getCard('eq-lockpicks'), 1),
-      'the fireball costs more than the lockpicks');
-    assert.ok(shopPrice(getCard('eq-lantern'), 3) > shopPrice(getCard('eq-lantern'), 1),
-      'and a shop this far down is the only shop there is');
-  });
-
-  test('the shop never sells what the party already carries', () => {
-    const camp = new Campaign([fighter, wizard, getCard('eq-tower-shield'), getCard('sp-firebolt')],
-      { seed: 'shop-dupes' });
-    camp.depth = 1;
-    const held = new Set([
-      ...camp.party.members.flatMap(m => m.equipment.map(e => e.id)),
-      ...camp.party.grimoire.map(s => s.id),
-    ]);
-    for (const offer of camp.shopOffers()) {
-      assert.ok(!held.has(offer.card.id), `${offer.card.name} is not already in the party`);
-    }
-  });
-
-  test('buying spends the gold, hands the piece to the named member, and clears the shelf', () => {
-    const camp = new Campaign([fighter, wizard, cleric], { seed: 'shop-buy' });
-    camp.depth = 1;
-    camp.party.gold = 500;
-    const offer = camp.shopOffers().find(o => o.card.type === 'equipment');
-    assert.ok(offer, 'the shop stocks kit');
-
-    const target = camp.party.members[2];
-    const before = camp.party.gold;
-    const sale = camp.buyFromShop(offer.card.id, target.name);
-
-    assert.ok(sale, 'it sold');
-    assert.equal(camp.party.gold, before - offer.price, 'the purse is lighter by the price');
-    assert.equal(sale.wearer?.name, target.name, 'and the named member is carrying it');
-    assert.ok(target.equipment.some(e => e.id === offer.card.id));
-    assert.ok(!camp.shopOffers().some(o => o.card.id === offer.card.id), 'the shelf is empty');
-  });
-
-  test('an empty purse buys nothing at all', () => {
-    const camp = new Campaign([fighter, wizard], { seed: 'shop-broke' });
-    camp.depth = 1;
-    camp.party.gold = 0;
-    const offer = camp.shopOffers()[0];
-    const kitBefore = allKit(camp.party).length;
-    assert.equal(camp.buyFromShop(offer.card.id), null, 'no sale');
-    assert.equal(camp.party.gold, 0, 'and no debt either');
-    assert.equal(allKit(camp.party).length, kitBefore);
-  });
-
-  test('a bought working joins the grimoire and can be handed to a caster', () => {
-    const camp = new Campaign([fighter, wizard], { seed: 'shop-spell' });
-    camp.depth = 1;
-    camp.party.gold = 500;
-    const offer = camp.shopOffers().find(o => o.card.type === 'spell');
-    if (!offer) return;                       // this seed's shelf is all kit
-    camp.buyFromShop(offer.card.id);
-    assert.ok(camp.party.grimoire.some(s => s.id === offer.card.id), 'it is in the book');
-    const w = camp.party.members.find(m => m.class === CLASSES.WIZARD);
-    assert.ok(camp.party.assignCaster(offer.card.id, w.name), 'and somebody can prepare it');
-  });
-});
 
 function test(name, fn) {
   try {
