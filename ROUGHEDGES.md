@@ -170,3 +170,24 @@ and its use while the job was importing. Entirely self-inflicted.
 
 **Rule: finish all source edits before starting a long measurement.**
 Docs and tests are safe to edit during; anything under `src/` is not.
+
+## R15. The game's loop does not run in a hidden Browser pane
+
+`src/main.js` drives the crawl with `requestAnimationFrame`, which does
+not fire while `document.visibilityState === 'hidden'` — and the Browser
+pane is hidden whenever it is not fronted. A delve therefore appears to
+*stall*: the room counter freezes, the chronicle stops growing, and the
+Pause button still reads "Pause" because the simulator believes it is
+running.
+
+It looks exactly like a hung game. It is not.
+
+**To verify a delve from a hidden pane, drive it with the `Step`
+button** (or front the tab). Step advances one room per click and does
+not depend on animation frames. Verified this way end to end on
+2026-09-01: draft → muster → delve → victory → town at depth 2.
+
+A secondary trap: `javascript_tool` calls that loop-and-sleep for more
+than ~45s time out, but their side effects still land. The clicks happen;
+only the reply is lost. Re-query state in a second short call rather than
+assuming the batch failed.

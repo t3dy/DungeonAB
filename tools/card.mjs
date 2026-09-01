@@ -17,26 +17,73 @@
  *   npm run card tac-flanking sp-fireball        (several at once)
  *   npm run card eq-greatsword --n 800 --difficulty hard
  *
- * The default fixture is chosen to sit in a MEASURABLE regime: a
- * baseline near 45% on medium, because a card cannot show its worth
- * against a party that never wins or never loses. Testing on hard with a
- * thin party puts the baseline at 7% and every card reads as +1.
+ * Fixtures are chosen per difficulty to sit in a MEASURABLE regime,
+ * because a card cannot show its worth against a party that never wins
+ * or never loses. There is one fixture per difficulty rather than one
+ * overall: at a 4.7x spread in monster scale, no single party is
+ * beatable-but-winnable at both ends. See BASE_BY_DIFFICULTY, and
+ * `tests/cardfixture.test.js`, which fails if any of them drifts out of
+ * the band.
  */
 
 import { Simulator } from '../src/sim/Simulator.js';
 import {
-  CHARACTER_CARDS, EQUIPMENT_CARDS, getCard,
+  CHARACTER_CARDS, EQUIPMENT_CARDS, SPELL_CARDS, getCard,
 } from '../src/game/Cards.js';
 import { getTactic } from '../src/game/Tactics.js';
 import { costCard } from '../src/game/Costing.js';
 
-/* A party that wins about half the time: room to move either way */
-const BASE = [...CHARACTER_CARDS.slice(0, 4), ...EQUIPMENT_CARDS.slice(4, 9)];
+/*
+ * A base party that can actually be moved — one per difficulty.
+ *
+ * There used to be a single fixture with the comment "a party that wins
+ * about half the time: room to move either way". Measured on 2026-09-01
+ * it won **98.7% / 92.0% / 17.7% / 0.3%** across easy/medium/hard/
+ * nightmare. At the top there was nothing left to win and at the bottom
+ * nothing to save, so every card measured as worth roughly zero at both
+ * ends — not because the cards are worthless but because a saturated
+ * number cannot move. That is standing rule 11 (a comparison that
+ * cannot fail is worse than no test) broken inside the tool standing
+ * rule 10 relies on to price cards.
+ *
+ * The fixtures below were searched for by measurement and all sit
+ * between 35% and 65%, where a card has room to help or hurt. They are
+ * deliberately different SHAPES — a lone magus on easy, a fully kitted
+ * party with a grimoire on nightmare — because that is what it takes to
+ * be beatable-but-winnable at each end of a 4.7x monster-scale spread.
+ *
+ * Re-measure these whenever STAT_SCALE moves. A fixture that has drifted
+ * out of its band reports confident zeroes.
+ */
+const BASE_BY_DIFFICULTY = {
+  easy: () => [...CHARACTER_CARDS.slice(0, 1)],                                   // ~39%
+  medium: () => [...CHARACTER_CARDS.slice(0, 4)],                                 // ~48%
+  hard: () => [...CHARACTER_CARDS.slice(0, 4), ...EQUIPMENT_CARDS.slice(0, 9)],   // ~63%
+  nightmare: () => [                                                              // ~35%
+    ...CHARACTER_CARDS.slice(0, 4),
+    ...EQUIPMENT_CARDS.slice(0, 9),
+    ...SPELL_CARDS.slice(0, 6),
+  ],
+};
+
+/** The band a fixture must stay inside to be able to measure anything. */
+export const MEASURABLE = { lo: 25, hi: 75 };
+
+/**
+ * The base for a difficulty, minus anything being measured — a fixture
+ * that already holds the card under test reports it as worth nothing.
+ */
+export function baseFor(difficulty, excludeIds = []) {
+  const make = BASE_BY_DIFFICULTY[difficulty] || BASE_BY_DIFFICULTY.medium;
+  const drop = new Set(excludeIds);
+  return make().filter(c => !drop.has(c.id));
+}
 
 export function winRate(extra, { difficulty = 'medium', n = 500, seedPrefix = 'card' } = {}) {
+  const base = baseFor(difficulty, extra.map(c => c?.id).filter(Boolean));
   let wins = 0;
   for (let i = 0; i < n; i++) {
-    const sim = new Simulator([...BASE, ...extra], `${seedPrefix}-${i}`, difficulty);
+    const sim = new Simulator([...base, ...extra], `${seedPrefix}-${i}`, difficulty);
     let guard = 0;
     while (!sim.gameOver && guard++ < 400) sim.tick();
     if (sim.getRunResult().victory) wins++;
