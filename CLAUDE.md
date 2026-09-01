@@ -16,6 +16,20 @@ npm run dev      # http://localhost:5175
 npm test
 ```
 
+## Where the trouble is written down
+
+Read these before concluding something is fine, and add to them as you
+go — they are kept live rather than written up at the end, because the
+entries that get lost are the ones that looked small at the time.
+
+| File | Holds |
+|---|---|
+| `PROBLEMS.md` | Broken or unfinished, with how it is known and its status |
+| `PERPLEXITIES.md` | Open design questions with no obvious answer |
+| `BALANCEISSUES.md` | Measured numbers that look wrong, with the measurement |
+| `ROUGHEDGES.md` | Papercuts, debt, and traps for the next session |
+| `DESIGN_DIALOGUE.md` | The narrative of why things are the way they are (§N–§Q) |
+
 ## Structure
 
 ```

@@ -274,10 +274,19 @@ export function resolveEncounterOption(def, optionId, party, ctx, opts = {}) {
    * heaviest chest, hurrying through — teach nothing. That asymmetry
    * IS the payoff.
    */
-  // Improvising past a problem does not teach you how the place was
-  // built — you got through it without ever understanding it, which is
-  // the whole difference the mastery band prices.
-  if (result?.success !== false && (option?.requires || []).length > 0 && !result.mastery?.label?.includes('improvised')) {
+  /*
+   * Improvising past a problem does not teach you how the place was
+   * built — you got through it without ever understanding it, which is
+   * the whole difference the mastery band prices.
+   *
+   * And a reading of a dungeon cannot be bought in town. The town
+   * routes through this same resolver, so an astrologer's consultation
+   * was handing out a way into a crypt nobody had walked into yet:
+   * fiction backwards, and a free resource banked before the delve
+   * began. `ctx.type === 'town'` is the seam between the two worlds.
+   */
+  const inDungeon = ctx?.type !== 'town';
+  if (inDungeon && result?.success !== false && (option?.requires || []).length > 0 && !result.mastery?.label?.includes('improvised')) {
     const held = party.wayIn || 0;
     if (held < WAY_IN_CAP) {
       party.wayIn = held + 1;
