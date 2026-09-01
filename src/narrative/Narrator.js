@@ -72,6 +72,15 @@ export function composeSecretFound(party, wing = null) {
   const rogue = party.living().find(m => m.class === CLASSES.ROGUE);
   const finder = rogue ? rogue.name : (party.living()[0]?.name || 'Someone');
   const behind = wing?.tell ? ` Behind it: ${wing.tell}.` : '';
+  // Nobody found this by looking. It was deduced from the reading an
+  // answered situation bought (RoomEncounters.detectSecretDoor), and
+  // the line has to say so or the draft's payoff is invisible.
+  if (party.foundByReading) {
+    party.foundByReading = false;
+    return `🕳️ Nobody spots the door; the party works out where it has to be. `
+      + `The plan of the place demands a passage here, and here it is, into ${wing?.name || 'a side passage'}.`
+      + `${behind} Its rooms join the route.`;
+  }
   return `🕳️ ${finder} finds a hidden door into ${wing?.name || 'a side passage'}.${behind} Its rooms join the route.`;
 }
 
@@ -96,6 +105,8 @@ export function composeLockedWing(wing, outcome) {
       return `🗝️ ${door[0].toUpperCase()}${door.slice(1)} — and the party is carrying ${wing.keyName}. ${name[0].toUpperCase()}${name.slice(1)} opens.`;
     case 'picked':
       return `🗝️ ${door[0].toUpperCase()}${door.slice(1)}. The rogue has it open in the time it takes to say so, and quietly.`;
+    case 'read':
+      return `🗝️ ${door[0].toUpperCase()}${door.slice(1)} — and the party has already read how this place was built. ${name[0].toUpperCase()}${name.slice(1)} opens without a key and without a sound.`;
     case 'knock':
       return `💥 ${outcome.source || 'Knock'} takes ${door} off its fastenings. ${name[0].toUpperCase()}${name.slice(1)} is open, and everything below heard it.`;
     case 'forced':
@@ -751,6 +762,38 @@ export function composeResolution(room, optionId, result, party) {
   if (result.foldedPreps) bits.push(foldClause(result.foldedPreps));
 
   return bits.join(' ');
+}
+
+/**
+ * Who walks in front, said once when it is first true and again
+ * whenever it changes.
+ *
+ * The party has always had a point man — `Party.takeDamage` sends every
+ * blow to the fighters first — and the prose has never named them. So
+ * the most exposed member of the party was anonymous until the line
+ * that killed them: 85% of deaths were of somebody the reader had not
+ * met (narrative/Dramaturg.js, mortalityEarned).
+ *
+ * Rationed to the moments it means something: the first dangerous room,
+ * and every time the order changes underneath. A change is nearly
+ * always somebody dying, which makes the replacement's first line and
+ * their predecessor's last fall in the same breath — the succession is
+ * the drama, and it was already happening silently in the arithmetic.
+ */
+export function composePoint(member, { succeeding = null } = {}) {
+  if (!member) return null;
+  if (succeeding) {
+    return pick([
+      `🛡️ With ${succeeding} down, ${member.name} takes the front. The next thing through the door meets them first.`,
+      `🛡️ Somebody has to stand where ${succeeding} was standing. ${member.name} moves up.`,
+      `🛡️ ${member.name} steps into the gap ${succeeding} left, and the party re-forms behind them.`,
+    ]);
+  }
+  return pick([
+    `🛡️ ${member.name} walks in front, which is where the blows land first.`,
+    `🛡️ The order settles with ${member.name} at the head of it: whatever comes, comes to them.`,
+    `🛡️ ${member.name} takes the front of the march, and the rest fall in behind.`,
+  ]);
 }
 
 /* ------------------------------------------------------------------ */

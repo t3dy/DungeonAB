@@ -135,6 +135,13 @@ export class Party {
     // party: a sexton's key is for one door in one crypt.
     this.keys = [];
 
+    // Readings of how this dungeon was built, earned by answering a
+    // situation with a drafted capability and spent on a sealed door
+    // (encounters/EncounterEngine.js grants, sim/Simulator.js spends).
+    // Four locked wings in ten have no key anywhere in the dungeon, and
+    // this is how a party that drafted well gets into them.
+    this.wayIn = 0;
+
     // The lantern's reserve, spent on the march (see restStep)
     this.supply = STARTING_SUPPLY;
     this.marches = 0;
@@ -330,6 +337,7 @@ export class Party {
       potions: this.potions.map(x => ({ ...x })),
       pack: this.pack.map(e => ({ ...e })),
       keys: this.keys.map(k => ({ ...k })),
+      wayIn: this.wayIn,
       supply: this.supply,
       spellsLearned: this.spellsLearned,
       poisonLinger: this.poisonLinger || 0,
@@ -374,6 +382,7 @@ export class Party {
     party.potions = (saved.potions || []).map(x => ({ ...x }));
     party.pack = (saved.pack || []).map(rehydrate).filter(Boolean);
     party.keys = (saved.keys || []).map(k => ({ ...k }));
+    party.wayIn = saved.wayIn || 0;
     party.supply = saved.supply ?? party.supply;
     party.spellsLearned = saved.spellsLearned || 0;
     party.poisonLinger = saved.poisonLinger || 0;
@@ -631,12 +640,32 @@ export class Party {
    * Fighters hold the door: the front rank absorbs damage fully,
    * and it only spills to the back rank over a fallen fighter
    */
-  takeDamage(amount) {
-    let remaining = amount;
-    const order = [
+  /**
+   * Who is standing in front. Fighters first, in draft order — the same
+   * order `takeDamage` sends blows down, so this is not a label but a
+   * description of who is actually being hit.
+   *
+   * It exists to be narrated. Measured over 120 transcripts, 85% of
+   * deaths were of somebody the reader had never met, because only the
+   * magus who argued for a plan ever got a line (narrative/Dramaturg.js
+   * mortalityEarned). The party's most exposed member was structurally
+   * anonymous until the sentence that killed them.
+   */
+  pointMan() {
+    return this.damageOrder()[0] || null;
+  }
+
+  /** The order blows land in: fighters first, then everyone else. */
+  damageOrder() {
+    return [
       ...this.living().filter(m => m.class === CLASSES.FIGHTER),
       ...this.living().filter(m => m.class !== CLASSES.FIGHTER),
     ];
+  }
+
+  takeDamage(amount) {
+    let remaining = amount;
+    const order = this.damageOrder();
     for (const member of order) {
       if (remaining <= 0) break;
       const absorbed = Math.min(remaining, member.health);

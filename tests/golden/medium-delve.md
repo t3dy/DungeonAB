@@ -14,6 +14,8 @@ They might have chosen to speak with whatever wears the armour, or name the armo
 
 ✨ The cleric turns the undead: a bone warden on its rounds crumbles. +30 score. 🦴 A bone warden on its rounds drops a pauldron of century bone: a trinket (+1 defense), now worn by Giordano Bruno.
 
+_🛡️ Tycho Brahe takes the front of the march, and the rest fall in behind._
+
 <details><summary>Ledger</summary>
 
 - 🏅 30 renown earned.
@@ -29,7 +31,7 @@ They might have chosen to speak with whatever wears the armour, or name the armo
 
 A boil of grave mites holds the room (attack 5, health 11). The party must decide how to get past it. It is a swarm: spell openings hit it ×1.5. It keeps clear of the torches: weak to fire (fire damage ×1.5). A gargoyle spout drips something that is not water into a stained channel.
 
-They might have chosen to recognize his school, or push past him — Pico della Mirandola made the case: "I asked permission for this spell. Twice." The party chose to open with a combat spell.
+They might have chosen to recognize his school, or push past him — Pico della Mirandola made the case: "I did not memorize this spell to whisper it." The party chose to open with a combat spell.
 
 🔥 The caster opens with Firebolt, chosen precisely for the monster's fire weakness: spell damage ×1.5. ⚔️ A boil of grave mites is dead before the party closes: it never gets a round. ⛲ The working settles into a gargoyle spout, dripping and stays there. The party drinks: 4 healed. 🛡️ The prayers on the inside of the buckler turn aside half of what the party set off. 🎒 3 more preparations hold besides — the ledger keeps them.
 
@@ -42,7 +44,7 @@ They might have chosen to recognize his school, or push past him — Pico della 
 - 🚪 1 more room behind them.
 - · 👹 Room 2: monster — spell-strike
 - 🎒 🧊 A gargoyle spout, dripping freezes and the glaze spreads across the floor. The monster cannot keep its feet: -3 to what it hits for. Neither can the party, quite: 1 damage.
-- 🎒 🔺 The party drives in as a wedge, everything committed forward.
+- 🎒 🌐 There is room enough in the chamber to fight spread out, well apart.
 - 🎒 🟠 A boil of grave mites drops a handful of grave-amber: 2 alchemy materials.
 
 </details>
@@ -67,23 +69,24 @@ They might have chosen to endure the discord, or strip the gold leaf — John De
 
 A connecting corridor. Nothing blocks the way; the party moves through.
 
-They might have chosen to work the planetary sequence, or divine the opening order — the Scholarly wanted the knowledge. The party chose to reconcile the traditions.
+They might have chosen to reconcile the traditions, or divine the opening order — the Scholarly wanted the knowledge. The party chose to work the planetary sequence.
 
-☯️ Two traditions are quarrelling on one door; reconciled, they agree to open it. +2 materials, +35 score.
+🔭 Pressed in the order the planets actually stand tonight, the signs give. +2 materials, +30 score. 🗝️ And the shape of the place gives itself away: something sealed further down will open to what was learned here.
 
 <details><summary>Ledger</summary>
 
-- 🏅 35 renown earned.
+- 🏅 30 renown earned.
 - 🌿 2 more alchemical materials in the satchel.
 - 🕯️ 1 march of oil burned.
+- 🗝️ A reading of how this place was put together.
 - 🚪 1 more room behind them.
-- · 🪐 Room 4: situation — reconcile-traditions
+- · 🪐 Room 4: situation — planetary-sequence
 
 </details>
 
 ### 🪜 Room 5 — stairs
 
-A stair cut into the rock, going down. Cold air comes up it.
+The floor ends at a stairwell. Whatever is below has been waiting longer.
 
 There was only one option: the party chose to take the stair down.
 
@@ -101,7 +104,7 @@ There was only one option: the party chose to take the stair down.
 
 A library. The party can study here to learn spells. A brazier burns in its bracket — nobody has been here to feed it, and it burns anyway. Shelves sag under books nobody has audited in a century. Pillars break the room into aisles — something to fight behind.
 
-They might have chosen to reconstruct the mosaic from memory, or imagine what the image should be — the Scholarly argued from what the books say about this. The party chose to strip the shelves.
+They might have chosen to reconstruct the mosaic from memory, or imagine what the image should be — the Scholarly wanted a closer look before anything else. The party chose to strip the shelves.
 
 📚 The wizard strips sagging shelves: a scroll of Shelf-Found Working for the grimoire.
 
@@ -119,11 +122,11 @@ They might have chosen to reconstruct the mosaic from memory, or imagine what th
 
 A library. The party can study here to learn spells. Pillars break the room into aisles — something to fight behind.
 
-They might have chosen to study the shelves, or move on — Pico della Mirandola made the case: "Range is a suggestion. Watch." The party chose to read the sealed texts.
+They might have chosen to study the shelves, or move on — Pico della Mirandola made the case: "Fascinating. Everyone stand behind me while I annotate." The party chose to read the sealed texts.
 
 🔏 The wizard reads the sealed texts: 2 spells learned, including a forbidden working. +50 score.
 
-_🕯️ The wick is well down the oil. 2 more marches of light, then none._
+_🕯️ Someone checks the reservoir and does not like the answer: oil for 2 more marches._
 
 <details><summary>Ledger</summary>
 
@@ -132,7 +135,7 @@ _🕯️ The wick is well down the oil. 2 more marches of light, then none._
 - 📖 2 new workings copied into the grimoire.
 - 📜 The grimoire grows by 1.
 - 🚪 1 more room behind them.
-- · 🕯️ The wick is well down the oil. 2 more marches of light, then none.
+- · 🕯️ Someone checks the reservoir and does not like the answer: oil for 2 more marches.
 - · 📚 Room 7: library — deep-study
 
 </details>
@@ -143,16 +146,17 @@ A connecting corridor. Nothing blocks the way; the party moves through.
 
 They might have chosen to read the place itself, or scry for the map — the Scholarly wanted a closer look before anything else. The party chose to reconstruct his rounds.
 
-🧠 He is asked to describe his rounds, all of them, and somebody holds the whole account at once until the shape closes. The map was behind the shelving. Two marches of oil saved. +28 score.
+🧠 He is asked to describe his rounds, all of them, and somebody holds the whole account at once until the shape closes. The map was behind the shelving. Two marches of oil saved. +28 score. 🗝️ And the shape of the place gives itself away: something sealed further down will open to what was learned here.
 
-_🕯️ The wick is well down the oil. 1 more march of light, then none._
+_🕯️ The lantern is burning low: oil for 1 more march._
 
 <details><summary>Ledger</summary>
 
 - 🏅 28 renown earned.
 - 🕯️ 1 more march of oil found.
+- 🗝️ A reading of how this place was put together.
 - 🚪 1 more room behind them.
-- · 🕯️ The wick is well down the oil. 1 more march of light, then none.
+- · 🕯️ The lantern is burning low: oil for 1 more march.
 - · 🪐 Room 8: situation — reconstruct-his-rounds
 
 </details>
@@ -161,18 +165,20 @@ _🕯️ The wick is well down the oil. 1 more march of light, then none._
 
 A room of herbs, salts, and quicksilver — alchemy materials, free to gather. Somebody stacked supplies here and never came back for them. A gargoyle spout drips something that is not water into a stained channel. A boulder sits at the top of a slope, held by a wedge of rotten timber.
 
-They might have chosen to gather the materials — the Scholarly wanted the knowledge. The party chose to move on.
+They might have chosen to move on — the Scholarly argued from what the books say about this. The party chose to gather the materials.
 
-There is nothing to fight and nothing to take. The party keeps going.
+🌿 The party gathers 2 bundles of alchemy materials.
 
-_🕯️ The wick is well down the oil. 2 more marches of light, then none. 🧭 The Devout did not like leaving the dead untended: the party turns off into the burial wing. Its rooms join the route._
+_🕯️ The lantern is burning low: oil for 2 more marches. 🧭 The Devout did not like leaving the dead untended: the party turns off into the burial wing. Its rooms join the route._
 
 <details><summary>Ledger</summary>
 
+- 🏅 5 renown earned.
+- 🌿 2 more alchemical materials in the satchel.
 - 🕯️ 1 march of oil burned.
 - 🚪 1 more room behind them.
-- · 🕯️ The wick is well down the oil. 2 more marches of light, then none.
-- · 🌿 Room 9: materials — pass-by
+- · 🕯️ The lantern is burning low: oil for 2 more marches.
+- · 🌿 Room 9: materials — gather
 
 </details>
 

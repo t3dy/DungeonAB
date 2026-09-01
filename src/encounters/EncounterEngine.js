@@ -166,8 +166,42 @@ export function evaluateOptions(def, party, ctx) {
 }
 
 /** Resolve an option through the definition's own resolver, tracing the choice. */
+/**
+ * How many readings of a dungeon's construction a party can hold at
+ * once. Two: enough that answering situations pays even when no locked
+ * door has turned up yet, few enough that it stays a thing being spent
+ * rather than a bank.
+ */
+export const WAY_IN_CAP = 2;
+
 export function resolveEncounterOption(def, optionId, party, ctx) {
+  const option = def.options.find(o => o.id === optionId);
   const result = def.resolveOption(optionId, party, ctx);
+
+  /*
+   * A situation answered with a drafted capability teaches the party
+   * how this place was put together — and that knowledge opens
+   * something sealed later (`Party.wayIn`, spent at a locked wing in
+   * sim/Simulator.js).
+   *
+   * This is the access half of what a good draft buys. Margins alone
+   * left drafting nearly invisible: measured at n=600, broad drafts
+   * scored 6% higher and saw 0.2 more vaults, which is a difference
+   * nobody can feel (DESIGN_DIALOGUE.md §O). Content the party would
+   * otherwise walk past is a difference they can see.
+   *
+   * Gated on `requires`, so the fallback options — guessing at the
+   * heaviest chest, hurrying through — teach nothing. That asymmetry
+   * IS the payoff.
+   */
+  if (result?.success !== false && (option?.requires || []).length > 0) {
+    const held = party.wayIn || 0;
+    if (held < WAY_IN_CAP) {
+      party.wayIn = held + 1;
+      result.taughtWayIn = true;
+    }
+  }
+
   recordTrace({
     kind: 'resolve',
     encounterId: def.id,

@@ -706,7 +706,24 @@ export function detectSecretDoor(party, rollValue = roll()) {
   if (party.hasPersonality('scholarly')) bonus += 1;
   if (party.hasPersonality('craven')) bonus += 1;   // counts the exits, finds the extra one
   bonus += getPreparationBonuses(party).secretDoor; // the lantern throws the seam's shadow
-  return eyes + bonus + rollValue > 11;
+  if (eyes + bonus + rollValue > 11) return true;
+
+  // Failing that: a party that answered a situation with a capability
+  // has read how this place was put together, and a passage that is not
+  // on the plan is exactly what such a reading turns up
+  // (encounters/EncounterEngine.js, Party.wayIn).
+  //
+  // Spent only when the ordinary roll has already failed, so the
+  // reading is never wasted on a door the rogue was going to find
+  // anyway. Secret wings are twice as common as locked ones (0.68 a
+  // delve against 0.33) and a missed one is lost entirely, so this is
+  // where the draft's reward actually reaches the player.
+  if (party.wayIn > 0) {
+    party.wayIn--;
+    party.foundByReading = true;
+    return true;
+  }
+  return false;
 }
 
 /**
@@ -798,6 +815,16 @@ export function wingAppeal(party, wing) {
  */
 export function openLockedWing(party, wing, rollValue = roll()) {
   if (party.hasKey(wing)) return { opened: true, how: 'key', noisy: false };
+
+  // What an answered situation taught about how this place is built:
+  // the service passage behind the niches, the order the seals were
+  // set. Spent here, quietly, and only when no key was found — a party
+  // that drafted for it gets into the four wings in ten that have no
+  // key anywhere (encounters/EncounterEngine.js grants it).
+  if (party.wayIn > 0) {
+    party.wayIn--;
+    return { opened: true, how: 'read', noisy: false };
+  }
 
   // A rogue with picks, or a rogue with patience
   const rogues = party.living().filter(m => m.class === CLASSES.ROGUE);

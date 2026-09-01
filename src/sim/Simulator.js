@@ -19,7 +19,7 @@ import {
   detectTrapdoor, decideTrapdoor,
 } from '../encounters/RoomEncounters.js';
 import {
-  composePredicament, composeDeliberation, composeResolution, editPreps,
+  composePredicament, composeDeliberation, composeResolution, editPreps, composePoint,
   composeWipe, composeVictory, composeFall,
   composeSecretFound, composeDetour, composeTrapdoor, composeKeyFound, composeLockedWing,
   composeSupply, composeWound, composeDormant, composeTactics, composeProvision,
@@ -65,6 +65,9 @@ export class Simulator {
     this.paused = false;
     this.epitaph = null;
     this.lastNarration = null;
+    // Who was walking in front last time we looked, so the prose can
+    // say when that changes (narrative/Narrator.js composePoint)
+    this.pointName = null;
     this.log = [];
     // Prep lines the resolution's editor cut for length; recordTick
     // files them in the ledger, where complete accounting has always
@@ -249,6 +252,26 @@ export class Simulator {
     const predicament = composePredicament(room, this.dungeon.theme);
     const options = getRoomOptions(room, this.party);
     const chosen = decideRoomAction(room, this.party);
+    /*
+     * Who is walking in front, said before the room that will test it.
+     *
+     * Computed here rather than after the resolution because the point
+     * man must be named BEFORE the blow lands — a name introduced in
+     * the same room it dies in is exactly the failure this addresses
+     * (narrative/Dramaturg.js, mortalityEarned at 85%).
+     */
+    const DANGEROUS = new Set([ROOM_TYPES.MONSTER, ROOM_TYPES.BOSS, ROOM_TYPES.TRAP, ROOM_TYPES.DISASTER]);
+    let pointLine = null;
+    if (DANGEROUS.has(room.type)) {
+      const point = this.party.pointMan();
+      if (point && point.name !== this.pointName) {
+        // A change of point is nearly always a succession: whoever was
+        // in front is dead. Name the predecessor when there was one.
+        pointLine = composePoint(point, { succeeding: this.pointName });
+        this.pointName = point.name;
+      }
+    }
+
     const result = resolveRoomAction(room, this.party, chosen);
     this.lastResult = result;   // structured outcome, for analytics/mining
 
@@ -256,6 +279,18 @@ export class Simulator {
     // sentence (carries, card promises, the two best generics) and the
     // rest go to the ledger whole. The mechanics already applied every
     // one of them — this cuts nothing but column inches.
+    // A capability answered the room, and what it taught is worth a
+    // line: an earned advantage the player never reads is a dead
+    // declaration, whatever the ledger says. Situations often carry no
+    // preps at all, so this makes the array rather than assuming it.
+    if (result.taughtWayIn) {
+      result.preps = result.preps || [];
+      result.preps.push({
+        source: 'the reading',
+        text: '🗝️ And the shape of the place gives itself away: something sealed further down will open to what was learned here.',
+      });
+    }
+
     if (result.preps?.length) {
       // Lead lines the composer prints outside the preps array are card
       // promises too, and spend the same budget (Narrator.js editPreps)
@@ -298,11 +333,14 @@ export class Simulator {
         .filter(m => m.isAlive() && m.wounds > (woundsBefore.get(m.name) ?? 0))
         .map(m => composeWound(m, personalityModifiers(this.party).woundNotes)),
       supply: this.party.supply,
-      aside: linger
-        ? (linger.cured
-            ? '🐍 The cleric cures the lingering venom on the march: no damage taken.'
-            : `🐍 The venom carried from the last room acts: ${linger.damage} damage taken on the march.`)
-        : supplyLine,
+      aside: [
+        pointLine,
+        linger
+          ? (linger.cured
+              ? '🐍 The cleric cures the lingering venom on the march: no damage taken.'
+              : `🐍 The venom carried from the last room acts: ${linger.damage} damage taken on the march.`)
+          : supplyLine,
+      ].filter(Boolean).join(' ') || null,
     };
 
     // A key on a hook, a belt, or a body. Finding it is not a decision

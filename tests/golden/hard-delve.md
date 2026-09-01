@@ -12,12 +12,13 @@ An alchemy lab with a working bench. An alchemist with materials can brew or coa
 
 They might have chosen to experiment with the assembly, or dissolve the lock — the Cunning looked for the way that costs least. The party chose to understand the mechanism and fix it.
 
-🔧 The mechanism is understood and restored — it was a door-holder, and it shows the party how the builders meant to stand in this passage. The party takes that shape and keeps it. +22 score, and a shield wall into the next fight.
+🔧 The mechanism is understood and restored — it was a door-holder, and it shows the party how the builders meant to stand in this passage. The party takes that shape and keeps it. +22 score, and a shield wall into the next fight. 🗝️ And the shape of the place gives itself away: something sealed further down will open to what was learned here.
 
 <details><summary>Ledger</summary>
 
 - 🏅 22 renown earned.
 - 🕯️ 1 march of oil burned.
+- 🗝️ A reading of how this place was put together.
 - 🚪 1 more room behind them.
 - · ⚗️ Room 1: lab — tinkering-solve
 
@@ -45,9 +46,11 @@ _🚶 The party looks into the archive wing (shelving stacked to the ceiling, ha
 
 A thrall footman, polite and bloodless holds the room (attack 9, health 19). The party must decide how to get past it. It will not face the cleric: undead take holy damage ×1.5. Pillars break the room into aisles — something to fight behind. Half the ceiling is on the floor, in pieces worth stepping around. Somebody stacked supplies here and never came back for them.
 
-They might have chosen to name the armour by its heraldry, or strip the insignia off it — Michael Sendivogius made the case: "I hit hardest from the side nobody's watching." The party chose to stand and fight.
+They might have chosen to name the armour by its heraldry, or strip the insignia off it — Michael Sendivogius made the case: "The body is a temple. Mine's a fortress." The party chose to stand and fight.
 
 🪄 Michael Sendivogius uses the Haunted Armor — The Ghost Objects: a summon adding 1 attack each round. ⚔️ The party kills a thrall footman, polite and bloodless in 2 rounds, taking 1 damage. 📐 The party meets it standing as the last room left them. 🛡️ Aegis of Ash goes up before the first blow: 2 less damage every round. 🛡️ Shields lock along the front rank and the party stops trying to win quickly. 🎒 4 more preparations hold besides — the ledger keeps them.
+
+_🛡️ Michael Sendivogius walks in front, which is where the blows land first._
 
 <details><summary>Ledger</summary>
 
@@ -67,7 +70,7 @@ They might have chosen to name the armour by its heraldry, or strip the insignia
 
 ### 🪜 Room 4 — stairs
 
-The floor ends at a stairwell. Whatever is below has been waiting longer.
+A stair cut into the rock, going down. Cold air comes up it.
 
 They might have chosen to camp at the stairhead first — the Cunning looked for the way that costs least. The party chose to take the stair down.
 
@@ -89,9 +92,9 @@ They might have chosen to diagnose and treat the fever, or apply a natural remed
 
 🤒 Isabella Cortese is carried rather than treated, and the fever takes its price in full: 6 damage, and the party files through the next passage strung out around the litter.
 
-_🕯️ The wick is well down the oil. 2 more marches of light, then none._
+_🕯️ The lantern is burning low: oil for 2 more marches._
 
-- ✚ That one leaves a mark on Isabella Cortese. Their ceiling drops to 11 for the rest of the delve. The Devout tend what the dungeon opens: fewer blows leave a mark that stays.
+- ✚ Isabella Cortese takes a wound that will not close down here. Healing can bring them back to 11, no further, until town. The Devout tend what the dungeon opens: fewer blows leave a mark that stays.
 
 <details><summary>Ledger</summary>
 
@@ -100,7 +103,7 @@ _🕯️ The wick is well down the oil. 2 more marches of light, then none._
 - ✚ 1 wound that will not close down here.
 - 🚪 1 more room behind them.
 - 🪜 The party descends a floor: everything below hits harder.
-- · 🕯️ The wick is well down the oil. 2 more marches of light, then none.
+- · 🕯️ The lantern is burning low: oil for 2 more marches.
 - · 🕯️ Room 5: shrine — push-through
 
 </details>
@@ -113,13 +116,13 @@ They might have chosen to question the ghost gently, or scry for the map — the
 
 🚶 The party leaves him looking for it and finds its own way round the long side. A march of oil for the privilege.
 
-_🕯️ The lantern is burning low: oil for 1 more march._
+_🕯️ Someone checks the reservoir and does not like the answer: oil for 1 more march._
 
 <details><summary>Ledger</summary>
 
 - 🕯️ 2 marches of oil burned.
 - 🚪 1 more room behind them.
-- · 🕯️ The lantern is burning low: oil for 1 more march.
+- · 🕯️ Someone checks the reservoir and does not like the answer: oil for 1 more march.
 - · 📚 Room 6: library — leave-cartographer
 
 </details>
@@ -128,20 +131,20 @@ _🕯️ The lantern is burning low: oil for 1 more march._
 
 A treasure chest sits in the room. It may hold gold; it may be a mimic.
 
-They might have chosen to divine what is hidden here, or loot the treasure — the Cunning looked for the way that costs least. The party chose to inspect it first.
+They might have chosen to loot the treasure, or inspect it first — the Cunning looked for the way that costs least. The party chose to divine what is hidden here.
 
-🔍 The party checks for mimics and curses first, then takes 27 gold safely. 🔍 The Masterwork Lockpicks found everything: the full gold taken, nothing missed. 📜 Also in the hoard: a scroll of Eyes of the Mouse, added to the grimoire.
+🔮 Divine sense finds what mortal eyes miss: a handful of coin scattered in crevices. +8 gold, +10 score. 🗝️ And the shape of the place gives itself away: something sealed further down will open to what was learned here.
 
-_💡 No oil left, so Dancing Light does the work — light enough to walk by, and 3 damage nobody pays._
+_💡 Dancing Light kindles in the empty air and the party walks on seeing. The dark takes nothing._
 
 <details><summary>Ledger</summary>
 
-- 💰 The purse is 27 heavier.
-- 🏅 27 renown earned.
-- 📜 The grimoire grows by 1.
+- 💰 The purse is 8 heavier.
+- 🏅 10 renown earned.
+- 🗝️ A reading of how this place was put together.
 - 🚪 1 more room behind them.
-- · 💡 No oil left, so Dancing Light does the work — light enough to walk by, and 3 damage nobody pays.
-- · 💰 Room 7: treasure — inspect
+- · 💡 Dancing Light kindles in the empty air and the party walks on seeing. The dark takes nothing.
+- · 💰 Room 7: treasure — divine-presence
 
 </details>
 
@@ -184,4 +187,4 @@ They might have chosen to stand and fight, or fall back — the Cunning had alre
 
 the Castle of the Vampire Lord is cleared: the boss is dead and the party walks out. Survivors: Isabella Cortese, Paracelsus, Michael Sendivogius, Michael Maier. Rooms cleared: 8. Trophies carried out: 2 (latest: 👰 the Bride's veil).
 
-**Rooms cleared:** 8 · **Score:** 386 · **Gold:** 39 · **Trophies:** 2 · **Survivors:** 4
+**Rooms cleared:** 8 · **Score:** 369 · **Gold:** 20 · **Trophies:** 2 · **Survivors:** 4

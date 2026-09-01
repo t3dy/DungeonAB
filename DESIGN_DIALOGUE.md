@@ -1619,3 +1619,59 @@ line's text broke its marker, and the venom aside was a real carry the
 probe couldn't see. Both caught by tests/dramaturg. The lesson stands:
 when a mechanic's writing changes, its marker in `CARRY_MARKERS` changes
 with it, and the test that refuses all-false probes is load-bearing.
+
+## §P. The gate that does not gate
+
+Two levers built (2026-08-31), one working, one measured into the ground —
+and the measurement is the more useful result.
+
+**Access: a reading of the building.** Answering a situation with a
+drafted capability now grants `Party.wayIn`, spent at a sealed door: it
+opens a locked wing with no key in the dungeon (four in ten have none),
+and — worth twice as much, because secret wings are twice as common
+(0.68 a delve against 0.33) and a missed one is lost entirely — it
+deduces a secret door the roll failed to find. Both halves narrated at
+grant and at spend; ledger field added; 20% of delves see it pay, over
+the 10% floor `tests/assets` holds.
+
+**And it does not discriminate between drafts.** Grants are
+draft-sensitive (1.10 a delve narrow, 1.44 broad). The payoff is not:
+0.17 against 0.19, and rooms cleared 11.38 against 11.40. The lever
+saturates on *opportunity*: there are ~0.8 addressable doors a delve and
+even a narrow party earns more readings than that. Banking more readings
+buys nothing when there is nothing left to spend them on.
+
+**The upstream constraint, measured.** Of situations met:
+
+| | narrow draft | broad draft |
+|---|---|---|
+| offered a capability option | **93%** | 100% |
+| took one | 75% | 82% |
+
+A gate 93% of narrow parties pass is not a gate. This is §N's finding one
+level down: capability scarcity was fixed on the *cards* (median 19 → 15
+of 28) and then re-saturated by the *encounters*, because each asks "do
+you hold any of these four?" — and against four independent draws even a
+thin party nearly always holds one. Every downstream payoff is capped by
+that 7-point gap. No amount of access-lever tuning can exceed it.
+
+The fork this opens is whether an encounter option should be a binary
+gate at all. The house already answers this everywhere else (standing
+rule 4: gradient outcomes, not binary win/lose) — an option could be
+open to everyone and *resolve* by how much of it the party can bring, one
+relevant capability giving a partial result and three the full one. That
+converts breadth from a key into a quality, which is measurable and
+cannot saturate. It is also a change to every encounter's resolveOption,
+so it is a decision rather than a refactor.
+
+**Spotlight: the point man.** `Party.pointMan()` names who is actually
+standing in front — fighters first, the same order `takeDamage` sends
+blows down — said on the first dangerous room and again whenever it
+changes, which is nearly always a succession over somebody's body. With
+the brunt line it composes into an arc: "Tycho Brahe takes the front of
+the march" in room 3, "Tycho Brahe takes the worst of it: 13 of the
+party's 14" in room 9. Deaths of somebody the reader had met went from
+~22% to 68%; `mortalityEarned` 85% → 67% miss, and `protagonist` left
+the systemic list entirely. The residue is mass death in wipes, where
+the back rank dies in the same room it is first named — a structural
+limit, not a writing failure, and not worth weakening the probe over.

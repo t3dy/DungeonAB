@@ -66,6 +66,7 @@ export function snapshotState(sim) {
     equipment: p.members.reduce((s, m) => s + m.equipment.length, 0),
     weaponMods: p.members.reduce((s, m) => s + m.weaponMods.length, 0),
     keys: p.keys.length,
+    wayIn: p.wayIn || 0,
     roomsCleared: sim.roomsCleared,
     // Which floor the party is standing on. A descent is a state change
     // the player cares about (everything below is scaled harder), so it
@@ -172,6 +173,16 @@ const FIELDS = {
     icon: '🗝️', label: 'keys', salience: SALIENCE.NOTABLE,
     up: n => `${n === 1 ? 'A key' : `${n} keys`} taken up. Somewhere below there is a door for it.`,
     down: n => `${n === 1 ? 'A key' : `${n} keys`} gone from the ring.`,
+  },
+  // What answering a situation taught about the building, and what
+  // spending it opened (encounters/EncounterEngine.js, Party.wayIn).
+  // Ledger salience: the prose already says both halves in its own
+  // words at the moment each happens, and a second telling in the same
+  // room would be the stuck record this file exists to prevent.
+  wayIn: {
+    icon: '🗝️', label: 'readings of the building', salience: SALIENCE.LEDGER,
+    up: n => `${n === 1 ? 'A reading' : `${n} readings`} of how this place was put together.`,
+    down: n => `${n === 1 ? 'A reading' : `${n} readings`} spent on a sealed door.`,
   },
   floor: {
     icon: '🪜', label: 'floor', salience: SALIENCE.BEAT,
