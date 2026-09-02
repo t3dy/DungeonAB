@@ -197,3 +197,35 @@ currently is — and being in between is arguably why the draft explains
 1.5% of outcomes while 28 systems each reach 15% of delves.
 
 **Which one is it?** That answer changes half the cut list.
+
+---
+
+# STATUS — 2026-09-01, v8.0 tagged
+
+Ted answered the closing question in three words: **a dungeon
+simulator.** The cut was executed on branch `v8` the same day.
+
+| proposed | landed |
+|---|---|
+| the town, entirely | ✂️ gone, with Campaign and TownState |
+| Providence + Divination | ✂️ gone |
+| the tactics tree | ✂️ gone; pack slot went to equipment |
+| alchemy as a resource loop | ✂️ gone; loot stayed, economy died |
+| lock-and-key wings | ✂️ gone; wings are open or secret |
+| multi-floor dungeons | ✂️ one floor, 8–10 rooms |
+| conditions/wagers UI, hexes | ✂️ gone (inert plumbing remains) |
+| 8 themes → 3 | ✂️ delve, castle, icecaverns |
+| ship-time tooling out of bundle | deferred — build config, not deletion |
+| pool 83 → ~40 cards | partial: 68 (tactics gone); compression is v8.1 |
+| 28 → ~12 capabilities | deferred to v8.1 — content compression, not system removal |
+
+**17,427 → 14,542 lines.** The rest of the proposal's target is card and
+vocabulary compression, which is a different kind of work (content
+editing under measurement) and should not be rushed in the same sitting
+as structural surgery.
+
+The "meaner" half stands mostly ahead: the curve was recalibrated to the
+same 99/88/71/45 targets, not retargeted. Death now sticks — no town, no
+healing between delves, a lost magus is lost — but two of four
+difficulties still rarely kill anybody. Retargeting difficulty is a
+design decision to take with fresh eyes, not at the end of a long cut.
