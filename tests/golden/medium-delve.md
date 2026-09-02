@@ -1,6 +1,6 @@
 # The Chronicle of Marsilio Ficino, Michael Maier
 
-## Delve I — the Ancient Crypt
+## Delve I — the Old Delve
 
 **Difficulty:** medium · **Depth:** 1 · **Seed:** `golden-medium`
 
@@ -8,101 +8,79 @@
 
 ### 👹 Room 1 — monster
 
-A bone warden on its rounds holds the room (attack 5, health 12). The party must decide how to get past it. Plate and chitin cover it: the party's blows do 2 less damage each round. It will not face the cleric: undead take holy damage ×1.5. A bed of rusted spikes stands out of the floor, most of them still upright. A gargoyle spout drips something that is not water into a stained channel.
+A chittering rat swarm holds the room (attack 3, health 8). The party must decide how to get past it. It is a swarm: spell openings hit it ×1.5. It keeps clear of the torches: weak to fire (fire damage ×1.5). A boulder sits at the top of a slope, held by a wedge of rotten timber. A portcullis hangs raised above the passage, on a chain that still turns.
 
-They might have chosen to accept the duel, or negotiate the terms — Marsilio Ficino made the case: "Candles first. Then courage." The party chose to turn the undead.
+They might have chosen to stand and fight, or fall back — Marsilio Ficino made the case: "Candles first. Then courage." The party chose to open with a combat spell.
 
-✨ The cleric turns the undead: a bone warden on its rounds crumbles. +30 score. 🦴 A bone warden on its rounds drops a pauldron of century bone: a trinket (+1 defense), now worn by Michael Maier.
+🔥 Chain Lightning opens the fight; against a swarm the spell hits ×1.5. ⚔️ A chittering rat swarm is dead before the party closes: it never gets a round. ⚡ The working finds a raised portcullis and arcs off it into everything nearby: 4 extra damage. 🌐 There is room enough in the hall to fight spread out, well apart. 🎒 1 more preparation holds besides — the ledger keeps it.
 
-_🛡️ Marsilio Ficino takes the front of the march, and the rest fall in behind._
+_🛡️ Marsilio Ficino takes the front of the march, and the rest fall in behind. 🧭 The Covetous wanted what gets buried with people: the party turns off into the burial wing. Its rooms join the route._
 
 <details><summary>Ledger</summary>
 
-- 🏅 30 renown earned.
+- 🏅 25 renown earned.
 - 🏆 1 trophy taken from the dead.
 - 🎒 1 piece of kit taken up.
 - 🚪 1 more room behind them.
-- · 👹 Room 1: monster — turn-undead
+- · 👹 Room 1: monster — spell-strike
+- 🎒 🐀 A chittering rat swarm drops the rat-king's knot: a trinket (+1 mind), now worn by Michael Maier.
 
 </details>
 
-### 👹 Room 2 — monster
+### ⚠️ Room 2 — trap
 
-A boil of grave mites holds the room (attack 3, health 7). The party must decide how to get past it. It is a swarm: spell openings hit it ×1.5. It keeps clear of the torches: weak to fire (fire damage ×1.5). Pillars break the room into aisles — something to fight behind.
+A trap blocks the corridor. The party must disarm it, avoid it, or take the hit. Half the ceiling is on the floor, in pieces worth stepping around. A bed of rusted spikes stands out of the floor, most of them still upright.
 
-They might have chosen to speak with whatever wears the armour, or name the armour by its heraldry — Michael Maier made the case: "Add nothing until you know what it does. Then add plenty." The party chose to put the armour down.
+They might have chosen to push through and take the hit, or bypass it with a utility spell — Michael Maier made the case: "I've drunk worse than whatever that is." The party chose to search for a way around.
 
-⚔️ Empty armour does dent like full armour, and hits back like it too. 4 damage, a great deal of noise, and the party comes out of it spread across the passage.
-
-_🧭 The party turns off into the flooded wing — a floor that slopes down into standing water. Its rooms join the route._
+Nothing here needs doing. The party walks on.
 
 <details><summary>Ledger</summary>
 
 - 🕯️ 1 march of oil burned.
-- ❤️ 4 health taken.
 - 🚪 1 more room behind them.
-- · 👹 Room 2: monster — put-it-down
+- · ⚠️ Room 2: trap — search-around
 
 </details>
 
-### 👹 Room 3 — monster
+### ⚠️ Room 3 — trap
 
-A barrow shade, thin as smoke holds the room (attack 7, health 9). The party must decide how to get past it. It is ethereal: weapons do only 60% damage unless a cleric blesses the blades. It will not face the cleric: undead take holy damage ×1.5. A portcullis hangs raised above the passage, on a chain that still turns. A bed of rusted spikes stands out of the floor, most of them still upright.
+A trap blocks the corridor. The party must disarm it, avoid it, or take the hit. A tripwire runs up the wall to a bell: an alarm trap. Little damage, but the next monster will be warned (+2 attack). A bed of rusted spikes stands out of the floor, most of them still upright. Half the ceiling is on the floor, in pieces worth stepping around.
 
-They might have chosen to stand and fight, or fall back — Marsilio Ficino made the case: "Faith walks in front. So do I." The party chose to turn the undead.
+They might have chosen to search for a way around, or bypass it with a utility spell — Marsilio Ficino made the case: "The liturgy has a verse for this. Several, actually." The party chose to push through and take the hit.
 
-✨ The cleric turns the undead: a barrow shade, thin as smoke crumbles. +30 score. 📜 A barrow shade, thin as smoke drops the shade's last words: a scroll of Barrow Chill (combat, power 4), added to the grimoire.
+💥 The party pushes through the trap, taking 1 damage. 🏮 The Everburning Lantern showed the pressure plates: 1 less damage. 🪶 Feather Step takes the party's weight off the floor: 3 less damage from anything underfoot. 🔔 The alarm rings through the dungeon: the next monster will attack with +2.
 
 <details><summary>Ledger</summary>
 
-- 🏅 30 renown earned.
-- 🏆 1 trophy taken from the dead.
-- 📜 The grimoire grows by 1.
-- ❤️ 1 health mended.
+- 🔔 An alarm is ringing somewhere below. Whatever comes next knows.
+- ❤️ 1 health taken.
 - 🚪 1 more room behind them.
-- · 👹 Room 3: monster — turn-undead
+- · ⚠️ Room 3: trap — push-through
 
 </details>
 
-### 🌋 Room 4 — disaster
+### ⚠️ Room 4 — trap
 
-The tomb lids open at once and the dead press in from every side. The party must brace together or scatter.
+A trap blocks the corridor. The party must disarm it, avoid it, or take the hit. Half the ceiling is on the floor, in pieces worth stepping around.
 
-They might have chosen to scatter and regroup — Michael Maier made the case: "The notes end mid-sentence. I intend to finish them." The party chose to brace together.
+They might have chosen to search for a way around, or bypass it with a utility spell — Michael Maier made the case: "Add nothing until you know what it does. Then add plenty." The party chose to push through and take the hit.
 
-🌋 The party braces together and rides it out: 5 damage taken. 💚 Balm of Hours heals 13 as the dust settles.
+💥 The party pushes through the trap, taking 1 damage. 🏮 The Everburning Lantern showed the pressure plates: 1 less damage. 🪶 Feather Step takes the party's weight off the floor: 3 less damage from anything underfoot.
 
 <details><summary>Ledger</summary>
 
 - 🕯️ 1 march of oil burned.
-- ❤️ 3 health mended.
 - 🚪 1 more room behind them.
-- · 🌋 Room 4: disaster — brace
+- · ⚠️ Room 4: trap — push-through
 
 </details>
 
 ### 💰 Room 5 — treasure
 
-A treasure chest sits in the room. It may hold gold; it may be a mimic. A silvered mirror leans against the wall, and it shows the room more honestly than the room does.
+A treasure chest sits in the room. It may hold gold; it may be a mimic. Somebody stacked supplies here and never came back for them. A sarcophagus stands against the wall with its lid slightly wrong.
 
-They might have chosen to inspect it first, or leave it alone — Marsilio Ficino made the case: "The god helps those who check for tripwires." The party chose to loot the treasure.
-
-💰 The party loots the chest: 50 gold.
-
-<details><summary>Ledger</summary>
-
-- 💰 The purse is 50 heavier.
-- 🏅 50 renown earned.
-- 🚪 1 more room behind them.
-- · 💰 Room 5: treasure — loot
-
-</details>
-
-### 🕯️ Room 6 — shrine
-
-A shrine. Resting here heals the party; the gold leaf on the altar could be stripped instead. Pillars break the room into aisles — something to fight behind. A sarcophagus stands against the wall with its lid slightly wrong.
-
-They might have chosen to rest and heal, or strip the gold leaf — Michael Maier made the case: "Every explosion is a lesson. Class is in session." The party chose to pry the sarcophagus open.
+They might have chosen to loot the treasure, or inspect it first — Marsilio Ficino made the case: "Grace favors the well-prepared." The party chose to pry the sarcophagus open.
 
 ⚰️ The party pries the lid off a stone sarcophagus: 55 gold.
 
@@ -110,160 +88,205 @@ They might have chosen to rest and heal, or strip the gold leaf — Michael Maie
 
 - 💰 The purse is 55 heavier.
 - 🏅 55 renown earned.
+- ❤️ 1 health mended.
+- 🚪 1 more room behind them.
+- · 💰 Room 5: treasure — pry-sarcophagus
+
+</details>
+
+### 👹 Room 6 — monster
+
+A rattling skeleton patrol holds the room (attack 5, health 12). The party must decide how to get past it. It will not face the cleric: undead take holy damage ×1.5. A gargoyle spout drips something that is not water into a stained channel. A crack runs the width of the room, wide enough to matter and too wide to jump twice.
+
+They might have chosen to stand and fight, or fall back — Marsilio Ficino made the case: "The god counts. So do I." The party chose to turn the undead.
+
+✨ The cleric turns the undead: a rattling skeleton patrol crumbles. +30 score. 🦴 A rattling skeleton patrol drops a femur of surprising balance: a trinket (+1 attack), now worn by Marsilio Ficino.
+
+<details><summary>Ledger</summary>
+
+- 🏅 30 renown earned.
 - 🕯️ 1 march of oil burned.
+- 🏆 1 trophy taken from the dead.
+- 🎒 1 piece of kit taken up.
 - 🚪 1 more room behind them.
-- · 🕯️ Room 6: shrine — pry-sarcophagus
+- · 👹 Room 6: monster — turn-undead
 
 </details>
 
-### ⚗️ Room 7 — lab
+### 📚 Room 7 — library
 
-An alchemy lab with a working bench. An alchemist with materials can brew or coat weapons here. Shelves sag under books nobody has audited in a century. A brazier burns in its bracket — nobody has been here to feed it, and it burns anyway.
+A library. The party can study here to learn spells. Shelves sag under books nobody has audited in a century.
 
-There was only one option: the party chose to move on.
+They might have chosen to question the ghost gently, or scry for the map — Marsilio Ficino made the case: "We are exactly where we are meant to be. Regrettably." The party chose to read the place itself.
 
-Nothing here needs doing. The party walks on.
-
-_🕳️ Marsilio Ficino finds a trapdoor in the floor. The party leaves it shut: the rooms it skips hold loot as well as danger._
-
-<details><summary>Ledger</summary>
-
-- 🚪 1 more room behind them.
-- · ⚗️ Room 7: lab — pass-by
-
-</details>
-
-### 🪜 Room 8 — stairs
-
-The floor ends at a stairwell. Whatever is below has been waiting longer.
-
-There was only one option: the party chose to take the stair down.
-
-🪜 The party goes down the stair to the second floor, burning a march of oil on the climb.
-
-<details><summary>Ledger</summary>
-
-- 🕯️ 2 marches of oil burned.
-- 🚪 1 more room behind them.
-- · 🪜 Room 8: stairs — descend
-
-</details>
-
-### 📚 Room 9 — library
-
-A library. The party can study here to learn spells. Pillars break the room into aisles — something to fight behind. A font holds water that has been still a long time and is somehow clean.
-
-They might have chosen to move on, or bless the font and drink — Marsilio Ficino made the case: "Tithes flow both directions, technically." The party chose to study the shelves.
-
-📚 The party studies the shelves and learns 2 spells.
+🧭 The map is unnecessary: the place was laid out by someone with habits, and habits can be read off three corridors. The party stops doubling back — two marches of oil saved, and the next snare is on the route before they reach it. +30 score. 🎓 Somebody checks the work who is qualified to: +10 renown.
 
 <details><summary>Ledger</summary>
 
 - 🏅 40 renown earned.
-- 📖 2 new workings copied into the grimoire.
-- 📜 The grimoire grows by 2.
+- 🕯️ 2 more marches of oil found.
 - 🚪 1 more room behind them.
-- 🪜 The party descends a floor: everything below hits harder.
-- · 📚 Room 9: library — study
+- · 📚 Room 7: library — read-the-plan
 
 </details>
 
-### 📚 Room 10 — library
-
-A library. The party can study here to learn spells. A font holds water that has been still a long time and is somehow clean. A brazier burns in its bracket — nobody has been here to feed it, and it burns anyway.
-
-They might have chosen to move on, or bless the font and drink — Michael Maier made the case: "Gold in, gold out — that's the whole science." The party chose to study the shelves.
-
-📚 The party studies the shelves and learns 2 spells.
-
-<details><summary>Ledger</summary>
-
-- 🏅 40 renown earned.
-- 🕯️ 1 march of oil burned.
-- 📖 2 new workings copied into the grimoire.
-- 📜 The grimoire grows by 2.
-- 🚪 1 more room behind them.
-- · 📚 Room 10: library — study
-
-</details>
-
-### 🪐 Room 11 — situation
+### 🪐 Room 8 — situation
 
 A connecting corridor. Nothing blocks the way; the party moves through.
 
-They might have chosen to divine the unstable motion, or compute the orrery’s epicycles — Marsilio Ficino made the case: "Candles first. Then courage." The party chose to repair the gears.
+They might have chosen to attune the resonances, or link the three frequencies — Michael Maier made the case: "Peer review can wait. The flask can't." The party chose to sing the third harmony.
 
-🔧 The gears are coaxed still and the walls stop. A stripped bronze pinion goes into the satchel: +1 material, +20 score. 🎓 Everything this asks for, the party happens to have brought: +25 renown. 🗝️ And the shape of the place gives itself away: something sealed below will open to this.
-
-<details><summary>Ledger</summary>
-
-- 🏅 45 renown earned.
-- 🌿 1 more alchemical materials in the satchel.
-- 🗝️ A reading of how this place was put together.
-- 🚪 1 more room behind them.
-- · 🪐 Room 11: situation — repair-gears
-
-</details>
-
-### 🌿 Room 12 — materials
-
-A room of herbs, salts, and quicksilver — alchemy materials, free to gather. A gargoyle spout drips something that is not water into a stained channel.
-
-They might have chosen to experiment with the assembly, or dissolve the lock — Michael Maier made the case: "Peer review can wait. The flask can't." The party chose to harvest the spout.
-
-🗿 The alchemist bottles what drips from a gargoyle spout, dripping: 3 materials.
+🎵 A perfect voice finds the third harmony. The three frequencies lock into a single, beautiful chord. The walls settle and the front-rank member feels renewed. +18 score. 🎓 Not done alone, and better for it: +10 renown.
 
 <details><summary>Ledger</summary>
 
-- 🌿 3 more alchemical materials in the satchel.
+- 🏅 28 renown earned.
 - 🕯️ 1 march of oil burned.
 - 🚪 1 more room behind them.
-- · 🌿 Room 12: materials — harvest-spout
+- · 🪐 Room 8: situation — music-harmony
 
 </details>
 
-### 🐉 Room 13 — boss
+### 👹 Room 9 — monster
 
-The boss chamber. The Abbot of Worms, still preaching waits at its center (attack 10, health 35); killing it clears the dungeon. It is venomous: even a won fight leaves poison working, unless a cleric cures it. It will not face the cleric: undead take holy damage ×1.5. Pillars break the room into aisles — something to fight behind. A pit takes up a third of the floor. The bottom is not visible.
+A goblin toll-gang holds the room (attack 4, health 10). The party must decide how to get past it. Half the ceiling is on the floor, in pieces worth stepping around. A brazier burns in its bracket — nobody has been here to feed it, and it burns anyway.
 
-They might have chosen to stand and fight, or fall back — Marsilio Ficino made the case: "The god helps those who check for tripwires." The party chose to open with a combat spell.
+They might have chosen to accept the duel, or negotiate the terms — Marsilio Ficino made the case: "The commentaries disagree. I don't." The party chose to fight from behind the pillars.
 
-🔥 The caster opens with Radiant Lance, chosen precisely for the monster's holy weakness: spell damage ×1.5. ☠️ Even softened, the Abbot of Worms, still preaching beats the party down. 📐 The party meets it standing as the last room left them. 🛡️ The prayers on the inside of the buckler turn aside half of what the party set off. 💚 Balm of Hours closes Marsilio Ficino's wounds mid-fight: 13 healed in round 8, then 7 a round while it holds. 🎒 9 more preparations hold besides — the ledger keeps them.
+🏛️ The party backs into a row of squat pillars and makes the monster come down one aisle at a time: 4 damage as it closes. ⚔️ The party kills a goblin toll-gang in 1 round, taking 0 damage. 🔔 The alarm tripped earlier warned it: the monster attacks with +2 this fight. 🧱 The party fights from behind a fall of rubble: 1 less damage per round. 🧱 The party fights from behind a row of squat pillars: 1 less damage per round. 🎒 3 more preparations hold besides — the ledger keeps them.
 
 <details><summary>Ledger</summary>
 
-- 🕯️ 2 marches of oil burned.
-- 📜 1 scroll burns away on use.
-- ❤️ 1 health taken.
-- · 🐉 Room 13: boss — spell-strike
-- 🎒 🧱 The party fights from behind a row of squat pillars: 1 less damage per round.
+- 💰 The purse is 15 heavier.
+- 🏅 40 renown earned.
+- 🏆 1 trophy taken from the dead.
+- 🔔 The alarm has stopped mattering; the thing it warned has been met.
+- 🚪 1 more room behind them.
+- · 👹 Room 9: monster — fight-from-cover
 - 🎒 🏛️ Fighting from the aisles: 3 less damage per round on top of the cover.
-- 🎒 ✨ Nothing is held back for later: the party looses everything it has, 8 workings in the one fight that matters.
-- 🎒 🕳️ The working earths itself down an open pit, and the whole floor jumps: the monster fights off-balance for 2 less, and everyone who felt it takes 1.
-- 🎒 ❄️ Frost gets into a row of squat pillars and cracks it apart: 2 damage in splinters of cold stone.
-- 🎒 🧊 Frost sheets across an open pit until it will bear weight — a bridge to fight from, and a bad place to slip: 2 cover, 1 damage.
-- 🎒 💨 The working puts a brazier still burning out. Smoke to fight behind, and 2 marches of light gone with it.
-- 🎒 🌐 There is room enough in the hall to fight spread out, well apart.
-- 🎒 ✨ The working holds: +48 damage every round while the fight lasts.
+- 🎒 🔺 The party drives in as a wedge, everything committed forward.
+- 🎒 💰 A goblin toll-gang drops the toll-purse: 15 gold.
 
 </details>
 
-### 🐉 Room 13 — boss
+### ⚠️ Room 10 — trap
 
-The boss chamber. The Abbot of Worms, still preaching waits at its center (attack 10, health 35); killing it clears the dungeon. It is venomous: even a won fight leaves poison working, unless a cleric cures it. It will not face the cleric: undead take holy damage ×1.5. Pillars break the room into aisles — something to fight behind. A pit takes up a third of the floor. The bottom is not visible.
+A trap blocks the corridor. The party must disarm it, avoid it, or take the hit. A pit takes up a third of the floor. The bottom is not visible.
 
-They might have chosen to stand and fight, or fall back — Marsilio Ficino made the case: "The god helps those who check for tripwires." The party chose to open with a combat spell.
+They might have chosen to solve the progression, or read the dust — Michael Maier made the case: "As above, so below. Mind the fumes between." The party chose to just walk it.
 
-🔥 The caster opens with Radiant Lance, chosen precisely for the monster's holy weakness: spell damage ×1.5. ☠️ Even softened, the Abbot of Worms, still preaching beats the party down. 📐 The party meets it standing as the last room left them. 🛡️ The prayers on the inside of the buckler turn aside half of what the party set off. 💚 Balm of Hours closes Marsilio Ficino's wounds mid-fight: 13 healed in round 8, then 7 a round while it holds. 🎒 9 more preparations hold besides — the ledger keeps them.
+💥 It is a floor for about six paces. 3 damage out of the ceiling, and the party finishes the crossing at a scattered run.
 
 <details><summary>Ledger</summary>
 
+- 🕯️ 1 march of oil burned.
+- ❤️ 3 health taken.
+- 🚪 1 more room behind them.
+- · ⚠️ Room 10: trap — walk-it
+
+</details>
+
+### ⚠️ Room 11 — trap
+
+A trap blocks the corridor. The party must disarm it, avoid it, or take the hit. A tripwire runs up the wall to a bell: an alarm trap. Little damage, but the next monster will be warned (+2 attack). Half the ceiling is on the floor, in pieces worth stepping around.
+
+They might have chosen to push through and take the hit, or search for a way around — Marsilio Ficino made the case: "The liturgy has a verse for this. Several, actually." The party chose to bypass it with a utility spell.
+
+There is nothing to fight and nothing to take. The party keeps going.
+
+<details><summary>Ledger</summary>
+
+- 🏅 10 renown earned.
+- ❤️ 1 health mended.
+- 🚪 1 more room behind them.
+- · ⚠️ Room 11: trap — spell-bypass
+
+</details>
+
+### 🪐 Room 12 — situation
+
+A connecting corridor. Nothing blocks the way; the party moves through.
+
+They might have chosen to experiment with the assembly, or dissolve the lock — Michael Maier made the case: "I've drunk worse than whatever that is." The party chose to take one of the side passages.
+
+🛤️ The side passage goes round, and round, and eventually through. Two more marches of oil burned than the direct road would have cost. +8 score.
+
+<details><summary>Ledger</summary>
+
+- 🏅 8 renown earned.
+- 🕯️ 3 marches of oil burned.
+- ❤️ 1 health mended.
+- 🚪 1 more room behind them.
+- · 🪐 Room 12: situation — take-detour
+
+</details>
+
+### 🪐 Room 13 — situation
+
+A connecting corridor. Nothing blocks the way; the party moves through.
+
+They might have chosen to send something under the slab, or signal by sound — Marsilio Ficino made the case: "Candles first. Then courage." The party chose to pass a plan through the stone.
+
+📡 The link carries more than reassurance: a plan goes across it, timed, with both halves moving on the same count. They meet in the middle of whatever was waiting, from two sides at once, and are still in that shape when the next room opens. +36 score. 🎓 Done by people who do something near it: 10 renown less than a clean job.
+
+<details><summary>Ledger</summary>
+
+- 🏅 26 renown earned.
+- ❤️ 1 health mended.
+- 🚪 1 more room behind them.
+- · 🪐 Room 13: situation — linked-plan
+
+</details>
+
+### 🕯️ Room 14 — shrine
+
+A shrine. Resting here heals the party; the gold leaf on the altar could be stripped instead.
+
+They might have chosen to bring the fever down, or apply a natural remedy — Michael Maier made the case: "Everything in this room fits in my satchel if I believe." The party chose to diagnose and treat the fever.
+
+💊 The diagnosis is swift: a blood imbalance, easily corrected. Medical knowledge and a minute's treatment restore full vigor. +18 score. 🎓 Nobody here is the person you would send. It shows, by 10 renown.
+
+<details><summary>Ledger</summary>
+
+- 🏅 8 renown earned.
+- 🕯️ 1 march of oil burned.
+- 🚪 1 more room behind them.
+- · 🕯️ Room 14: shrine — medicine-diagnose
+
+</details>
+
+### 🐉 Room 15 — boss
+
+The boss chamber. The Ogre King Under the Stair waits at its center (attack 12, health 32); killing it clears the dungeon. Plate and chitin cover it: the party's blows do 2 less damage each round. A brazier burns in its bracket — nobody has been here to feed it, and it burns anyway. A silvered mirror leans against the wall, and it shows the room more honestly than the room does.
+
+They might have chosen to stand and fight, or fall back — Marsilio Ficino made the case: "Even the dead tithe here. Especially the dead." The party chose to put it onto the floor spikes.
+
+🔻 The party drives the monster back onto a bed of rusted floor spikes: 19 damage, and it has to pull itself off them. ⚔️ The party kills the Ogre King Under the Stair in 2 rounds, taking 10 damage. 📐 The party meets it standing as the last room left them. 💢 Sunder reminds the plate it was ore: it stops turning blows for the rest of the fight. 💚 Balm of Hours closes Marsilio Ficino's wounds mid-fight: 13 healed in round 1, then 7 a round while it holds. 🎒 6 more preparations hold besides — the ledger keeps them.
+
+- ✚ Marsilio Ficino is opened up badly enough that the delve will keep it: 12 is as whole as they get until town. The Devout tend what the dungeon opens: fewer blows leave a mark that stays.
+
+<details><summary>Ledger</summary>
+
+- 🏅 250 renown earned.
+- 🏆 1 trophy taken from the dead.
+- 📜 The grimoire grows by 1.
+- ❤️ 2 health taken.
+- ✚ 1 wound that will not close down here.
+- 🎒 1 piece of kit taken up.
+- 🚪 1 more room behind them.
+- · 🐉 Room 15: boss — shove-onto-spikes
 - · 🏆 The dungeon is beaten!
+- 🎒 🪞 A tall silvered mirror shows the ethereal where it truly stands: weapons do full damage.
+- 🎒 🔨 The Blessed Mace sanctifies the room between swings: whatever was stirring in the stone settles.
+- 🎒 🔺 The party drives in as a wedge, everything committed forward.
+- 🎒 💢 At half health, the Ogre King Under the Stair turns fierce: attack +2 for the rest of the fight.
+- 🎒 👑 The Ogre King Under the Stair drops the Ogre King's smallest crown: a trinket (+2 defense), now worn by Michael Maier.
+- 🎒 📜 Also in the hoard: a scroll of Dawnbreak, added to the grimoire.
 
 </details>
 
 ### 🏆 The way out
 
-the Ancient Crypt is cleared: the boss is dead and the party walks out. Survivors: Marsilio Ficino, Michael Maier. Rooms cleared: 12. Trophies carried out: 2 (latest: 📜 the shade's last words).
+the Old Delve is cleared: the boss is dead and the party walks out. Survivors: Marsilio Ficino, Michael Maier. Rooms cleared: 15. Trophies carried out: 4 (latest: 👑 the Ogre King's smallest crown).
 
-**Rooms cleared:** 12 · **Score:** 290 · **Gold:** 105 · **Trophies:** 2 · **Survivors:** 2
+**Rooms cleared:** 15 · **Score:** 520 · **Gold:** 70 · **Trophies:** 4 · **Survivors:** 2

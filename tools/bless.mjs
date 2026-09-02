@@ -44,7 +44,7 @@ export const CASES = [
   // recalibration that followed it — `golden-fall-1` survived the new
   // curve. This case exists to freeze a wipe, so when it stops wiping,
   // find a seed that does rather than accepting three victories.
-  { name: 'nightmare-delve', seed: 'golden-fall-2', difficulty: 'nightmare' },
+  { name: 'nightmare-delve', seed: 'golden-fall-1', difficulty: 'nightmare' },
 ];
 
 /**

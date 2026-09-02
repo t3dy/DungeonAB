@@ -55,7 +55,7 @@ import { costCard } from '../src/game/Costing.js';
  * out of its band reports confident zeroes.
  */
 const BASE_BY_DIFFICULTY = {
-  easy: () => [...CHARACTER_CARDS.slice(0, 1)],                                   // ~39%
+  easy: () => [...CHARACTER_CARDS.slice(0, 2)],                                   // re-fit for v8
   medium: () => [...CHARACTER_CARDS.slice(0, 4)],                                 // ~48%
   hard: () => [...CHARACTER_CARDS.slice(0, 4), ...EQUIPMENT_CARDS.slice(0, 9)],   // ~63%
   nightmare: () => [                                                              // ~35%
