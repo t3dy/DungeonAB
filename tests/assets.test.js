@@ -147,7 +147,8 @@ describe('The reworked kit has a job', () => {
       assert.ok(card, `${id} exists`);
       assert.ok(card.text.length > 60, `${card.name} explains its new job`);
     }
-    assert.match(getCard('eq-alembic').text, /oil/i);
+    // v8: the oil-cooking promise went with the alchemy economy
+    assert.match(getCard('eq-alembic').text, /alchemist|laboratory/i);
     assert.match(getCard('eq-chainmail').text, /scar/i);
     assert.match(getCard('eq-warded-buckler').text, /come back on them/i);
     assert.match(getCard('eq-athanor-charm').text, /alight|burn/i);
