@@ -195,27 +195,6 @@ describe('The party reads capabilities off everything it carries', () => {
 });
 
 describe('A power travels with the capability, not the character', () => {
-  test('the fugue rule doubles a brew for alchemy + music in ANY hands', () => {
-    // Maier carries both himself
-    const maier = new Party([byId('char-maier')]);
-    maier.materials = 2;
-    const solo = maier.doAlchemy(0.2);
-    assert.equal(solo.type, 'potion');
-    assert.ok(solo.doubled, 'Maier brews in doubles');
-
-    // ...and so does an alchemist standing next to a musician
-    const pair = new Party([byId('char-paracelsus'), byId('char-ficino')]);
-    pair.materials = 2;
-    const together = pair.doAlchemy(0.2);
-    assert.equal(together.type, 'potion');
-    assert.ok(together.doubled, 'the synergy is between capabilities, not people');
-
-    // ...but an alchemist alone does not
-    const alone = new Party([byId('char-paracelsus')]);
-    alone.materials = 2;
-    const single = alone.doAlchemy(0.2);
-    assert.ok(!single.doubled, 'alchemy without music draws one flask');
-  });
 });
 
 function test(name, fn) {

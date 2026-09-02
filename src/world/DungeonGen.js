@@ -46,8 +46,8 @@ export const ROOM_TYPES = {
  * to live: each one is meaner than the last, and the boss waits at the
  * bottom.
  */
-export const FLOOR_SPINE = { min: 3, max: 4 };
-export const MAX_FLOORS = 3;
+export const FLOOR_SPINE = { min: 8, max: 10 };
+export const MAX_FLOORS = 1;   // v8: one floor, every room of it mattering
 
 /**
  * Wings — the side passages off the spine.
@@ -64,36 +64,25 @@ export const MAX_FLOORS = 3;
  */
 export const WINGS = {
   crypt: {
-    id: 'crypt',
-    door: 'a barred grille, its bar on the far side', keyName: 'the sexton\'s key', name: 'the burial wing',
+    id: 'crypt', name: 'the burial wing',
     tell: 'burial niches, most of them open',
     body: ['monster', 'trap', 'shrine'],
     payoff: 'treasure',
   },
-  works: {
-    id: 'works',
-    door: 'a workshop door with a lock cast into it', keyName: 'a brass workshop key', name: 'the workshop wing',
-    tell: 'cold furnaces and racked glassware',
-    body: ['materials', 'lab', 'trap'],
-    payoff: 'materials',
-  },
   archive: {
-    id: 'archive',
-    door: 'a reading-room door, locked since the last audit', keyName: 'the archivist\'s key', name: 'the archive wing',
+    id: 'archive', name: 'the archive wing',
     tell: 'shelving stacked to the ceiling, half of it collapsed',
     body: ['library', 'trap', 'monster'],
     payoff: 'library',
   },
   barracks: {
-    id: 'barracks',
-    door: 'a guardroom door with a drop-bar', keyName: 'the watch-captain\'s key', name: 'the barracks wing',
+    id: 'barracks', name: 'the barracks wing',
     tell: 'bunkrooms and a picked-over weapon rack',
     body: ['monster', 'monster', 'corridor'],
     payoff: 'treasure',
   },
   sump: {
-    id: 'sump',
-    door: 'a sluice gate, wound shut', keyName: 'a sluice crank', name: 'the flooded wing',
+    id: 'sump', name: 'the flooded wing',
     tell: 'a floor that slopes down into standing water',
     body: ['disaster', 'monster', 'trap'],
     payoff: 'treasure',
@@ -133,8 +122,6 @@ const ROOM_GEOMETRY = {
   treasure:  [{ shape: 'cell', min: [5, 5], max: [7, 7] }, { shape: 'chamber', min: [8, 7], max: [10, 9] }],
   library:   [{ shape: 'hall', min: [12, 7], max: [16, 8] }, { shape: 'chamber', min: [9, 9], max: [12, 12] }],
   shrine:    [{ shape: 'rotunda', min: [9, 9], max: [12, 12] }, { shape: 'chamber', min: [8, 8], max: [10, 10] }],
-  lab:       [{ shape: 'chamber', min: [9, 8], max: [12, 10] }, { shape: 'hall', min: [12, 6], max: [14, 7] }],
-  materials: [{ shape: 'cavern', min: [9, 8], max: [13, 10] }, { shape: 'cell', min: [6, 5], max: [7, 7] }],
   disaster:  [{ shape: 'cavern', min: [12, 9], max: [16, 13] }, { shape: 'hall', min: [13, 6], max: [16, 8] }],
   // The throne room is the biggest room in the dungeon by construction,
   // not by luck: its smallest footprint (120 tiles) beats the largest
@@ -197,10 +184,10 @@ const ROOM_ICONS = {
  * budget and the benchmark that rests on it, not a nudged constant.
  */
 const TYPE_WEIGHTS = {
-  easy: { monster: 2, trap: 1, treasure: 2, library: 1, shrine: 1.5, lab: 1, materials: 2, disaster: 0.5, corridor: 1, situation: 3 },
-  medium: { monster: 3, trap: 1.5, treasure: 2, library: 1, shrine: 1, lab: 1, materials: 1.5, disaster: 1, corridor: 1, situation: 3 },
-  hard: { monster: 4, trap: 2.5, treasure: 1.5, library: 1, shrine: 0.7, lab: 1, materials: 1, disaster: 2, corridor: 0.5, situation: 2.6 },
-  nightmare: { monster: 5, trap: 3, treasure: 1.5, library: 0.8, shrine: 0.5, lab: 1, materials: 1, disaster: 3, corridor: 0.3, situation: 2.2 },
+  easy: { monster: 2, trap: 1, treasure: 2, library: 1, shrine: 1.5, disaster: 0.5, corridor: 1, situation: 3 },
+  medium: { monster: 3, trap: 1.5, treasure: 2, library: 1, shrine: 1, disaster: 1, corridor: 1, situation: 3 },
+  hard: { monster: 4, trap: 2.5, treasure: 1.5, library: 1, shrine: 0.7, disaster: 2, corridor: 0.5, situation: 2.6 },
+  nightmare: { monster: 5, trap: 3, treasure: 1.5, library: 0.8, shrine: 0.5, disaster: 3, corridor: 0.3, situation: 2.2 },
 };
 
 function weightedPick(rng, weights) {
@@ -348,7 +335,7 @@ export function generateDungeon(seed, difficulty = 'medium', opts = {}) {
   // start with, three once the party is delving deep. A random third
   // floor made early delves twice as long as the supply the party can
   // carry, and the lamp — not the monsters — decided the run.
-  const floorCount = Math.min(MAX_FLOORS, 2 + (depth >= 3 ? 1 : 0));
+  const floorCount = 1;   // v8: the delve is one floor deep
   const floorScale = f => statScale * (1 + f * 0.18);
 
   const rooms = [];
@@ -377,11 +364,6 @@ export function generateDungeon(seed, difficulty = 'medium', opts = {}) {
   // Themes add their own identity guarantees on top.
   ensureRoomType(rooms, ROOM_TYPES.LIBRARY, rng, theme, depth, floorScale, condition, weights, theme.minLibraries || 1);
   ensureRoomType(rooms, ROOM_TYPES.SHRINE, rng, theme, depth, floorScale, condition, weights);
-  if (opts.wantLab || theme.alwaysLab) {
-    ensureRoomType(rooms, ROOM_TYPES.LAB, rng, theme, depth, floorScale, condition, weights);
-    // A lab without materials is glassware and regret
-    ensureRoomType(rooms, ROOM_TYPES.MATERIALS, rng, theme, depth, floorScale, condition, weights, 1);
-  }
 
   // Each situation asks a different question. Dealt without replacement
   // because the same orrery twice in one delve is a bug the player can
@@ -515,68 +497,16 @@ export function generateDungeon(seed, difficulty = 'medium', opts = {}) {
     }
 
     if (branchRooms.length > 0) {
-      // Lock and key (PCG ch.3, Fig. 3.5): a subtree with a single
-      // entrance can be locked and its key placed elsewhere, which
-      // turns a branch from optional loot into a question the dungeon
-      // asked earlier. Only open wings lock — a secret wing already
-      // has a lock, and it is the door itself.
-      const lockable = !secret && junction > 2;
-      const locked = lockable && rng.next() < 0.55;
-      let keyRoom = null;
-      if (locked && rng.next() < 0.6) {
-        // Six times in ten the key is on the spine before the door, so
-        // the party picks it up on the way past. It must never be
-        // *behind* the door it opens — that is the one arrangement
-        // nothing can solve.
-        //
-        // The other four times there is no key in the dungeon at all,
-        // and the door has to be picked, Knocked, or shouldered. With a
-        // key on the critical path every time, 93 of 98 doors opened
-        // with it and the lock asked nobody anything (tools/census.mjs).
-        const before = spine.slice(1, junction).filter(i => rooms[i].type !== ROOM_TYPES.STAIRS);
-        if (before.length > 0) {
-          keyRoom = before[Math.floor(rng.next() * before.length)];
-          rooms[keyRoom].key = { wing: wing.id, name: wing.keyName };
-        }
-      }
+      // v8: lock-and-key went with the town and the key economy. A wing
+      // is now open or secret, nothing else — one roll, one decision.
       branches.push({
         junction, rooms: branchRooms, secret, consumed: false,
         wing: wing.id, name: wing.name, tell: wing.tell,
-        locked,
-        keyRoom,
-        keyName: wing.keyName,
-        door: wing.door,
       });
     }
   }
 
-  /* ---- Trapdoors: the shaft in the floor ---------------------------- */
-  // A hole in the floor drops you through the floor. Now that the
-  // dungeon has floors, a trapdoor lands on the one below and skips the
-  // stair — and the rooms between, their loot and their danger both.
-  // Half are hidden under rubble; those the party can blunder into.
-  const trapdoors = [];
-  const trapdoorCount = rng.next() < 0.65 ? 1 : 0;
-  for (let t = 0; t < trapdoorCount; t++) {
-    // Never past the boss: the boss is always fought, never skipped
-    const lastSpine = spine.length - 1;
-    const from = 1 + Math.floor(rng.next() * Math.max(1, Math.floor(lastSpine * 0.6)));
-    const fromFloor = rooms[from].floor || 0;
-    // The first room below this one that the shaft could reach. A shaft
-    // that lands on the same floor is a hole to nowhere.
-    const below = rooms.findIndex((r, i) => i > from && i <= lastSpine - 1 && (r.floor || 0) > fromFloor);
-    const to = below > from + 1
-      ? below + Math.floor(rng.next() * 2)   // the landing room, or the one past it
-      : Math.min(from + 2 + Math.floor(rng.next() * 3), lastSpine - 1);
-    if (to <= from + 1 || to > lastSpine - 1) continue;
-    trapdoors.push({
-      from, to,
-      secret: rng.next() < 0.5,
-      fall: 3 + Math.floor(rng.next() * 3) + (depth - 1),
-      consumed: false,
-    });
-    edges.push({ a: from, b: to, secret: false, kind: 'trapdoor' });
-  }
+  const trapdoors = [];   // v8: trapdoors went with the floors they fell through
 
   return new Dungeon(rooms, theme, condition, { spine, edges, branches, trapdoors });
 }
@@ -708,12 +638,11 @@ const RIDER_CHANCE = 0.5;
  * encounters' own `rides` declarations so the two cannot drift.
  */
 export const RIDERS_BY_ROOM = {
-  treasure: ['appraiser-test', 'observer-secret'],
+  treasure: ['appraiser-test', 'observer-secret', 'experimental-crossroads'],
   vault: ['appraiser-test'],
-  lab: ['experimental-crossroads'],
-  materials: ['experimental-crossroads', 'observer-secret'],
   shrine: ['healer-trial', 'musician-harmony'],
-  corridor: ['healer-trial', 'observer-secret', 'haunted-armour', 'duellists-challenge',
+  corridor: ['healer-trial', 'observer-secret', 'experimental-crossroads',
+    'haunted-armour', 'duellists-challenge',
     'chessboard-floor', 'cartographers-ghost', 'severed-council'],
   library: ['memory-reconstruction', 'cartographers-ghost'],
   disaster: ['musician-harmony', 'severed-council'],
@@ -745,83 +674,12 @@ export const DUNGEON_THEMES = {
     ],
   },
 
-  crypt: {
-    id: 'crypt', name: 'the Ancient Crypt', icon: '⚰️',
-    tagline: 'The dead were buried with their grudges. Both kept.',
-    weightTweaks: { monster: 1, shrine: 0.5, treasure: -0.5 },
-    trapTypes: ['spike', 'poison'],
-    monsters: [
-      { kind: 'bone-warden', name: 'a bone warden on its rounds', icon: '💀', attack: 6, health: 15, undead: true },
-      { kind: 'grave-mites', name: 'a boil of grave mites', icon: '🪲', attack: 4, health: 9, undead: false },
-      { kind: 'barrow-shade', name: 'a barrow shade, thin as smoke', icon: '👻', attack: 8, health: 11, undead: true },
-      { kind: 'hungry-ghoul', name: 'a ghoul between meals', icon: '🧟', attack: 7, health: 13, undead: true },
-    ],
-    bosses: [
-      { kind: 'shrouded-king', name: 'the Shrouded King in his broken throne-niche', icon: '👑', attack: 12, health: 32, undead: true },
-      { kind: 'abbot-of-worms', name: 'the Abbot of Worms, still preaching', icon: '☠️', attack: 10, health: 36, undead: true },
-    ],
-  },
-
-  volcanic: {
-    id: 'volcanic', name: 'the Cinder Galleries', icon: '🌋',
-    tagline: 'The mountain is not dormant. The mountain is patient.',
-    weightTweaks: { disaster: 1, trap: 0.5, shrine: -0.3 },
-    trapBonus: 2, // fire traps bite harder
-    trapTypes: ['fire', 'spike'],
-    monsters: [
-      { kind: 'salamander', name: 'a salamander the size of a mistake', icon: '🦎', attack: 7, health: 14, undead: false },
-      { kind: 'cinder-bats', name: 'a shriek of cinder bats', icon: '🦇', attack: 5, health: 9, undead: false },
-      { kind: 'magma-toad', name: 'a magma toad, gently steaming', icon: '🐸', attack: 6, health: 16, undead: false, slow: true },
-      { kind: 'obsidian-golem', name: 'an obsidian golem with a slow fuse', icon: '🗿', attack: 8, health: 20, undead: false, slow: true },
-    ],
-    bosses: [
-      { kind: 'cinder-wyrm', name: 'the Cinder Wyrm coiled in its forge-nest', icon: '🐉', attack: 13, health: 36, undead: false },
-      { kind: 'forge-tyrant', name: 'the Forge Tyrant, hammer still warm', icon: '🔨', attack: 14, health: 34, undead: false, bribable: true },
-    ],
-  },
-
-  library: {
-    id: 'library', name: 'the Drowned Athenaeum', icon: '📚',
-    tagline: 'Knowledge wants to be free. It has been waiting a long time.',
-    weightTweaks: { library: 2, monster: -0.5, materials: -0.5 },
-    minLibraries: 2,
-    trapTypes: ['alarm', 'spike'],
-    monsters: [
-      { kind: 'flying-tomes', name: 'a wheeling flock of flying tomes', icon: '📖', attack: 5, health: 10, undead: false },
-      { kind: 'ink-elemental', name: 'an ink elemental, still wet', icon: '🫧', attack: 6, health: 13, undead: false },
-      { kind: 'spectral-scribe', name: 'a spectral scribe mid-citation', icon: '👻', attack: 7, health: 12, undead: true },
-      { kind: 'index-wight', name: 'the wight of a disappointed librarian', icon: '🧟', attack: 8, health: 14, undead: true },
-    ],
-    bosses: [
-      { kind: 'archivist', name: 'the Archivist, quill dripping', icon: '🪶', attack: 11, health: 33, undead: true },
-      { kind: 'grand-errata', name: 'the Grand Errata, a book that reads back', icon: '📕', attack: 12, health: 35, undead: false },
-    ],
-  },
-
-  madlab: {
-    id: 'madlab', name: 'the Mad Alchemist\'s Dungeon', icon: '⚗️',
-    tagline: 'The experiments continued after the funding stopped. And after the alchemist did.',
-    weightTweaks: { lab: 1.5, materials: 1, disaster: 0.5, shrine: -0.5 },
-    alwaysLab: true, // the theme's identity: labs regardless of party
-    trapTypes: ['poison', 'fire'],
-    monsters: [
-      { kind: 'sludge-elemental', name: 'a sludge elemental, recently fed', icon: '🟢', attack: 6, health: 15, undead: false },
-      { kind: 'potion-rats', name: 'a scurry of potion-glowing rats', icon: '🐀', attack: 5, health: 10, undead: false },
-      { kind: 'mutant-vine', name: 'a vine that learned grasping from a textbook', icon: '🌿', attack: 6, health: 14, undead: false, slow: true },
-      { kind: 'failed-homunculus', name: 'a homunculus that failed peer review', icon: '🧪', attack: 7, health: 12, undead: false, bribable: true },
-    ],
-    bosses: [
-      { kind: 'mad-alchemist', name: 'the Mad Alchemist, flask raised in welcome', icon: '⚗️', attack: 12, health: 34, undead: false },
-      { kind: 'the-precipitate', name: 'the Precipitate, everything the drains refused', icon: '🫠', attack: 13, health: 37, undead: false },
-    ],
-  },
-
   castle: {
     id: 'castle', name: 'the Castle of the Vampire Lord', icon: '🦇',
     tagline: 'The invitation was in your dreams. The exit clause was not.',
     // Features: the Lord's treasury runs deep, his study is real, but
     // the chapels were desecrated centuries ago — heal elsewhere.
-    weightTweaks: { treasure: 1.5, library: 0.5, monster: 0.5, shrine: -0.7, materials: -0.5, corridor: -0.3 },
+    weightTweaks: { treasure: 1.5, library: 0.5, monster: 0.5, shrine: -0.7, corridor: -0.3 },
     minLibraries: 1,
     trapTypes: ['alarm', 'spike'],
     monsters: [
@@ -833,27 +691,6 @@ export const DUNGEON_THEMES = {
     bosses: [
       { kind: 'vampire-lord', name: 'the Vampire Lord, apologizing for the hour', icon: '🧛', attack: 13, health: 35, undead: true },
       { kind: 'the-bride', name: 'the Bride, who was here long before the Lord', icon: '👰', attack: 12, health: 33, undead: true },
-    ],
-  },
-
-  bogcellar: {
-    id: 'bogcellar', name: 'the Root Cellar of the Bog Witch', icon: '🧹',
-    tagline: 'Everything down here is pickled, potted, or patient. Some of it is all three.',
-    // Features: her stillroom always works, the shelves drip with
-    // reagents, and the rot in the timbers bites like a trap.
-    weightTweaks: { materials: 1.5, lab: 1, trap: 0.5, treasure: -0.5, corridor: -0.3 },
-    alwaysLab: true,          // the witch's stillroom
-    trapBonus: 1,             // rot, roots, and jars best left corked
-    trapTypes: ['poison', 'spike'],
-    monsters: [
-      { kind: 'jar-imp', name: 'an imp still angry about the jar', icon: '🫙', attack: 5, health: 10, undead: false, bribable: true },
-      { kind: 'pickled-thing', name: 'a pickled thing that finished pickling', icon: '🥒', attack: 6, health: 14, undead: true },
-      { kind: 'root-golem', name: 'a golem of taproots and bad intentions', icon: '🌳', attack: 7, health: 18, undead: false, slow: true },
-      { kind: 'bog-toad', name: 'a bog toad the size of a smokehouse', icon: '🐸', attack: 6, health: 16, undead: false, slow: true },
-    ],
-    bosses: [
-      { kind: 'bog-witch', name: 'the Bog Witch, delighted to have company for dinner', icon: '🧙‍♀️', attack: 12, health: 34, undead: false, bribable: true },
-      { kind: 'the-cauldron', name: 'the Cauldron, which learned to want', icon: '🍲', attack: 13, health: 36, undead: false },
     ],
   },
 
@@ -903,7 +740,7 @@ export const STAT_SCALE = {
   easy: 0.35,
   medium: 0.83,
   hard: 1.21,
-  nightmare: 1.64,
+  nightmare: 2.06,
 };
 
 /* ------------------------------------------------------------------ */

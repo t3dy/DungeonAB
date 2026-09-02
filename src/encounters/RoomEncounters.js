@@ -130,18 +130,6 @@ export function getFeatureOptions(room, party) {
   });
 }
 
-/**
- * Can the party cook a material down into lamp oil?
- *
- * The alembic's answer to the supply clock. It used to want a materials
- * room and three marches of oil or fewer, and the coincidence of those
- * with the card in the pack meant tools/census.mjs saw it fire in under
- * one delve in twenty-five. A lab bench is the obvious other place to
- * do it, and five marches is still running low.
- */
-export function canBrewOil(party) {
-  return hasItem(party, 'eq-alembic') && party.materials > 0 && party.supply <= 5;
-}
 
 export function getRoomOptions(room, party) {
   // A room carrying a stamped situation is governed by the capability
@@ -233,11 +221,6 @@ function baseRoomOptions(room, party) {
       if (party.grimoire.some(s => s.use === 'utility')) {
         opts.push({ id: 'spell-bypass', name: 'Magic It Open', desc: 'A utility spell solves this' });
       }
-      // The alchemist can spend a material on a smoke concoction that
-      // springs the trap from a safe distance
-      if (party.hasClass(CLASSES.ALCHEMIST) && party.materials >= 1) {
-        opts.push({ id: 'smoke-bomb', name: 'Alchemist\'s Smoke', desc: 'Spend a material; spring it from afar' });
-      }
       return opts;
     }
 
@@ -273,31 +256,6 @@ function baseRoomOptions(room, party) {
         { id: 'desecrate', name: 'Pry Out the Gold Leaf', desc: 'Profitable. Blasphemous.' },
         { id: 'pass-by', name: 'Keep Moving', desc: 'No time for candles' },
       ];
-    }
-
-    case ROOM_TYPES.LAB: {
-      const opts = [{ id: 'pass-by', name: 'Move On', desc: 'Glassware and regret' }];
-      if (party.hasClass(CLASSES.ALCHEMIST) && party.materials > 0) {
-        opts.unshift({ id: 'alchemy', name: 'Work the Bench', desc: 'Brew a potion or mod a weapon' });
-      }
-      // The alembic turns the bench on the supply clock: a material
-      // cooked down into light. Only worth offering when the lamp
-      // actually needs it, or the party will brew oil it cannot carry.
-      if (canBrewOil(party)) {
-        opts.unshift({ id: 'brew-oil', name: 'Cook Down Lamp Oil', desc: 'A material becomes two marches of light' });
-      }
-      return opts;
-    }
-
-    case ROOM_TYPES.MATERIALS: {
-      const opts = [
-        { id: 'gather', name: 'Gather Materials', desc: 'Herbs, salts, quicksilver' },
-        { id: 'pass-by', name: 'Leave Them', desc: 'The satchel stays light' },
-      ];
-      if (canBrewOil(party)) {
-        opts.push({ id: 'brew-oil', name: 'Cook Down Lamp Oil', desc: 'A material becomes two marches of light' });
-      }
-      return opts;
     }
 
     case ROOM_TYPES.STAIRS: {
@@ -339,6 +297,31 @@ function baseRoomOptions(room, party) {
 }
 
 
+/**
+ * A boss cannot be killed before it turns.
+ *
+ * The throne room was the flattest thing in the game to read: bosses
+ * died in ONE round taking ZERO damage, because opening damage plus one
+ * party swing cleared the whole bar and the loop breaks on death before
+ * the monster acts. The delve's third act did not exist.
+ *
+ * So a boss gets a floor: damage that would kill it outright in one
+ * round instead leaves it on its last QUARTER, the phase fires, and it
+ * gets its round. A quarter, not a half — at a half the devastating
+ * opening a party drafts for was thrown away and easy sat 13 points
+ * under its target (DESIGN_DIALOGUE.md §R, MEASUREMENT.md M9).
+ *
+ * Ordinary monsters are untouched: a rout is a legitimate outcome and
+ * "dead before the party closes" is one of the better lines in the game.
+ */
+export const BOSS_FLOOR_SHARE = 0.25;
+
+export function bossFloor(monster, health, alreadyPhased) {
+  if (!monster?.isBoss || alreadyPhased) return health;
+  const turn = Math.max(1, Math.ceil(monster.health * BOSS_FLOOR_SHARE));
+  return health < turn ? turn : health;
+}
+
 /*
  * v8: the tactic tree is cut. The fight resolver consulted drilled
  * tactics at eight sites; every read now gets this neutral answer,
@@ -366,14 +349,13 @@ const PERSONALITY_WEIGHTS = {
   scholarly: { study: 3, 'deep-study': 3, 'spell-strike': 2, 'spell-bypass': 2 },
   pious: { rest: 3, 'turn-undead': 3, desecrate: -5, 'camp-stair': 2 },
   reckless: { fight: 2, 'push-through': 3, loot: 2, inspect: -2, 'search-around': -2, 'camp-stair': -3, descend: 2 },
-  craven: { flee: 3, sneak: 2, disarm: 2, 'search-around': 2, inspect: 1, scatter: 2, fight: -2, 'push-through': -2, brace: -1, 'cause-fear': 3, 'smoke-bomb': 2, 'knock-open': 1, 'camp-stair': 3 },
+  craven: { flee: 3, sneak: 2, disarm: 2, 'search-around': 2, inspect: 1, scatter: 2, fight: -2, 'push-through': -2, brace: -1, 'cause-fear': 3, 'knock-open': 1, 'camp-stair': 3 },
 };
 
 /* Preparation-gated options are attractive to those who'd use them */
 const PREP_OPTION_WEIGHTS = {
   'knock-open': { base: 1.5, cunning: 2, scholarly: 1 },
   'cause-fear': { base: 1.5, cunning: 1 },
-  'smoke-bomb': { base: 1.5, cunning: 2 },
 };
 
 /**
@@ -445,6 +427,7 @@ const BLUNT_ANSWERS = new Map([
   ['hurry-past', { spent: 4, fresh: 0, tempers: { craven: 2 } }],
   ['take-detour', { spent: 3, fresh: 0, tempers: { craven: 2, cunning: 1 } }],
   ['push-through', { spent: 0, fresh: 2, tempers: { reckless: 2, brave: 1 } }],
+  ['shout-through-it', { spent: 3, fresh: 2, tempers: { reckless: 2, brave: 2 } }],
 ]);
 
 export function decideRoomAction(room, party) {
@@ -475,8 +458,6 @@ export function decideRoomAction(room, party) {
     if (opt.weight !== undefined) w += opt.weight;
 
     // Instincts independent of personality
-    if (opt.id === 'alchemy') w += 3;                       // Benches get used
-    if (opt.id === 'gather') w += 2;                        // Satchels get filled
     const prep = PREP_OPTION_WEIGHTS[opt.id];
     if (prep) {
       w += prep.base;
@@ -608,8 +589,8 @@ export function rollFind(party, always = false, rollValue = Math.random()) {
     return { source: 'the hoard', find: 'potion', text: '🧪 Also in the hoard: a healing draught (heals 6), added to the satchel.' };
   }
   if (kind === 1) {
-    party.materials += 2;
-    return { source: 'the hoard', find: 'materials', text: '🌿 Also in the hoard: 2 alchemy materials.' };
+    party.addGold(15);
+    return { source: 'the hoard', find: 'gold', text: '💰 Also in the hoard: a purse nobody came back for, 15 gold.' };
   }
   if (kind === 2) {
     const scroll = SPELL_CARDS[Math.floor(rollValue * 997) % SPELL_CARDS.length];
@@ -694,10 +675,6 @@ export function resolveFeatureAction(room, party, optionId, options = {}) {
     party.addGold(action.gold);
     result.gold = action.gold;
   }
-  if (action.materials) {
-    party.materials += action.materials;
-    result.materials = action.materials;
-  }
   if (action.heal) {
     party.healParty(action.heal);
     result.healed = action.heal;
@@ -761,21 +738,6 @@ export function detectSecretDoor(party, rollValue = roll()) {
   bonus += getPreparationBonuses(party).secretDoor; // the lantern throws the seam's shadow
   if (eyes + bonus + rollValue > 11) return true;
 
-  // Failing that: a party that answered a situation with a capability
-  // has read how this place was put together, and a passage that is not
-  // on the plan is exactly what such a reading turns up
-  // (encounters/EncounterEngine.js, Party.wayIn).
-  //
-  // Spent only when the ordinary roll has already failed, so the
-  // reading is never wasted on a door the rogue was going to find
-  // anyway. Secret wings are twice as common as locked ones (0.68 a
-  // delve against 0.33) and a missed one is lost entirely, so this is
-  // where the draft's reward actually reaches the player.
-  if (party.wayIn > 0) {
-    party.wayIn--;
-    party.foundByReading = true;
-    return true;
-  }
   return false;
 }
 
@@ -856,96 +818,6 @@ export function wingAppeal(party, wing) {
   }
 }
 
-/**
- * A locked wing: what opens it, and what that costs.
- *
- * Lock and key is the oldest structural trick in the form (PCG ch.3
- * Fig. 3.5): a branch with one entrance, sealed, its key placed on the
- * spine before the door. Four ways through, in the order the party
- * would try them — and only one of them is quiet.
- *
- * Returns { opened, how, noisy } so the writing can say which.
- */
-/**
- * A boss cannot be killed before it turns.
- *
- * The throne room was the flattest thing in the game to read. Measured
- * across a stratified sample of transcripts: bosses died in ONE round,
- * taking 0 damage, repeatedly — a 65-health monster with attack 20
- * evaporating before it swung, because opening damage plus one party
- * swing cleared its whole health bar and the loop `break`s on death
- * before the monster acts. The delve's third act did not exist.
- *
- * A boss already has a second act written for it: at half health it
- * turns fierce (+2 attack, and a line). That phase was being skipped
- * whenever the party could clear the bar in one blow, which against a
- * well-drafted party is most of the time.
- *
- * So a boss gets a floor: damage that would kill it outright in one
- * round instead leaves it on its last quarter, the phase fires, and it
- * gets its round. It can die on any round after that.
- *
- * A QUARTER, not a half, and the difference is the whole tuning. At a
- * half, a devastating opening — the thing a party drafts and prepares
- * for — was thrown away: the boss was pinned at 50% and the party had to
- * grind the rest down with ordinary swings, taking four or five rounds
- * of boss attacks on the way. Measured, that put `easy` at 70% against a
- * 99% target and no monster scaling could recover it, because the losses
- * were not about monster strength at all. At a quarter the opening still
- * very nearly kills, and it costs the party exactly one round of being
- * hit back — which is the point, and is affordable.
- *
- * Ordinary monsters are untouched: a rout is a legitimate outcome and
- * "dead before the party closes" is one of the better lines in the game.
- */
-export const BOSS_FLOOR_SHARE = 0.25;
-
-export function bossFloor(monster, health, alreadyPhased) {
-  if (!monster?.isBoss || alreadyPhased) return health;
-  const turn = Math.max(1, Math.ceil(monster.health * BOSS_FLOOR_SHARE));
-  return health < turn ? turn : health;
-}
-
-export function openLockedWing(party, wing, rollValue = roll()) {
-  if (party.hasKey(wing)) return { opened: true, how: 'key', noisy: false };
-
-  // What an answered situation taught about how this place is built:
-  // the service passage behind the niches, the order the seals were
-  // set. Spent here, quietly, and only when no key was found — a party
-  // that drafted for it gets into the four wings in ten that have no
-  // key anywhere (encounters/EncounterEngine.js grants it).
-  if (party.wayIn > 0) {
-    party.wayIn--;
-    return { opened: true, how: 'read', noisy: false };
-  }
-
-  // A rogue with picks, or a rogue with patience
-  const rogues = party.living().filter(m => m.class === CLASSES.ROGUE);
-  if (rogues.length > 0) {
-    const mind = Math.max(...rogues.map(m => m.mind));
-    const picks = getPreparationBonuses(party).disarm;   // the lockpicks help here too
-    if (mind + picks + rollValue > 9) return { opened: true, how: 'picked', noisy: false };
-  }
-  // Knock opens any lock. Loudly — the card has always said so.
-  if (hasSpell(party, 'sp-knock')) {
-    const knock = party.castSpell('utility', 'sp-knock');
-    if (knock) return { opened: true, how: 'knock', noisy: true, source: knock.name };
-  }
-  // Muscle, a prybar, or both. A door is not a monster: shouldering it
-  // hurts, everything below hears it, and it does not always work.
-  //
-  // Measured at a threshold of 12 the lock refused 0.3% of parties,
-  // which is a gate that is not a gate (tools/census.mjs). A wing you
-  // can always get into is a wing that was never locked.
-  const strongest = Math.max(0, ...party.living().map(m => m.attack));
-  const lever = hasItem(party, 'eq-prybar') ? 4 : 0;
-  if (strongest + lever + rollValue > 15) {
-    const hurt = lever ? 0 : 2;      // levered off its hinges, or shouldered
-    if (hurt) party.takeDamage(hurt);
-    return { opened: true, how: 'forced', noisy: true, lever: lever > 0, damage: hurt };
-  }
-  return { opened: false, how: null, noisy: false };
-}
 
 export function decideDetour(party, rollValue = roll(), wing = null) {
   let w = 4;   // idle curiosity baseline
@@ -1580,14 +1452,6 @@ export function resolveRoomAction(room, party, optionId, options = null) {
       return { success: true, damage: dmg, spotted: spotter > 0, trapType, preps };
     }
 
-    case 'smoke-bomb': {
-      // A material spent from a safe distance beats bravery every time
-      party.materials -= 1;
-      party.addScore(15);
-      room.cleared = true;
-      party.recordEncounter('smoke-bomb', true);
-      return { success: true, materialsLeft: party.materials };
-    }
 
     case 'search-around': {
       const ok = party.bestMind() + roll() > 8;
@@ -1700,17 +1564,6 @@ export function resolveRoomAction(room, party, optionId, options = null) {
     }
 
     /* Shrine */
-    case 'brew-oil': {
-      // The alchemist's answer to the supply clock: a material cooked
-      // down into light. Ties the bench to the lamp.
-      party.materials -= 1;
-      const gained = party.addSupply(2);
-      room.cleared = true;
-      return {
-        success: true,
-        preps: [{ source: 'the Portable Alembic', text: `⚗️ A material goes into the alembic and comes out as lamp oil: ${gained} more march${gained === 1 ? '' : 'es'} of light.` }],
-      };
-    }
 
     case 'rest': {
       const bonus = party.hasPersonality('pious') ? 4 : 0;
@@ -1740,20 +1593,8 @@ export function resolveRoomAction(room, party, optionId, options = null) {
     }
 
     /* Lab */
-    case 'alchemy': {
-      const result = party.doAlchemy();
-      room.cleared = true;
-      party.addScore(25);
-      return { success: true, alchemy: result };
-    }
 
     /* Materials */
-    case 'gather': {
-      party.materials += room.materials || 1;
-      party.addScore(5);
-      room.cleared = true;
-      return { success: true, materials: room.materials || 1 };
-    }
 
     /* Stairs — the floor below is meaner than this one */
     case 'descend': {

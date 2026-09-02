@@ -22,11 +22,11 @@ describe('Theme definitions', () => {
     }
   });
 
-  test('the crypt is where the undead live (so to speak)', () => {
-    const crypt = DUNGEON_THEMES.crypt;
-    const undead = crypt.monsters.filter(m => m.undead).length;
-    assert.ok(undead >= crypt.monsters.length / 2, 'the crypt roster is mostly undead');
-    assert.ok(crypt.bosses.every(b => b.undead), 'crypt bosses are undead — clerics feast');
+  test('the castle is where the undead live (so to speak)', () => {
+    const castle = DUNGEON_THEMES.castle;
+    const undead = castle.monsters.filter(m => m.undead).length;
+    assert.ok(undead >= castle.monsters.length / 2, 'the castle roster is mostly undead');
+    assert.ok(castle.bosses.every(b => b.undead), 'castle bosses are undead — clerics feast');
   });
 });
 
@@ -39,8 +39,8 @@ describe('Themed generation', () => {
   });
 
   test('a forced theme is honored', () => {
-    const d = generateDungeon('any-seed', 'medium', { theme: 'volcanic' });
-    assert.equal(d.theme.id, 'volcanic');
+    const d = generateDungeon('any-seed', 'medium', { theme: 'icecaverns' });
+    assert.equal(d.theme.id, 'icecaverns');
   });
 
   test('different seeds reach every theme eventually', () => {
@@ -63,29 +63,8 @@ describe('Themed generation', () => {
     }
   });
 
-  test('the mad lab always has a lab, alchemist or no', () => {
-    for (const seed of ['ml1', 'ml2', 'ml3', 'ml4', 'ml5']) {
-      const d = generateDungeon(seed, 'medium', { theme: 'madlab' });
-      const types = d.rooms.map(r => r.type);
-      assert.ok(types.includes(ROOM_TYPES.LAB), `${seed}: the lab is the point`);
-      assert.ok(types.includes(ROOM_TYPES.MATERIALS), `${seed}: with materials to work`);
-    }
-  });
 
-  test('the athenaeum guarantees two libraries', () => {
-    for (const seed of ['ath1', 'ath2', 'ath3']) {
-      const d = generateDungeon(seed, 'medium', { theme: 'library' });
-      const libs = d.rooms.filter(r => r.type === ROOM_TYPES.LIBRARY).length;
-      assert.ok(libs >= 2, `${seed}: ${libs} libraries`);
-    }
-  });
 
-  test('volcanic traps bite harder', () => {
-    const d = generateDungeon('hot-seed', 'medium', { theme: 'volcanic' });
-    for (const trap of d.rooms.filter(r => r.type === ROOM_TYPES.TRAP)) {
-      assert.ok(trap.trapDamage >= 6, 'fire traps start at 6');
-    }
-  });
 
   test('every theme still runs entrance → boss with core guarantees', () => {
     for (const themeId of Object.keys(DUNGEON_THEMES)) {
@@ -112,16 +91,16 @@ describe('Themes in the narration', () => {
 
   test('the epitaph names the place of death', () => {
     const fighter = CHARACTER_CARDS.find(c => c.class === 'fighter');
-    const sim = new Simulator([fighter], 'epitaph-seed', 'easy', { theme: 'crypt' });
+    const sim = new Simulator([fighter], 'epitaph-seed', 'easy', { theme: 'castle' });
     const text = composeWipe(sim.party, 3, sim.dungeon.theme);
-    assert.ok(text.includes('the Ancient Crypt'), 'died somewhere specific');
+    assert.ok(text.includes('the Castle of the Vampire Lord'), 'died somewhere specific');
   });
 
   test('the simulator exposes the theme to the UI', () => {
     const fighter = CHARACTER_CARDS.find(c => c.class === 'fighter');
-    const sim = new Simulator([fighter], 'ui-seed', 'easy', { theme: 'madlab' });
+    const sim = new Simulator([fighter], 'ui-seed', 'easy', { theme: 'icecaverns' });
     const state = sim.getState();
-    assert.equal(state.theme.id, 'madlab');
+    assert.equal(state.theme.id, 'icecaverns');
     assert.ok(state.theme.name && state.theme.icon && state.theme.tagline);
   });
 });

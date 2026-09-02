@@ -1,6 +1,14 @@
 # DungeonAB — Agent Guide
 
-**Dungeon-crawling autobattler.** MTG-style pack draft (player + 3 AI drafters, pass the packs), then a drafted party of Fighters / Clerics / Wizards / Rogues / Alchemists auto-crawls a procgen dungeon: fights, loot, spell-learning, alchemy at lab rooms.
+**Dungeon-crawling autobattler — v8, the brass-tacks dungeon simulator.**
+MTG-style pack draft (player + 3 AI drafters, pass the packs), then a
+drafted party of Renaissance magi auto-crawls one procgen dungeon:
+fights, loot, spell-learning, capability-graded situations. One draft,
+one delve, compare scores at the table, draft again. The town, campaign
+depths, providence, the tactic tree, wagers/hexes, lock-and-key wings,
+multi-floor dungeons and the alchemy inventory loop were all cut on
+2026-09-01 — see CUTPROPOSAL.md for why and git tag v7.0-prototype for
+the game they were cut from.
 
 **Read `DESIGN.md` first** — it consolidates the Megabase design chats
 (`2025-12-14_Dungeon crawling auto battler`, `2025-01-10_RPG Auto-Battler Concept`),
@@ -51,18 +59,21 @@ unfinished, where a `npm test` failure means something is broken.
 
 ```
 src/
-  game/Cards.js          ← Draftable card pool (characters/equipment/spells/personalities)
-  game/Campaign.js       ← Town between dungeons, party carryover, depth scaling
-  game/Progression.js    ← Difficulty tiers, run history (from SnakeAB)
+  game/Cards.js          ← Draftable pool (characters/equipment/spells/personalities)
+  game/Capabilities.js   ← The tag dictionary + AFFINITIES adjacency graph
+  game/Progression.js    ← Difficulty tiers, run history
   draft/PackDraft.js     ← MTG pack draft engine + AI drafter personas
-  agents/Adventurer.js   ← One character: stats, class kit, equipment
-  agents/Party.js        ← The drafted party: group decisions, marching order
-  world/DungeonGen.js    ← Seeded room-graph dungeon generation
-  encounters/RoomEncounters.js ← Per-room-type options/outcomes (personality-weighted)
-  narrative/Narrator.js  ← Three-beat party narration (predicament/deliberation/resolution)
-  narrative/Barks.js     ← Personality × class dialogue (same archetype, different voice per class)
+  agents/Adventurer.js   ← One magus: stats, kit, wounds
+  agents/Party.js        ← The drafted party: decisions, damage order
+  agents/Formation.js    ← Where they stand, priced per fight
+  world/DungeonGen.js    ← Seeded single-floor room graph, 3 themes, wings
+  encounters/EncounterEngine.js ← capability × affordance → graded options
+  encounters/RoomEncounters.js  ← Hand-written rooms + the fight resolver
+  narrative/Narrator.js  ← Three-beat narration + the prose editor
+  narrative/Chronicle.js ← Two layers: ledger that misses nothing, curated prose
+  narrative/Dramaturg.js ← Reads finished transcripts against a poetics (dev tool)
   sim/Simulator.js       ← Room-by-room auto-crawl loop
-  ui/                    ← DraftUI (pack picks), story panel, renderer
+  ui/                    ← DraftUI (pack picks), story panel, iso renderer
 tests/                   ← Node test runner suites
 ```
 

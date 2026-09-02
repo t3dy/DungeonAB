@@ -70,14 +70,6 @@ describe('Preparation-gated options', () => {
     assert.ok(!getRoomOptions(boss, party).some(o => o.id === 'cause-fear'));
   });
 
-  test('the smoke option exists only with an alchemist AND a material to spend', () => {
-    const trap = { type: ROOM_TYPES.TRAP, trapDamage: 5 };
-    const stocked = new Party([byClass('alchemist')]);
-    stocked.materials = 1;
-    const broke = new Party([byClass('alchemist')]);
-    assert.ok(getRoomOptions(trap, stocked).some(o => o.id === 'smoke-bomb'));
-    assert.ok(!getRoomOptions(trap, broke).some(o => o.id === 'smoke-bomb'));
-  });
 });
 
 describe('Preparation-driven outcomes', () => {
@@ -95,15 +87,6 @@ describe('Preparation-driven outcomes', () => {
     assert.ok(party.isAlive() && party.totalHealth() === party.totalMaxHealth(), 'the mimic bit only air');
   });
 
-  test('the smoke concoction spends a material and nobody bleeds', () => {
-    const party = new Party([byClass('alchemist')]);
-    party.materials = 2;
-    const hp = party.totalHealth();
-    const result = resolveRoomAction({ type: ROOM_TYPES.TRAP, trapDamage: 7 }, party, 'smoke-bomb');
-    assert.equal(result.success, true);
-    assert.equal(party.materials, 1, 'one material spent');
-    assert.equal(party.totalHealth(), hp, 'no blood');
-  });
 
   test('Cause Fear clears the room bloodlessly, spending that working only', () => {
     const party = new Party([byClass('fighter'), sp('sp-firebolt'), sp('sp-fear')]);

@@ -519,7 +519,6 @@ function updateUI(state) {
   supplyEl.title = supply === 0
     ? 'The oil is gone. Every march in the dark costs the whole party health.'
     : `Oil for ${supply} more march${supply === 1 ? '' : 'es'}.`;
-  document.getElementById('materials-count').textContent = state.party.materials;
   document.getElementById('potions-count').textContent = state.party.potions;
   // The trophy case: count onscreen, the full inventory on hover
   const trophyEl = document.getElementById('trophies-count');

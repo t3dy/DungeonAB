@@ -85,21 +85,6 @@ describe('Party assembly', () => {
       `the wizard's mind and amplification tell (${amped.effectivePower} > ${plain.effectivePower})`);
   });
 
-  test('alchemy needs an alchemist and materials', () => {
-    const noAlch = new Party([fighter]);
-    noAlch.materials = 3;
-    assert.equal(noAlch.doAlchemy(), null);
-
-    const alch = new Party([alchemist]);
-    assert.equal(alch.doAlchemy(), null, 'no materials, no miracles');
-    alch.materials = 2;
-    const potion = alch.doAlchemy(0.2); // < 0.5 → potion
-    assert.equal(potion.type, 'potion');
-    assert.equal(alch.potions.length >= 1, true);
-    const mod = alch.doAlchemy(0.9); // ≥ 0.5 → weapon mod
-    assert.equal(mod.type, 'weapon-mod');
-    assert.equal(alch.materials, 0);
-  });
 });
 
 describe('Dungeon generation', () => {
@@ -116,14 +101,12 @@ describe('Dungeon generation', () => {
     assert.deepEqual(a.rooms.map(r => r.type), b.rooms.map(r => r.type));
   });
 
-  test('library and shrine guaranteed; lab guaranteed when wanted', () => {
+  test('library and shrine are guaranteed', () => {
     for (const seed of ['g1', 'g2', 'g3', 'g4', 'g5']) {
-      const d = generateDungeon(seed, 'hard', { wantLab: true });
+      const d = generateDungeon(seed, 'hard');
       const types = d.rooms.map(r => r.type);
       assert.ok(types.includes(ROOM_TYPES.LIBRARY), `${seed} has a library`);
       assert.ok(types.includes(ROOM_TYPES.SHRINE), `${seed} has a shrine`);
-      assert.ok(types.includes(ROOM_TYPES.LAB), `${seed} has a lab`);
-      assert.ok(types.includes(ROOM_TYPES.MATERIALS), `${seed} has materials`);
     }
   });
 });
@@ -149,13 +132,6 @@ describe('Room encounters', () => {
     assert.ok(!getRoomOptions(beastRoom, party).some(o => o.id === 'turn-undead'));
   });
 
-  test('lab bench needs alchemist AND materials', () => {
-    const labRoom = { type: ROOM_TYPES.LAB };
-    const alchParty = new Party([alchemist]);
-    assert.ok(!getRoomOptions(labRoom, alchParty).some(o => o.id === 'alchemy'), 'no materials yet');
-    alchParty.materials = 1;
-    assert.ok(getRoomOptions(labRoom, alchParty).some(o => o.id === 'alchemy'));
-  });
 
   test('looting treasure pays out', () => {
     const party = new Party([fighter, rogue]);

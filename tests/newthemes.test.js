@@ -50,27 +50,6 @@ describe('the Castle of the Vampire Lord', () => {
   });
 });
 
-describe('the Root Cellar of the Bog Witch', () => {
-  test('the stillroom always works and the shelves drip with reagents', () => {
-    assert.equal(DUNGEON_THEMES.bogcellar.alwaysLab, true);
-    for (const seed of SEEDS) {
-      const d = generateDungeon(seed, 'medium', { theme: 'bogcellar' });
-      assert.ok(count(d, ROOM_TYPES.LAB) >= 1, `${seed}: the stillroom is there`);
-      assert.ok(count(d, ROOM_TYPES.MATERIALS) >= 1, `${seed}: reagents on the shelves`);
-    }
-  });
-
-  test('the rot bites: traps carry the theme bonus', () => {
-    const d = generateDungeon('nt-rot', 'medium', { theme: 'bogcellar' });
-    for (const trap of d.rooms.filter(r => r.trapDamage)) {
-      assert.ok(trap.trapDamage >= 5, `rot-trap ${trap.trapDamage} ≥ base+1`);
-    }
-  });
-
-  test('the witch respects a bargain', () => {
-    assert.ok(DUNGEON_THEMES.bogcellar.bosses.find(b => b.kind === 'bog-witch').bribable);
-  });
-});
 
 describe('the Ice Caverns of the Mad Pyromancer', () => {
   test('the caverns keep failing: disasters everywhere, worst traps in the game', () => {
@@ -97,7 +76,7 @@ describe('the Ice Caverns of the Mad Pyromancer', () => {
 });
 
 describe('Every new theme, end to end', () => {
-  for (const id of ['castle', 'bogcellar', 'icecaverns']) {
+  for (const id of ['castle', 'icecaverns']) {
     test(`${id}: themed disasters read in the theme's own voice, and a party crawls it out`, () => {
       const theme = DUNGEON_THEMES[id];
       // Disaster narration is theme-specific (not the generic pool)

@@ -18,7 +18,7 @@ const sp = id => SPELL_CARDS.find(s => s.id === id);
 
 describe('The Bestiary', () => {
   test('natures overlay onto roster monsters at generation', () => {
-    const d = generateDungeon('depth-nat', 'medium', { theme: 'crypt' });
+    const d = generateDungeon('depth-nat', 'medium', { theme: 'castle' });
     const annotated = d.rooms.filter(r => r.monster && (r.monster.trait || r.monster.weak || r.monster.undead));
     assert.ok(annotated.length > 0, 'crypt monsters carry natures');
     for (const r of d.rooms.filter(r => r.monster?.trait)) {
@@ -138,9 +138,9 @@ describe('Trap types', () => {
     for (const theme of Object.values(DUNGEON_THEMES)) {
       assert.ok(theme.trapTypes?.length >= 1, `${theme.id} has trapTypes`);
     }
-    const d = generateDungeon('depth-traps', 'hard', { theme: 'volcanic' });
+    const d = generateDungeon('depth-traps', 'hard', { theme: 'icecaverns' });
     for (const t of d.rooms.filter(r => r.type === ROOM_TYPES.TRAP)) {
-      assert.ok(DUNGEON_THEMES.volcanic.trapTypes.includes(t.trapType), 'volcanic snares only');
+      assert.ok(DUNGEON_THEMES.icecaverns.trapTypes.includes(t.trapType), 'cavern snares only');
     }
   });
 
@@ -242,7 +242,7 @@ describe('Finds — treasure beyond coin', () => {
   });
 
   test('a full crawl with all systems live still concludes', () => {
-    for (const theme of ['castle', 'icecaverns', 'bogcellar']) {
+    for (const theme of ['castle', 'icecaverns', 'delve']) {
       const sim = new Simulator([fighters[0], byClass('cleric'), byClass('wizard'), sp('sp-frost'), sp('sp-radiance')], `depth-${theme}`, 'easy', { theme });
       let guard = 0;
       while (!sim.gameOver && guard++ < 80) sim.tick();

@@ -50,7 +50,6 @@ export function snapshotState(sim) {
   return {
     gold: p.gold,
     score: p.score,
-    materials: p.materials,
     potions: p.potions.length,
     supply: p.supply,
     trophies: p.trophies.length,
@@ -65,8 +64,6 @@ export function snapshotState(sim) {
     wounds: p.members.reduce((s, m) => s + m.wounds, 0),
     equipment: p.members.reduce((s, m) => s + m.equipment.length, 0),
     weaponMods: p.members.reduce((s, m) => s + m.weaponMods.length, 0),
-    keys: p.keys.length,
-    wayIn: p.wayIn || 0,
     roomsCleared: sim.roomsCleared,
     // Which floor the party is standing on. A descent is a state change
     // the player cares about (everything below is scaled harder), so it
@@ -93,11 +90,6 @@ const FIELDS = {
     icon: '🏅', label: 'renown', salience: SALIENCE.LEDGER,
     up: n => `${n} renown earned.`,
     down: n => `${n} renown lost.`,
-  },
-  materials: {
-    icon: '🌿', label: 'materials', salience: SALIENCE.NOTABLE, threshold: 3,
-    up: n => `${n} more alchemical materials in the satchel.`,
-    down: n => `${n} materials spent at the bench.`,
   },
   potions: {
     icon: '🧪', label: 'potions', salience: SALIENCE.BEAT,
@@ -168,21 +160,6 @@ const FIELDS = {
     icon: '⚗️', label: 'weapon coatings', salience: SALIENCE.NOTABLE, threshold: 1,
     up: n => `${n} blade${n > 1 ? 's' : ''} coated at the bench.`,
     down: n => `${n} coating${n > 1 ? 's wear' : ' wears'} off.`,
-  },
-  keys: {
-    icon: '🗝️', label: 'keys', salience: SALIENCE.NOTABLE,
-    up: n => `${n === 1 ? 'A key' : `${n} keys`} taken up. Somewhere below there is a door for it.`,
-    down: n => `${n === 1 ? 'A key' : `${n} keys`} gone from the ring.`,
-  },
-  // What answering a situation taught about the building, and what
-  // spending it opened (encounters/EncounterEngine.js, Party.wayIn).
-  // Ledger salience: the prose already says both halves in its own
-  // words at the moment each happens, and a second telling in the same
-  // room would be the stuck record this file exists to prevent.
-  wayIn: {
-    icon: '🗝️', label: 'readings of the building', salience: SALIENCE.LEDGER,
-    up: n => `${n === 1 ? 'A reading' : `${n} readings`} of how this place was put together.`,
-    down: n => `${n === 1 ? 'A reading' : `${n} readings`} spent on a sealed door.`,
   },
   floor: {
     icon: '🪜', label: 'floor', salience: SALIENCE.BEAT,

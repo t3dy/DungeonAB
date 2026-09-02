@@ -1799,3 +1799,42 @@ the next reading pass finds something new instead of these again. The
 older lesson stands and is now load-bearing: **the reading pass is the
 only channel that is not an optimisation target, and it should be run
 before any narrative work is called done.**
+
+## §S. v8 — brass tacks
+
+Ted's call, answering §Q's fork in three words: *a dungeon simulator*.
+The delve is the heart; everything orbiting it went. Cut wholesale on
+2026-09-01, against `v7.0-prototype` as the preserved reference:
+
+- **The town and the campaign.** One draft, one dungeon. Victory shows
+  the table standings and offers a fresh draft. A lost magus stays lost.
+- **Providence and Divination** — information a self-crawling party
+  could never act on.
+- **The tactic tree** — a third draft axis at 11% reach. Its pack slot
+  went to equipment (2/4/2/1). The hazard architecture now opens to kit:
+  the grapple for the pit, the shield for the spikes.
+- **Wagers and hexes** — the whole conditions UI. The internal
+  `condition` plumbing remains, inert at `none`, removable at leisure.
+- **Lock-and-key wings and `wayIn`** — a wing is open or secret, one
+  roll, one decision. The mastery band is now the whole payoff for
+  answering a situation well: renown, not access.
+- **Multi-floor dungeons, stairs, trapdoors** — one floor, 8–10 spine
+  rooms, every one of them mattering.
+- **Five of eight themes** — delve, castle, icecaverns remain, each
+  mechanically distinct (neutral / undead+treasure / elements+disasters).
+- **The alchemy inventory loop** — lab and materials rooms, gather,
+  brewing, the smoke bomb, the materials currency, `doAlchemy` and with
+  it the fugue rule. Hoard potions and monster-drop coatings stay (loot,
+  not economy); reagent drops sell for gold; every encounter reward that
+  paid materials pays gold and says so.
+- **Debate merged into diplomacy** (its only askers were town
+  encounters), which sent fencing to Agrippa — the actual soldier — and
+  trimmed Sendivogius to three capabilities.
+
+Fallout worth remembering: `leave-it`, `make-it-a-melee` and
+`shout-through-it` all starved when the decision weights shifted around
+them — the third, fourth and fifth instances of the fallback-starvation
+pattern, all caught by tests/prose, all answered in `BLUNT_ANSWERS` or
+by weight. And one self-inflicted wound for MEASUREMENT.md: a cleanup
+regex using `[^']*` ate 1,160 lines of Narrator.js, because that class
+matches newlines — line-based edits only, in files that matter.

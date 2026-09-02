@@ -115,24 +115,11 @@ export class Party {
     // swap, or bought in town and not yet handed to anybody
     this.pack = [];
 
-    // Keys found in the dungeon, each opening one locked wing
-    // (world/DungeonGen.js lock and key). They do not leave with the
-    // party: a sexton's key is for one door in one crypt.
-    this.keys = [];
-
-    // Readings of how this dungeon was built, earned by answering a
-    // situation with a drafted capability and spent on a sealed door
-    // (encounters/EncounterEngine.js grants, sim/Simulator.js spends).
-    // Four locked wings in ten have no key anywhere in the dungeon, and
-    // this is how a party that drafted well gets into them.
-    this.wayIn = 0;
-
     // The lantern's reserve, spent on the march (see restStep)
     this.supply = STARTING_SUPPLY;
     this.marches = 0;
 
-    // Alchemy satchel: materials gathered in the dungeon
-    this.materials = 0;
+    // Potions found in hoards and on the dead; drunk when it matters
     this.potions = [];
 
     // The trophy case: every monster drop claimed, remembered by
@@ -223,18 +210,6 @@ export class Party {
     return { moved: card, from, to: target, displaced };
   }
 
-  /** Pocket a key found in a room. Returns it, or null if already held. */
-  takeKey(key) {
-    if (!key || this.keys.some(k => k.wing === key.wing)) return null;
-    this.keys.push({ ...key });
-    return key;
-  }
-
-  /** Does anybody have the key to this wing? */
-  hasKey(wingId) {
-    return this.keys.some(k => k.wing === wingId);
-  }
-
   /** Take a piece off and leave it with the pack. */
   unequip(cardId) {
     for (const m of [...this.members, ...this.reserve]) {
@@ -317,11 +292,8 @@ export class Party {
       trophies: this.trophies.map(t => ({ ...t })),
       gold: this.gold,
       score: this.score,
-      materials: this.materials,
       potions: this.potions.map(x => ({ ...x })),
       pack: this.pack.map(e => ({ ...e })),
-      keys: this.keys.map(k => ({ ...k })),
-      wayIn: this.wayIn,
       supply: this.supply,
       spellsLearned: this.spellsLearned,
       poisonLinger: this.poisonLinger || 0,
@@ -361,11 +333,8 @@ export class Party {
     party.trophies = (saved.trophies || []).map(t => ({ ...t }));
     party.gold = saved.gold || 0;
     party.score = saved.score || 0;
-    party.materials = saved.materials || 0;
     party.potions = (saved.potions || []).map(x => ({ ...x }));
     party.pack = (saved.pack || []).map(rehydrate).filter(Boolean);
-    party.keys = (saved.keys || []).map(k => ({ ...k }));
-    party.wayIn = saved.wayIn || 0;
     party.supply = saved.supply ?? party.supply;
     party.spellsLearned = saved.spellsLearned || 0;
     party.poisonLinger = saved.poisonLinger || 0;
@@ -859,35 +828,6 @@ export class Party {
     return { ...spell, effectivePower: power, consumed: burns };
   }
 
-  /**
-   * Alchemy at a lab: brew a potion or mod a weapon (needs materials)
-   */
-  doAlchemy(rngValue = Math.random()) {
-    if (!this.hasClass(CLASSES.ALCHEMIST) || this.materials <= 0) return null;
-
-    this.materials--;
-
-    // The fugue rule: alchemy and music held together draw two flasks
-    // where one would come. Maier set the Work to music and got both;
-    // so does any party that drafts the pair, in whosever hands.
-    const doubler = this.hasCapability('alchemy') && this.hasCapability('music');
-
-    if (rngValue < 0.5) {
-      const potion = { kind: 'healing-draught', heal: 6 };
-      this.potions.push(potion);
-      if (doubler) this.potions.push({ ...potion });
-      return { type: 'potion', potion, doubled: doubler };
-    } else {
-      // Weapon mod goes to the hardest hitter. Coatings carry their
-      // element — worth double against flesh that hates it.
-      const striker = this.living().reduce((a, b) => a.attack >= b.attack ? a : b);
-      const mod = rngValue < 0.75
-        ? { name: 'fire coating', attack: 2, element: 'fire' }
-        : { name: 'venom coating', attack: 3, venom: true };
-      striker.addWeaponMod(mod);
-      return { type: 'weapon-mod', mod, target: striker.name };
-    }
-  }
 
   /**
    * Loose a prepared healing working mid-fight, on the same instinct

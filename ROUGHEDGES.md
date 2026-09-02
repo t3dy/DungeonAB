@@ -191,3 +191,16 @@ A secondary trap: `javascript_tool` calls that loop-and-sleep for more
 than ~45s time out, but their side effects still land. The clicks happen;
 only the reply is lost. Re-query state in a second short call rather than
 assuming the batch failed.
+
+## R16. `[^']*` in a cleanup regex ate 1,160 lines of Narrator.js
+
+A negated character class matches NEWLINES. A regex meant to delete
+five single-line table entries (`  crypt: '...',`) matched from the
+first quote across a thousand lines to a distant `',\n`, and the file
+still parsed afterwards, so `node --check` said nothing. Caught only
+because a follow-up grep found PREDICAMENTS missing.
+
+**Rules:** line-based edits for anything that matters; after any bulk
+edit, check `wc -l` against expectations, not just the parser. Recovery
+was `git checkout` + redoing the three intended edits — which is also
+the argument for committing between surgical phases.

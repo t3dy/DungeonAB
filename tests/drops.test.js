@@ -32,7 +32,6 @@ function allThemedMonsters() {
 /** A snapshot of everything a drop could touch. */
 function partyWealth(party) {
   return party.gold
-    + party.materials
     + party.potions.length
     + party.grimoire.length
     + party.living().reduce((s, m) => s + m.equipment.length + m.weaponMods.length, 0);
@@ -161,10 +160,10 @@ describe('Pack-registered drops (DLC parity)', () => {
   });
 
   test('registerDrops lets a pack claim a new kind', () => {
-    registerDrops({ 'test-kind': { effect: 'materials', name: 'test dust', icon: '✨', count: 5, text: 'Dust of the test kind, settling.' } });
+    registerDrops({ 'test-kind': { effect: 'gold', name: 'test dust', icon: '✨', gold: 5, text: 'Dust of the test kind, settling.' } });
     const party = new Party([fighter]);
     claimDrop(party, { kind: 'test-kind', name: 'a test monster' });
-    assert.equal(party.materials, 5);
+    assert.equal(party.gold, 5);
   });
 });
 

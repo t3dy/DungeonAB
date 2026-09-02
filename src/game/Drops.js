@@ -157,8 +157,10 @@ export function claimDrop(party, monster) {
       outcome = `a potion (heals ${drop.potion.heal}), added to the satchel`;
       break;
     case 'materials':
-      party.materials += drop.count;
-      outcome = `${drop.count} alchemy material${drop.count === 1 ? '' : 's'}`;
+      // v8: the alchemy economy is cut. Reagent drops sell on the way
+      // out instead of feeding a bench that no longer exists.
+      party.addGold(drop.count * 8);
+      outcome = `reagents worth ${drop.count * 8} gold to the right buyer`;
       break;
     case 'scroll':
       // Taken off a corpse sealed: one cast and it burns (Party.castSpell)

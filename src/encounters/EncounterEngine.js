@@ -190,14 +190,6 @@ export function evaluateOptions(def, party, ctx) {
 }
 
 /** Resolve an option through the definition's own resolver, tracing the choice. */
-/**
- * How many readings of a dungeon's construction a party can hold at
- * once. Two: enough that answering situations pays even when no locked
- * door has turned up yet, few enough that it stays a thing being spent
- * rather than a bank.
- */
-export const WAY_IN_CAP = 2;
-
 /*
  * What depth is worth.
  *
@@ -275,24 +267,10 @@ export function resolveEncounterOption(def, optionId, party, ctx, opts = {}) {
    * IS the payoff.
    */
   /*
-   * Improvising past a problem does not teach you how the place was
-   * built — you got through it without ever understanding it, which is
-   * the whole difference the mastery band prices.
-   *
-   * And a reading of a dungeon cannot be bought in town. The town
-   * routes through this same resolver, so an astrologer's consultation
-   * was handing out a way into a crypt nobody had walked into yet:
-   * fiction backwards, and a free resource banked before the delve
-   * began. `ctx.type === 'town'` is the seam between the two worlds.
+   * v8: the `wayIn` grant that used to live here went with the
+   * lock-and-key wings it opened. The mastery band above is the whole
+   * payoff for answering well now — renown, not access.
    */
-  const inDungeon = ctx?.type !== 'town';
-  if (inDungeon && result?.success !== false && (option?.requires || []).length > 0 && !result.mastery?.label?.includes('improvised')) {
-    const held = party.wayIn || 0;
-    if (held < WAY_IN_CAP) {
-      party.wayIn = held + 1;
-      result.taughtWayIn = true;
-    }
-  }
 
   recordTrace({
     kind: 'resolve',

@@ -287,10 +287,10 @@ describe('Using the room changes the fight', () => {
     assert.ok(party.gold > goldBefore, 'crates pay');
     assert.equal(crates.cleared, true);
 
-    const spoutRoom = furnished(ROOM_TYPES.LAB, ['spout']);
-    const matBefore = party.materials;
+    const spoutRoom = furnished(ROOM_TYPES.SHRINE, ['spout']);
+    const goldBefore2 = party.gold;
     resolveRoomAction(spoutRoom, party, 'harvest-spout');
-    assert.ok(party.materials > matBefore, 'the spout is a reagent');
+    assert.ok(party.gold > goldBefore2, 'the spout drips something worth selling');
 
     // The lid is a gamble for bare hands: a forced high roll wakes the
     // occupant. (With a prybar it comes off quietly — see the tiering

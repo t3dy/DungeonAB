@@ -48,15 +48,15 @@ export const FEATURES = {
   rubble: {
     id: 'rubble', name: 'a fall of rubble', icon: '🪨',
     tile: { col: 0, row: 1 },
-    rooms: ['monster', 'corridor', 'disaster', 'trap', 'materials'],
-    weight: 3, tags: ['cover', 'materials'],
+    rooms: ['monster', 'corridor', 'disaster', 'trap'],
+    weight: 3, tags: ['cover'],
     cover: 1,
     tell: 'Half the ceiling is on the floor, in pieces worth stepping around.',
   },
   crates: {
     id: 'crates', name: 'stacked crates and barrels', icon: '📦',
     tile: { col: 1, row: 6 },
-    rooms: ['treasure', 'materials', 'corridor', 'monster', 'lab'],
+    rooms: ['treasure', 'corridor', 'monster'],
     weight: 2.5, tags: ['cover', 'loot'],
     cover: 1,
     tell: 'Somebody stacked supplies here and never came back for them.',
@@ -64,7 +64,7 @@ export const FEATURES = {
   brazier: {
     id: 'brazier', name: 'a brazier still burning', icon: '🔥',
     tile: { col: 5, row: 2 },
-    rooms: ['monster', 'boss', 'shrine', 'library', 'lab'],
+    rooms: ['monster', 'boss', 'shrine', 'library'],
     weight: 2.5, tags: ['fire', 'light'],
     tell: 'A brazier burns in its bracket — nobody has been here to feed it, and it burns anyway.',
   },
@@ -78,7 +78,7 @@ export const FEATURES = {
   boulder: {
     id: 'boulder', name: 'a boulder on a bad slope', icon: '⚪',
     tile: { col: 6, row: 8 },
-    rooms: ['monster', 'corridor', 'disaster', 'materials'],
+    rooms: ['monster', 'corridor', 'disaster'],
     weight: 1.5, tags: ['hazard'],
     tell: 'A boulder sits at the top of a slope, held by a wedge of rotten timber.',
   },
@@ -101,7 +101,7 @@ export const FEATURES = {
   spout: {
     id: 'spout', name: 'a gargoyle spout, dripping', icon: '🗿',
     tile: { col: 8, row: 1 },
-    rooms: ['lab', 'materials', 'corridor', 'monster'],
+    rooms: ['corridor', 'monster'],
     weight: 1.8, tags: ['alchemy'],
     tell: 'A gargoyle spout drips something that is not water into a stained channel.',
   },
@@ -115,14 +115,14 @@ export const FEATURES = {
   anvil: {
     id: 'anvil', name: 'a cold anvil', icon: '🔨',
     tile: { col: 2, row: 6 },
-    rooms: ['lab', 'materials', 'corridor', 'monster'],
+    rooms: ['corridor', 'monster'],
     weight: 1.5, tags: ['forge'],
     tell: 'An anvil sits under a dead forge, still true.',
   },
   shelves: {
     id: 'shelves', name: 'sagging shelves', icon: '📚',
     tile: { col: 3, row: 6 },
-    rooms: ['library', 'lab', 'vault', 'monster'],
+    rooms: ['library', 'vault', 'monster'],
     weight: 2, tags: ['study', 'flammable'],
     tell: 'Shelves sag under books nobody has audited in a century.',
   },
@@ -261,25 +261,25 @@ export const FEATURE_ACTIONS = {
   'harvest-spout': {
     feature: 'spout', name: 'Harvest the Drip', desc: 'Whatever that is, it is a reagent',
     gates: [{ cls: CLASSES.ALCHEMIST }, { item: 'eq-waterskin' }],
-    materials: 1,
+    gold: 8,
     // Something to put it in changes how much you can take
-    tool: { materials: 3 },
+    tool: { gold: 20 },
     weights: { greedy: 2, scholarly: 2 },
   },
   'sift-rubble': {
     feature: 'rubble', name: 'Sift the Rubble', desc: 'Salts and oddments in the broken stone',
     gates: [{ cls: CLASSES.ALCHEMIST }, { item: 'eq-prybar' }],
-    materials: 1, gold: 5,
+    gold: 13,
     // Levering the slabs up reaches what is under them
-    tool: { materials: 2, gold: 25 },
+    tool: { gold: 40 },
     weights: { greedy: 2.5, scholarly: 1 },
   },
   'crack-crates': {
     feature: 'crates', name: 'Crack the Crates', desc: 'Somebody else\'s supplies',
     gates: [{ item: 'eq-prybar' }, { cls: CLASSES.ROGUE }],
-    gold: 12, materials: 1,
+    gold: 20,
     // A prybar opens every crate in the stack, not just the loose one
-    tool: { gold: 40, materials: 2 },
+    tool: { gold: 55 },
     weights: { greedy: 3.5, reckless: 1 },
   },
   'work-the-anvil': {

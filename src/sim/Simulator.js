@@ -14,13 +14,12 @@ import { Chronicle, snapshotState, diffEvents, SALIENCE } from '../narrative/Chr
 import { CLASSES } from '../game/Cards.js';
 import {
   getRoomOptions, decideRoomAction, resolveRoomAction,
-  detectSecretDoor, decideDetour, wingAppeal, openLockedWing,
-  detectTrapdoor, decideTrapdoor,
+  detectSecretDoor, decideDetour, wingAppeal,
 } from '../encounters/RoomEncounters.js';
 import {
   composePredicament, composeDeliberation, composeResolution, editPreps, composePoint,
   composeWipe, composeVictory, composeFall,
-  composeSecretFound, composeDetour, composeTrapdoor, composeKeyFound, composeLockedWing,
+  composeSecretFound, composeDetour,
   composeSupply, composeWound, composeDormant, composeTactics, composeProvision,
   resetDeliberation,
 } from '../narrative/Narrator.js';
@@ -353,18 +352,6 @@ export class Simulator {
       });
     }
 
-    if (result.taughtWayIn) {
-      result.preps = result.preps || [];
-      result.preps.push({
-        source: 'the reading',
-        text: pickLine([
-          '🗝️ And the shape of the place gives itself away: something sealed below will open to this.',
-          '🗝️ Whoever built this had habits, and the party has just learned one of them.',
-          '🗝️ The trick of the place is understood now. Somewhere below is a door that does not know that yet.',
-        ]),
-      });
-    }
-
     if (result.preps?.length) {
       // Lead lines the composer prints outside the preps array are card
       // promises too, and spend the same budget (Narrator.js editPreps)
@@ -417,18 +404,6 @@ export class Simulator {
       ].filter(Boolean).join(' ') || null,
     };
 
-    // A key on a hook, a belt, or a body. Finding it is not a decision
-    // — carrying it to the right door is (world/DungeonGen.js).
-    if (room.key && this.party.isAlive()) {
-      const took = this.party.takeKey(room.key);
-      if (took) {
-        const finder = this.party.living()[0]?.name || 'Somebody';
-        this.lastNarration.aside = [this.lastNarration.aside, composeKeyFound(took, finder)]
-          .filter(Boolean).join(' ');
-        this.addLog(`🗝️ ${took.name} found.`);
-      }
-    }
-
     // A side passage? Secret doors must be noticed first; open ones
     // are a party vote. Taking one splices its rooms into the march.
     const branch = this.party.isAlive() ? this.dungeon.branchAt(roomIdx) : null;
@@ -442,28 +417,6 @@ export class Simulator {
           this.addLog('🕳️ A hidden door!');
         }
         // Unnoticed secrets stay secret — the branch may be found on a retreat pass
-      } else if (branch.locked) {
-        // Lock and key: the wing was sealed and the key was somewhere
-        // back up the spine. Four ways through, and two of them are loud
-        // (RoomEncounters.openLockedWing).
-        branch.consumed = true;
-        const opened = openLockedWing(this.party, branch.wing);
-        if (opened.noisy) this.party.alarmed = true;   // the dungeon heard that
-        if (opened.opened) {
-          const going = decideDetour(this.party, undefined, branch.wing);
-          if (going) this.path.splice(this.roomIndex + 1, 0, ...branch.rooms);
-          const appeal = wingAppeal(this.party, branch.wing);
-          this.lastNarration.aside = [
-            this.lastNarration.aside,
-            composeLockedWing(branch, opened),
-            composeDetour(going, branch, going ? appeal.advocate : null),
-          ].filter(Boolean).join(' ');
-        } else {
-          this.lastNarration.aside = [
-            this.lastNarration.aside,
-            composeLockedWing(branch, opened),
-          ].filter(Boolean).join(' ');
-        }
       } else {
         branch.consumed = true;
         const going = decideDetour(this.party, undefined, branch.wing);
@@ -475,11 +428,6 @@ export class Simulator {
         ].filter(Boolean).join(' ');
       }
     }
-
-    // A shaft in the floor: a shortcut that skips rooms for a fall.
-    // Hidden ones must be spotted or they spot you.
-    const trapdoor = this.party.isAlive() ? this.dungeon.trapdoorAt(roomIdx) : null;
-    if (trapdoor) this.resolveTrapdoor(trapdoor);
 
     this.addLog(`${room.icon} Room ${this.roomIndex}: ${room.type} — ${chosen}`);
 
@@ -501,65 +449,6 @@ export class Simulator {
     }
   }
 
-  /**
-   * Resolve a trapdoor in the current room's floor. Found shafts are a
-   * choice (skip rooms, take the fall, lose the loot between); unfound
-   * ones are an accident that costs the same rooms and more damage.
-   * Splices the skipped rooms out of the march.
-   */
-  resolveTrapdoor(trapdoor) {
-    trapdoor.consumed = true;
-
-    const toPos = this.path.indexOf(trapdoor.to);
-    const skipped = toPos - this.roomIndex - 1;
-    if (toPos <= this.roomIndex || skipped <= 0) return;   // the route already passed it
-
-    // A shaft that goes through the floor says so: the party lands on
-    // the next level down, and the stair it skipped stays unused.
-    const fromFloor = this.dungeon.rooms[trapdoor.from]?.floor || 0;
-    const toFloor = this.dungeon.rooms[trapdoor.to]?.floor || 0;
-    const floorsDropped = Math.max(0, toFloor - fromFloor);
-
-    const found = !trapdoor.secret || detectTrapdoor(this.party);
-    let outcome;
-    if (found) {
-      outcome = decideTrapdoor(this.party) ? 'descend' : 'refused';
-    } else {
-      outcome = 'fell';
-    }
-
-    if (outcome === 'refused') {
-      this.lastNarration.aside = [
-        this.lastNarration.aside,
-        composeTrapdoor({ outcome, finder: this.trapdoorFinder() }),
-      ].filter(Boolean).join(' ');
-      return;
-    }
-
-    // Roped down deliberately is half the drop; falling is the whole one
-    const damage = outcome === 'descend'
-      ? Math.max(1, Math.ceil(trapdoor.fall / 2))
-      : trapdoor.fall;
-    const livingBefore = this.party.living();
-    this.party.takeDamage(damage);
-
-    this.path.splice(this.roomIndex + 1, skipped);
-    for (const idx of this.dungeon.rooms.map((_, i) => i)) {
-      if (idx === trapdoor.to) this.dungeon.rooms[idx].discovered = true;
-    }
-
-    this.lastNarration.aside = [
-      this.lastNarration.aside,
-      composeTrapdoor({ outcome, rooms: skipped, damage, floors: floorsDropped, finder: this.trapdoorFinder() }),
-    ].filter(Boolean).join(' ');
-    this.lastNarration.falls = [
-      ...(this.lastNarration.falls || []),
-      ...fallLines(this.party, livingBefore.filter(m => !m.isAlive())),
-    ];
-    this.addLog(`🕳️ Trapdoor: ${skipped} room${skipped === 1 ? '' : 's'} skipped, ${damage} damage.`);
-
-    if (!this.party.isAlive()) this.finish(false);
-  }
 
   /** Who spotted the shaft — the rogue if there is one. */
   trapdoorFinder() {
@@ -626,7 +515,6 @@ export class Simulator {
         supply: this.party.supply,
         gold: this.party.gold,
         score: this.party.score,
-        materials: this.party.materials,
         poisonLinger: this.party.poisonLinger || 0,
         alarmed: !!this.party.alarmed,
         potions: this.party.potions.length,

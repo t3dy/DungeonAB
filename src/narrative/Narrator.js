@@ -24,24 +24,14 @@ import { roomFeatures, getFeature, FEATURE_ACTIONS } from '../world/RoomFeatures
 /* Themed arrivals — what this dungeon is, stated at the door */
 const THEME_ENTRANCES = {
   delve: 'The party enters the Old Delve: rats, skeletons, and goblin toll-gangs between here and the boss.',
-  crypt: 'The party enters the Ancient Crypt. Most monsters here are undead — holy damage and a cleric\'s turning work well.',
-  volcanic: 'The party enters the Cinder Galleries. Fire traps hit harder here, and most monsters resist fire but hate frost.',
-  library: 'The party enters the Drowned Athenaeum. Extra libraries to study in; several of its monsters burn easily.',
-  madlab: 'The party enters the Mad Alchemist\'s Dungeon. A lab is guaranteed, materials are common, and much of what lives here is venomous.',
   castle: 'The party enters the Castle of the Vampire Lord. Treasure is plentiful; most of the household is undead or ethereal.',
-  bogcellar: 'The party enters the Root Cellar of the Bog Witch. Poison traps and venomous monsters, with a stillroom lab guaranteed.',
   icecaverns: 'The party enters the Ice Caverns of the Mad Pyromancer. Disasters are frequent, and fire and frost weaknesses run through everything.',
 };
 
 /* Themed disasters — what actually goes wrong, per dungeon */
 const THEME_DISASTERS = {
   castle: 'The candles go out: the castle itself attacks the party in the dark.',
-  bogcellar: 'A shelf of jars breaks over the party; what spills is corrosive and moving.',
   icecaverns: 'A fire vent meets the cavern ice: a scalding steam blast fills the room.',
-  volcanic: 'Lava surges into the passage; the party must get clear before it closes the way.',
-  crypt: 'The tomb lids open at once and the dead press in from every side.',
-  library: 'The stacks collapse and the floodwater rises; falling shelves and water both do damage.',
-  madlab: 'An unattended reaction runs out of control and fills the room with caustic vapor.',
 };
 
 const PREDICAMENTS = {
@@ -72,50 +62,7 @@ export function composeSecretFound(party, wing = null) {
   const rogue = party.living().find(m => m.class === CLASSES.ROGUE);
   const finder = rogue ? rogue.name : (party.living()[0]?.name || 'Someone');
   const behind = wing?.tell ? ` Behind it: ${wing.tell}.` : '';
-  // Nobody found this by looking. It was deduced from the reading an
-  // answered situation bought (RoomEncounters.detectSecretDoor), and
-  // the line has to say so or the draft's payoff is invisible.
-  if (party.foundByReading) {
-    party.foundByReading = false;
-    return `🕳️ Nobody spots the door; the party works out where it has to be. `
-      + `The plan of the place demands a passage here, and here it is, into ${wing?.name || 'a side passage'}.`
-      + `${behind} Its rooms join the route.`;
-  }
   return `🕳️ ${finder} finds a hidden door into ${wing?.name || 'a side passage'}.${behind} Its rooms join the route.`;
-}
-
-/** A key, found on the way in. */
-export function composeKeyFound(key, finder) {
-  return `🗝️ ${finder} pockets ${key.name}. Somewhere below there is a door it belongs to.`;
-}
-
-/**
- * A locked wing, and how the party got through it — or did not.
- * Every branch says what it cost, because forcing a door is not the
- * same as unlocking one and the player should be able to tell.
- */
-export function composeLockedWing(wing, outcome) {
-  const door = wing?.door || 'a locked door';
-  const name = wing?.name || 'a side passage';
-  if (!outcome.opened) {
-    return `🔒 ${name[0].toUpperCase()}${name.slice(1)} is shut behind ${door}. Nobody here can open it, and the party walks on.`;
-  }
-  switch (outcome.how) {
-    case 'key':
-      return `🗝️ ${door[0].toUpperCase()}${door.slice(1)} — and the party is carrying ${wing.keyName}. ${name[0].toUpperCase()}${name.slice(1)} opens.`;
-    case 'picked':
-      return `🗝️ ${door[0].toUpperCase()}${door.slice(1)}. The rogue has it open in the time it takes to say so, and quietly.`;
-    case 'read':
-      return `🗝️ ${door[0].toUpperCase()}${door.slice(1)} — and the party has already read how this place was built. ${name[0].toUpperCase()}${name.slice(1)} opens without a key and without a sound.`;
-    case 'knock':
-      return `💥 ${outcome.source || 'Knock'} takes ${door} off its fastenings. ${name[0].toUpperCase()}${name.slice(1)} is open, and everything below heard it.`;
-    case 'forced':
-      return outcome.lever
-        ? `💪 ${door[0].toUpperCase()}${door.slice(1)} comes off its hinges under the prybar. ${name[0].toUpperCase()}${name.slice(1)} is open, and that was not quiet.`
-        : `💪 ${door[0].toUpperCase()}${door.slice(1)} goes down under somebody's shoulder: ${outcome.damage} damage taken doing it, and everything below heard.`;
-    default:
-      return `🔒 ${name} opens.`;
-  }
 }
 
 export function composeDetour(taken, wing = null, advocate = null) {

@@ -52,9 +52,9 @@ registerEncounter({
     room.cleared = true;
     switch (optionId) {
       case 'repair-gears':
-        party.materials += 1;
+        party.addGold(8);
         party.addScore(20);
-        return { success: true, narrative: '🔧 The gears are coaxed still and the walls stop. A stripped bronze pinion goes into the satchel: +1 material, +20 score.' };
+        return { success: true, narrative: '🔧 The gears are coaxed still and the walls stop. A stripped bronze pinion goes into the satchel: +8 gold, +20 score.' };
       case 'correct-orrery':
         party.addScore(20);
         party.starBlessed = true;
@@ -68,7 +68,7 @@ registerEncounter({
         return { success: true, narrative: '📖 The cosmological model is recognized and recorded — worth rather more to the right buyer than the brass it turns on. +30 score.' };
       case 'compute-epicycles':
         party.addScore(26);
-        party.materials += 1;
+        party.addGold(8);
         return { success: true, narrative: '📐 The fault is arithmetical, not mechanical: one wheel was cut to the wrong ratio and has been quietly wrong for a century. Worked out on the floor in chalk, corrected with a shim, and the spare bronze goes in the satchel. +1 material, +26 score.' };
       case 'steady-ground':
         party.addScore(10);
@@ -117,19 +117,19 @@ registerEncounter({
   resolveOption(optionId, party, room) {
     room.cleared = true;
     const openIt = (narrative, score) => {
-      party.materials += 2;
+      party.addGold(15);
       party.addScore(score);
       return { success: true, narrative };
     };
     switch (optionId) {
       case 'read-correspondences':
-        return openIt('🔗 The signs are not a lock but an argument, and it can be followed to its conclusion. The door opens on a working laboratory: +2 materials, +35 score.', 35);
+        return openIt('🔗 The signs are not a lock but an argument, and it can be followed to its conclusion. The door opens on a working laboratory: +15 gold, +35 score.', 35);
       case 'planetary-sequence':
-        return openIt('🔭 Pressed in the order the planets actually stand tonight, the signs give. +2 materials, +30 score.', 30);
+        return openIt('🔭 Pressed in the order the planets actually stand tonight, the signs give. +15 gold, +30 score.', 30);
       case 'material-symbolism':
-        return openIt('⚗️ Each sign is its metal, and the metals want touching in the order of their melting. +2 materials, +30 score.', 30);
+        return openIt('⚗️ Each sign is its metal, and the metals want touching in the order of their melting. +15 gold, +30 score.', 30);
       case 'reconcile-traditions':
-        return openIt('☯️ Two traditions are quarrelling on one door; reconciled, they agree to open it. +2 materials, +35 score.', 35);
+        return openIt('☯️ Two traditions are quarrelling on one door; reconciled, they agree to open it. +15 gold, +35 score.', 35);
       case 'divine-sequence':
         party.addScore(15);
         party.forewarned = true;
@@ -137,8 +137,8 @@ registerEncounter({
       case 'force-the-door': {
         party.takeDamage(4);
         party.addScore(10);
-        party.materials += 1;
-        return { success: false, damage: 4, narrative: '💥 The door yields to shoulders and a crowbar, and the ward on it yields something back: 4 damage, and only what could be grabbed on the way past. +1 material.' };
+        party.addGold(8);
+        return { success: false, damage: 4, narrative: '💥 The door yields to shoulders and a crowbar, and the ward on it yields something back: 4 damage, and only what could be grabbed on the way past. +8 gold scraped up.' };
       }
       case 'leave-sealed':
       default:
@@ -188,8 +188,8 @@ registerEncounter({
         return { success: true, narrative: '🤝 The grievance is real, old, and settleable. It stands aside, and pays 20 gold out of a hoard it says was never the point. +25 score.' };
       case 'translate-claim':
         party.addScore(30);
-        party.materials += 2;
-        return { success: true, narrative: '🌐 Answered in its own tongue, it stops being a monster in the passage and becomes someone with a complaint. It gives the party passage and a gift of its own reagents: +2 materials, +30 score.' };
+        party.addGold(15);
+        return { success: true, narrative: '🌐 Answered in its own tongue, it stops being a monster in the passage and becomes someone with a complaint. It gives the party passage and a gift of its own reagents: +15 gold, +30 score.' };
       case 'identify-artifact':
         party.addScore(30);
         party.addGold(35);
@@ -285,7 +285,7 @@ registerEncounter({
 
 registerEncounter({
   id: 'experimental-crossroads',
-  rides: ['lab', 'materials'],
+  rides: ['treasure', 'corridor'],
   title: 'A Mechanism in Pieces',
   situation: 'A elaborate mechanism blocks the passage, broken into components. It was clearly built to open the far door, but whether it can be reassembled, or should be, is unclear. There are three similar passages around it.',
   affordances: ['mechanism', 'apparatus'],
@@ -311,11 +311,11 @@ registerEncounter({
     room.cleared = true;
     switch (optionId) {
       case 'experiment-rebuild':
-        party.materials += 2;
+        party.addGold(15);
         party.addScore(20);
         return {
           success: true,
-          narrative: '🧪 Trial and error yields insight. The mechanism opens, and scattered materials reward the experiment. +2 materials, +20 score.',
+          narrative: '🧪 Trial and error yields insight. The mechanism opens, and what its builder left in the works rewards the experiment. +15 gold, +20 score.',
         };
       case 'alchemy-bypass':
         party.addScore(15);
@@ -537,7 +537,7 @@ registerEncounter({
 
 registerEncounter({
   id: 'observer-secret',
-  rides: ['corridor', 'materials', 'treasure'],
+  rides: ['corridor', 'treasure'],
   title: 'A Room With Hidden Reserves',
   situation: 'The passage looks bare — stone, dust, and the bare minimum of architecture. But something nags. There is excess here somewhere. Finding it requires attention that casual exploration will never provide.',
   affordances: [],
@@ -563,20 +563,20 @@ registerEncounter({
     room.cleared = true;
     switch (optionId) {
       case 'observe-closely':
-        party.materials += 2;
+        party.addGold(15);
         party.gold += 15;
         party.addScore(18);
         return {
           success: true,
-          narrative: '👁️ Hidden in plain sight: an alcove holding both materials and coin, overlooked by a hundred hurrying parties. +2 materials, +15 gold, +18 score.',
+          narrative: '👁️ Hidden in plain sight: an alcove holding coin and small valuables, overlooked by a hundred hurrying parties. +15 gold, +18 score.',
         };
       case 'search-methodical':
-        party.materials += 1;
+        party.addGold(8);
         party.gold += 12;
         party.addScore(14);
         return {
           success: true,
-          narrative: '🔎 Systematic searching reveals a cache in the oldest stones. Not as rich as it might have been, but real. +1 material, +12 gold, +14 score.',
+          narrative: '🔎 Systematic searching reveals a cache in the oldest stones. Not as rich as it might have been, but real. +20 gold, +14 score.',
         };
       case 'divine-presence':
         party.gold += 8;
@@ -651,10 +651,10 @@ registerEncounter({
         };
       case 'strip-insignia':
         party.addScore(20);
-        party.materials += 1;
+        party.addGold(8);
         return {
           success: true,
-          narrative: '🗡️ The binding is three rivets and a sealed strip of vellum. Out they come, and the plate is only plate again — with a strip of very old vellum worth keeping. +1 material, +20 score.',
+          narrative: '🗡️ The binding is three rivets and a sealed strip of vellum. Out they come, and the plate is only plate again — with a strip of very old vellum worth keeping. +8 gold, +20 score.',
         };
       case 'read-its-gait':
         party.addScore(18);
@@ -697,7 +697,7 @@ registerEncounter({
     },
     {
       id: 'make-it-a-melee', name: 'Make It a Team Fight', desc: 'He said one of them may pass. He did not say only one may fight',
-      requires: ['tactics'], weight: 1.5,
+      requires: ['tactics'], weight: 3,
     },
     { id: 'push-past-duellist', name: 'Push Past Him', desc: 'Decline, loudly, and keep walking' },
   ],
@@ -944,7 +944,7 @@ registerEncounter({
         };
       case 'work-the-slab':
         party.addScore(24);
-        party.materials += 1;
+        party.addGold(8);
         return {
           success: true,
           narrative: '🔧 The counterweight is found, persuaded, and reversed. The slab goes back up, and a length of its chain comes away useful. +1 material, +24 score.',

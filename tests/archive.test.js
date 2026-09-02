@@ -23,7 +23,7 @@ function fakeStorage() {
 
 describe('Layouts as data', () => {
   test('serialize → rebuild is exact (rooms, edges, secrets)', () => {
-    const d = generateDungeon('arch-1', 'medium', { theme: 'crypt', condition: 'traps' });
+    const d = generateDungeon('arch-1', 'medium', { theme: 'castle', condition: 'traps' });
     const layout = serializeDungeon(d);
     const rebuilt = dungeonFromLayout(layout);
 
@@ -33,7 +33,7 @@ describe('Layouts as data', () => {
     );
     assert.deepEqual(rebuilt.edges, d.edges);
     assert.deepEqual(rebuilt.spine, d.spine);
-    assert.equal(rebuilt.theme.id, 'crypt');
+    assert.equal(rebuilt.theme.id, 'castle');
     assert.equal(rebuilt.condition.id, 'traps');
   });
 
@@ -72,23 +72,15 @@ describe('Layouts as data', () => {
   });
 
   test('the editor cannot retype away the structure', () => {
-    // A dungeon has three kinds of room the player does not get to
-    // redecorate: the way in, the way down, and the throne room. The
-    // stair is the one that was easy to miss — retyping it leaves a
-    // floor with no way off it.
-    const layout = serializeDungeon(generateDungeon('arch-retype', 'hard', { depth: 3 }));
+    // Two kinds of room the player does not get to redecorate: the
+    // way in and the throne room (v8: stairs went with the floors).
+    const layout = serializeDungeon(generateDungeon('arch-retype', 'hard'));
     const find = type => layout.rooms.find(r => r.type === type);
 
-    const stair = find('stairs');
-    assert.ok(stair, 'a deep dungeon has a stair to try this on');
-    assert.equal(retypeRoom(layout, stair.index, 'treasure'), false, 'a stair is not retypeable');
-    assert.equal(find('stairs').type, 'stairs');
-
-    assert.equal(retypeRoom(layout, find('entrance').index, 'monster'), false, 'nor the entrance');
+    assert.equal(retypeRoom(layout, find('entrance').index, 'monster'), false, 'not the entrance');
     assert.equal(retypeRoom(layout, find('boss').index, 'corridor'), false, 'nor the boss');
 
-    const ordinary = layout.rooms.find(r => !['entrance', 'boss', 'stairs'].includes(r.type));
-    assert.equal(retypeRoom(layout, ordinary.index, 'stairs'), false, 'and nothing becomes a stair');
+    const ordinary = layout.rooms.find(r => !['entrance', 'boss'].includes(r.type));
     assert.equal(retypeRoom(layout, ordinary.index, 'treasure'), true, 'an ordinary room still retypes');
     assert.equal(layout.rooms.find(r => r.index === ordinary.index).type, 'treasure');
   });
@@ -111,7 +103,7 @@ describe('Layouts as data', () => {
   });
 
   test('the simulator replays a layout exactly', () => {
-    const original = generateDungeon('arch-4', 'medium', { theme: 'library' });
+    const original = generateDungeon('arch-4', 'medium', { theme: 'icecaverns' });
     const layout = serializeDungeon(original);
 
     const sim = new Simulator([fighter], 'ignored-seed', 'medium', { layout });
@@ -119,7 +111,7 @@ describe('Layouts as data', () => {
   });
 
   test('retyping a room gets a sane default payload', () => {
-    const theme = DUNGEON_THEMES.crypt;
+    const theme = DUNGEON_THEMES.castle;
     assert.ok(defaultPayloadFor(ROOM_TYPES.MONSTER, theme).monster.name);
     assert.ok(defaultPayloadFor(ROOM_TYPES.BOSS, theme).monster.isBoss);
     assert.ok(defaultPayloadFor(ROOM_TYPES.VAULT, theme).gold > defaultPayloadFor(ROOM_TYPES.TREASURE, theme).gold);
@@ -149,7 +141,7 @@ describe('The archive', () => {
   test('persists through storage and reloads', () => {
     const storage = fakeStorage();
     const a = new ArchiveManager(storage);
-    const layout = serializeDungeon(generateDungeon('arch-6', 'easy', { theme: 'crypt' }));
+    const layout = serializeDungeon(generateDungeon('arch-6', 'easy', { theme: 'castle' }));
     a.save({ name: 'Kept', layout, seed: 'arch-6', outcome: {} });
     const b = new ArchiveManager(storage);   // a fresh session
     assert.equal(b.list().length, 1);

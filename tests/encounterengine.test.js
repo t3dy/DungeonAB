@@ -123,11 +123,11 @@ describe('Consequences reach past the room', () => {
     assert.equal(party.forewarned, true);
   });
 
-  test('repairing the gears yields a material', () => {
+  test('repairing the gears pays', () => {
     const party = new Party([byId('char-brahe')]);
-    const before = party.materials;
+    const before = party.gold;
     resolveRoomAction(chamber(), party, 'repair-gears');
-    assert.equal(party.materials, before + 1);
+    assert.ok(party.gold > before, 'the stripped pinion sells');
   });
 
   test('the blunt option costs health', () => {
