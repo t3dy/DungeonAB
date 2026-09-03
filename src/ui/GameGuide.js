@@ -27,7 +27,7 @@ export const ROOM_HELP = {
   [ROOM_TYPES.BOSS]: 'The boss chamber. Everything you drafted, tested at once — and the party looses every prepared working it has kept for this.',
   [ROOM_TYPES.STAIRS]: 'A stair down. The floor below is meaner than this one, and there is no way back up.',
   [ROOM_TYPES.VAULT]: 'A vault — riches hidden behind a secret door. Rogues and scholars find these.',
-  [ROOM_TYPES.SITUATION]: 'A situation, not a fight: a seized orrery, a sealed door, something large that would rather talk. What the party can attempt here depends entirely on the capabilities it drafted — Tinkering, Astronomy, Divination, Diplomacy and the rest each open their own answer, and a party carrying none of them has only the blunt one.',
+  [ROOM_TYPES.SITUATION]: 'A situation, not a fight: a seized orrery, a sealed door, something large that would rather talk. What the party can attempt here depends entirely on the capabilities it drafted — Tinkering, Astrology, Divination, Rhetoric and the rest each open their own answer, and a party carrying none of them has only the blunt one.',
 };
 
 /**

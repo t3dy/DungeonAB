@@ -42,10 +42,10 @@ describe('The vocabulary is complete and honest', () => {
 });
 
 describe('Every magus is a capability package', () => {
-  test('each carries three or four capabilities — a package, not a monopoly', () => {
+  test('each carries exactly three capabilities — a tight package', () => {
     for (const card of CHARACTER_CARDS) {
       const n = (card.capabilities || []).length;
-      assert.ok(n >= 3 && n <= 4, `${card.name} carries ${n} capabilities`);
+      assert.equal(n, 3, `${card.name} carries ${n} capabilities`);
     }
   });
 
@@ -64,39 +64,29 @@ describe('Every magus is a capability package', () => {
   });
 
   /*
-   * No capability sits on more than two magi, and no kit card duplicates
-   * one another's.
+   * v8.1: twelve capabilities, each on at most four of sixteen magi, and
+   * no kit card duplicates another's tag.
    *
-   * This replaced a set of pinned per-magus loadouts, and it is the rule
-   * those loadouts were an instance of. Measured, the pinned version had
-   * every capability on four or five of the sixteen: a drafted party held
-   * a median 19 of 28, `knowledge` was on 99% of parties, and an option
-   * 99% of parties can take is flavour rather than a decision — so the
-   * dungeon could not tell a good draft from a bad one at any difficulty
-   * (DESIGN_DIALOGUE.md §N). Capping ownership put 23 of the 28 into the
-   * 40-70% band, where drafting one is a real choice.
+   * This is the same rule the old 28-word / max-2 version enforced —
+   * every tag a real draft decision — retuned to the smaller vocabulary.
+   * With twelve words spread three-per-magus across sixteen magi (48
+   * slots), an even spread is exactly four owners each, so four is the
+   * cap, not a violation of it. The point stands: a capability on a third
+   * of the roster is drafted deliberately, not stumbled into.
    *
-   * The cost was taking documented attributes off real people: Dee keeps
-   * the scrying and loses astronomy to Brahe and Forman, who have the
-   * better claim on it in this pool. A tag now marks who you would
-   * definitively ask, not everyone who was competent.
+   * Old history for the record: the pinned 28-word loadouts put
+   * `knowledge` on 99% of parties, which is flavour rather than a
+   * decision (DESIGN_DIALOGUE.md §N); consolidation to twelve words
+   * (§T) makes each remaining word carry real weight.
    */
   test('no capability is common enough to stop being a decision', () => {
     const byCap = {};
     for (const c of CHARACTER_CARDS) {
       for (const k of c.capabilities || []) (byCap[k] = byCap[k] || []).push(c.id);
     }
-    // Alchemy carries three because three cards' printed text promises
-    // brewing — Paracelsus brews at any bench, Cortese's recipes work,
-    // and Maier draws "two flasks where others draw one", which is the
-    // fugue rule and needs alchemy AND music in the same pair of hands.
-    // A promise on a card is a contract with the player; the cap is a
-    // heuristic for scarcity, and the contract outranks it.
-    const ALLOWED = { alchemy: 3 };
     for (const [cap, owners] of Object.entries(byCap)) {
-      const max = ALLOWED[cap] || 2;
-      assert.ok(owners.length <= max,
-        `${cap} is on ${owners.length} magi (${owners.join(', ')}) — max ${max}`);
+      assert.ok(owners.length <= 4,
+        `${cap} is on ${owners.length} magi (${owners.join(', ')}) — max 4 of 16`);
     }
     const byKit = {};
     for (const e of EQUIPMENT_CARDS) {
@@ -111,22 +101,23 @@ describe('Every magus is a capability package', () => {
   test('every magus is still a recognisable specialist', () => {
     for (const c of CHARACTER_CARDS) {
       const n = (c.capabilities || []).length;
-      assert.ok(n >= 3 && n <= 4, `${c.name} carries ${n} capabilities, wanted 3-4`);
+      assert.equal(n, 3, `${c.name} carries ${n} capabilities, wanted exactly 3`);
     }
-    // The signatures each figure is least replaceable for
+    // The signatures each figure is least replaceable for, in the
+    // twelve-word vocabulary
     const has = (id, cap) => byId(id).capabilities.includes(cap);
     assert.ok(has('char-dee', 'divination'), 'Dee still scries');
-    assert.ok(has('char-brahe', 'astronomy'), 'Brahe still observes the heavens');
-    assert.ok(has('char-paracelsus', 'alchemy'), 'Paracelsus still works the bench');
-    assert.ok(has('char-bruno', 'memory'), 'Bruno still holds the memory palace');
-    assert.ok(has('char-pico', 'syncretism'), 'Pico still reconciles the traditions');
-    assert.ok(has('char-cavendish', 'naturalPhilosophy'), 'Cavendish still answers without the occult');
+    assert.ok(has('char-brahe', 'astrology'), 'Brahe still reads the heavens');
+    assert.ok(has('char-paracelsus', 'alchemy'), 'Paracelsus still works matter');
+    assert.ok(has('char-bruno', 'scholarship'), 'Bruno still holds the memory palace');
+    assert.ok(has('char-pico', 'correspondence'), 'Pico still reconciles the traditions');
+    assert.ok(has('char-cavendish', 'alchemy'), 'Cavendish still answers without the occult');
   });
 
   test('Cavendish brings the non-occult answers', () => {
     const cav = byId('char-cavendish');
     assert.ok(cav, 'Margaret Cavendish is draftable');
-    assert.ok(cav.capabilities.includes('naturalPhilosophy'));
+    assert.ok(cav.capabilities.includes('alchemy'));
   });
 
   test('every class still fields at least three faces', () => {
@@ -173,16 +164,16 @@ describe('The party reads capabilities off everything it carries', () => {
   test('a character supplies theirs', () => {
     const party = new Party([byId('char-dee')]);
     assert.ok(party.hasCapability('divination'));
-    assert.ok(party.hasCapability('mathematics'));
+    assert.ok(party.hasCapability('astrology'));
     assert.ok(!party.hasCapability('tinkering'));
   });
 
   test('equipment supplies a capability its bearer lacks', () => {
     const bare = new Party([byId('char-agrippa')]);
-    assert.ok(!bare.hasCapability('rogue'), 'Agrippa is no burglar');
+    assert.ok(!bare.hasCapability('roguery'), 'Agrippa is no burglar');
     const kitted = new Party([byId('char-agrippa'), eq('eq-lockpicks')]);
-    if ((eq('eq-lockpicks').capabilities || []).includes('rogue')) {
-      assert.ok(kitted.hasCapability('rogue'), 'the picks bring what the man does not');
+    if ((eq('eq-lockpicks').capabilities || []).includes('roguery')) {
+      assert.ok(kitted.hasCapability('roguery'), 'the picks bring what the man does not');
     }
   });
 

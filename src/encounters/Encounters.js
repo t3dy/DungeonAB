@@ -28,7 +28,7 @@ registerEncounter({
     },
     {
       id: 'correct-orrery', name: 'Correct the Orrery', desc: 'Set the planets right and read what they say',
-      requires: ['astronomy'], affordances: ['astral'], weight: 1.5,
+      requires: ['astrology'], affordances: ['astral'], weight: 1.5,
     },
     {
       id: 'divine-instability', name: 'Divine the Instability', desc: 'Ask which motion is the dangerous one',
@@ -36,15 +36,11 @@ registerEncounter({
     },
     {
       id: 'recognize-model', name: 'Recognize the Model', desc: 'Name the cosmology; note it for the record',
-      requires: ['knowledge'], affordances: ['mechanism', 'astral'], weight: 1,
-    },
-    {
-      id: 'compute-epicycles', name: 'Compute the Epicycles', desc: 'An orrery is a calculating engine; work out what it is calculating wrongly',
-      requires: ['mathematics'], affordances: ['mechanism'], weight: 1.5,
+      requires: ['scholarship'], affordances: ['mechanism', 'astral'], weight: 1,
     },
     {
       id: 'steady-ground', name: 'Hold the Stationary Floor', desc: 'Put the party on the part that is not turning',
-      requires: ['tactics'], weight: 1,
+      requires: ['warcraft'], weight: 1,
     },
     { id: 'hurry-through', name: 'Hurry Through', desc: 'Run the turning floor and hope' },
   ],
@@ -66,10 +62,6 @@ registerEncounter({
       case 'recognize-model':
         party.addScore(30);
         return { success: true, narrative: '📖 The cosmological model is recognized and recorded — worth rather more to the right buyer than the brass it turns on. +30 score.' };
-      case 'compute-epicycles':
-        party.addScore(26);
-        party.addGold(8);
-        return { success: true, narrative: '📐 The fault is arithmetical, not mechanical: one wheel was cut to the wrong ratio and has been quietly wrong for a century. Worked out on the floor in chalk, corrected with a shim, and the spare bronze goes in the satchel. +1 material, +26 score.' };
       case 'steady-ground':
         party.addScore(10);
         return { success: true, narrative: '🎯 The stationary floor is found and held; the party crosses in order while the room turns around them. +10 score.' };
@@ -97,7 +89,7 @@ registerEncounter({
     },
     {
       id: 'planetary-sequence', name: 'Work the Planetary Sequence', desc: 'The order is astronomical, not decorative',
-      requires: ['astronomy'], affordances: ['astral'], weight: 1.5,
+      requires: ['astrology'], affordances: ['astral'], weight: 1.5,
     },
     {
       id: 'material-symbolism', name: 'Read the Metals', desc: 'Each planet is also a metal, and the metals are the lock',
@@ -105,7 +97,7 @@ registerEncounter({
     },
     {
       id: 'reconcile-traditions', name: 'Reconcile the Traditions', desc: 'Two systems overlap here; use both',
-      requires: ['syncretism'], weight: 1.5,
+      requires: ['scholarship'], weight: 1.5,
     },
     {
       id: 'divine-sequence', name: 'Divine the Order', desc: 'Ask which sign opens it and which is the trap',
@@ -159,23 +151,23 @@ registerEncounter({
   options: [
     {
       id: 'negotiate-grievance', name: 'Negotiate', desc: 'It is talking. Talk back',
-      requires: ['diplomacy'], affordances: ['people'], weight: 2,
+      requires: ['rhetoric'], affordances: ['people'], weight: 2,
     },
     {
       id: 'translate-claim', name: 'Answer in Its Own Tongue', desc: 'Nobody has done that in a long time',
-      requires: ['translation'], weight: 2,
+      requires: ['scholarship'], weight: 2,
     },
     {
       id: 'identify-artifact', name: 'Identify the Disputed Thing', desc: 'Recognize what was actually taken',
-      requires: ['antiquarian'], weight: 1.5,
+      requires: ['scholarship'], weight: 1.5,
     },
     {
       id: 'investigate-claim', name: 'Investigate the Claim', desc: 'Find out whether it is even true',
-      requires: ['knowledge'], weight: 1,
+      requires: ['scholarship'], weight: 1,
     },
     {
       id: 'slip-past-grievance', name: 'Slip Past It', desc: 'It is watching the passage, not the ceiling',
-      requires: ['rogue'], weight: 1,
+      requires: ['roguery'], weight: 1,
     },
     { id: 'fight-grievance', name: 'Fight It', desc: 'Talking is not the party\'s strength' },
   ],
@@ -226,11 +218,11 @@ registerEncounter({
   options: [
     {
       id: 'appraise-chests', name: 'Appraise Each Chest', desc: 'Examine them carefully and identify the true prize',
-      requires: ['appraisal'], affordances: ['valuables'], weight: 2,
+      requires: ['observation'], affordances: ['valuables'], weight: 2,
     },
     {
       id: 'knowledge-mark', name: 'Recognize the Maker\'s Mark', desc: 'The goldsmith\'s seal tells you which is real',
-      requires: ['knowledge', 'antiquarian'], affordances: [], weight: 1.5,
+      requires: ['scholarship'], affordances: [], weight: 1.5,
     },
     {
       id: 'observation-pick', name: 'Notice What Others Missed', desc: 'One chest has a scratch where the lock was tested',
@@ -292,7 +284,7 @@ registerEncounter({
   options: [
     {
       id: 'experiment-rebuild', name: 'Experiment With Assembly', desc: 'Try combinations until something works',
-      requires: ['experimentation'], affordances: ['mechanism', 'apparatus'], weight: 2,
+      requires: ['tinkering'], affordances: ['mechanism', 'apparatus'], weight: 2,
     },
     {
       id: 'alchemy-bypass', name: 'Dissolve the Lock', desc: 'The mechanism is guarding something. Dissolve it.',
@@ -352,7 +344,7 @@ registerEncounter({
   options: [
     {
       id: 'heal-directly', name: 'Apply Direct Healing', desc: 'A healing working brings the fever down',
-      requires: ['healing'], affordances: [], weight: 2,
+      requires: ['medicine'], affordances: [], weight: 2,
     },
     {
       id: 'medicine-diagnose', name: 'Diagnose and Treat', desc: 'Medical knowledge identifies the cause and cure',
@@ -360,7 +352,7 @@ registerEncounter({
     },
     {
       id: 'naturalphil-remedy', name: 'Apply Natural Remedy', desc: 'A non-occult solution is sometimes strongest',
-      requires: ['naturalPhilosophy'], affordances: [], weight: 1.5,
+      requires: ['alchemy'], affordances: [], weight: 1.5,
     },
     {
       id: 'push-through', name: 'Press On Without Treatment', desc: 'They\'ll recover or they won\'t',
@@ -419,15 +411,15 @@ registerEncounter({
   options: [
     {
       id: 'reconstruct-memory', name: 'Reconstruct From Memory', desc: 'Recall every detail from earlier passages and rebuild the image',
-      requires: ['memory'], affordances: [], weight: 2,
+      requires: ['scholarship'], affordances: [], weight: 2,
     },
     {
       id: 'imagine-solution', name: 'Imagine What It Should Be', desc: 'Creative insight fills the gaps',
-      requires: ['imagination'], affordances: [], weight: 1.5,
+      requires: ['conjuring'], affordances: [], weight: 1.5,
     },
     {
-      id: 'knowledge-pattern', name: 'Recognize the Pattern', desc: 'The image is historical; you know it',
-      requires: ['knowledge'], affordances: ['books'], weight: 1,
+      id: 'knowledge-pattern', name: 'Recognize the Pattern', desc: 'You have seen this design before, on a floor much like this one',
+      requires: ['observation'], affordances: ['books'], weight: 1.5,
     },
     {
       id: 'smash-wall', name: 'Break Through the Wall', desc: 'The hard way',
@@ -481,11 +473,11 @@ registerEncounter({
   options: [
     {
       id: 'music-harmony', name: 'Sing the Harmony', desc: 'A voice trained in music can unify the three tones',
-      requires: ['music'], affordances: [], weight: 2,
+      requires: ['correspondence'], affordances: [], weight: 2,
     },
     {
       id: 'harmony-attune', name: 'Attune the Resonances', desc: 'Bring them into consonance through sympathetic magic',
-      requires: ['harmony'], affordances: ['sacred'], weight: 2,
+      requires: ['correspondence'], affordances: ['sacred'], weight: 2,
     },
     {
       id: 'correspondence-solve', name: 'Understand and Link Them', desc: 'The three frequencies correspond to three principles that must agree',
@@ -548,7 +540,7 @@ registerEncounter({
     },
     {
       id: 'search-methodical', name: 'Search Methodically', desc: 'Systematic inspection finds what casual glances miss',
-      requires: ['rogue', 'knowledge'], affordances: [], weight: 1.5,
+      requires: ['roguery', 'scholarship'], affordances: [], weight: 1.5,
     },
     {
       id: 'divine-presence', name: 'Divine What\'s Here', desc: 'Sense the hidden without seeing',
@@ -620,15 +612,15 @@ registerEncounter({
     },
     {
       id: 'name-the-owner', name: 'Name Its Owner', desc: 'The heraldry on the breastplate is not anonymous',
-      requires: ['antiquarian'], weight: 1.5,
+      requires: ['scholarship'], weight: 1.5,
     },
     {
       id: 'strip-insignia', name: 'Strip the Insignia', desc: 'Whatever binds it is riveted on, and rivets come off',
-      requires: ['rogue'], affordances: ['mechanism'], weight: 1.5,
+      requires: ['roguery'], affordances: ['mechanism'], weight: 1.5,
     },
     {
       id: 'read-its-gait', name: 'Read Its Movement', desc: 'It repeats itself, and what repeats can be walked around',
-      requires: ['tactics'], weight: 1.5,
+      requires: ['warcraft'], weight: 1.5,
     },
     { id: 'put-it-down', name: 'Put It Down', desc: 'Empty armour dents like full armour' },
   ],
@@ -685,19 +677,15 @@ registerEncounter({
   options: [
     {
       id: 'accept-duel', name: 'Accept the Duel', desc: 'Blade to blade, on his terms',
-      requires: ['fencing'], affordances: ['people'], weight: 2,
+      requires: ['warcraft'], affordances: ['people'], weight: 2,
     },
     {
       id: 'negotiate-terms', name: 'Negotiate the Terms', desc: 'He named the contest; he did not name the stakes',
-      requires: ['diplomacy'], affordances: ['people'], weight: 1.5,
+      requires: ['rhetoric'], affordances: ['people'], weight: 1.5,
     },
     {
       id: 'recognize-style', name: 'Recognize the School', desc: 'That guard has a name and a published weakness',
-      requires: ['knowledge'], weight: 1.5,
-    },
-    {
-      id: 'make-it-a-melee', name: 'Make It a Team Fight', desc: 'He said one of them may pass. He did not say only one may fight',
-      requires: ['tactics'], weight: 3,
+      requires: ['scholarship'], weight: 1.5,
     },
     { id: 'push-past-duellist', name: 'Push Past Him', desc: 'Decline, loudly, and keep walking' },
   ],
@@ -725,13 +713,6 @@ registerEncounter({
           success: true,
           narrative: '📖 The guard is Bolognese, the counter to it is on a page somebody in the party has read, and the bout lasts four seconds. He takes it well, and mentions what is waiting further down. +26 score, and the next snare is known.',
         };
-      case 'make-it-a-melee':
-        party.addScore(20);
-        party.forcedFormation = 'line';
-        return {
-          success: true,
-          narrative: '🎯 Four of them step up at once. He objects on principle, loses on arithmetic, and stands aside — and the party is already abreast when it reaches the next room. +20 score.',
-        };
       case 'push-past-duellist':
       default:
         party.takeDamage(5);
@@ -754,7 +735,7 @@ registerEncounter({
   options: [
     {
       id: 'solve-progression', name: 'Solve the Progression', desc: 'The safe squares are a sequence, and sequences can be continued',
-      requires: ['mathematics'], affordances: ['mechanism'], weight: 2,
+      requires: ['astrology'], affordances: ['mechanism'], weight: 2,
     },
     {
       id: 'read-the-dust', name: 'Read the Dust', desc: 'Dust does not settle where things move',
@@ -766,7 +747,7 @@ registerEncounter({
     },
     {
       id: 'cross-in-order', name: 'Cross in Order', desc: 'Weight distributed, one at a time, on the tested squares',
-      requires: ['tactics'], weight: 1.5,
+      requires: ['warcraft'], weight: 1.5,
     },
     { id: 'walk-it', name: 'Just Walk It', desc: 'It is a floor' },
   ],
@@ -823,15 +804,15 @@ registerEncounter({
   options: [
     {
       id: 'read-the-plan', name: 'Read the Place Itself', desc: 'The dungeon has a logic; a surveyor can follow it without his map',
-      requires: ['navigation'], weight: 2,
+      requires: ['astrology'], weight: 2,
     },
     {
       id: 'reconstruct-his-rounds', name: 'Reconstruct His Rounds', desc: 'He described his route. Hold all of it at once and the map falls out',
-      requires: ['memory'], affordances: ['books'], weight: 2,
+      requires: ['scholarship'], affordances: ['books'], weight: 2,
     },
     {
       id: 'question-the-ghost', name: 'Question Him Gently', desc: 'He is not obstructive, only frightened and very old',
-      requires: ['diplomacy'], affordances: ['people'], weight: 1.5,
+      requires: ['rhetoric'], affordances: ['people'], weight: 1.5,
     },
     {
       id: 'ask-where-it-lies', name: 'Scry for the Map', desc: 'Ask the question he cannot answer himself',
@@ -891,11 +872,11 @@ registerEncounter({
   options: [
     {
       id: 'linked-plan', name: 'Pass a Plan Through the Stone', desc: 'A link is only worth what is sent along it',
-      requires: ['telepathy', 'tactics'], weight: 2.5,
+      requires: ['divination', 'warcraft'], weight: 2.5,
     },
     {
       id: 'link-minds', name: 'Speak Mind to Mind', desc: 'Stone is no barrier to a thing air never carried',
-      requires: ['telepathy'], weight: 2,
+      requires: ['divination'], weight: 2,
     },
     {
       id: 'send-a-messenger', name: 'Send Something Through', desc: 'Summon something that does not need the door',
@@ -903,7 +884,7 @@ registerEncounter({
     },
     {
       id: 'signal-by-sound', name: 'Signal by Sound', desc: 'Stone carries a struck note further than a shout',
-      requires: ['music'], weight: 1.5,
+      requires: ['correspondence'], weight: 1.5,
     },
     {
       id: 'work-the-slab', name: 'Work the Slab', desc: 'It came down on a mechanism, and mechanisms go both ways',

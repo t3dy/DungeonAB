@@ -419,7 +419,7 @@ export function natureAdjustments(party, room) {
  * exists to answer.
  */
 const BLUNT_ANSWERS = new Map([
-  ['push-past-duellist', { spent: 5, fresh: 0, tempers: { craven: 2 } }],
+  ['push-past-duellist', { spent: 4, fresh: 1, tempers: { craven: 2 } }],
   ['put-it-down', { spent: 2, fresh: 3, tempers: { reckless: 2, brave: 1 } }],
   ['endure-discord', { spent: 3, fresh: 2, tempers: { reckless: 2, brave: 1 } }],
   ['guess-heavy', { spent: 2, fresh: 2, tempers: { greedy: 2, reckless: 1 } }],
@@ -428,6 +428,7 @@ const BLUNT_ANSWERS = new Map([
   ['take-detour', { spent: 3, fresh: 0, tempers: { craven: 2, cunning: 1 } }],
   ['push-through', { spent: 0, fresh: 2, tempers: { reckless: 2, brave: 1 } }],
   ['shout-through-it', { spent: 3, fresh: 2, tempers: { reckless: 2, brave: 2 } }],
+  ['walk-it', { spent: 3, fresh: 2, tempers: { reckless: 3, brave: 1 } }],
 ]);
 
 export function decideRoomAction(room, party) {

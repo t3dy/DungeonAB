@@ -1838,3 +1838,45 @@ pattern, all caught by tests/prose, all answered in `BLUNT_ANSWERS` or
 by weight. And one self-inflicted wound for MEASUREMENT.md: a cleanup
 regex using `[^']*` ate 1,160 lines of Narrator.js, because that class
 matches newlines — line-based edits only, in files that matter.
+
+## §T. v8.1 — twelve words
+
+The capability vocabulary went 28 → 12. Each new word absorbed its
+nearest neighbours: warcraft ← tactics+fencing, scholarship ←
+knowledge+translation+antiquarian+memory, correspondence ←
++syncretism+music+harmony, astrology ← astronomy+mathematics+navigation,
+and so on. Every magus now carries exactly three tags; each capability
+sits on at most four of sixteen magi; kit patches eight of the twelve,
+one item each.
+
+**The counterintuitive measurement, stated honestly.** Twelve words did
+NOT make capabilities scarcer to *hold* — the opposite. A drafted party
+now holds a median 10 of 12 (it held 15 of 28 before), and the commonest
+word is on 86% of parties. On raw-coverage terms this is worse
+saturation than the 28-word pool.
+
+**But coverage was never the discriminator; depth is.** With twelve
+densely-linked words, a party holds most tags but rarely at *mastery*
+depth — three of an option's bearing tags at once. Measured at n=160,
+medium, quartile split on breadth:
+
+| | narrow | broad |
+|---|---|---|
+| improvised (a botched, adjacent attempt) | 0.57 | 0.19 |
+| mastered (three disciplines, no guessing) | 1.52 | 2.60 |
+| score | 462 | 504 |
+
+Broad drafts improvise a third as often and master 70% more, for +42
+renown. The gradient carries what coverage cannot, which is the whole
+argument for the affinity graph (§Q) and the reason twelve words works
+where a naive reading says it should not.
+
+The cut also forced a **de-duplication pass**: merging four book-tags
+into `scholarship` left the library puzzle with two scholarship options,
+and merging the musical tags into `correspondence` left the sealed lab
+with two of those — redundant options that starved each other under the
+prose gate. `knowledge-pattern` moved to observation, `reconcile-
+traditions` to scholarship, `compute-epicycles` and `make-it-a-melee`
+(both duplicating another option's tag in their own room) were cut. The
+lesson for the deferred card-pool compression: a vocabulary merge is
+also an encounter-option merge, and the prose gate is the alarm.

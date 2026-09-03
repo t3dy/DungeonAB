@@ -121,7 +121,6 @@ const OPTION_PHRASES = {
   'accept-duel': 'accept the duel',
   'negotiate-terms': 'negotiate the terms',
   'recognize-style': 'recognize his school',
-  'make-it-a-melee': 'make it a team fight',
   'push-past-duellist': 'push past him',
   // The Chessboard Floor
   'solve-progression': 'solve the progression',
@@ -148,7 +147,6 @@ const OPTION_PHRASES = {
   'divine-instability': 'divine the unstable motion',
   'recognize-model': 'recognize the cosmological model',
   'steady-ground': 'hold the stationary floor',
-  'compute-epicycles': 'compute the orrery’s epicycles',
   'hurry-through': 'hurry through the turning room',
   'read-correspondences': 'read the correspondences',
   'planetary-sequence': 'work the planetary sequence',

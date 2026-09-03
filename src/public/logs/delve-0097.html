@@ -54,7 +54,7 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
 
     <p class="meta">Who went down: 🔮 Margaret Cavendish (wizard), ⚔️ Tycho Brahe (fighter), ⚗️ Paracelsus (alchemist), ⚗️ Isabella Cortese (alchemist)</p>
 
-    <div class="panel"><p class="quote">5 damage, the party scattered across the floor, and only 10 gold in the wreckage — and it meets the next room spread out and unready.</p>
+    <div class="panel"><p class="quote">🏛️ The party backs into a row of squat pillars and makes the monster come down one aisle at a time: 3 damage as it closes.</p>
       <p class="note" style="margin-top:.6rem">The line this delve would be retold by.</p></div>
 
     <h2>The dramaturg reads it</h2>
@@ -77,12 +77,12 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
     <tr>
       <td><span class="pass">met</span></td>
       <td>Something must go wrong, and it should be legible when it does.</td>
-      <td class="note">5 rooms cost the party something</td>
+      <td class="note">4 rooms cost the party something</td>
     </tr>
     <tr>
-      <td><span class="fail">missed</span></td>
+      <td><span class="pass">met</span></td>
       <td>If every room is a beat, no room is.</td>
-      <td class="note">flat: peak 3 against a median of 2 — no room stands out</td>
+      <td class="note">the loudest room runs 3.0× the median (peak 3, median 1)</td>
     </tr>
     <tr>
       <td><span class="pass">met</span></td>
@@ -120,9 +120,9 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
       <td class="note">every resolution inside its budget</td>
     </tr>
     <tr>
-      <td><span class="pass">met</span></td>
+      <td><span class="fail">missed</span></td>
       <td>The back half should cost more than the front half.</td>
-      <td class="note">front half 2, back half 2</td>
+      <td class="note">front half 2, back half 0</td>
     </tr>
     <tr>
       <td><span class="pass">met</span></td>
@@ -173,7 +173,7 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
       <div class="meta">🕯️ Room 5 — shrine</div>
       <p class="beat">A shrine. Resting here heals the party; the gold leaf on the altar could be stripped instead. A sarcophagus stands against the wall with its lid slightly wrong. A brazier burns in its bracket — nobody has been here to feed it, and it burns anyway.</p>
       <p class="beat delib">They might have chosen to diagnose and treat the fever, or apply a natural remedy — Margaret Cavendish made the case: &quot;There's a cheaper way to do this. There always is.&quot; The party chose to bring the fever down.</p>
-      <p class="beat">💚 The fever breaks under the working's touch. Margaret Cavendish is steady again. +15 score. 🎓 It is answered from three directions at once and stays answered: +25 renown.</p>
+      <p class="beat">💚 The fever breaks under the working's touch. Margaret Cavendish is steady again. +15 score. 🎓 Not done alone, and better for it: +10 renown.</p>
       
       
       
@@ -199,10 +199,10 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
     <div class="room">
       <div class="meta">💰 Room 8 — treasure</div>
       <p class="beat">A treasure chest sits in the room. It may hold gold; it may be a mimic. Somebody stacked supplies here and never came back for them.</p>
-      <p class="beat delib">They might have chosen to appraise the three chests, or pick the chest that was opened before — Isabella Cortese made the case: &quot;Everything in this room fits in my satchel if I believe.&quot; The party chose to take the heaviest chest.</p>
-      <p class="beat">💥 The heaviest chest was heavy because of what was packed around the lead. 5 damage, the party scattered across the floor, and only 10 gold in the wreckage — and it meets the next room spread out and unready.</p>
+      <p class="beat delib">They might have chosen to appraise the three chests, or read the maker's mark — Isabella Cortese made the case: &quot;Gold in, gold out — that's the whole science.&quot; The party chose to pick the chest that was opened before.</p>
+      <p class="beat">👁️ That faint scratch tells the story: this chest was opened, tested, and resealed. The real prize. +30 gold, +18 score. 🎓 Three disciplines on one problem, none of them guessing: +25 renown.</p>
       
-      <p class="hurt">✚ Tycho Brahe takes a wound that will not close down here. Healing can bring them back to 11, no further, until town. The Reckless do not stop to bind anything, and more of it stays with them.</p>
+      
       
     </div>
     <div class="room">
@@ -236,8 +236,8 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
     <h2>The way out</h2>
       <p>the Castle of the Vampire Lord is cleared: the boss is dead and the party walks out. Survivors: Margaret Cavendish, Tycho Brahe, Paracelsus, Isabella Cortese. Rooms cleared: 11. Trophies carried out: 4 (latest: 👰 the Bride's veil).</p>
     <p class="meta" style="margin-top:1rem">
-      Rooms cleared 11 · Score 507 ·
-      Gold 115 · Trophies 4 · Survivors 4
+      Rooms cleared 11 · Score 535 ·
+      Gold 135 · Trophies 4 · Survivors 4
     </p>
     <p class="note" style="margin-top:2rem">Regenerate this exact delve:
       <code>npm run simulate -- --seed log-easy-96</code></p>

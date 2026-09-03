@@ -68,7 +68,7 @@ describe('Affordances', () => {
 
 describe('Capabilities open options, and their absence closes them', () => {
   test('what Brahe can attempt, and what he cannot', () => {
-    const brahe = new Party([byId('char-brahe')]);   // tinkering, astronomy, observation
+    const brahe = new Party([byId('char-brahe')]);   // astrology, observation, tinkering
     const ids = getRoomOptions(chamber(), brahe).map(o => o.id);
     assert.ok(ids.includes('repair-gears'), 'tinkering repairs it');
     assert.ok(ids.includes('correct-orrery'), 'astronomy corrects it');
@@ -84,14 +84,25 @@ describe('Capabilities open options, and their absence closes them', () => {
     assert.ok(ids.includes('hurry-through'), 'the blunt option is always there');
   });
 
-  test('a party with none of it gets only the blunt option', () => {
-    const ids = getRoomOptions(chamber(), new Party([byId('char-ficino')])).map(o => o.id);
-    assert.deepEqual(ids.filter(i => i !== 'hurry-through'), [],
-      'Ficino brings music to an orrery and it does not help');
+  test('a lone magus of the wrong discipline gets only what adjacency lends', () => {
+    // v8.1: at twelve densely-connected capabilities, few magi are shut
+    // out entirely — but a magus whose disciplines only *neighbour* the
+    // orrery gets exactly the improvised options, never the proper ones.
+    // Ficino (correspondence/medicine/conjuring) reaches recognize-model
+    // through correspondence→scholarship, and nothing else.
+    const opts = getRoomOptions(chamber(), new Party([byId('char-ficino')]));
+    const nonBlunt = opts.filter(o => o.id !== 'hurry-through');
+    assert.ok(nonBlunt.length >= 1, 'adjacency lends at least one attempt');
+    assert.ok(nonBlunt.every(o => o.improvised),
+      'but every one of them is improvised — no proper answer');
   });
 
   test('a drafted spell can open an option no member could', () => {
-    const party = new Party([byId('char-ficino'), sp('sp-eyes')]);
+    // Napier is astrology/warcraft/tinkering — no divination, and none
+    // of its neighbours either, so divine-instability is shut to him.
+    const bare = getRoomOptions(chamber(), new Party([byId('char-napier')])).map(o => o.id);
+    assert.ok(!bare.includes('divine-instability'), 'no divination in reach');
+    const party = new Party([byId('char-napier'), sp('sp-eyes')]);
     const ids = getRoomOptions(chamber(), party).map(o => o.id);
     assert.ok(ids.includes('divine-instability'), 'Eyes of the Mouse carries divination');
   });
@@ -150,11 +161,11 @@ describe('The debug trace answers the balancing question', () => {
     const trace = getEncounterTrace();
     const evaluated = trace.find(t => t.kind === 'evaluate' && t.encounterId === 'astronomers-chamber');
     assert.ok(evaluated.capabilitiesPresent.includes('tinkering'));
-    // Divination is now reachable for him by adjacency, so the trace's
-    // gatedOut list is asked about something he is nowhere near:
-    // knowledge, whose neighbours are antiquarian, translation and
-    // memory, none of which Brahe holds.
-    assert.ok(evaluated.gatedOut.some(o => o.missingCaps.includes('knowledge')),
+    // Brahe (astrology/observation/tinkering) is nowhere near
+    // scholarship — its neighbours are correspondence, rhetoric and
+    // medicine, none of which he or his own neighbours hold — so
+    // recognize-model stays gated and the trace says why.
+    assert.ok(evaluated.gatedOut.some(o => o.missingCaps.includes('scholarship')),
       'the trace explains the options that did NOT appear');
 
     const summary = capabilityUsageSummary();

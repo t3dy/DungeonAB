@@ -117,13 +117,13 @@ They might have chosen to stand and fight, or fall back — Marsilio Ficino made
 
 A library. The party can study here to learn spells. Shelves sag under books nobody has audited in a century.
 
-They might have chosen to question the ghost gently, or scry for the map — Marsilio Ficino made the case: "We are exactly where we are meant to be. Regrettably." The party chose to read the place itself.
+They might have chosen to reconstruct his rounds, or question the ghost gently — Marsilio Ficino made the case: "We are exactly where we are meant to be. Regrettably." The party chose to read the place itself.
 
-🧭 The map is unnecessary: the place was laid out by someone with habits, and habits can be read off three corridors. The party stops doubling back — two marches of oil saved, and the next snare is on the route before they reach it. +30 score. 🎓 Somebody checks the work who is qualified to: +10 renown.
+🧭 The map is unnecessary: the place was laid out by someone with habits, and habits can be read off three corridors. The party stops doubling back — two marches of oil saved, and the next snare is on the route before they reach it. +30 score. 🎓 Near enough to the discipline to try, not near enough to be paid for it: 10 renown short.
 
 <details><summary>Ledger</summary>
 
-- 🏅 40 renown earned.
+- 🏅 20 renown earned.
 - 🕯️ 2 more marches of oil found.
 - 🚪 1 more room behind them.
 - · 📚 Room 7: library — read-the-plan
@@ -136,11 +136,11 @@ A connecting corridor. Nothing blocks the way; the party moves through.
 
 They might have chosen to attune the resonances, or link the three frequencies — Michael Maier made the case: "Peer review can wait. The flask can't." The party chose to sing the third harmony.
 
-🎵 A perfect voice finds the third harmony. The three frequencies lock into a single, beautiful chord. The walls settle and the front-rank member feels renewed. +18 score. 🎓 Not done alone, and better for it: +10 renown.
+🎵 A perfect voice finds the third harmony. The three frequencies lock into a single, beautiful chord. The walls settle and the front-rank member feels renewed. +18 score. 🎓 It is answered from three directions at once and stays answered: +25 renown.
 
 <details><summary>Ledger</summary>
 
-- 🏅 28 renown earned.
+- 🏅 43 renown earned.
 - 🕯️ 1 march of oil burned.
 - 🚪 1 more room behind them.
 - · 🪐 Room 8: situation — music-harmony
@@ -225,7 +225,7 @@ They might have chosen to experiment with the assembly, or dissolve the lock —
 
 A connecting corridor. Nothing blocks the way; the party moves through.
 
-They might have chosen to send something under the slab, or signal by sound — Marsilio Ficino made the case: "Candles first. Then courage." The party chose to pass a plan through the stone.
+They might have chosen to speak mind to mind, or send something under the slab — Marsilio Ficino made the case: "Candles first. Then courage." The party chose to pass a plan through the stone.
 
 📡 The link carries more than reassurance: a plan goes across it, timed, with both halves moving on the same count. They meet in the middle of whatever was waiting, from two sides at once, and are still in that shape when the next room opens. +36 score. 🎓 Done by people who do something near it: 10 renown less than a clean job.
 
@@ -244,11 +244,11 @@ A shrine. Resting here heals the party; the gold leaf on the altar could be stri
 
 They might have chosen to bring the fever down, or apply a natural remedy — Michael Maier made the case: "Everything in this room fits in my satchel if I believe." The party chose to diagnose and treat the fever.
 
-💊 The diagnosis is swift: a blood imbalance, easily corrected. Medical knowledge and a minute's treatment restore full vigor. +18 score. 🎓 Nobody here is the person you would send. It shows, by 10 renown.
+💊 The diagnosis is swift: a blood imbalance, easily corrected. Medical knowledge and a minute's treatment restore full vigor. +18 score. 🎓 Everything this asks for, the party happens to have brought: +25 renown.
 
 <details><summary>Ledger</summary>
 
-- 🏅 8 renown earned.
+- 🏅 43 renown earned.
 - 🕯️ 1 march of oil burned.
 - 🚪 1 more room behind them.
 - · 🕯️ Room 14: shrine — medicine-diagnose
@@ -289,4 +289,4 @@ They might have chosen to stand and fight, or fall back — Marsilio Ficino made
 
 the Old Delve is cleared: the boss is dead and the party walks out. Survivors: Marsilio Ficino, Michael Maier. Rooms cleared: 15. Trophies carried out: 4 (latest: 👑 the Ogre King's smallest crown).
 
-**Rooms cleared:** 15 · **Score:** 520 · **Gold:** 70 · **Trophies:** 4 · **Survivors:** 2
+**Rooms cleared:** 15 · **Score:** 550 · **Gold:** 70 · **Trophies:** 4 · **Survivors:** 2

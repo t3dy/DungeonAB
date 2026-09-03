@@ -123,7 +123,7 @@ They might have chosen to experiment with the assembly, or dissolve the lock —
 
 A thrall footman, polite and bloodless holds the room (attack 9, health 20). The party must decide how to get past it. It will not face the cleric: undead take holy damage ×1.5. Pillars break the room into aisles — something to fight behind. Half the ceiling is on the floor, in pieces worth stepping around.
 
-They might have chosen to negotiate the terms, or recognize his school — Johannes Trithemius made the case: "I already know which part of it sells." The party chose to sift the rubble.
+They might have chosen to accept the duel, or negotiate the terms — Johannes Trithemius made the case: "I already know which part of it sells." The party chose to sift the rubble.
 
 🪨 The party sifts a fall of rubble: 40 gold.
 
@@ -163,7 +163,7 @@ They might have chosen to stand and fight, or fall back — Margaret Cavendish m
 
 A connecting corridor. Nothing blocks the way; the party moves through.
 
-They might have chosen to reconstruct the mosaic from memory, or imagine what the image should be — Isabella Cortese made the case: "Don't burn the carcass — half my income is in the glands." The party chose to break through the wall.
+They might have chosen to reconstruct the mosaic from memory, or recognize the mosaic — Isabella Cortese made the case: "Don't burn the carcass — half my income is in the glands." The party chose to break through the wall.
 
 💥 The wall yields to force and the ceiling comes with it. 3 damage, a march of oil spent clearing the rubble, and what is left is a hole the party can only go through one at a time.
 
@@ -185,12 +185,12 @@ A treasure chest sits in the room. It may hold gold; it may be a mimic. Somebody
 
 They might have chosen to read the maker's mark, or pick the chest that was opened before — Margaret Cavendish made the case: "Knowledge is treasure, but treasure is also treasure." The party chose to appraise the three chests.
 
-💰 Examined closely, the real chest is obvious — and so is how the other two were rigged, which is a lesson that keeps. +40 gold, +25 score, and the next snare is already understood. 🎓 Nobody here is the person you would send. It shows, by 10 renown.
+💰 Examined closely, the real chest is obvious — and so is how the other two were rigged, which is a lesson that keeps. +40 gold, +25 score, and the next snare is already understood. 🎓 It is answered from three directions at once and stays answered: +25 renown.
 
 <details><summary>Ledger</summary>
 
 - 💰 The purse is 40 heavier.
-- 🏅 15 renown earned.
+- 🏅 50 renown earned.
 - 🕯️ 1 march of oil burned.
 - 🚪 1 more room behind them.
 - · 💰 Room 10: treasure — appraise-chests
@@ -203,11 +203,11 @@ A shrine. Resting here heals the party; the gold leaf on the altar could be stri
 
 They might have chosen to diagnose and treat the fever, or apply a natural remedy — Johannes Trithemius made the case: "Every door is a suggestion." The party chose to bring the fever down.
 
-💚 The fever breaks under the working's touch. Isabella Cortese is steady again. +15 score. 🎓 A second pair of hands that knows what it sees: +10 renown.
+💚 The fever breaks under the working's touch. Isabella Cortese is steady again. +15 score. 🎓 Three disciplines on one problem, none of them guessing: +25 renown.
 
 <details><summary>Ledger</summary>
 
-- 🏅 25 renown earned.
+- 🏅 40 renown earned.
 - 🚪 1 more room behind them.
 - · 🕯️ Room 11: shrine — heal-directly
 
@@ -331,4 +331,4 @@ _🕯️ The flame stands up, thins, and is gone. The party is out of oil._
 
 the Castle of the Vampire Lord is cleared: the boss is dead and the party walks out. Survivors: Isabella Cortese, Margaret Cavendish, Johannes Trithemius, Tycho Brahe. Rooms cleared: 16. Trophies carried out: 3 (latest: 👰 the Bride's veil).
 
-**Rooms cleared:** 16 · **Score:** 767 · **Gold:** 315 · **Trophies:** 3 · **Survivors:** 4
+**Rooms cleared:** 16 · **Score:** 817 · **Gold:** 315 · **Trophies:** 3 · **Survivors:** 4

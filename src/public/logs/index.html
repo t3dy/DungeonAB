@@ -57,27 +57,33 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
     <p>One log missing a value is a log. A fifth of them missing the same value is a mechanic.</p>
     
     <div class="panel">
-      <h3><span class="fail">51% of delves miss this</span> — Rooms should be in the order they are for a reason.</h3>
-      <p class="note">delve 1: 1 of 9 rooms answer an earlier one (11%) · delve 2: 1 of 13 rooms answer an earlier one (8%) · delve 4: 1 of 14 rooms answer an earlier one (7%) · delve 6: 1 of 15 rooms answer an earlier one (7%)</p>
+      <h3><span class="fail">50% of delves miss this</span> — Rooms should be in the order they are for a reason.</h3>
+      <p class="note">delve 1: 1 of 9 rooms answer an earlier one (11%) · delve 2: 1 of 13 rooms answer an earlier one (8%) · delve 7: 1 of 13 rooms answer an earlier one (8%) · delve 9: nothing any room did reaches any later room</p>
       <p class="note" style="margin-top:.5rem">Mechanics that could serve it:
         <code>encounters/RoomEncounters.js (forcedFormation, starBlessed, forewarned)</code>, <code>agents/Adventurer.js wounds</code></p>
     </div>
     <div class="panel">
-      <h3><span class="fail">22% of delves miss this</span> — The back half should cost more than the front half.</h3>
-      <p class="note">delve 3: front half 5, back half 2 · delve 5: front half 4, back half 1 · delve 13: front half 4, back half 1 · delve 14: front half 7, back half 6</p>
+      <h3><span class="fail">28% of delves miss this</span> — No sentence should appear twice in one delve, verbatim.</h3>
+      <p class="note">delve 2: 2 effect lines printed verbatim more than once (worst ×3) · delve 6: 1 effect line printed verbatim more than once (worst ×2) · delve 8: 1 effect line printed verbatim more than once (worst ×2) · delve 9: 2 effect lines printed verbatim more than once (worst ×2)</p>
+      <p class="note" style="margin-top:.5rem">Mechanics that could serve it:
+        <code>sim/Simulator.js pickLine</code>, <code>narrative/Narrator.js pick</code></p>
+    </div>
+    <div class="panel">
+      <h3><span class="fail">24% of delves miss this</span> — The back half should cost more than the front half.</h3>
+      <p class="note">delve 2: front half 3, back half 1 · delve 3: front half 5, back half 3 · delve 10: front half 5, back half 3 · delve 13: front half 5, back half 3</p>
       <p class="note" style="margin-top:.5rem">Mechanics that could serve it:
         <code>world/DungeonGen.js floorScale</code>, <code>game/Progression.js</code></p>
     </div>
 
-    <h3>Holding up</h3><table><tbody><tr><td class="pass">80%</td><td>No sentence should appear twice in one delve, verbatim.</td></tr><tr><td class="pass">83%</td><td>The boss should get to be a boss.</td></tr><tr><td class="pass">84%</td><td>If every room is a beat, no room is.</td></tr><tr><td class="pass">89%</td><td>A resolution should be readable in one breath.</td></tr><tr><td class="pass">97%</td><td>A death is only worth reading if the dead had a line first.</td></tr><tr><td class="pass">100%</td><td>A delve should be about somebody.</td></tr><tr><td class="pass">100%</td><td>Something must go wrong, and it should be legible when it does.</td></tr><tr><td class="pass">100%</td><td>A choice reads as a choice only when the alternatives are named.</td></tr><tr><td class="pass">100%</td><td>Name the thing and state the number.</td></tr><tr><td class="pass">100%</td><td>The party should not argue in one voice.</td></tr><tr><td class="pass">100%</td><td>The ending should answer the delve it ended.</td></tr></tbody></table>
+    <h3>Holding up</h3><table><tbody><tr><td class="pass">81%</td><td>The boss should get to be a boss.</td></tr><tr><td class="pass">86%</td><td>If every room is a beat, no room is.</td></tr><tr><td class="pass">93%</td><td>A resolution should be readable in one breath.</td></tr><tr><td class="pass">97%</td><td>A death is only worth reading if the dead had a line first.</td></tr><tr><td class="pass">100%</td><td>A delve should be about somebody.</td></tr><tr><td class="pass">100%</td><td>Something must go wrong, and it should be legible when it does.</td></tr><tr><td class="pass">100%</td><td>A choice reads as a choice only when the alternatives are named.</td></tr><tr><td class="pass">100%</td><td>Name the thing and state the number.</td></tr><tr><td class="pass">100%</td><td>The party should not argue in one voice.</td></tr><tr><td class="pass">100%</td><td>The ending should answer the delve it ended.</td></tr></tbody></table>
 
     <h2>Repetition across delves</h2>
     <div class="panel">
-      <p>5186 lines of prose, 2896 of them distinct
-        (<strong>44%</strong> reused).</p>
+      <p>5181 lines of prose, 2854 of them distinct
+        (<strong>45%</strong> reused).</p>
       <p class="note" style="margin-top:.5rem">A reader reads one delve closely and a saga loosely,
         so the sentence they are sure they have seen before is the tell. Most reused:</p>
-      <table><tbody><tr><td class="meta">103×</td><td class="note">A connecting corridor. Nothing blocks the way; the party moves through.</td></tr><tr><td class="meta">37×</td><td class="note">A fire vent meets the cavern ice: a scalding steam blast fills the room. The party must brace together or scatter.</td></tr><tr><td class="meta">28×</td><td class="note">📚 The wizard strips sagging shelves: a scroll of Shelf-Found Working for the grimoire.</td></tr><tr><td class="meta">28×</td><td class="note">🕯️ Someone checks the reservoir and does not like the answer: oil for 2 more marches.</td></tr><tr><td class="meta">27×</td><td class="note">🕯️ Someone checks the reservoir and does not like the answer: oil for 1 more march.</td></tr><tr><td class="meta">26×</td><td class="note">🕯️ The lantern is burning low: oil for 2 more marches.</td></tr><tr><td class="meta">25×</td><td class="note">A treasure chest sits in the room. It may hold gold; it may be a mimic. Somebody stacked supplies here and never came ba</td></tr><tr><td class="meta">25×</td><td class="note">🪨 The party sifts a fall of rubble: 40 gold.</td></tr></tbody></table>
+      <table><tbody><tr><td class="meta">103×</td><td class="note">A connecting corridor. Nothing blocks the way; the party moves through.</td></tr><tr><td class="meta">37×</td><td class="note">A fire vent meets the cavern ice: a scalding steam blast fills the room. The party must brace together or scatter.</td></tr><tr><td class="meta">29×</td><td class="note">🕯️ Someone checks the reservoir and does not like the answer: oil for 1 more march.</td></tr><tr><td class="meta">28×</td><td class="note">📚 The wizard strips sagging shelves: a scroll of Shelf-Found Working for the grimoire.</td></tr><tr><td class="meta">25×</td><td class="note">🕯️ The lantern is burning low: oil for 2 more marches.</td></tr><tr><td class="meta">25×</td><td class="note">A treasure chest sits in the room. It may hold gold; it may be a mimic. Somebody stacked supplies here and never came ba</td></tr><tr><td class="meta">24×</td><td class="note">🕯️ Someone checks the reservoir and does not like the answer: oil for 2 more marches.</td></tr><tr><td class="meta">23×</td><td class="note">A treasure chest sits in the room. It may hold gold; it may be a mimic. Somebody stacked supplies here and never came ba</td></tr></tbody></table>
     </div>
 
     <h2>The logs</h2>
@@ -86,24 +92,54 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
         <th>About whom</th><th>Poetics</th><th>Missed</th></tr></thead>
       <tbody>
       <tr>
-        <td class="meta">65</td>
-        <td><a href="./delve-0065.html">the Ice Caverns of the Mad Pyromancer</a></td>
-        <td class="meta">easy</td>
-        <td class="meta">13</td>
-        <td class="pass">out</td>
-        <td class="meta">Cornelius Agrippa</td>
-        <td><div class="bar"><i style="width:69%"></i></div></td>
-        <td class="note">continuity, rationing, freshLines, shape</td>
-      </tr>
-      <tr>
         <td class="meta">24</td>
         <td><a href="./delve-0024.html">the Castle of the Vampire Lord</a></td>
         <td class="meta">nightmare</td>
         <td class="meta">11</td>
         <td class="pass">out</td>
         <td class="meta">Simon Forman</td>
+        <td><div class="bar"><i style="width:67%"></i></div></td>
+        <td class="note">continuity, freshLines, climax, shape</td>
+      </tr>
+      <tr>
+        <td class="meta">73</td>
+        <td><a href="./delve-0073.html">the Old Delve</a></td>
+        <td class="meta">easy</td>
+        <td class="meta">9</td>
+        <td class="pass">out</td>
+        <td class="meta">Margaret Cavendish</td>
+        <td><div class="bar"><i style="width:67%"></i></div></td>
+        <td class="note">continuity, freshLines, climax, shape</td>
+      </tr>
+      <tr>
+        <td class="meta">2</td>
+        <td><a href="./delve-0002.html">the Old Delve</a></td>
+        <td class="meta">medium</td>
+        <td class="meta">13</td>
+        <td class="pass">out</td>
+        <td class="meta">Tycho Brahe</td>
         <td><div class="bar"><i style="width:75%"></i></div></td>
-        <td class="note">continuity, rationing, climax</td>
+        <td class="note">continuity, freshLines, shape</td>
+      </tr>
+      <tr>
+        <td class="meta">22</td>
+        <td><a href="./delve-0022.html">the Castle of the Vampire Lord</a></td>
+        <td class="meta">medium</td>
+        <td class="meta">12</td>
+        <td class="pass">out</td>
+        <td class="meta">Johannes Trithemius</td>
+        <td><div class="bar"><i style="width:75%"></i></div></td>
+        <td class="note">continuity, rationing, freshLines</td>
+      </tr>
+      <tr>
+        <td class="meta">37</td>
+        <td><a href="./delve-0037.html">the Old Delve</a></td>
+        <td class="meta">easy</td>
+        <td class="meta">10</td>
+        <td class="pass">out</td>
+        <td class="meta">Margaret Cavendish</td>
+        <td><div class="bar"><i style="width:75%"></i></div></td>
+        <td class="note">continuity, climax, shape</td>
       </tr>
       <tr>
         <td class="meta">42</td>
@@ -136,6 +172,16 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
         <td class="note">continuity, climax, shape</td>
       </tr>
       <tr>
+        <td class="meta">65</td>
+        <td><a href="./delve-0065.html">the Ice Caverns of the Mad Pyromancer</a></td>
+        <td class="meta">easy</td>
+        <td class="meta">12</td>
+        <td class="pass">out</td>
+        <td class="meta">Michael Sendivogius</td>
+        <td><div class="bar"><i style="width:75%"></i></div></td>
+        <td class="note">continuity, climax, shape</td>
+      </tr>
+      <tr>
         <td class="meta">78</td>
         <td><a href="./delve-0078.html">the Castle of the Vampire Lord</a></td>
         <td class="meta">medium</td>
@@ -146,16 +192,6 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
         <td class="note">continuity, rationing, climax</td>
       </tr>
       <tr>
-        <td class="meta">94</td>
-        <td><a href="./delve-0094.html">the Old Delve</a></td>
-        <td class="meta">medium</td>
-        <td class="meta">15</td>
-        <td class="pass">out</td>
-        <td class="meta">Michael Sendivogius</td>
-        <td><div class="bar"><i style="width:75%"></i></div></td>
-        <td class="note">rationing, concision, shape</td>
-      </tr>
-      <tr>
         <td class="meta">97</td>
         <td><a href="./delve-0097.html">the Castle of the Vampire Lord</a></td>
         <td class="meta">easy</td>
@@ -163,7 +199,7 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
         <td class="pass">out</td>
         <td class="meta">Margaret Cavendish</td>
         <td><div class="bar"><i style="width:75%"></i></div></td>
-        <td class="note">continuity, rationing, climax</td>
+        <td class="note">continuity, climax, shape</td>
       </tr>
       <tr>
         <td class="meta">118</td>
@@ -174,6 +210,16 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
         <td class="meta">John Dee</td>
         <td><div class="bar"><i style="width:75%"></i></div></td>
         <td class="note">continuity, rationing, shape</td>
+      </tr>
+      <tr>
+        <td class="meta">14</td>
+        <td><a href="./delve-0014.html">the Castle of the Vampire Lord</a></td>
+        <td class="meta">medium</td>
+        <td class="meta">11</td>
+        <td class="pass">out</td>
+        <td class="meta">Michael Sendivogius</td>
+        <td><div class="bar"><i style="width:77%"></i></div></td>
+        <td class="note">continuity, freshLines, shape</td>
       </tr>
       <tr>
         <td class="meta">70</td>
@@ -196,52 +242,32 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
         <td class="note">continuity, climax</td>
       </tr>
       <tr>
-        <td class="meta">2</td>
-        <td><a href="./delve-0002.html">the Old Delve</a></td>
-        <td class="meta">medium</td>
-        <td class="meta">13</td>
-        <td class="pass">out</td>
-        <td class="meta">Tycho Brahe</td>
-        <td><div class="bar"><i style="width:83%"></i></div></td>
-        <td class="note">continuity, freshLines</td>
-      </tr>
-      <tr>
-        <td class="meta">3</td>
-        <td><a href="./delve-0003.html">the Castle of the Vampire Lord</a></td>
-        <td class="meta">hard</td>
-        <td class="meta">17</td>
-        <td class="pass">out</td>
-        <td class="meta">Robert Fludd</td>
-        <td><div class="bar"><i style="width:83%"></i></div></td>
-        <td class="note">freshLines, shape</td>
-      </tr>
-      <tr>
-        <td class="meta">5</td>
-        <td><a href="./delve-0005.html">the Castle of the Vampire Lord</a></td>
-        <td class="meta">easy</td>
-        <td class="meta">14</td>
-        <td class="pass">out</td>
-        <td class="meta">Pico della Mirandola</td>
-        <td><div class="bar"><i style="width:83%"></i></div></td>
-        <td class="note">climax, shape</td>
-      </tr>
-      <tr>
-        <td class="meta">6</td>
-        <td><a href="./delve-0006.html">the Castle of the Vampire Lord</a></td>
-        <td class="meta">medium</td>
-        <td class="meta">15</td>
-        <td class="pass">out</td>
-        <td class="meta">Michael Sendivogius</td>
-        <td><div class="bar"><i style="width:83%"></i></div></td>
-        <td class="note">continuity, freshLines</td>
-      </tr>
-      <tr>
         <td class="meta">9</td>
         <td><a href="./delve-0009.html">the Castle of the Vampire Lord</a></td>
         <td class="meta">easy</td>
         <td class="meta">11</td>
         <td class="pass">out</td>
         <td class="meta">Margaret Cavendish</td>
+        <td><div class="bar"><i style="width:83%"></i></div></td>
+        <td class="note">continuity, freshLines</td>
+      </tr>
+      <tr>
+        <td class="meta">10</td>
+        <td><a href="./delve-0010.html">the Castle of the Vampire Lord</a></td>
+        <td class="meta">medium</td>
+        <td class="meta">10</td>
+        <td class="pass">out</td>
+        <td class="meta">Cornelius Agrippa</td>
+        <td><div class="bar"><i style="width:83%"></i></div></td>
+        <td class="note">rationing, shape</td>
+      </tr>
+      <tr>
+        <td class="meta">11</td>
+        <td><a href="./delve-0011.html">the Castle of the Vampire Lord</a></td>
+        <td class="meta">hard</td>
+        <td class="meta">12</td>
+        <td class="pass">out</td>
+        <td class="meta">Pico della Mirandola</td>
         <td><div class="bar"><i style="width:83%"></i></div></td>
         <td class="note">continuity, freshLines</td>
       </tr>
@@ -256,14 +282,14 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
         <td class="note">continuity, climax</td>
       </tr>
       <tr>
-        <td class="meta">13</td>
-        <td><a href="./delve-0013.html">the Ice Caverns of the Mad Pyromancer</a></td>
-        <td class="meta">easy</td>
-        <td class="meta">12</td>
+        <td class="meta">19</td>
+        <td><a href="./delve-0019.html">the Ice Caverns of the Mad Pyromancer</a></td>
+        <td class="meta">hard</td>
+        <td class="meta">10</td>
         <td class="pass">out</td>
-        <td class="meta">Michael Sendivogius</td>
+        <td class="meta">Giordano Bruno</td>
         <td><div class="bar"><i style="width:83%"></i></div></td>
-        <td class="note">concision, shape</td>
+        <td class="note">continuity, climax</td>
       </tr>
       <tr>
         <td class="meta">20</td>
@@ -286,26 +312,6 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
         <td class="note">continuity, climax</td>
       </tr>
       <tr>
-        <td class="meta">22</td>
-        <td><a href="./delve-0022.html">the Castle of the Vampire Lord</a></td>
-        <td class="meta">medium</td>
-        <td class="meta">12</td>
-        <td class="pass">out</td>
-        <td class="meta">Johannes Trithemius</td>
-        <td><div class="bar"><i style="width:83%"></i></div></td>
-        <td class="note">continuity, rationing</td>
-      </tr>
-      <tr>
-        <td class="meta">23</td>
-        <td><a href="./delve-0023.html">the Castle of the Vampire Lord</a></td>
-        <td class="meta">hard</td>
-        <td class="meta">13</td>
-        <td class="fail">lost</td>
-        <td class="meta">Michael Sendivogius</td>
-        <td><div class="bar"><i style="width:83%"></i></div></td>
-        <td class="note">continuity, mortalityEarned</td>
-      </tr>
-      <tr>
         <td class="meta">25</td>
         <td><a href="./delve-0025.html">the Ice Caverns of the Mad Pyromancer</a></td>
         <td class="meta">easy</td>
@@ -316,24 +322,34 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
         <td class="note">continuity, shape</td>
       </tr>
       <tr>
-        <td class="meta">37</td>
-        <td><a href="./delve-0037.html">the Old Delve</a></td>
-        <td class="meta">easy</td>
-        <td class="meta">10</td>
+        <td class="meta">34</td>
+        <td><a href="./delve-0034.html">the Ice Caverns of the Mad Pyromancer</a></td>
+        <td class="meta">medium</td>
+        <td class="meta">18</td>
         <td class="pass">out</td>
-        <td class="meta">Margaret Cavendish</td>
+        <td class="meta">Cornelius Agrippa</td>
         <td><div class="bar"><i style="width:83%"></i></div></td>
-        <td class="note">continuity, climax</td>
+        <td class="note">continuity, concision</td>
       </tr>
       <tr>
-        <td class="meta">60</td>
-        <td><a href="./delve-0060.html">the Ice Caverns of the Mad Pyromancer</a></td>
-        <td class="meta">nightmare</td>
-        <td class="meta">16</td>
+        <td class="meta">49</td>
+        <td><a href="./delve-0049.html">the Old Delve</a></td>
+        <td class="meta">easy</td>
+        <td class="meta">14</td>
         <td class="pass">out</td>
-        <td class="meta">Johannes Trithemius</td>
+        <td class="meta">Michael Sendivogius</td>
         <td><div class="bar"><i style="width:83%"></i></div></td>
-        <td class="note">continuity, shape</td>
+        <td class="note">freshLines, shape</td>
+      </tr>
+      <tr>
+        <td class="meta">50</td>
+        <td><a href="./delve-0050.html">the Ice Caverns of the Mad Pyromancer</a></td>
+        <td class="meta">medium</td>
+        <td class="meta">14</td>
+        <td class="pass">out</td>
+        <td class="meta">John Napier</td>
+        <td><div class="bar"><i style="width:83%"></i></div></td>
+        <td class="note">continuity, freshLines</td>
       </tr>
       <tr>
         <td class="meta">62</td>
@@ -346,14 +362,24 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
         <td class="note">concision, shape</td>
       </tr>
       <tr>
-        <td class="meta">63</td>
-        <td><a href="./delve-0063.html">the Castle of the Vampire Lord</a></td>
-        <td class="meta">hard</td>
-        <td class="meta">13</td>
+        <td class="meta">72</td>
+        <td><a href="./delve-0072.html">the Ice Caverns of the Mad Pyromancer</a></td>
+        <td class="meta">nightmare</td>
+        <td class="meta">9</td>
         <td class="pass">out</td>
-        <td class="meta">Giordano Bruno</td>
+        <td class="meta">Simon Forman</td>
         <td><div class="bar"><i style="width:83%"></i></div></td>
-        <td class="note">freshLines, shape</td>
+        <td class="note">continuity, rationing</td>
+      </tr>
+      <tr>
+        <td class="meta">81</td>
+        <td><a href="./delve-0081.html">the Castle of the Vampire Lord</a></td>
+        <td class="meta">easy</td>
+        <td class="meta">14</td>
+        <td class="pass">out</td>
+        <td class="meta">Cornelius Agrippa</td>
+        <td><div class="bar"><i style="width:83%"></i></div></td>
+        <td class="note">continuity, shape</td>
       </tr>
       <tr>
         <td class="meta">82</td>
@@ -369,11 +395,31 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
         <td class="meta">93</td>
         <td><a href="./delve-0093.html">the Castle of the Vampire Lord</a></td>
         <td class="meta">easy</td>
-        <td class="meta">11</td>
+        <td class="meta">9</td>
         <td class="pass">out</td>
         <td class="meta">Michael Maier</td>
         <td><div class="bar"><i style="width:83%"></i></div></td>
-        <td class="note">freshLines, climax</td>
+        <td class="note">continuity, climax</td>
+      </tr>
+      <tr>
+        <td class="meta">94</td>
+        <td><a href="./delve-0094.html">the Old Delve</a></td>
+        <td class="meta">medium</td>
+        <td class="meta">15</td>
+        <td class="pass">out</td>
+        <td class="meta">Pico della Mirandola</td>
+        <td><div class="bar"><i style="width:83%"></i></div></td>
+        <td class="note">rationing, climax</td>
+      </tr>
+      <tr>
+        <td class="meta">98</td>
+        <td><a href="./delve-0098.html">the Ice Caverns of the Mad Pyromancer</a></td>
+        <td class="meta">medium</td>
+        <td class="meta">16</td>
+        <td class="pass">out</td>
+        <td class="meta">Giordano Bruno</td>
+        <td><div class="bar"><i style="width:83%"></i></div></td>
+        <td class="note">continuity, shape</td>
       </tr>
       <tr>
         <td class="meta">101</td>
@@ -386,6 +432,26 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
         <td class="note">continuity, rationing</td>
       </tr>
       <tr>
+        <td class="meta">102</td>
+        <td><a href="./delve-0102.html">the Ice Caverns of the Mad Pyromancer</a></td>
+        <td class="meta">medium</td>
+        <td class="meta">10</td>
+        <td class="pass">out</td>
+        <td class="meta">Michael Sendivogius</td>
+        <td><div class="bar"><i style="width:83%"></i></div></td>
+        <td class="note">continuity, freshLines</td>
+      </tr>
+      <tr>
+        <td class="meta">108</td>
+        <td><a href="./delve-0108.html">the Old Delve</a></td>
+        <td class="meta">nightmare</td>
+        <td class="meta">14</td>
+        <td class="pass">out</td>
+        <td class="meta">Tycho Brahe</td>
+        <td><div class="bar"><i style="width:83%"></i></div></td>
+        <td class="note">rationing, shape</td>
+      </tr>
+      <tr>
         <td class="meta">110</td>
         <td><a href="./delve-0110.html">the Old Delve</a></td>
         <td class="meta">medium</td>
@@ -396,14 +462,24 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
         <td class="note">climax, shape</td>
       </tr>
       <tr>
-        <td class="meta">14</td>
-        <td><a href="./delve-0014.html">the Castle of the Vampire Lord</a></td>
-        <td class="meta">medium</td>
-        <td class="meta">11</td>
+        <td class="meta">117</td>
+        <td><a href="./delve-0117.html">the Ice Caverns of the Mad Pyromancer</a></td>
+        <td class="meta">easy</td>
+        <td class="meta">12</td>
+        <td class="pass">out</td>
+        <td class="meta">Johannes Trithemius</td>
+        <td><div class="bar"><i style="width:83%"></i></div></td>
+        <td class="note">continuity, freshLines</td>
+      </tr>
+      <tr>
+        <td class="meta">13</td>
+        <td><a href="./delve-0013.html">the Ice Caverns of the Mad Pyromancer</a></td>
+        <td class="meta">easy</td>
+        <td class="meta">12</td>
         <td class="pass">out</td>
         <td class="meta">Michael Sendivogius</td>
         <td><div class="bar"><i style="width:85%"></i></div></td>
-        <td class="note">continuity, shape</td>
+        <td class="note">concision, shape</td>
       </tr>
       <tr>
         <td class="meta">27</td>
@@ -416,64 +492,44 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
         <td class="note">continuity, freshLines</td>
       </tr>
       <tr>
-        <td class="meta">29</td>
-        <td><a href="./delve-0029.html">the Ice Caverns of the Mad Pyromancer</a></td>
-        <td class="meta">easy</td>
-        <td class="meta">16</td>
-        <td class="pass">out</td>
-        <td class="meta">Michael Sendivogius</td>
-        <td><div class="bar"><i style="width:85%"></i></div></td>
-        <td class="note">continuity, climax</td>
-      </tr>
-      <tr>
-        <td class="meta">48</td>
-        <td><a href="./delve-0048.html">the Ice Caverns of the Mad Pyromancer</a></td>
-        <td class="meta">nightmare</td>
-        <td class="meta">12</td>
-        <td class="fail">lost</td>
-        <td class="meta">Michael Sendivogius</td>
-        <td><div class="bar"><i style="width:85%"></i></div></td>
-        <td class="note">rationing, concision</td>
-      </tr>
-      <tr>
-        <td class="meta">50</td>
-        <td><a href="./delve-0050.html">the Ice Caverns of the Mad Pyromancer</a></td>
-        <td class="meta">medium</td>
-        <td class="meta">14</td>
-        <td class="pass">out</td>
-        <td class="meta">John Napier</td>
-        <td><div class="bar"><i style="width:85%"></i></div></td>
-        <td class="note">continuity, freshLines</td>
-      </tr>
-      <tr>
-        <td class="meta">55</td>
-        <td><a href="./delve-0055.html">the Ice Caverns of the Mad Pyromancer</a></td>
+        <td class="meta">47</td>
+        <td><a href="./delve-0047.html">the Old Delve</a></td>
         <td class="meta">hard</td>
-        <td class="meta">11</td>
+        <td class="meta">10</td>
         <td class="pass">out</td>
-        <td class="meta">John Napier</td>
+        <td class="meta">Michael Sendivogius</td>
         <td><div class="bar"><i style="width:85%"></i></div></td>
         <td class="note">continuity, freshLines</td>
-      </tr>
-      <tr>
-        <td class="meta">64</td>
-        <td><a href="./delve-0064.html">the Castle of the Vampire Lord</a></td>
-        <td class="meta">nightmare</td>
-        <td class="meta">13</td>
-        <td class="fail">lost</td>
-        <td class="meta">Simon Forman</td>
-        <td><div class="bar"><i style="width:85%"></i></div></td>
-        <td class="note">concision, shape</td>
       </tr>
       <tr>
         <td class="meta">67</td>
         <td><a href="./delve-0067.html">the Ice Caverns of the Mad Pyromancer</a></td>
         <td class="meta">hard</td>
         <td class="meta">10</td>
-        <td class="pass">out</td>
+        <td class="fail">lost</td>
         <td class="meta">Johannes Trithemius</td>
         <td><div class="bar"><i style="width:85%"></i></div></td>
         <td class="note">continuity, freshLines</td>
+      </tr>
+      <tr>
+        <td class="meta">68</td>
+        <td><a href="./delve-0068.html">the Old Delve</a></td>
+        <td class="meta">nightmare</td>
+        <td class="meta">12</td>
+        <td class="fail">lost</td>
+        <td class="meta">Pico della Mirandola</td>
+        <td><div class="bar"><i style="width:85%"></i></div></td>
+        <td class="note">continuity, freshLines</td>
+      </tr>
+      <tr>
+        <td class="meta">83</td>
+        <td><a href="./delve-0083.html">the Old Delve</a></td>
+        <td class="meta">hard</td>
+        <td class="meta">16</td>
+        <td class="pass">out</td>
+        <td class="meta">Isabella Cortese</td>
+        <td><div class="bar"><i style="width:85%"></i></div></td>
+        <td class="note">freshLines, shape</td>
       </tr>
       <tr>
         <td class="meta">85</td>
@@ -481,9 +537,9 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
         <td class="meta">easy</td>
         <td class="meta">17</td>
         <td class="pass">out</td>
-        <td class="meta">Giordano Bruno</td>
+        <td class="meta">Pico della Mirandola</td>
         <td><div class="bar"><i style="width:85%"></i></div></td>
-        <td class="note">continuity, rationing</td>
+        <td class="note">freshLines, shape</td>
       </tr>
       <tr>
         <td class="meta">86</td>
@@ -493,7 +549,27 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
         <td class="fail">lost</td>
         <td class="meta">Giordano Bruno</td>
         <td><div class="bar"><i style="width:85%"></i></div></td>
-        <td class="note">freshLines, concision</td>
+        <td class="note">continuity, concision</td>
+      </tr>
+      <tr>
+        <td class="meta">88</td>
+        <td><a href="./delve-0088.html">the Ice Caverns of the Mad Pyromancer</a></td>
+        <td class="meta">nightmare</td>
+        <td class="meta">17</td>
+        <td class="pass">out</td>
+        <td class="meta">Pico della Mirandola</td>
+        <td><div class="bar"><i style="width:85%"></i></div></td>
+        <td class="note">continuity, freshLines</td>
+      </tr>
+      <tr>
+        <td class="meta">92</td>
+        <td><a href="./delve-0092.html">the Old Delve</a></td>
+        <td class="meta">nightmare</td>
+        <td class="meta">12</td>
+        <td class="fail">lost</td>
+        <td class="meta">Pico della Mirandola</td>
+        <td><div class="bar"><i style="width:85%"></i></div></td>
+        <td class="note">continuity, freshLines</td>
       </tr>
       <tr>
         <td class="meta">95</td>
@@ -506,34 +582,14 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
         <td class="note">continuity, rationing</td>
       </tr>
       <tr>
-        <td class="meta">96</td>
-        <td><a href="./delve-0096.html">the Old Delve</a></td>
-        <td class="meta">nightmare</td>
-        <td class="meta">10</td>
-        <td class="fail">lost</td>
-        <td class="meta">Giordano Bruno</td>
-        <td><div class="bar"><i style="width:85%"></i></div></td>
-        <td class="note">concision, shape</td>
-      </tr>
-      <tr>
-        <td class="meta">106</td>
-        <td><a href="./delve-0106.html">the Old Delve</a></td>
-        <td class="meta">medium</td>
-        <td class="meta">16</td>
-        <td class="pass">out</td>
-        <td class="meta">Margaret Cavendish</td>
-        <td><div class="bar"><i style="width:85%"></i></div></td>
-        <td class="note">continuity, freshLines</td>
-      </tr>
-      <tr>
-        <td class="meta">107</td>
-        <td><a href="./delve-0107.html">the Castle of the Vampire Lord</a></td>
+        <td class="meta">99</td>
+        <td><a href="./delve-0099.html">the Old Delve</a></td>
         <td class="meta">hard</td>
-        <td class="meta">10</td>
+        <td class="meta">14</td>
         <td class="pass">out</td>
-        <td class="meta">John Dee</td>
+        <td class="meta">Kenelm Digby</td>
         <td><div class="bar"><i style="width:85%"></i></div></td>
-        <td class="note">continuity, shape</td>
+        <td class="note">freshLines, concision</td>
       </tr>
       <tr>
         <td class="meta">109</td>
@@ -543,47 +599,27 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
         <td class="pass">out</td>
         <td class="meta">Cornelius Agrippa</td>
         <td><div class="bar"><i style="width:85%"></i></div></td>
-        <td class="note">continuity, freshLines</td>
+        <td class="note">rationing, freshLines</td>
       </tr>
       <tr>
-        <td class="meta">115</td>
-        <td><a href="./delve-0115.html">the Ice Caverns of the Mad Pyromancer</a></td>
-        <td class="meta">hard</td>
-        <td class="meta">14</td>
-        <td class="pass">out</td>
-        <td class="meta">Michael Sendivogius</td>
-        <td><div class="bar"><i style="width:85%"></i></div></td>
-        <td class="note">continuity, freshLines</td>
-      </tr>
-      <tr>
-        <td class="meta">8</td>
-        <td><a href="./delve-0008.html">the Old Delve</a></td>
+        <td class="meta">112</td>
+        <td><a href="./delve-0112.html">the Ice Caverns of the Mad Pyromancer</a></td>
         <td class="meta">nightmare</td>
-        <td class="meta">15</td>
+        <td class="meta">14</td>
+        <td class="fail">lost</td>
+        <td class="meta">Tycho Brahe</td>
+        <td><div class="bar"><i style="width:85%"></i></div></td>
+        <td class="note">continuity, shape</td>
+      </tr>
+      <tr>
+        <td class="meta">6</td>
+        <td><a href="./delve-0006.html">the Castle of the Vampire Lord</a></td>
+        <td class="meta">medium</td>
+        <td class="meta">19</td>
         <td class="pass">out</td>
-        <td class="meta">Kenelm Digby</td>
+        <td class="meta">Johannes Trithemius</td>
         <td><div class="bar"><i style="width:92%"></i></div></td>
         <td class="note">freshLines</td>
-      </tr>
-      <tr>
-        <td class="meta">10</td>
-        <td><a href="./delve-0010.html">the Castle of the Vampire Lord</a></td>
-        <td class="meta">medium</td>
-        <td class="meta">12</td>
-        <td class="pass">out</td>
-        <td class="meta">Cornelius Agrippa</td>
-        <td><div class="bar"><i style="width:92%"></i></div></td>
-        <td class="note">continuity</td>
-      </tr>
-      <tr>
-        <td class="meta">11</td>
-        <td><a href="./delve-0011.html">the Castle of the Vampire Lord</a></td>
-        <td class="meta">hard</td>
-        <td class="meta">12</td>
-        <td class="pass">out</td>
-        <td class="meta">Pico della Mirandola</td>
-        <td><div class="bar"><i style="width:92%"></i></div></td>
-        <td class="note">continuity</td>
       </tr>
       <tr>
         <td class="meta">15</td>
@@ -596,16 +632,6 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
         <td class="note">continuity</td>
       </tr>
       <tr>
-        <td class="meta">17</td>
-        <td><a href="./delve-0017.html">the Castle of the Vampire Lord</a></td>
-        <td class="meta">easy</td>
-        <td class="meta">11</td>
-        <td class="pass">out</td>
-        <td class="meta">John Napier</td>
-        <td><div class="bar"><i style="width:92%"></i></div></td>
-        <td class="note">freshLines</td>
-      </tr>
-      <tr>
         <td class="meta">18</td>
         <td><a href="./delve-0018.html">the Old Delve</a></td>
         <td class="meta">medium</td>
@@ -616,10 +642,20 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
         <td class="note">continuity</td>
       </tr>
       <tr>
+        <td class="meta">23</td>
+        <td><a href="./delve-0023.html">the Castle of the Vampire Lord</a></td>
+        <td class="meta">hard</td>
+        <td class="meta">13</td>
+        <td class="fail">lost</td>
+        <td class="meta">Michael Sendivogius</td>
+        <td><div class="bar"><i style="width:92%"></i></div></td>
+        <td class="note">continuity</td>
+      </tr>
+      <tr>
         <td class="meta">26</td>
         <td><a href="./delve-0026.html">the Castle of the Vampire Lord</a></td>
         <td class="meta">medium</td>
-        <td class="meta">13</td>
+        <td class="meta">14</td>
         <td class="pass">out</td>
         <td class="meta">Margaret Cavendish</td>
         <td><div class="bar"><i style="width:92%"></i></div></td>
@@ -646,16 +682,6 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
         <td class="note">climax</td>
       </tr>
       <tr>
-        <td class="meta">34</td>
-        <td><a href="./delve-0034.html">the Ice Caverns of the Mad Pyromancer</a></td>
-        <td class="meta">medium</td>
-        <td class="meta">18</td>
-        <td class="pass">out</td>
-        <td class="meta">Cornelius Agrippa</td>
-        <td><div class="bar"><i style="width:92%"></i></div></td>
-        <td class="note">concision</td>
-      </tr>
-      <tr>
         <td class="meta">38</td>
         <td><a href="./delve-0038.html">the Castle of the Vampire Lord</a></td>
         <td class="meta">medium</td>
@@ -666,14 +692,14 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
         <td class="note">continuity</td>
       </tr>
       <tr>
-        <td class="meta">39</td>
-        <td><a href="./delve-0039.html">the Castle of the Vampire Lord</a></td>
+        <td class="meta">43</td>
+        <td><a href="./delve-0043.html">the Ice Caverns of the Mad Pyromancer</a></td>
         <td class="meta">hard</td>
-        <td class="meta">14</td>
+        <td class="meta">12</td>
         <td class="pass">out</td>
-        <td class="meta">Kenelm Digby</td>
+        <td class="meta">Robert Fludd</td>
         <td><div class="bar"><i style="width:92%"></i></div></td>
-        <td class="note">shape</td>
+        <td class="note">continuity</td>
       </tr>
       <tr>
         <td class="meta">45</td>
@@ -686,14 +712,14 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
         <td class="note">shape</td>
       </tr>
       <tr>
-        <td class="meta">49</td>
-        <td><a href="./delve-0049.html">the Old Delve</a></td>
-        <td class="meta">easy</td>
-        <td class="meta">14</td>
+        <td class="meta">46</td>
+        <td><a href="./delve-0046.html">the Ice Caverns of the Mad Pyromancer</a></td>
+        <td class="meta">medium</td>
+        <td class="meta">15</td>
         <td class="pass">out</td>
-        <td class="meta">Michael Sendivogius</td>
+        <td class="meta">John Napier</td>
         <td><div class="bar"><i style="width:92%"></i></div></td>
-        <td class="note">shape</td>
+        <td class="note">freshLines</td>
       </tr>
       <tr>
         <td class="meta">53</td>
@@ -716,12 +742,22 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
         <td class="note">shape</td>
       </tr>
       <tr>
+        <td class="meta">63</td>
+        <td><a href="./delve-0063.html">the Castle of the Vampire Lord</a></td>
+        <td class="meta">hard</td>
+        <td class="meta">13</td>
+        <td class="pass">out</td>
+        <td class="meta">Marsilio Ficino</td>
+        <td><div class="bar"><i style="width:92%"></i></div></td>
+        <td class="note">shape</td>
+      </tr>
+      <tr>
         <td class="meta">66</td>
         <td><a href="./delve-0066.html">the Castle of the Vampire Lord</a></td>
         <td class="meta">medium</td>
         <td class="meta">13</td>
         <td class="pass">out</td>
-        <td class="meta">Margaret Cavendish</td>
+        <td class="meta">Tycho Brahe</td>
         <td><div class="bar"><i style="width:92%"></i></div></td>
         <td class="note">continuity</td>
       </tr>
@@ -734,16 +770,6 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
         <td class="meta">Paracelsus</td>
         <td><div class="bar"><i style="width:92%"></i></div></td>
         <td class="note">freshLines</td>
-      </tr>
-      <tr>
-        <td class="meta">73</td>
-        <td><a href="./delve-0073.html">the Old Delve</a></td>
-        <td class="meta">easy</td>
-        <td class="meta">9</td>
-        <td class="pass">out</td>
-        <td class="meta">Margaret Cavendish</td>
-        <td><div class="bar"><i style="width:92%"></i></div></td>
-        <td class="note">climax</td>
       </tr>
       <tr>
         <td class="meta">74</td>
@@ -766,16 +792,6 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
         <td class="note">climax</td>
       </tr>
       <tr>
-        <td class="meta">81</td>
-        <td><a href="./delve-0081.html">the Castle of the Vampire Lord</a></td>
-        <td class="meta">easy</td>
-        <td class="meta">14</td>
-        <td class="pass">out</td>
-        <td class="meta">Cornelius Agrippa</td>
-        <td><div class="bar"><i style="width:92%"></i></div></td>
-        <td class="note">shape</td>
-      </tr>
-      <tr>
         <td class="meta">87</td>
         <td><a href="./delve-0087.html">the Old Delve</a></td>
         <td class="meta">hard</td>
@@ -783,17 +799,7 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
         <td class="pass">out</td>
         <td class="meta">Kenelm Digby</td>
         <td><div class="bar"><i style="width:92%"></i></div></td>
-        <td class="note">continuity</td>
-      </tr>
-      <tr>
-        <td class="meta">89</td>
-        <td><a href="./delve-0089.html">the Old Delve</a></td>
-        <td class="meta">easy</td>
-        <td class="meta">12</td>
-        <td class="pass">out</td>
-        <td class="meta">Cornelius Agrippa</td>
-        <td><div class="bar"><i style="width:92%"></i></div></td>
-        <td class="note">rationing</td>
+        <td class="note">climax</td>
       </tr>
       <tr>
         <td class="meta">90</td>
@@ -802,26 +808,6 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
         <td class="meta">14</td>
         <td class="pass">out</td>
         <td class="meta">Tycho Brahe</td>
-        <td><div class="bar"><i style="width:92%"></i></div></td>
-        <td class="note">continuity</td>
-      </tr>
-      <tr>
-        <td class="meta">98</td>
-        <td><a href="./delve-0098.html">the Ice Caverns of the Mad Pyromancer</a></td>
-        <td class="meta">medium</td>
-        <td class="meta">15</td>
-        <td class="pass">out</td>
-        <td class="meta">Kenelm Digby</td>
-        <td><div class="bar"><i style="width:92%"></i></div></td>
-        <td class="note">concision</td>
-      </tr>
-      <tr>
-        <td class="meta">102</td>
-        <td><a href="./delve-0102.html">the Ice Caverns of the Mad Pyromancer</a></td>
-        <td class="meta">medium</td>
-        <td class="meta">10</td>
-        <td class="pass">out</td>
-        <td class="meta">Michael Sendivogius</td>
         <td><div class="bar"><i style="width:92%"></i></div></td>
         <td class="note">continuity</td>
       </tr>
@@ -836,36 +822,6 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
         <td class="note">freshLines</td>
       </tr>
       <tr>
-        <td class="meta">113</td>
-        <td><a href="./delve-0113.html">the Ice Caverns of the Mad Pyromancer</a></td>
-        <td class="meta">easy</td>
-        <td class="meta">14</td>
-        <td class="pass">out</td>
-        <td class="meta">Michael Sendivogius</td>
-        <td><div class="bar"><i style="width:92%"></i></div></td>
-        <td class="note">freshLines</td>
-      </tr>
-      <tr>
-        <td class="meta">116</td>
-        <td><a href="./delve-0116.html">the Ice Caverns of the Mad Pyromancer</a></td>
-        <td class="meta">nightmare</td>
-        <td class="meta">9</td>
-        <td class="pass">out</td>
-        <td class="meta">Kenelm Digby</td>
-        <td><div class="bar"><i style="width:92%"></i></div></td>
-        <td class="note">continuity</td>
-      </tr>
-      <tr>
-        <td class="meta">117</td>
-        <td><a href="./delve-0117.html">the Ice Caverns of the Mad Pyromancer</a></td>
-        <td class="meta">easy</td>
-        <td class="meta">13</td>
-        <td class="pass">out</td>
-        <td class="meta">Marsilio Ficino</td>
-        <td><div class="bar"><i style="width:92%"></i></div></td>
-        <td class="note">shape</td>
-      </tr>
-      <tr>
         <td class="meta">120</td>
         <td><a href="./delve-0120.html">the Old Delve</a></td>
         <td class="meta">nightmare</td>
@@ -876,6 +832,16 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
         <td class="note">continuity</td>
       </tr>
       <tr>
+        <td class="meta">3</td>
+        <td><a href="./delve-0003.html">the Castle of the Vampire Lord</a></td>
+        <td class="meta">hard</td>
+        <td class="meta">17</td>
+        <td class="pass">out</td>
+        <td class="meta">Robert Fludd</td>
+        <td><div class="bar"><i style="width:92%"></i></div></td>
+        <td class="note">shape</td>
+      </tr>
+      <tr>
         <td class="meta">4</td>
         <td><a href="./delve-0004.html">the Ice Caverns of the Mad Pyromancer</a></td>
         <td class="meta">nightmare</td>
@@ -883,7 +849,27 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
         <td class="fail">lost</td>
         <td class="meta">Michael Maier</td>
         <td><div class="bar"><i style="width:92%"></i></div></td>
+        <td class="note">rationing</td>
+      </tr>
+      <tr>
+        <td class="meta">7</td>
+        <td><a href="./delve-0007.html">the Castle of the Vampire Lord</a></td>
+        <td class="meta">hard</td>
+        <td class="meta">13</td>
+        <td class="fail">lost</td>
+        <td class="meta">Johannes Trithemius</td>
+        <td><div class="bar"><i style="width:92%"></i></div></td>
         <td class="note">continuity</td>
+      </tr>
+      <tr>
+        <td class="meta">8</td>
+        <td><a href="./delve-0008.html">the Old Delve</a></td>
+        <td class="meta">nightmare</td>
+        <td class="meta">15</td>
+        <td class="fail">lost</td>
+        <td class="meta">Johannes Trithemius</td>
+        <td><div class="bar"><i style="width:92%"></i></div></td>
+        <td class="note">freshLines</td>
       </tr>
       <tr>
         <td class="meta">16</td>
@@ -896,16 +882,6 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
         <td class="note">continuity</td>
       </tr>
       <tr>
-        <td class="meta">19</td>
-        <td><a href="./delve-0019.html">the Ice Caverns of the Mad Pyromancer</a></td>
-        <td class="meta">hard</td>
-        <td class="meta">11</td>
-        <td class="fail">lost</td>
-        <td class="meta">Giordano Bruno</td>
-        <td><div class="bar"><i style="width:92%"></i></div></td>
-        <td class="note">rationing</td>
-      </tr>
-      <tr>
         <td class="meta">28</td>
         <td><a href="./delve-0028.html">the Castle of the Vampire Lord</a></td>
         <td class="meta">nightmare</td>
@@ -916,6 +892,16 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
         <td class="note">continuity</td>
       </tr>
       <tr>
+        <td class="meta">29</td>
+        <td><a href="./delve-0029.html">the Ice Caverns of the Mad Pyromancer</a></td>
+        <td class="meta">easy</td>
+        <td class="meta">16</td>
+        <td class="pass">out</td>
+        <td class="meta">Michael Sendivogius</td>
+        <td><div class="bar"><i style="width:92%"></i></div></td>
+        <td class="note">climax</td>
+      </tr>
+      <tr>
         <td class="meta">31</td>
         <td><a href="./delve-0031.html">the Old Delve</a></td>
         <td class="meta">hard</td>
@@ -923,14 +909,14 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
         <td class="fail">lost</td>
         <td class="meta">Marsilio Ficino</td>
         <td><div class="bar"><i style="width:92%"></i></div></td>
-        <td class="note">continuity</td>
+        <td class="note">freshLines</td>
       </tr>
       <tr>
         <td class="meta">32</td>
         <td><a href="./delve-0032.html">the Ice Caverns of the Mad Pyromancer</a></td>
         <td class="meta">nightmare</td>
         <td class="meta">9</td>
-        <td class="pass">out</td>
+        <td class="fail">lost</td>
         <td class="meta">Robert Fludd</td>
         <td><div class="bar"><i style="width:92%"></i></div></td>
         <td class="note">continuity</td>
@@ -956,34 +942,24 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
         <td class="note">freshLines</td>
       </tr>
       <tr>
-        <td class="meta">43</td>
-        <td><a href="./delve-0043.html">the Ice Caverns of the Mad Pyromancer</a></td>
-        <td class="meta">hard</td>
-        <td class="meta">12</td>
-        <td class="pass">out</td>
-        <td class="meta">Robert Fludd</td>
-        <td><div class="bar"><i style="width:92%"></i></div></td>
-        <td class="note">continuity</td>
-      </tr>
-      <tr>
         <td class="meta">44</td>
         <td><a href="./delve-0044.html">the Old Delve</a></td>
         <td class="meta">nightmare</td>
         <td class="meta">10</td>
-        <td class="fail">lost</td>
+        <td class="pass">out</td>
         <td class="meta">Michael Sendivogius</td>
         <td><div class="bar"><i style="width:92%"></i></div></td>
-        <td class="note">continuity</td>
+        <td class="note">concision</td>
       </tr>
       <tr>
-        <td class="meta">47</td>
-        <td><a href="./delve-0047.html">the Old Delve</a></td>
-        <td class="meta">hard</td>
-        <td class="meta">10</td>
+        <td class="meta">48</td>
+        <td><a href="./delve-0048.html">the Ice Caverns of the Mad Pyromancer</a></td>
+        <td class="meta">nightmare</td>
+        <td class="meta">12</td>
         <td class="fail">lost</td>
         <td class="meta">Michael Sendivogius</td>
         <td><div class="bar"><i style="width:92%"></i></div></td>
-        <td class="note">continuity</td>
+        <td class="note">concision</td>
       </tr>
       <tr>
         <td class="meta">52</td>
@@ -991,9 +967,19 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
         <td class="meta">nightmare</td>
         <td class="meta">9</td>
         <td class="fail">lost</td>
-        <td class="meta">Cornelius Agrippa</td>
+        <td class="meta">Pico della Mirandola</td>
         <td><div class="bar"><i style="width:92%"></i></div></td>
         <td class="note">rationing</td>
+      </tr>
+      <tr>
+        <td class="meta">55</td>
+        <td><a href="./delve-0055.html">the Ice Caverns of the Mad Pyromancer</a></td>
+        <td class="meta">hard</td>
+        <td class="meta">11</td>
+        <td class="pass">out</td>
+        <td class="meta">John Napier</td>
+        <td><div class="bar"><i style="width:92%"></i></div></td>
+        <td class="note">continuity</td>
       </tr>
       <tr>
         <td class="meta">56</td>
@@ -1006,22 +992,12 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
         <td class="note">climax</td>
       </tr>
       <tr>
-        <td class="meta">59</td>
-        <td><a href="./delve-0059.html">the Ice Caverns of the Mad Pyromancer</a></td>
-        <td class="meta">hard</td>
-        <td class="meta">13</td>
-        <td class="fail">lost</td>
-        <td class="meta">John Napier</td>
-        <td><div class="bar"><i style="width:92%"></i></div></td>
-        <td class="note">continuity</td>
-      </tr>
-      <tr>
-        <td class="meta">68</td>
-        <td><a href="./delve-0068.html">the Old Delve</a></td>
+        <td class="meta">60</td>
+        <td><a href="./delve-0060.html">the Ice Caverns of the Mad Pyromancer</a></td>
         <td class="meta">nightmare</td>
-        <td class="meta">12</td>
+        <td class="meta">17</td>
         <td class="fail">lost</td>
-        <td class="meta">Pico della Mirandola</td>
+        <td class="meta">Johannes Trithemius</td>
         <td><div class="bar"><i style="width:92%"></i></div></td>
         <td class="note">continuity</td>
       </tr>
@@ -1032,16 +1008,6 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
         <td class="meta">12</td>
         <td class="pass">out</td>
         <td class="meta">Cornelius Agrippa</td>
-        <td><div class="bar"><i style="width:92%"></i></div></td>
-        <td class="note">continuity</td>
-      </tr>
-      <tr>
-        <td class="meta">72</td>
-        <td><a href="./delve-0072.html">the Ice Caverns of the Mad Pyromancer</a></td>
-        <td class="meta">nightmare</td>
-        <td class="meta">9</td>
-        <td class="fail">lost</td>
-        <td class="meta">Simon Forman</td>
         <td><div class="bar"><i style="width:92%"></i></div></td>
         <td class="note">continuity</td>
       </tr>
@@ -1066,44 +1032,34 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
         <td class="note">concision</td>
       </tr>
       <tr>
-        <td class="meta">83</td>
-        <td><a href="./delve-0083.html">the Old Delve</a></td>
-        <td class="meta">hard</td>
-        <td class="meta">15</td>
-        <td class="pass">out</td>
-        <td class="meta">Johannes Trithemius</td>
-        <td><div class="bar"><i style="width:92%"></i></div></td>
-        <td class="note">concision</td>
-      </tr>
-      <tr>
-        <td class="meta">88</td>
-        <td><a href="./delve-0088.html">the Ice Caverns of the Mad Pyromancer</a></td>
-        <td class="meta">nightmare</td>
-        <td class="meta">17</td>
-        <td class="pass">out</td>
-        <td class="meta">Pico della Mirandola</td>
-        <td><div class="bar"><i style="width:92%"></i></div></td>
-        <td class="note">continuity</td>
-      </tr>
-      <tr>
-        <td class="meta">92</td>
-        <td><a href="./delve-0092.html">the Old Delve</a></td>
+        <td class="meta">84</td>
+        <td><a href="./delve-0084.html">the Ice Caverns of the Mad Pyromancer</a></td>
         <td class="meta">nightmare</td>
         <td class="meta">13</td>
         <td class="fail">lost</td>
-        <td class="meta">Pico della Mirandola</td>
+        <td class="meta">John Napier</td>
         <td><div class="bar"><i style="width:92%"></i></div></td>
         <td class="note">continuity</td>
       </tr>
       <tr>
-        <td class="meta">99</td>
-        <td><a href="./delve-0099.html">the Old Delve</a></td>
-        <td class="meta">hard</td>
-        <td class="meta">14</td>
-        <td class="pass">out</td>
-        <td class="meta">Kenelm Digby</td>
+        <td class="meta">96</td>
+        <td><a href="./delve-0096.html">the Old Delve</a></td>
+        <td class="meta">nightmare</td>
+        <td class="meta">11</td>
+        <td class="fail">lost</td>
+        <td class="meta">Giordano Bruno</td>
         <td><div class="bar"><i style="width:92%"></i></div></td>
-        <td class="note">concision</td>
+        <td class="note">mortalityEarned</td>
+      </tr>
+      <tr>
+        <td class="meta">100</td>
+        <td><a href="./delve-0100.html">the Ice Caverns of the Mad Pyromancer</a></td>
+        <td class="meta">nightmare</td>
+        <td class="meta">17</td>
+        <td class="pass">out</td>
+        <td class="meta">Johannes Trithemius</td>
+        <td><div class="bar"><i style="width:92%"></i></div></td>
+        <td class="note">freshLines</td>
       </tr>
       <tr>
         <td class="meta">104</td>
@@ -1111,37 +1067,67 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
         <td class="meta">nightmare</td>
         <td class="meta">10</td>
         <td class="fail">lost</td>
-        <td class="meta">Giordano Bruno</td>
+        <td class="meta">John Dee</td>
         <td><div class="bar"><i style="width:92%"></i></div></td>
         <td class="note">continuity</td>
       </tr>
       <tr>
-        <td class="meta">108</td>
-        <td><a href="./delve-0108.html">the Old Delve</a></td>
-        <td class="meta">nightmare</td>
-        <td class="meta">14</td>
+        <td class="meta">106</td>
+        <td><a href="./delve-0106.html">the Old Delve</a></td>
+        <td class="meta">medium</td>
+        <td class="meta">17</td>
         <td class="pass">out</td>
-        <td class="meta">Paracelsus</td>
-        <td><div class="bar"><i style="width:92%"></i></div></td>
-        <td class="note">shape</td>
-      </tr>
-      <tr>
-        <td class="meta">112</td>
-        <td><a href="./delve-0112.html">the Ice Caverns of the Mad Pyromancer</a></td>
-        <td class="meta">nightmare</td>
-        <td class="meta">14</td>
-        <td class="fail">lost</td>
-        <td class="meta">Tycho Brahe</td>
+        <td class="meta">Kenelm Digby</td>
         <td><div class="bar"><i style="width:92%"></i></div></td>
         <td class="note">continuity</td>
+      </tr>
+      <tr>
+        <td class="meta">107</td>
+        <td><a href="./delve-0107.html">the Castle of the Vampire Lord</a></td>
+        <td class="meta">hard</td>
+        <td class="meta">10</td>
+        <td class="pass">out</td>
+        <td class="meta">John Napier</td>
+        <td><div class="bar"><i style="width:92%"></i></div></td>
+        <td class="note">continuity</td>
+      </tr>
+      <tr>
+        <td class="meta">113</td>
+        <td><a href="./delve-0113.html">the Ice Caverns of the Mad Pyromancer</a></td>
+        <td class="meta">easy</td>
+        <td class="meta">12</td>
+        <td class="pass">out</td>
+        <td class="meta">Michael Sendivogius</td>
+        <td><div class="bar"><i style="width:92%"></i></div></td>
+        <td class="note">freshLines</td>
       </tr>
       <tr>
         <td class="meta">114</td>
         <td><a href="./delve-0114.html">the Ice Caverns of the Mad Pyromancer</a></td>
         <td class="meta">medium</td>
-        <td class="meta">15</td>
+        <td class="meta">16</td>
         <td class="fail">lost</td>
         <td class="meta">Giordano Bruno</td>
+        <td><div class="bar"><i style="width:92%"></i></div></td>
+        <td class="note">freshLines</td>
+      </tr>
+      <tr>
+        <td class="meta">115</td>
+        <td><a href="./delve-0115.html">the Ice Caverns of the Mad Pyromancer</a></td>
+        <td class="meta">hard</td>
+        <td class="meta">14</td>
+        <td class="fail">lost</td>
+        <td class="meta">Michael Sendivogius</td>
+        <td><div class="bar"><i style="width:92%"></i></div></td>
+        <td class="note">continuity</td>
+      </tr>
+      <tr>
+        <td class="meta">116</td>
+        <td><a href="./delve-0116.html">the Ice Caverns of the Mad Pyromancer</a></td>
+        <td class="meta">nightmare</td>
+        <td class="meta">9</td>
+        <td class="fail">lost</td>
+        <td class="meta">Michael Sendivogius</td>
         <td><div class="bar"><i style="width:92%"></i></div></td>
         <td class="note">continuity</td>
       </tr>
@@ -1156,12 +1142,22 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
         <td class="note">shape</td>
       </tr>
       <tr>
-        <td class="meta">7</td>
-        <td><a href="./delve-0007.html">the Castle of the Vampire Lord</a></td>
-        <td class="meta">hard</td>
-        <td class="meta">13</td>
-        <td class="fail">lost</td>
-        <td class="meta">Johannes Trithemius</td>
+        <td class="meta">5</td>
+        <td><a href="./delve-0005.html">the Castle of the Vampire Lord</a></td>
+        <td class="meta">easy</td>
+        <td class="meta">15</td>
+        <td class="pass">out</td>
+        <td class="meta">Pico della Mirandola</td>
+        <td><div class="bar"><i style="width:100%"></i></div></td>
+        <td class="note">—</td>
+      </tr>
+      <tr>
+        <td class="meta">17</td>
+        <td><a href="./delve-0017.html">the Castle of the Vampire Lord</a></td>
+        <td class="meta">easy</td>
+        <td class="meta">10</td>
+        <td class="pass">out</td>
+        <td class="meta">John Napier</td>
         <td><div class="bar"><i style="width:100%"></i></div></td>
         <td class="note">—</td>
       </tr>
@@ -1176,22 +1172,22 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
         <td class="note">—</td>
       </tr>
       <tr>
+        <td class="meta">39</td>
+        <td><a href="./delve-0039.html">the Castle of the Vampire Lord</a></td>
+        <td class="meta">hard</td>
+        <td class="meta">14</td>
+        <td class="fail">lost</td>
+        <td class="meta">Kenelm Digby</td>
+        <td><div class="bar"><i style="width:100%"></i></div></td>
+        <td class="note">—</td>
+      </tr>
+      <tr>
         <td class="meta">40</td>
         <td><a href="./delve-0040.html">the Castle of the Vampire Lord</a></td>
         <td class="meta">nightmare</td>
         <td class="meta">13</td>
         <td class="pass">out</td>
-        <td class="meta">Simon Forman</td>
-        <td><div class="bar"><i style="width:100%"></i></div></td>
-        <td class="note">—</td>
-      </tr>
-      <tr>
-        <td class="meta">46</td>
-        <td><a href="./delve-0046.html">the Ice Caverns of the Mad Pyromancer</a></td>
-        <td class="meta">medium</td>
-        <td class="meta">15</td>
-        <td class="pass">out</td>
-        <td class="meta">John Napier</td>
+        <td class="meta">Cornelius Agrippa</td>
         <td><div class="bar"><i style="width:100%"></i></div></td>
         <td class="note">—</td>
       </tr>
@@ -1216,6 +1212,26 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
         <td class="note">—</td>
       </tr>
       <tr>
+        <td class="meta">59</td>
+        <td><a href="./delve-0059.html">the Ice Caverns of the Mad Pyromancer</a></td>
+        <td class="meta">hard</td>
+        <td class="meta">13</td>
+        <td class="fail">lost</td>
+        <td class="meta">John Napier</td>
+        <td><div class="bar"><i style="width:100%"></i></div></td>
+        <td class="note">—</td>
+      </tr>
+      <tr>
+        <td class="meta">64</td>
+        <td><a href="./delve-0064.html">the Castle of the Vampire Lord</a></td>
+        <td class="meta">nightmare</td>
+        <td class="meta">12</td>
+        <td class="fail">lost</td>
+        <td class="meta">Michael Sendivogius</td>
+        <td><div class="bar"><i style="width:100%"></i></div></td>
+        <td class="note">—</td>
+      </tr>
+      <tr>
         <td class="meta">75</td>
         <td><a href="./delve-0075.html">the Castle of the Vampire Lord</a></td>
         <td class="meta">hard</td>
@@ -1236,12 +1252,12 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
         <td class="note">—</td>
       </tr>
       <tr>
-        <td class="meta">84</td>
-        <td><a href="./delve-0084.html">the Ice Caverns of the Mad Pyromancer</a></td>
-        <td class="meta">nightmare</td>
-        <td class="meta">13</td>
-        <td class="fail">lost</td>
-        <td class="meta">Isabella Cortese</td>
+        <td class="meta">89</td>
+        <td><a href="./delve-0089.html">the Old Delve</a></td>
+        <td class="meta">easy</td>
+        <td class="meta">12</td>
+        <td class="pass">out</td>
+        <td class="meta">Cornelius Agrippa</td>
         <td><div class="bar"><i style="width:100%"></i></div></td>
         <td class="note">—</td>
       </tr>
@@ -1250,18 +1266,8 @@ code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;color:#c2a
         <td><a href="./delve-0091.html">the Ice Caverns of the Mad Pyromancer</a></td>
         <td class="meta">hard</td>
         <td class="meta">10</td>
-        <td class="fail">lost</td>
-        <td class="meta">Marsilio Ficino</td>
-        <td><div class="bar"><i style="width:100%"></i></div></td>
-        <td class="note">—</td>
-      </tr>
-      <tr>
-        <td class="meta">100</td>
-        <td><a href="./delve-0100.html">the Ice Caverns of the Mad Pyromancer</a></td>
-        <td class="meta">nightmare</td>
-        <td class="meta">17</td>
-        <td class="fail">lost</td>
-        <td class="meta">Johannes Trithemius</td>
+        <td class="pass">out</td>
+        <td class="meta">Cornelius Agrippa</td>
         <td><div class="bar"><i style="width:100%"></i></div></td>
         <td class="note">—</td>
       </tr>

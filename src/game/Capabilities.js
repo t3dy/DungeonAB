@@ -20,36 +20,38 @@
  */
 
 export const CAPABILITIES = {
-  /* --- already in use across the card pool ---------------------- */
-  tinkering: { name: 'Tinkering', icon: '🔧', text: 'Manipulates machines and mechanisms.' },
-  diplomacy: { name: 'Diplomacy', icon: '🤝', text: 'Another way of interacting with people.' },
-  rogue: { name: 'Rogue Craft', icon: '🗡️', text: 'Locks, traps, shadows, and the exits nobody else noticed.' },
-  fencing: { name: 'Fencing', icon: '🤺', text: 'Blade-work as a social and a combat option both.' },
-  tactics: { name: 'Tactics', icon: '🎯', text: 'Reads and reshapes the formation.' },
-  conjuring: { name: 'Conjuring', icon: '🪄', text: 'Summons, binds, and speaks with what is not flesh.' },
-  divination: { name: 'Divination', icon: '🔮', text: 'Information before commitment, not raw power.' },
-  alchemy: { name: 'Alchemy', icon: '⚗️', text: 'Substances, bodies, medicines, poisons, reactions.' },
-  healing: { name: 'Healing', icon: '💚', text: 'Mends wounds and cures what lingers.' },
-  knowledge: { name: 'Knowledge', icon: '📖', text: 'Recognizes traditions, histories, and texts.' },
-  appraisal: { name: 'Appraisal', icon: '💰', text: 'Knows what a thing is actually worth.' },
-  translation: { name: 'Translation', icon: '🌐', text: 'Renders the obscure legible.' },
-  observation: { name: 'Observation', icon: '👁️', text: 'Notices what a careless party would miss.' },
-  experimentation: { name: 'Experimentation', icon: '🧪', text: 'Tests, iterates, transforms materials.' },
-  correspondence: { name: 'Correspondence', icon: '🔗', text: 'Links disparate systems of meaning.' },
-  memory: { name: 'Memory', icon: '🧠', text: 'Holds more, and holds it in relation.' },
-  mathematics: { name: 'Mathematical Magic', icon: '📐', text: 'Number, proportion, and the working built on them.' },
-  navigation: { name: 'Navigation', icon: '🧭', text: 'Finds the way, or the way around.' },
-
-  /* --- the Renaissance additions -------------------------------- */
-  antiquarian: { name: 'Antiquarian Knowledge', icon: '🏺', text: 'Recognizes what is historically significant.' },
-  astronomy: { name: 'Astronomy', icon: '🔭', text: 'Reads the sky and what moves by it.' },
-  naturalPhilosophy: { name: 'Natural Philosophy', icon: '🌿', text: 'Non-occult explanations for magical problems.' },
-  imagination: { name: 'Imagination', icon: '✨', text: 'Unconventional associations, novel solutions.' },
-  syncretism: { name: 'Syncretism', icon: '☯️', text: 'Reconciles competing traditions.' },
-  music: { name: 'Music', icon: '🎵', text: 'Performance as persuasion, distraction, or balm.' },
-  harmony: { name: 'Harmony', icon: '🎶', text: 'Strengthens what already works together.' },
-  medicine: { name: 'Medicine', icon: '💊', text: 'Diagnoses and treats the body.' },
-  telepathy: { name: 'Telepathy', icon: '📡', text: 'A link to minds that carry their own capabilities.' },
+  /*
+   * v8.1: twelve words, down from twenty-eight.
+   *
+   * The 28-word vocabulary was a scarcity problem that came back twice:
+   * fixed on the cards (median held 19 → 15 of 28) and re-saturated by
+   * encounters asking "any of these four?", then partially re-fixed by
+   * grading. Twelve words each held by at most four magi makes every
+   * tag a real draft decision, every encounter ask legible, and the
+   * affinity graph small enough for a player to hold in their head.
+   *
+   * Each word absorbed its old neighbours:
+   *   warcraft   ← tactics, fencing        roguery  ← rogue, (hiding)
+   *   tinkering  ← + experimentation       alchemy  ← + naturalPhilosophy
+   *   medicine   ← + healing               rhetoric ← diplomacy, debate
+   *   scholarship← knowledge, translation, antiquarian, memory
+   *   astrology  ← astronomy, mathematics, navigation
+   *   divination ← + telepathy             conjuring ← + imagination
+   *   observation← + appraisal
+   *   correspondence ← + syncretism, music, harmony
+   */
+  warcraft: { name: 'Warcraft', icon: '⚔️', text: 'Formations, duels, and the reading of a fight before it starts.' },
+  roguery: { name: 'Roguery', icon: '🗡️', text: 'Locks, shadows, ciphers, and the exits nobody else noticed.' },
+  observation: { name: 'Observation', icon: '👁️', text: 'Notices what a careless party would miss, and what a thing is worth.' },
+  tinkering: { name: 'Tinkering', icon: '🔧', text: 'Mechanisms, instruments, and the patience to test until it works.' },
+  alchemy: { name: 'Alchemy', icon: '⚗️', text: 'Substances, reactions, and non-occult explanations for occult problems.' },
+  medicine: { name: 'Medicine', icon: '💊', text: 'Diagnoses, treats, and mends the body.' },
+  scholarship: { name: 'Scholarship', icon: '📖', text: 'Texts, histories, tongues, and the memory that holds them in relation.' },
+  astrology: { name: 'Astrology', icon: '🔭', text: 'The sky, the number, and everything that moves by either.' },
+  divination: { name: 'Divination', icon: '🔮', text: 'Knowing the hidden before committing to it.' },
+  conjuring: { name: 'Conjuring', icon: '🪄', text: 'Summons, binds, and imagines what is not flesh into answering.' },
+  correspondence: { name: 'Correspondence', icon: '🔗', text: 'The links between systems — metals to planets, tones to spheres, one tradition to another.' },
+  rhetoric: { name: 'Rhetoric', icon: '🤝', text: 'Persuasion, disputation, and the bargain nobody planned to offer.' },
 };
 
 /**
@@ -86,33 +88,18 @@ export const CAPABILITIES = {
  * should be one a player could guess before reading this table.
  */
 export const AFFINITIES = {
-  tinkering: ['mathematics', 'experimentation', 'observation'],
-  diplomacy: ['translation', 'appraisal', 'telepathy'],
-  rogue: ['observation', 'tinkering', 'navigation'],
-  fencing: ['tactics', 'observation'],
-  tactics: ['observation', 'navigation', 'fencing'],
-  conjuring: ['correspondence', 'divination', 'syncretism'],
-  divination: ['astronomy', 'observation', 'correspondence'],
-  alchemy: ['experimentation', 'medicine', 'naturalPhilosophy'],
-  healing: ['medicine', 'harmony', 'alchemy'],
-  knowledge: ['antiquarian', 'translation', 'memory'],
-  appraisal: ['antiquarian', 'knowledge', 'observation'],
-  translation: ['knowledge', 'correspondence', 'memory'],
-  observation: ['divination', 'naturalPhilosophy', 'appraisal'],
-  experimentation: ['naturalPhilosophy', 'alchemy', 'tinkering'],
-  correspondence: ['syncretism', 'astronomy', 'harmony'],
-  memory: ['knowledge', 'imagination', 'music'],
-  mathematics: ['astronomy', 'harmony', 'tinkering'],
-  astronomy: ['mathematics', 'divination', 'navigation'],
-  navigation: ['astronomy', 'mathematics', 'observation'],
-  harmony: ['music', 'mathematics', 'correspondence'],
-  music: ['harmony', 'memory', 'imagination'],
-  imagination: ['memory', 'music', 'syncretism'],
-  syncretism: ['correspondence', 'translation', 'knowledge'],
-  antiquarian: ['knowledge', 'appraisal', 'translation'],
-  naturalPhilosophy: ['experimentation', 'observation', 'medicine'],
-  medicine: ['healing', 'alchemy', 'naturalPhilosophy'],
-  telepathy: ['conjuring', 'divination', 'diplomacy'],
+  warcraft: ['roguery', 'observation'],
+  roguery: ['observation', 'warcraft', 'tinkering'],
+  observation: ['roguery', 'divination', 'tinkering'],
+  tinkering: ['observation', 'alchemy', 'astrology'],
+  alchemy: ['tinkering', 'medicine', 'correspondence'],
+  medicine: ['alchemy', 'scholarship'],
+  scholarship: ['correspondence', 'rhetoric', 'medicine'],
+  astrology: ['divination', 'correspondence', 'tinkering'],
+  divination: ['astrology', 'conjuring', 'observation'],
+  conjuring: ['divination', 'correspondence'],
+  correspondence: ['scholarship', 'astrology', 'conjuring'],
+  rhetoric: ['scholarship', 'correspondence', 'warcraft'],
 };
 
 /** Everything that bears on an option asking for these capabilities. */
