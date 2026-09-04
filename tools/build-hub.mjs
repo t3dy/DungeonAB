@@ -85,6 +85,7 @@ const GROUPS = [
       ['ARCHITECTURE.md', 'Architecture — the seams', 'ARCHITECTUREPROPOSAL.md'],
       ['DATACONTRACTS.md', 'Data contracts — the syncs nobody enforces', 'DATACONTRACTSPROPOSAL.md'],
       ['MEASUREMENT.md', 'Measurement — how not to fool yourself', 'MEASUREMENTPROPOSAL.md'],
+      ['GRAPHICS.md', 'Graphics — the renderer, measured, and what it would take'],
     ],
   },
   {

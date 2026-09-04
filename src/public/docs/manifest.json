@@ -1,5 +1,5 @@
 {
-  "generated": "2026-09-04T11:40:39.042Z",
+  "generated": "2026-09-04T22:37:41.937Z",
   "versions": [
     {
       "v": "v8.1",
@@ -142,6 +142,10 @@
           "file": "MEASUREMENT.md",
           "title": "Measurement — how not to fool yourself",
           "proposal": "MEASUREMENTPROPOSAL.md"
+        },
+        {
+          "file": "GRAPHICS.md",
+          "title": "Graphics — the renderer, measured, and what it would take"
         }
       ]
     },
