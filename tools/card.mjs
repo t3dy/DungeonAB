@@ -57,7 +57,7 @@ import { costCard } from '../src/game/Costing.js';
 const BASE_BY_DIFFICULTY = {
   easy: () => [...CHARACTER_CARDS.slice(0, 2)],                                   // re-fit for v8
   medium: () => [...CHARACTER_CARDS.slice(0, 4)],                                 // ~48%
-  hard: () => [...CHARACTER_CARDS.slice(0, 4), ...EQUIPMENT_CARDS.slice(0, 9)],   // ~63%
+  hard: () => [...CHARACTER_CARDS.slice(0, 4), ...EQUIPMENT_CARDS.slice(0, 7)],   // re-fit v8.1
   nightmare: () => [                                                              // ~35%
     ...CHARACTER_CARDS.slice(0, 4),
     ...EQUIPMENT_CARDS.slice(0, 9),

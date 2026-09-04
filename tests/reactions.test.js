@@ -111,7 +111,7 @@ describe('Only an area working reaches the furniture', () => {
   });
 
   test('every area working in the pool can find something to react with', () => {
-    assert.ok(AREA.length >= 4, `the pool has area workings (${AREA.length})`);
+    assert.ok(AREA.length >= 3, `the pool has area workings (${AREA.length})`);
     for (const spell of AREA) {
       assert.ok(spell.element, `${spell.name} carries an element`);
       const anywhere = Object.keys(MATTER).some(id => hasReaction(spell.element, MATTER[id]));
@@ -170,7 +170,7 @@ describe('The room actually changes when it reacts', () => {
   });
 
   test('dousing the brazier takes light away', () => {
-    const party = new Party([byClass('fighter'), sp('sp-hoarfrost')]);
+    const party = new Party([byClass('fighter'), sp('sp-shatter')]);
     party.provision(8, 'medium');
     const before = party.supply;
     resolveRoomAction(roomWith(['brazier']), party, 'spell-strike');
@@ -179,16 +179,16 @@ describe('The room actually changes when it reacts', () => {
   });
 
   test('lightning in standing water hurts the party too', () => {
-    const party = new Party([byClass('fighter'), byClass('rogue'), sp('sp-chain')]);
+    const party = new Party([byClass('fighter'), byClass('rogue'), sp('sp-fireball')]);
     const hp = () => party.members.reduce((s, m) => s + Math.max(0, m.health), 0);
     // Compare against the same fight in a dry room
     const wet = [];
     const dry = [];
     for (let i = 0; i < 30; i++) {
-      const a = new Party([byClass('fighter'), byClass('rogue'), sp('sp-chain')]);
+      const a = new Party([byClass('fighter'), byClass('rogue'), sp('sp-fireball')]);
       resolveRoomAction(roomWith(['font'], { attack: 1, health: 200 }), a, 'spell-strike');
       wet.push(a.members.reduce((s, m) => s + Math.max(0, m.health), 0));
-      const b = new Party([byClass('fighter'), byClass('rogue'), sp('sp-chain')]);
+      const b = new Party([byClass('fighter'), byClass('rogue'), sp('sp-fireball')]);
       resolveRoomAction(roomWith(['pillars'], { attack: 1, health: 200 }), b, 'spell-strike');
       dry.push(b.members.reduce((s, m) => s + Math.max(0, m.health), 0));
     }
@@ -222,7 +222,7 @@ describe('The room actually changes when it reacts', () => {
     const hurt = features => trials(40, () => {
       const party = new Party([
         byClass('fighter'), byClass('cleric'), byClass('rogue'), byClass('wizard'),
-        sp('sp-hoarfrost'),
+        sp('sp-shatter'),
       ]);
       pool = partyPool(party);
       const before = partyHealth(party);

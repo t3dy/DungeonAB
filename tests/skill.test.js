@@ -57,17 +57,6 @@ describe('Skill tiers make different picks from the same pack', () => {
       'the Novice\'s evaluations swing wider than the Prodigy\'s');
   });
 
-  test('the curse chaser reads big numbers as pure upside', () => {
-    const cursed = EQUIPMENT_CARDS.find(e => e.cursed);
-    const pool = [fighter, fighter, fighter, fighter];
-    const warlord = DRAFT_PERSONAS.find(p => p.id === 'warlord');
-    const noviceVal = evaluatePick(cursed, novice, pool, flatRng);
-    const warlordVal = evaluatePick(cursed, warlord, pool, flatRng);
-    const plain = EQUIPMENT_CARDS.find(e => e.id === 'eq-greatsword');
-    // The warlord flinches from the curse relative to clean gear; the novice doesn't
-    assert.ok(evaluatePick(plain, warlord, pool, flatRng) > warlordVal, 'warlord flinches');
-    assert.ok(noviceVal > evaluatePick(plain, novice, pool, flatRng) - 3, 'novice chases');
-  });
 });
 
 describe('Skill expression is measurable (the 17lands check)', () => {

@@ -89,29 +89,9 @@ export const EQUIPMENT_CARDS = [
   { id: 'eq-grimoire', type: CARD_TYPES.EQUIPMENT, name: 'Grimoire of Low Whispers', icon: '📖', slot: 'focus', bonus: { mind: 3 }, bestFor: CLASSES.WIZARD, text: 'The margins argue with the text.', capabilities: ['scholarship'] },
   { id: 'eq-lockpicks', type: CARD_TYPES.EQUIPMENT, name: 'Masterwork Lockpicks', icon: '🗝️', slot: 'tool', bonus: { mind: 2 }, bestFor: CLASSES.ROGUE, text: 'Every door is a suggestion.', capabilities: ['roguery'] },
   { id: 'eq-alembic', type: CARD_TYPES.EQUIPMENT, name: 'Portable Alembic', icon: '⚗️', slot: 'tool', bonus: { mind: 2 }, bestFor: CLASSES.ALCHEMIST, text: 'A laboratory folded into a satchel. Whoever carries it can answer as an alchemist answers.', capabilities: ['alchemy'] },
-  { id: 'eq-chainmail', type: CARD_TYPES.EQUIPMENT, name: 'Dwarven Chainmail', icon: '🥋', slot: 'armor', bonus: { defense: 2 }, bestFor: null, text: 'Fits anyone brave enough to wear it. Takes the worst of a blow, so fewer of them leave a lasting scar.' },
-  { id: 'eq-boots', type: CARD_TYPES.EQUIPMENT, name: 'Boots of the Quiet Step', icon: '👢', slot: 'boots', bonus: { defense: 1, mind: 1 }, bestFor: CLASSES.ROGUE, text: 'The floorboards never learn your name.' },
   { id: 'eq-lantern', type: CARD_TYPES.EQUIPMENT, name: 'Everburning Lantern', icon: '🏮', slot: 'tool', bonus: { mind: 1, defense: 1 }, bestFor: CLASSES.CLERIC, text: 'Reveals hazards one room ahead, and sips its oil: the party burns supply every other march instead of every one.', capabilities: ['observation'] },
-  { id: 'eq-throwing-knives', type: CARD_TYPES.EQUIPMENT, name: 'Bandolier of Knives', icon: '🔪', slot: 'weapon', bonus: { attack: 2 }, bestFor: CLASSES.ROGUE, text: 'Six answers to most questions, and they arrive before the asking: 4 damage thrown before the first round.',  },
-  { id: 'eq-warded-buckler', type: CARD_TYPES.EQUIPMENT, name: 'Warded Buckler', icon: '🛡️', slot: 'armor', bonus: { defense: 2, mind: 1 }, bestFor: CLASSES.CLERIC, text: 'The prayers are etched on the inside, where they matter. Whatever the party sets off in a room, half of it does not come back on them.' },
   { id: 'eq-quicksilver-daggers', type: CARD_TYPES.EQUIPMENT, name: 'Quicksilver Daggers', icon: '🗡️', slot: 'weapon', bonus: { attack: 3 }, bestFor: CLASSES.ROGUE, text: 'They land before the argument starts: the party takes no damage in the first round of a fight.' },
   { id: 'eq-athanor-charm', type: CARD_TYPES.EQUIPMENT, name: 'Athanor Charm', icon: '🔥', slot: 'tool', bonus: { mind: 2 }, bestFor: CLASSES.ALCHEMIST, text: 'A furnace in miniature, always exactly warm enough. Anything the party sets alight burns 2 harder for the rest of the fight.' },
-
-  // Class-keyed items: the same item is a different miracle in
-  // different hands. (Megabase: a wand gives a fighter a fireball;
-  // a wizard gets meteors.)
-  {
-    id: 'eq-wand-embers', type: CARD_TYPES.EQUIPMENT, name: 'Wand of Embers', icon: '🪄',
-    slot: 'focus', bonus: { mind: 1 }, bestFor: CLASSES.WIZARD,
-    text: 'Warm to any hand. What comes out depends on whose.',
-    classActions: {
-      [CLASSES.FIGHTER]: { name: 'Ember Shot', opening: 4 },
-      [CLASSES.WIZARD]: { name: 'Meteor Fall', opening: 8 },
-      [CLASSES.CLERIC]: { name: 'Flame Ward', ward: 1 },
-      [CLASSES.ROGUE]: { name: 'Smoke Veil', ward: 1 },
-      [CLASSES.ALCHEMIST]: { name: 'Accelerant Charge', opening: 5 },
-    },
-  },
   {
     id: 'eq-holy-symbol', type: CARD_TYPES.EQUIPMENT, name: 'Holy Symbol of Dawn', icon: '☀️',
     capabilities: ['medicine'],
@@ -125,58 +105,15 @@ export const EQUIPMENT_CARDS = [
       [CLASSES.ALCHEMIST]: { name: 'Blessed Reagents', opening: 2 },
     },
   },
-
-  // Room-feature tools: gear whose value is the architecture, not the
-  // stat line. A prybar is +1 attack and a key to every sarcophagus,
-  // crate and rubble pile in the dungeon; a grapple turns any pit into
-  // a weapon. These are the cards that make a furnished room worth
-  // reading before you pick (see world/RoomFeatures.js FEATURE_ACTIONS).
-  {
-    id: 'eq-prybar', type: CARD_TYPES.EQUIPMENT, name: 'Ironwood Prybar', icon: '🪝',
-    slot: 'tool', bonus: { attack: 1, defense: 1 }, bestFor: CLASSES.FIGHTER,
-    text: 'Opens sarcophagi, crates and rubble. Doubles as an argument.',
-  },
-  {
-    id: 'eq-grapple', type: CARD_TYPES.EQUIPMENT, name: 'Grapple and Line', icon: '🪢',
-    slot: 'tool', bonus: { mind: 1, defense: 1 }, bestFor: CLASSES.ROGUE,
-    text: 'Forty feet of good rope. Pits become options; a shaft becomes a stairway.',
-  },
-  {
-    id: 'eq-tinderbox', type: CARD_TYPES.EQUIPMENT, name: 'Alchemist\'s Tinderbox', icon: '🔥',
-    slot: 'tool', bonus: { attack: 1, mind: 1 }, bestFor: CLASSES.ALCHEMIST,
-    text: 'Lights braziers, shelves, and anything else the room has generously left flammable.',
-  },
-  {
-    id: 'eq-winch-hook', type: CARD_TYPES.EQUIPMENT, name: 'Winch Hook', icon: '⚓',
-    slot: 'tool', bonus: { attack: 2 }, bestFor: CLASSES.ROGUE,
-    text: 'For chains, cranks and portcullises. Whatever the dungeon raised can be dropped.',
-  },
-  {
-    id: 'eq-smiths-kit', type: CARD_TYPES.EQUIPMENT, name: 'Field Smith\'s Kit', icon: '🔨',
-    slot: 'tool', bonus: { attack: 1, defense: 1 }, bestFor: CLASSES.FIGHTER,
-    text: 'Hammer, file, flux. Useless in a corridor; worth a sword at an anvil.',
-  },
-  {
-    id: 'eq-waterskin', type: CARD_TYPES.EQUIPMENT, name: 'Great Waterskin', icon: '🫗',
-    slot: 'tool', bonus: { defense: 1, mind: 1 }, bestFor: null,
-    text: 'Holds four days. Wounds get washed, venom gets flushed, fonts get emptied.',
-  },
   {
     id: 'eq-silvered-mirror', type: CARD_TYPES.EQUIPMENT, name: 'Silvered Hand-Mirror', icon: '🪞',
     slot: 'focus', bonus: { mind: 2 }, bestFor: CLASSES.CLERIC,
-    text: 'Shows what is standing there rather than what wants to be seen.',
-  },
-
-  // Trap cards: cursed gear with hidden upsides. They look like
-  // mistakes in the pack and play like gambles at the table.
-  {
-    id: 'eq-cursed-blade', type: CARD_TYPES.EQUIPMENT, name: 'Blade of the Adder', icon: '🐍',
-    slot: 'weapon', bonus: { attack: 4, defense: -2 }, bestFor: CLASSES.FIGHTER, cursed: true,
-    text: 'It whispers where to cut. It is usually right. It never says about what. Its bearer has lived with venom long enough that the party shrugs off the venomous.',
+    text: 'Shows what is standing there rather than what wants to be seen. Whoever carries it can scry as a diviner scries.',
+    capabilities: ['divination'],
   },
   {
     id: 'eq-haunted-armor', type: CARD_TYPES.EQUIPMENT, name: 'Haunted Armor', icon: '👻',
-    slot: 'armor', bonus: { defense: 3, mind: -1 }, bestFor: CLASSES.FIGHTER, cursed: true,
+    slot: 'armor', bonus: { defense: 3, mind: -1 }, bestFor: CLASSES.FIGHTER, cursed: true, capabilities: ['conjuring'],
     text: 'A chill down the spine — but the resident ghost hates monsters more than it hates you.',
     classActions: {
       [CLASSES.FIGHTER]: { name: 'The Ghost Objects', summonAttack: 1 },
@@ -184,6 +121,35 @@ export const EQUIPMENT_CARDS = [
       [CLASSES.WIZARD]: { name: 'The Ghost Objects', summonAttack: 1 },
       [CLASSES.ROGUE]: { name: 'The Ghost Objects', summonAttack: 1 },
       [CLASSES.ALCHEMIST]: { name: 'The Ghost Objects', summonAttack: 1 },
+    },
+  },
+  {
+    id: 'eq-astrolabe', type: CARD_TYPES.EQUIPMENT, name: 'Brass Astrolabe', icon: '🔭',
+    slot: 'tool', bonus: { mind: 2 }, bestFor: CLASSES.CLERIC,
+    text: 'The heavens folded flat and turned by hand. Whoever carries it reads the sky as an astrologer reads it.',
+    capabilities: ['astrology'],
+  },
+  {
+    id: 'eq-emblem-book', type: CARD_TYPES.EQUIPMENT, name: 'Book of Emblems', icon: '📕',
+    slot: 'focus', bonus: { mind: 2 }, bestFor: CLASSES.WIZARD,
+    text: 'Fifty pictures and fifty fugues, all making one argument. Everything answers to everything, and whoever carries it can work those answers.',
+    capabilities: ['correspondence'],
+  },
+  {
+    id: 'eq-grapple', type: CARD_TYPES.EQUIPMENT, name: 'Grapple and Line', icon: '🪢',
+    slot: 'tool', bonus: { mind: 1, defense: 1 }, bestFor: CLASSES.ROGUE,
+    text: 'Forty feet of good rope. Pits become options; a shaft becomes a stairway.',
+  },
+  {
+    id: 'eq-wand-embers', type: CARD_TYPES.EQUIPMENT, name: 'Wand of Embers', icon: '🪄',
+    slot: 'focus', bonus: { mind: 1 }, bestFor: CLASSES.WIZARD,
+    text: 'Warm to any hand. What comes out depends on whose.',
+    classActions: {
+      [CLASSES.FIGHTER]: { name: 'Ember Shot', opening: 4 },
+      [CLASSES.WIZARD]: { name: 'Meteor Fall', opening: 8 },
+      [CLASSES.CLERIC]: { name: 'Flame Ward', ward: 1 },
+      [CLASSES.ROGUE]: { name: 'Smoke Veil', ward: 1 },
+      [CLASSES.ALCHEMIST]: { name: 'Accelerant Charge', opening: 5 },
     },
   },
 ];
@@ -195,24 +161,15 @@ export const EQUIPMENT_CARDS = [
 export const SPELL_CARDS = [
   { id: 'sp-firebolt', type: CARD_TYPES.SPELL, name: 'Firebolt', icon: '🔥', school: 'evocation', element: 'fire', power: 4, use: 'combat', text: 'Opens combat with 4 damage before blades are drawn, and goes on burning while the fight lasts.' },
   { id: 'sp-mend', type: CARD_TYPES.SPELL, name: 'Mending Word', icon: '💚', school: 'restoration', power: 5, use: 'heal', text: 'Restores 5 health to the most wounded companion the moment the fight turns against them, then keeps mending while it holds.' },
-  { id: 'sp-knock', type: CARD_TYPES.SPELL, name: 'Knock', icon: '🚪', school: 'transmutation', power: 3, use: 'utility', text: 'Opens any lock. Loudly.' },
-  { id: 'sp-shield', type: CARD_TYPES.SPELL, name: 'Aegis of Ash', icon: '🛡️', school: 'abjuration', power: 3, use: 'combat', text: 'Blunts every blow of the fight, not just the first.' },
   { id: 'sp-light', type: CARD_TYPES.SPELL, name: 'Dancing Light', icon: '💡', school: 'evocation', power: 2, use: 'utility', text: 'Reveals traps and ambushes in the next room — and once the oil is gone, carries the party through a march of dark for free.' },
+  { id: 'sp-knock', type: CARD_TYPES.SPELL, name: 'Knock', icon: '🚪', school: 'transmutation', power: 3, use: 'utility', text: 'Opens any lock. Loudly.' },
   { id: 'sp-fear', type: CARD_TYPES.SPELL, name: 'Cause Fear', icon: '😱', school: 'necromancy', power: 4, use: 'combat', text: 'Weak monsters flee before the fight begins.' },
-  { id: 'sp-chain', type: CARD_TYPES.SPELL, name: 'Chain Lightning', icon: '⚡', school: 'evocation', element: 'shock', power: 5, use: 'combat', aoe: true, text: 'Arcs from foe to foe until it runs out of foes or enthusiasm — and through anything wet or metal on the way.' },
+  { id: 'sp-shatter', type: CARD_TYPES.SPELL, name: 'Shatter', icon: '🪨', school: 'transmutation', element: 'frost', power: 4, use: 'combat', aoe: true, text: 'Stone remembers being loose, and cold reminds it. Pillars, boulders and bad ceilings all listen.' },
   { id: 'sp-frost', type: CARD_TYPES.SPELL, name: 'Frost Lance', icon: '❄️', school: 'evocation', element: 'frost', power: 5, use: 'combat', text: 'Cold, precise, and deeply personal.' },
   { id: 'sp-sunder', type: CARD_TYPES.SPELL, name: 'Sunder', icon: '💢', school: 'transmutation', power: 4, use: 'combat', text: 'Armor remembers being ore. This spell reminds it, and plate stops turning blows for the rest of the fight.' },
-  { id: 'sp-radiance', type: CARD_TYPES.SPELL, name: 'Radiant Lance', icon: '🌟', school: 'theurgy', element: 'holy', power: 4, use: 'combat', text: 'A line of noon driven through whatever the dark is wearing.' },
-  { id: 'sp-balm', type: CARD_TYPES.SPELL, name: 'Balm of Hours', icon: '🌾', school: 'restoration', power: 6, use: 'heal', text: 'Borrows healing from a quieter week and spends it mid-fight, then goes on spending.' },
   { id: 'sp-eyes', type: CARD_TYPES.SPELL, name: 'Eyes of the Mouse', icon: '👁️', school: 'divination', power: 2, use: 'utility', text: 'See what the small and cautious see. It is a lot, and it is just as much in the dark: the party never pays what the dark charges.', capabilities: ['divination'] },
   { id: 'sp-feather', type: CARD_TYPES.SPELL, name: 'Feather Step', icon: '🪶', school: 'transmutation', power: 3, use: 'utility', text: 'The floor agrees to pretend nobody is on it: 3 less damage from anything underfoot, and no stumbling in the dark.' },
-
-  // Workings that read the room: each one turns a piece of a furnished
-  // chamber into a weapon or a resource (world/RoomFeatures.js)
-  { id: 'sp-shatter', type: CARD_TYPES.SPELL, name: 'Shatter', icon: '🪨', school: 'transmutation', element: 'frost', power: 4, use: 'combat', aoe: true, text: 'Stone remembers being loose, and cold reminds it. Pillars, boulders and bad ceilings all listen.' },
-  { id: 'sp-kindle', type: CARD_TYPES.SPELL, name: 'Kindle', icon: '🕯️', school: 'evocation', element: 'fire', power: 3, use: 'combat', aoe: true, text: 'Lights any fire in the room from across it — braziers, crates, shelves, and whatever is standing near one.' },
   { id: 'sp-fireball', type: CARD_TYPES.SPELL, name: 'Fireball', icon: '🔥', school: 'evocation', element: 'fire', power: 5, use: 'combat', aoe: true, text: 'It does not stop at the monster. Whatever else in the room will burn, burns.' },
-  { id: 'sp-hoarfrost', type: CARD_TYPES.SPELL, name: 'Hoarfrost', icon: '🧊', school: 'evocation', element: 'frost', power: 4, use: 'combat', aoe: true, text: 'The cold goes everywhere at once: into the water, into the fire, into the cracks in the stone.' },
   { id: 'sp-dawnbreak', type: CARD_TYPES.SPELL, name: 'Dawnbreak', icon: '🌟', school: 'theurgy', element: 'holy', power: 4, use: 'combat', aoe: true, text: 'Noon, indoors, all at once. Old stone and old glass both answer it.', capabilities: ['correspondence'] },
   { id: 'sp-purify', type: CARD_TYPES.SPELL, name: 'Purify the Font', icon: '⛲', school: 'theurgy', power: 4, use: 'heal', text: 'Still water, said over and made willing — poured out when someone is failing, and again each round after. Best where the dungeon left a font.', capabilities: ['rhetoric', 'medicine'] },
 ];
@@ -236,8 +193,6 @@ export const PERSONALITY_CARDS = [
   // alchemy pack's Hermetic set the precedent) so the barks and
   // deliberation voices stay fully covered per class — the new name is
   // a new *lens* on the same decision weights.
-  { id: 'pers-tinkerer', type: CARD_TYPES.PERSONALITY, name: 'The Tinkerer', icon: '🔧', archetype: 'cunning', text: 'Touches everything in the room: the chain, the lid, the lever. Uses the architecture as a weapon.' },
-  { id: 'pers-vandal', type: CARD_TYPES.PERSONALITY, name: 'The Vandal', icon: '🪓', archetype: 'reckless', text: 'If a thing in the room can be toppled, burned, or dropped on someone, it will be.' },
 ];
 
 /**

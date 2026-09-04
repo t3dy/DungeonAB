@@ -353,7 +353,7 @@ export class Party {
     for (const m of [...this.members, ...this.reserve]) {
       // Armour stacks on temper: dwarven mail takes the worst of a blow,
       // so fewer of them cross the line into a lasting scar
-      const armoured = m.equipment.some(e => e.id === 'eq-chainmail') ? 0.3 : 0;
+      const armoured = 0;
       m.woundBias = bias + armoured;
     }
     return bias;

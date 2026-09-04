@@ -214,7 +214,7 @@ export const FEATURE_ACTIONS = {
   },
   'shove-into-brazier': {
     feature: 'brazier', name: 'Shove It Into the Fire', desc: 'The brazier is right there',
-    gates: [{ cls: CLASSES.FIGHTER }, { item: 'eq-tinderbox' }, { spell: 'sp-kindle' }],
+    gates: [{ cls: CLASSES.FIGHTER }, { item: 'eq-athanor-charm' }],
     fightOnly: true, openerDamage: 10, element: 'fire',
     // With an accelerant the brazier stops being a brazier
     tool: { openerDamage: 16 },
@@ -222,7 +222,7 @@ export const FEATURE_ACTIONS = {
   },
   'drop-portcullis': {
     feature: 'portcullis', name: 'Drop the Portcullis', desc: 'Cut the room in half on top of it',
-    gates: [{ cls: CLASSES.ROGUE }, { item: 'eq-winch-hook' }],
+    gates: [{ cls: CLASSES.ROGUE }, { item: 'eq-grapple' }],
     fightOnly: true, openerDamage: 6,
     // The hook releases the whole chain at once, from cover
     tool: { openerDamage: 14 },
@@ -238,7 +238,7 @@ export const FEATURE_ACTIONS = {
   },
   'pry-sarcophagus': {
     feature: 'sarcophagus', name: 'Pry the Lid', desc: 'Grave goods, and whatever else',
-    gates: [{ item: 'eq-prybar' }, { cls: CLASSES.ROGUE }],
+    gates: [{ cls: CLASSES.ROGUE }, { item: 'eq-greatsword' }],
     gold: 20, wakesDead: true,
     // Proper leverage opens it cleanly: more of the goods, and the lid
     // comes off in one piece instead of three noisy ones
@@ -254,13 +254,13 @@ export const FEATURE_ACTIONS = {
   },
   'fill-waterskins': {
     feature: 'font', name: 'Fill the Waterskins', desc: 'Cold water, and a wash for the wounds',
-    gates: [{ item: 'eq-waterskin' }],
+    gates: [{ cls: CLASSES.CLERIC }, { cls: CLASSES.ALCHEMIST }, { spell: 'sp-purify' }],
     heal: 3, curesLinger: true,
     weights: { cunning: 2, craven: 1.5 },
   },
   'harvest-spout': {
     feature: 'spout', name: 'Harvest the Drip', desc: 'Whatever that is, it is a reagent',
-    gates: [{ cls: CLASSES.ALCHEMIST }, { item: 'eq-waterskin' }],
+    gates: [{ cls: CLASSES.ALCHEMIST }, { item: 'eq-alembic' }],
     gold: 8,
     // Something to put it in changes how much you can take
     tool: { gold: 20 },
@@ -268,7 +268,7 @@ export const FEATURE_ACTIONS = {
   },
   'sift-rubble': {
     feature: 'rubble', name: 'Sift the Rubble', desc: 'Salts and oddments in the broken stone',
-    gates: [{ cls: CLASSES.ALCHEMIST }, { item: 'eq-prybar' }],
+    gates: [{ cls: CLASSES.ALCHEMIST }, { item: 'eq-grapple' }],
     gold: 13,
     // Levering the slabs up reaches what is under them
     tool: { gold: 40 },
@@ -276,7 +276,7 @@ export const FEATURE_ACTIONS = {
   },
   'crack-crates': {
     feature: 'crates', name: 'Crack the Crates', desc: 'Somebody else\'s supplies',
-    gates: [{ item: 'eq-prybar' }, { cls: CLASSES.ROGUE }],
+    gates: [{ cls: CLASSES.ROGUE }, { item: 'eq-lockpicks' }],
     gold: 20,
     // A prybar opens every crate in the stack, not just the loose one
     tool: { gold: 55 },
@@ -285,7 +285,7 @@ export const FEATURE_ACTIONS = {
   'work-the-anvil': {
     feature: 'anvil', name: 'Work the Anvil', desc: 'Put an edge back on something',
     // Tool-only: an anvil without hammer, file and flux is a heavy table
-    gates: [{ item: 'eq-smiths-kit' }],
+    gates: [{ cls: CLASSES.FIGHTER }, { cls: CLASSES.ALCHEMIST }, { item: 'eq-athanor-charm' }],
     weaponMod: { name: 'anvil-set edge', attack: 3 },
     weights: { brave: 2, cunning: 1.5, scholarly: 1 },
   },

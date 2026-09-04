@@ -1880,3 +1880,53 @@ traditions` to scholarship, `compute-epicycles` and `make-it-a-melee`
 (both duplicating another option's tag in their own room) were cut. The
 lesson for the deferred card-pool compression: a vocabulary merge is
 also an encounter-option merge, and the prose gate is the alarm.
+
+## §U. v8.1 — the card pool, compressed toward the traditions
+
+83 cards became 52 across the v8 line; this pass took equipment 24→16,
+spells 19→13, personalities 9→7, and kept all 16 magi. The constraint
+was not a number but a shape: **the leaner pool must still let a player
+draft toward a distinct school of Renaissance magic.**
+
+Five traditions, each a capability cluster the pool supports end to end:
+
+| tradition | signature capabilities | kit anchors | plays like |
+|---|---|---|---|
+| **Astral** | astrology · divination · conjuring | astrolabe, silvered mirror | foreknowledge; 64% |
+| **Alchemical** | alchemy · medicine · tinkering | alembic, athanor, holy symbol | matter and bodies; 50% |
+| **Ceremonial** | conjuring · correspondence · rhetoric | haunted armour, emblem book, mace | summon and treat; 52% |
+| **Cabalist** | scholarship · divination · roguery | grimoire, mirror, lockpicks | texts and hidden ways; 39% |
+| **Harmonic** | correspondence · scholarship · medicine | emblem book, grimoire, holy symbol | sympathies; 43% |
+
+(Win rates are pure four-magus parties with no kit — deliberately
+handicapped, to show the traditions differ before any equipment. They
+differ in *profile* as much as strength: astral survives by reading the
+dungeon ahead, cabalist scores through situations rather than fights.)
+
+The design principle that made 16 equipment enough: **each of the twelve
+capabilities gets exactly one kit patch, and each patch anchors a
+tradition.** So a party committed to the astral school whose astrology
+magi get drafted away can still buy the astrolabe; a ceremonial party
+short a summoner can buy the haunted armour. Every strategy is
+draft-robust, not luck-dependent. Two new cards were authored for the
+two traditions that lacked kit — the Brass Astrolabe (astrology) and the
+Book of Emblems (correspondence) — and two existing cards retagged to
+their obvious capability: the Silvered Hand-Mirror scries (divination),
+the Haunted Armour summons (conjuring).
+
+What was cut was redundancy, not variety: duplicate openers, duplicate
+defensive armour, duplicate hazard tools, and the archetype-alias
+personalities. What was kept past the round-number target was mechanical
+distinctness — the Wand of Embers (an item whose power depends on who
+holds it, the purest "the tool serves the magus" card in the pool), the
+class-varying openers, the summon, the fire coating, the grapple that
+turns a pit into a decision.
+
+The trap this pass re-taught, twice: a vocabulary or pool cut is also a
+test cut. Eleven suites broke, every one of them either a fixture
+pointing at a removed card or a design assertion whose subject was gone
+(tool-only interactions, the class-varying wand's cursed sibling). The
+prose gate caught two more starved options where a merge had left two
+cards asking for the same capability in one room. The gates did their
+job; the fix was always to update the fixture or delete the obsolete
+assertion, never to weaken the rule.

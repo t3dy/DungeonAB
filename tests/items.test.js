@@ -125,37 +125,6 @@ describe('Class-keyed items in combat', () => {
   });
 });
 
-describe('Trap cards — cursed gear with hidden upsides', () => {
-  const cursedBlade = EQUIPMENT_CARDS.find(e => e.id === 'eq-cursed-blade');
-  const hauntedArmor = EQUIPMENT_CARDS.find(e => e.id === 'eq-haunted-armor');
-
-  test('the Blade of the Adder trades defense for teeth', () => {
-    const bare = new Party([fighter]).members[0];
-    const armed = new Party([fighter, cursedBlade]).members[0];
-    assert.equal(armed.attack, bare.attack + 4, 'the whisper is worth +4');
-    assert.equal(armed.defense, bare.defense - 2, 'and costs -2 to hear');
-  });
-
-  test('the Haunted Armor\'s ghost fights alongside any class', () => {
-    for (const character of [fighter, wizard, cleric]) {
-      const party = new Party([character, hauntedArmor]);
-      const actions = party.combatItemActions();
-      assert.ok(actions.some(a => a.name === 'The Ghost Objects' && a.summonAttack === 1),
-        `the ghost objects for a ${character.class}`);
-    }
-  });
-
-  test('AI drafters flinch from the curse (trap picks wheel to the player)', () => {
-    const warlord = DRAFT_PERSONAS.find(p => p.id === 'warlord');
-    const greatsword = EQUIPMENT_CARDS.find(e => e.id === 'eq-greatsword');
-    const pool = [fighter]; // both items are bestFor a fighter the AI has
-    const flatRng = { next: () => 0 };
-    const cleanScore = scoreCard(greatsword, warlord, pool, flatRng);
-    const cursedScore = scoreCard(cursedBlade, warlord, pool, flatRng);
-    assert.ok(cursedScore < cleanScore,
-      `the curse reads as a downside to the AI (${cursedScore} < ${cleanScore})`);
-  });
-});
 
 function test(name, fn) {
   try {

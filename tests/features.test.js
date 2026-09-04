@@ -20,6 +20,8 @@ import {
   getRoomOptions, getFeatureOptions, resolveRoomAction, decideRoomAction,
 } from '../src/encounters/RoomEncounters.js';
 import { composePredicament, composeDeliberation, composeResolution } from '../src/narrative/Narrator.js';
+import { allEncounters } from '../src/encounters/EncounterEngine.js';
+import '../src/encounters/Encounters.js';
 import { getFeatureTile } from '../src/ui/SpriteAtlas.js';
 import { featureSlots, roomHalf, partySlots, monsterSpot } from '../src/ui/RoomLayout.js';
 import { validateCard } from '../src/game/CardPacks.js';
@@ -279,7 +281,7 @@ describe('Using the room changes the fight', () => {
 
   test('the resource uses pay out, and the sarcophagus can bite', () => {
     const party = new Party([fighter, alchemist, wizard]);
-    party.assignEquipment({ ...EQUIPMENT_CARDS.find(e => e.id === 'eq-prybar') });
+    party.assignEquipment({ ...EQUIPMENT_CARDS.find(e => e.id === 'eq-lockpicks') });
 
     const crates = furnished(ROOM_TYPES.TREASURE, ['crates']);
     const goldBefore = party.gold;
@@ -433,16 +435,6 @@ describe('Tools upgrade the interaction, they do not merely unlock it', () => {
     assert.ok(tiered >= 8, `most interactions are tiered (${tiered})`);
   });
 
-  test('a tool-only interaction is closed to a party without the tool', () => {
-    const room = furnished(ROOM_TYPES.LAB, ['anvil']);
-    const bare = new Party([fighter, alchemist]);   // a fighter is not a smith
-    assert.equal(getFeatureOptions(room, bare).length, 0,
-      'an anvil without hammer, file and flux is a heavy table');
-
-    const smith = new Party([fighter, alchemist]);
-    smith.assignEquipment({ ...getCard('eq-smiths-kit') });
-    assert.ok(getFeatureOptions(room, smith).some(o => o.id === 'work-the-anvil'));
-  });
 
   test('the prybar opens a sarcophagus without waking the occupant', () => {
     const realRandom = Math.random;
@@ -454,7 +446,7 @@ describe('Tools upgrade the interaction, they do not merely unlock it', () => {
       assert.equal(rough.wokeDead, true, 'bare hands crack the lid');
 
       const withBar = new Party([rogue]);
-      withBar.assignEquipment({ ...getCard('eq-prybar') });
+      withBar.assignEquipment({ ...getCard('eq-greatsword') });
       const tomb2 = furnished(ROOM_TYPES.SHRINE, ['sarcophagus']);
       const clean = resolveRoomAction(tomb2, withBar, 'pry-sarcophagus');
       assert.equal(clean.wokeDead, false, 'leverage lifts it quietly');
@@ -467,10 +459,7 @@ describe('Tools upgrade the interaction, they do not merely unlock it', () => {
 
 describe('The new cards', () => {
   const NEW_IDS = [
-    'eq-prybar', 'eq-grapple', 'eq-tinderbox', 'eq-winch-hook',
-    'eq-smiths-kit', 'eq-waterskin', 'eq-silvered-mirror',
-    'sp-shatter', 'sp-kindle', 'sp-purify',
-    'pers-tinkerer', 'pers-vandal',
+    'eq-astrolabe', 'eq-emblem-book', 'eq-silvered-mirror', 'eq-haunted-armor',
   ];
 
   test('all of them exist and pass card validation', () => {
@@ -482,13 +471,17 @@ describe('The new cards', () => {
     }
   });
 
-  test('every feature tool actually unlocks something', () => {
-    const toolIds = NEW_IDS.filter(id => id.startsWith('eq-') || id.startsWith('sp-'));
-    const gated = new Set(
-      Object.values(FEATURE_ACTIONS).flatMap(a => a.gates.map(g => g.item || g.spell)).filter(Boolean),
-    );
-    const unused = toolIds.filter(id => !gated.has(id) && id !== 'eq-silvered-mirror');
-    assert.deepEqual(unused, [], `every new tool opens a feature interaction (${unused.join(', ')})`);
+  test('every new capability card grants a capability an encounter asks for', () => {
+    // v8.1: the additions are capability cards (astral, harmonic,
+    // scrying, summoning), not hazard tools — they open encounter
+    // options, not room features. A patch nobody asks for is dead kit.
+    const asked = new Set();
+    for (const def of allEncounters()) for (const o of def.options) for (const c of o.requires || []) asked.add(c);
+    for (const id of NEW_IDS.filter(x => x.startsWith('eq-'))) {
+      const caps = getCard(id).capabilities || [];
+      assert.ok(caps.length >= 1, `${id} grants a capability`);
+      assert.ok(caps.every(c => asked.has(c)), `${id}'s capability is asked by some encounter`);
+    }
   });
 
   test('the Silvered Hand-Mirror is the portable version of the room feature', () => {
@@ -510,21 +503,13 @@ describe('The new cards', () => {
       'and the chronicle credits the card');
   });
 
-  test('the feature personalities reuse proven archetypes', () => {
-    const archetypes = new Set(PERSONALITY_CARDS.map(p => p.archetype));
-    for (const id of ['pers-tinkerer', 'pers-vandal']) {
-      const card = getCard(id);
-      assert.ok(archetypes.has(card.archetype),
-        `${id} reuses an archetype with weights, voices and barks`);
-    }
-  });
 
-  test('the Vandal reaches for the furniture more than a plain party', () => {
+  test('a reckless party reaches for the furniture more than a plain one', () => {
     const realRandom = Math.random;
     Math.random = () => 0.5;
     try {
       const room = furnished(ROOM_TYPES.MONSTER, ['boulder']);
-      const vandalParty = new Party([fighter, PERSONALITY_CARDS.find(p => p.id === 'pers-vandal')]);
+      const vandalParty = new Party([fighter, PERSONALITY_CARDS.find(p => p.archetype === 'reckless')]);
       const plainParty = new Party([fighter]);
       // The Vandal's reckless weights push the boulder option up the list
       const vandalPick = decideRoomAction(room, vandalParty);

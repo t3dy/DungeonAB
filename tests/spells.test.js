@@ -75,8 +75,8 @@ describe('A working holds', () => {
       }
       return total / trials;
     };
-    const weak = meanDamage('sp-shield');    // power 3
-    const strong = meanDamage('sp-chain');   // power 5
+    const weak = meanDamage('sp-firebolt');  // power 4
+    const strong = meanDamage('sp-frost');   // power 5
     assert.ok(strong > weak,
       `the stronger working does more over the fight (${strong.toFixed(1)} > ${weak.toFixed(1)})`);
   });
@@ -85,7 +85,7 @@ describe('A working holds', () => {
 describe('At the throne the party holds nothing back', () => {
   test('an ordinary room rations the grimoire; a boss empties it', () => {
     const three = () => [byClass('fighter'), byClass('rogue'),
-      sp('sp-firebolt'), sp('sp-frost'), sp('sp-chain')];
+      sp('sp-firebolt'), sp('sp-frost'), sp('sp-fireball')];
 
     const ordinary = new Party(three());
     const inRoom = resolveRoomAction(bruiser(), ordinary, 'spell-strike');
@@ -115,7 +115,7 @@ describe('At the throne the party holds nothing back', () => {
 
   test('utility and healing workings are not spent as strikes', () => {
     const party = new Party([byClass('fighter'),
-      sp('sp-firebolt'), sp('sp-knock'), sp('sp-light')]);
+      sp('sp-firebolt'), sp('sp-knock'), sp('sp-eyes')]);
     const result = resolveRoomAction(throne(), party, 'spell-strike');
     assert.deepEqual(result.spellsCast, ['Firebolt'],
       'only combat workings are loosed at the foe');
@@ -243,7 +243,7 @@ describe('A healing working fires when it is needed, not after', () => {
       return { left, survival: survived.reduce((s, v) => s + v, 0) / survived.length };
     };
     const bare = outcome([]);
-    const healed = outcome(['sp-mend', 'sp-balm']);
+    const healed = outcome(['sp-mend', 'sp-purify']);
 
     const { a, b } = armsDiffer(healed.left, bare.left, {
       label: 'healing workings against none',

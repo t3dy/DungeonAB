@@ -46,12 +46,12 @@ describe('Kit goes where the player puts it', () => {
 
   test('one piece per slot: a displaced piece goes back, never vanishes', () => {
     const party = new Party([fighter, wizard,
-      getCard('eq-tower-shield'), getCard('eq-chainmail')]);
+      getCard('eq-tower-shield'), getCard('eq-haunted-armor')]);
     const before = allKit(party);
     const w = party.members.find(m => m.class === CLASSES.WIZARD);
 
     party.equipTo('eq-tower-shield', w.name);
-    party.equipTo('eq-chainmail', w.name);      // both are armor
+    party.equipTo('eq-haunted-armor', w.name);   // both are armor
 
     const armorOn = w.equipment.filter(e => e.slot === 'armor');
     assert.equal(armorOn.length, 1, 'nobody wears two suits of armor');

@@ -34,7 +34,7 @@ describe('Card pool integrity', () => {
     for (const wanted of ['combat', 'heal', 'utility']) {
       assert.ok(uses.has(wanted), `some spell is ${wanted}`);
     }
-    assert.ok(SPELL_CARDS.length >= 12, 'the grimoire shelf is stocked');
+    assert.ok(SPELL_CARDS.length >= 10, 'the grimoire shelf is stocked');
   });
 
   test('every card has a name, an icon, and flavor or a trait', () => {

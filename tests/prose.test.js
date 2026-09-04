@@ -129,7 +129,7 @@ describe('The line says the number the mechanic applied', () => {
     // that never happened.
     const party = new Party([
       byClassName('fighter'), byClassName('rogue'),
-      getCard('eq-throwing-knives'), getCard('sp-fireball'),
+      getCard('eq-wand-embers'), getCard('sp-fireball'),
     ]);
     const room = {
       type: 'monster', icon: '👹',
@@ -225,7 +225,7 @@ describe('Every line can actually be reached', () => {
     // Prose can exist, pass a coverage test, and never be printed by any
     // run — writing for a branch nobody takes.
     const seen = new Set();
-    for (let i = 0; i < 30; i++) {
+    for (let i = 0; i < 80; i++) {
       for (const line of transcript(`reach-${i}`, i % 2 ? 'hard' : 'nightmare')) {
         if (/oil for \d+ more|wick is well down|checks the reservoir/i.test(line)) seen.add('low');
         if (/last of the oil|flame stands up|lantern dies/i.test(line)) seen.add('guttered');
@@ -244,7 +244,7 @@ describe('Every line can actually be reached', () => {
     // deliberation naming a raw id is the writing failing silently.
     const phrased = new Set(phrasedOptions());
     const missing = new Set();
-    for (let i = 0; i < 30; i++) {
+    for (let i = 0; i < 80; i++) {
       const seed = `phrase-${i}`;
       const pool = new SeededRandom(seed).shuffle(getAllCards()).slice(0, 27);
       const sim = new Simulator(pool, seed, i % 2 ? 'hard' : 'medium');

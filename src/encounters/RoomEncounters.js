@@ -81,10 +81,6 @@ export function getPreparationBonuses(party) {
     cleanInspect: false,
     notes: {},   // bonus key → the card that earned it (for the writing)
   };
-  if (hasItem(party, 'eq-boots')) {
-    b.sneak += 1.5;
-    b.notes.sneak = 'Boots of the Quiet Step';
-  }
   if (hasSpell(party, 'sp-light')) {
     b.sneak += 1;
     b.notes.sneakLight = 'Dancing Light';

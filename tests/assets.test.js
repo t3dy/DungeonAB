@@ -118,42 +118,6 @@ describe('A temper has an opinion about the march', () => {
   });
 });
 
-describe('The reworked kit has a job', () => {
-  test('dwarven mail makes a blow less likely to leave a scar', () => {
-    const wounds = mail => {
-      const cards = [byClass('fighter'), ...(mail ? [getCard('eq-chainmail')] : [])];
-      const party = new Party(cards);
-      const m = party.members[0];
-      m.takeDamage(Math.ceil(m.maxHealth * 0.28));
-      return m.wounds;
-    };
-    assert.equal(wounds(false), 1, 'a bare fighter scars');
-    assert.equal(wounds(true), 0, 'an armoured one does not');
-  });
-
-  test('kit assigned after muster still reaches the wearer', () => {
-    // Equipment is assigned after the temper is first applied, so the
-    // mail has to re-apply when it finds a wearer -- it did not, at first.
-    const party = new Party([byClass('fighter'), pers('reckless'), getCard('eq-chainmail')]);
-    const wearer = party.members.find(m => m.equipment.some(e => e.id === 'eq-chainmail'));
-    assert.ok(wearer, 'somebody is wearing it');
-    assert.ok(wearer.woundBias > personalityModifiers(party).wound,
-      'and the armour counts on top of the temper');
-  });
-
-  test('the reworked items all say what they now do', () => {
-    for (const id of ['eq-alembic', 'eq-chainmail', 'eq-warded-buckler', 'eq-athanor-charm']) {
-      const card = getCard(id);
-      assert.ok(card, `${id} exists`);
-      assert.ok(card.text.length > 60, `${card.name} explains its new job`);
-    }
-    // v8: the oil-cooking promise went with the alchemy economy
-    assert.match(getCard('eq-alembic').text, /alchemist|laboratory/i);
-    assert.match(getCard('eq-chainmail').text, /scar/i);
-    assert.match(getCard('eq-warded-buckler').text, /come back on them/i);
-    assert.match(getCard('eq-athanor-charm').text, /alight|burn/i);
-  });
-});
 
 describe('The drift audit is honest about what it finds', () => {
   test('personalities are no longer inert', () => {

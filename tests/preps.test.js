@@ -28,16 +28,16 @@ describe('Preparation bonuses (one inspectable place)', () => {
 
     const loaded = getPreparationBonuses(new Party([
       byClass('rogue'), byClass('wizard'), byClass('cleric'),
-      eq('eq-boots'), eq('eq-lockpicks'), eq('eq-grimoire'), eq('eq-lantern'),
+      eq('eq-quicksilver-daggers'), eq('eq-lockpicks'), eq('eq-grimoire'), eq('eq-lantern'),
       sp('sp-light'),
     ]));
-    assert.equal(loaded.sneak, 2.5, 'boots + dancing light');
+    assert.equal(loaded.sneak, 1, 'dancing light');
     assert.equal(loaded.disarm, 1.5, 'lockpicks');
     assert.equal(loaded.deepStudy, 1.5, 'the whispering grimoire');
     assert.equal(loaded.secretDoor, 2, 'the lantern');
     assert.equal(loaded.trapSoak, 1, 'the lantern');
     assert.equal(loaded.cleanInspect, true);
-    assert.ok(Object.keys(loaded.notes).length >= 5, 'every bonus names its card');
+    assert.ok(Object.keys(loaded.notes).length >= 4, 'every bonus names its card');
   });
 
   test('the lantern finds doors a bare party walks past', () => {

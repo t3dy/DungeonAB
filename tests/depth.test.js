@@ -120,7 +120,7 @@ describe('Elemental spellcasting', () => {
   });
 
   test('Radiant Lance exists for the cleric\'s war', () => {
-    const lance = sp('sp-radiance');
+    const lance = sp('sp-dawnbreak');
     assert.ok(lance && lance.element === 'holy' && lance.use === 'combat');
     assert.equal(elementMult(lance, { undead: true }), 1.5);
   });
@@ -243,7 +243,7 @@ describe('Finds — treasure beyond coin', () => {
 
   test('a full crawl with all systems live still concludes', () => {
     for (const theme of ['castle', 'icecaverns', 'delve']) {
-      const sim = new Simulator([fighters[0], byClass('cleric'), byClass('wizard'), sp('sp-frost'), sp('sp-radiance')], `depth-${theme}`, 'easy', { theme });
+      const sim = new Simulator([fighters[0], byClass('cleric'), byClass('wizard'), sp('sp-frost'), sp('sp-dawnbreak')], `depth-${theme}`, 'easy', { theme });
       let guard = 0;
       while (!sim.gameOver && guard++ < 80) sim.tick();
       assert.ok(sim.gameOver, `${theme} concludes`);
