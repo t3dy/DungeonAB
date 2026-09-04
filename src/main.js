@@ -384,6 +384,9 @@ function runCapture(req) {
       appState.gameRunning = false;              // no timer; we step by hand
       const state = tickToRoom(sim, req.room);
       appState.renderer.render(state);
+      // render() eases the camera toward the room; a capture wants it
+      // there, not on its way (IsoDungeonRenderer.snapCamera).
+      appState.renderer.snapCamera?.();
       updateUI(state);
       markReady(state, req);
     },

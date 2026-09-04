@@ -27,8 +27,29 @@ import {
 // Rooms are half again as big as they were, and a fixed wide view drew
 // four adventurers as six pixels each — which is no good to anyone
 // trying to read where the party is standing.
-const VIEW_HALF = 7;
+const VIEW_HALF = 6.2;
 const CAM_BACK = 26;        // how far back the iso eye sits
+
+/**
+ * How high the eye rides, as a multiple of CAM_BACK.
+ *
+ * For a camera at 45° azimuth, a ground tile projects to a diamond whose
+ * height-to-width ratio is exactly sin(elevation): the diamond is √2
+ * wide and √2·sinθ tall. Ultima VII and VIII use the 2:1 convention — a
+ * tile twice as wide as it is tall — which needs sin θ = 0.5, θ = 30°.
+ *
+ *   y = CAM_BACK·k,  ground run = CAM_BACK·√2,  tan 30° = k/√2
+ *   → k = √2 · tan 30° = 0.8165
+ *
+ * This was 1.05 from v1.0 to v8.1: θ = 36.6°, a 1.68:1 diamond, which is
+ * near true isometric — the SimCity eye, looking down at the floor. The
+ * flatter Ultima eye looks *across* the chamber, which is why its
+ * interiors read as rooms you stand in rather than plans you hover over.
+ *
+ * It lives here as one constant because resize() and animateFrame() both
+ * need it and must never disagree about it.
+ */
+const CAM_RISE = Math.SQRT2 * Math.tan(Math.PI / 6);   // 0.8165 → θ = 30°
 const WALL_H = 1.15;        // wall height in world units
 const WALL_T = 0.28;        // wall thickness
 const CORRIDOR_W = 1.7;     // connecting passage width
@@ -87,6 +108,16 @@ export class IsoDungeonRenderer {
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
+    // A torch is a high-dynamic-range object: bright core, fast falloff,
+    // deep shadow. Rendered with NoToneMapping — which is what this
+    // scene did from v1.0 to v8.1 — the bright end clamps to white and
+    // the dark end has nowhere to go, so the range collapses and the
+    // torch reads as an orange smudge on evenly grey stone. The curve is
+    // what buys back the range. Own it here and nowhere else, so a
+    // later post-processing pass cannot double up on it.
+    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    this.renderer.toneMappingExposure = 1.25;
+
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(0x0a0805);
     // The camera sits ~26 units back and rides with the party, so fog
@@ -94,22 +125,33 @@ export class IsoDungeonRenderer {
     // which is what a torch in the dark actually does
     this.scene.fog = new THREE.Fog(0x0a0805, 34, 78);
 
-    // Cold ambient + hemisphere skylight + moonlight from the shaft
-    this.scene.add(new THREE.AmbientLight(0xaab4d0, 1.1));
-    this.scene.add(new THREE.HemisphereLight(0x8a9aba, 0x3a3028, 0.9));
-    const moon = new THREE.DirectionalLight(0xaabbdd, 1.3);
-    moon.position.set(-10, 20, 6);
-    moon.castShadow = true;
-    moon.shadow.mapSize.set(2048, 2048);
-    moon.shadow.camera.left = -30;
-    moon.shadow.camera.right = 30;
-    moon.shadow.camera.top = 30;
-    moon.shadow.camera.bottom = -30;
-    this.scene.add(moon);
+    // The rig this replaces was SnakeAB's, inherited whole at v1.0 and
+    // never revisited: AmbientLight(0xaab4d0, 1.1) plus a hemisphere at
+    // 0.9 — the colours of a cold outdoor sky, in a hole in the ground.
+    // Two units of flat fill reached every surface equally, so the torch
+    // had no dark to carve anything out of. What is left of it here is a
+    // floor to stop unlit stone going pure black, not a light source.
+    this.scene.add(new THREE.AmbientLight(0x2b3038, 0.14));
+    this.scene.add(new THREE.HemisphereLight(0x39485e, 0x2a1d12, 0.22));
 
-    // The party's torch: warm point light that travels with them
+    // What used to be "moonlight from the shaft" at 1.3, casting the
+    // only shadows in the game. It stays as a faint cold rake that keeps
+    // wall tops legible against the fog — the shadows now come from the
+    // thing the party is actually carrying.
+    const shaft = new THREE.DirectionalLight(0x8fa6c4, 0.16);
+    shaft.position.set(-10, 20, 6);
+    this.scene.add(shaft);
+
+    // The party's torch: warm point light that travels with them, and
+    // now the scene's key light and its only shadow caster. A point
+    // shadow is a cube map, which would be a real cost in a busy scene;
+    // this one is ~700 triangles and static between rooms, so it is not.
     this.torch = new THREE.PointLight(0xff9a3c, 30, 12, 1.8);
     this.torch.position.set(0, 2.2, 0);
+    this.torch.castShadow = true;
+    this.torch.shadow.mapSize.set(1024, 1024);
+    this.torch.shadow.camera.near = 0.4;
+    this.torch.shadow.bias = -0.004;
     this.scene.add(this.torch);
 
     this.staticGroup = new THREE.Group();   // Platforms, walkways — built once per dungeon
@@ -372,7 +414,7 @@ export class IsoDungeonRenderer {
     this.camera = new THREE.OrthographicCamera(
       -vertHalf * aspect, vertHalf * aspect, vertHalf, -vertHalf, 0.1, 400
     );
-    this.camera.position.set(CAM_BACK, CAM_BACK * 1.05, CAM_BACK);
+    this.camera.position.set(CAM_BACK, CAM_BACK * CAM_RISE, CAM_BACK);
     this.camera.lookAt(0, 0, 0);
     this.camTarget = new THREE.Vector3(0, 0, 0);
   }
@@ -394,6 +436,24 @@ export class IsoDungeonRenderer {
     if (!this.camTarget) this.camTarget = new THREE.Vector3(x, y, z);
     this.camTarget.set(x, y, z);
     this.camZoom = zoomOut;
+  }
+
+  /**
+   * Put the eye where it is heading, now, instead of gliding there.
+   *
+   * The camera eases toward the room the party is in at 0.12 a frame,
+   * which is right for watching a delve and wrong for photographing one:
+   * a capture that fires before the glide finishes frames the previous
+   * chamber, and if the tab is hidden — rAF throttled — it may never
+   * finish at all. The capture harness calls this so a frame depends on
+   * the scene and not on how many animation frames the browser felt like
+   * granting (ui/Frames.js).
+   */
+  snapCamera() {
+    if (!this.camera || !this.camTarget) return;
+    this.camLook = this.camTarget.clone();
+    this.camPlaced = false;    // animateFrame's "first frame snaps" path
+    this.animateFrame();
   }
 
   buildDungeon(rooms, edges = null, themeId = 'delve', trapdoors = []) {
@@ -745,7 +805,7 @@ export class IsoDungeonRenderer {
     if (this.camTarget) {
       const back = CAM_BACK + (this.camZoom || 0) * 2;
       const want = new THREE.Vector3(
-        this.camTarget.x + back, this.camTarget.y + back * 1.05, this.camTarget.z + back
+        this.camTarget.x + back, this.camTarget.y + back * CAM_RISE, this.camTarget.z + back
       );
       // First frame snaps; after that it eases
       const ease = this.camPlaced ? 0.12 : 1;

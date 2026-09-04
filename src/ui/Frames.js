@@ -15,11 +15,22 @@
  *
  *   ?capture=1&draftSeed=frames&seed=frames-01&room=3&theme=castle
  *
- * Everything is seeded and every step is synchronous — the draft picks
- * first-card-in-pack rather than by wall-clock, the muster is skipped,
- * and the simulator is ticked in a loop rather than on a timer. Two runs
- * of the same URL put the same party in the same chamber, so a
- * difference in the image is a difference in the renderer.
+ * Everything under this module's control is seeded and every step is
+ * synchronous — the draft picks first-card-in-pack rather than by
+ * wall-clock, the muster is skipped, the simulator is ticked in a loop
+ * rather than on a timer, and the camera is snapped rather than eased,
+ * so a frame does not depend on how many animation frames the browser
+ * felt like granting a hidden tab.
+ *
+ * WHAT IS AND IS NOT REPRODUCIBLE. Two runs of one URL give the same
+ * party, the same dungeon, the same theme and the same chamber — which
+ * is what a *picture* comparison needs. They do not give the same
+ * *choices*: the encounter layer still rolls on `Math.random`
+ * (encounters/RoomEncounters.js, sim/Simulator.js), so the log will
+ * differ run to run and health totals will drift. That is a genuine
+ * hole in the seed, found by building this harness and written up in
+ * PROBLEMS.md — do not read it as a renderer difference, and do not
+ * quote a capture's numbers as if the seed pinned them.
  *
  * `window.__frameReady` flips true when the scene is settled, and
  * `window.__frameInfo` carries what was actually captured, so a capture
