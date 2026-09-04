@@ -55,8 +55,13 @@ of the dark because there is no dark. That is why the delve reads as
 
 ### What the frozen renderer now draws for a game that no longer exists
 
-- `THEME_PALETTES` holds **nine** palettes. v8 ships **three** themes
-  (`delve`, `castle`, `icecaverns`). Six palettes are dead.
+- `THEME_PALETTES` holds **nine** palettes. `DUNGEON_THEMES` declares
+  **three** (`delve`, `castle`, `icecaverns`). ~~Six palettes are dead.~~
+  **Corrected 2026-09-04 — see §6.** `registerTheme()` mutates
+  `DUNGEON_THEMES` at load and the alchemy pack is on by default, which
+  adds `athanor`: **four** themes are reachable in a normal session, and
+  the other five palettes are the extension points a pack registers
+  into. This changed the recommendation in §G6.
 - `FLOOR_DROP`, `roomWorldPos`'s `y = -(room.floor||0) * FLOOR_DROP`, and
   the `stair`/`trapdoor` edge skips exist for multi-floor descent.
   `DungeonGen.MAX_FLOORS = 1`. The vertical machinery is inert.
@@ -208,7 +213,7 @@ So: ranked, with reasons, including the ones to refuse.
 | Skill | Why it fits *this* game |
 |---|---|
 | **`threejs-visual-validation`** | The missing instrument (§1). Fixed-view captures, seed sweeps, no-post baselines, regression evidence — the image-space sibling of `npm run audit` / `census`. This project's whole culture is "measure it or it isn't real"; graphics is the one surface with no measurement. **Do this first, before changing any pixel**, so every later change has a before/after. |
-| **`threejs-exposure-color-grading`** | Directly addresses the §2 finding. Gives one owner for tone mapping (currently `NoToneMapping`) plus a generated 32-cube LUT — which is exactly how the *three* themes get to read as three places: one LUT per theme instead of nine dead hex palettes. Torchlight is an exposure problem before it is a lighting problem. |
+| **`threejs-exposure-color-grading`** | Directly addresses the §2 finding. Gives one owner for tone mapping (currently `NoToneMapping`) plus a generated 32-cube LUT — which is exactly how the four live themes get to read as four places instead of four flat hex triples. Torchlight is an exposure problem before it is a lighting problem. |
 | **`threejs-shadow-systems`** | The torch is the game's mood and it currently casts nothing (only the "moon" directional has `castShadow`). This skill's cached, update-budgeted approach is ideal for a static-per-room scene: build the shadow once on room arrival, never again. |
 | **`threejs-procedural-architecture`** | The rooms are `BoxGeometry` slabs and 1.15-unit walls. Massing grammars, façade bays, arches, cornices, profiles — a vault that looks like a vault. This is the biggest single jump in "looks like a CRPG," and it consumes the alchemical architecture cutouts in §5a (181 arches, 62 columns, 60 towers, 47 castles) as reference. |
 | **`threejs-procedural-materials`** | Stone that is stone. Currently `MeshStandardMaterial({ color, roughness: 1 })` — flat colour, no normal, no variation. Authored PBR identities plus derivative normals per theme; the skill also covers emissive/lava surfaces, which the athanor and forge rooms still want. |
@@ -514,13 +519,22 @@ House style: the problem, then options ranked, with a recommendation.
 
 ### G6 — Dead visual code for a game that was cut
 
-1. **Delete the six unused `THEME_PALETTES`, the `FLOOR_DROP` / stair
-   machinery, and the five cut themes' monster tile maps; extend
-   `npm run audit`'s reach to `src/ui/`. ★ recommended** — v8 was a cut;
-   the renderer never got cut with it, and `ROUGHEDGES` should carry this
-   entry.
-2. Leave it as extension points, documented as such (`ARCHITECTURE.md`
-   already distinguishes extension points from leftovers).
+**Ranking reversed 2026-09-04.** The original recommendation was to
+delete, on the reading that six of nine palettes served themes the cut
+removed. That reading was wrong: `registerTheme()` mutates
+`DUNGEON_THEMES` at load, the alchemy pack is on by default and registers
+`athanor`, so a palette can be live without appearing in the built-in
+roster — which is precisely `ARCHITECTURE.md`'s extension-point case.
+Deleting on the old reading would have removed a pack's stone.
+
+1. ~~Delete the six unused `THEME_PALETTES`…~~ **Withdrawn.** It would
+   have broken any pack registering into them, `athanor` included had it
+   been listed a line lower.
+2. **Document them as extension points, in the file, at the definition —
+   done in the G2 relight commit. Extend `npm run audit`'s reach to
+   `src/ui/` so the *genuinely* unread cases (the `FLOOR_DROP` / stair
+   machinery, with `MAX_FLOORS = 1`) are found by a tool rather than by
+   an argument. ★ recommended (revised)**
 3. Leave it undocumented. *(Status quo.)*
 
 ### The smallest thing that proves the whole direction
@@ -530,6 +544,78 @@ exposure, drop the camera to 30°. No new assets, no new dependencies, no
 WebGPU decision, roughly a day — and at the end there is a before/after
 pair that says whether "Ultima-style torchlit CRPG" is a direction worth
 funding the rest of this document for.
+
+---
+
+## 6. What was built, and what building it corrected
+
+Branch `graphics-v8`, worktree `C:\Dev\DungeonAB-graphics` (rule 14: the
+main tree was held by another session, which moved it from `v8` to `main`
+mid-session — the isolation earned its keep). Three commits; `npm test`
+42 files, 42 pass, 0 fail at each.
+
+**G1 — `src/ui/Frames.js`, committed alone so the "before" is
+checkout-able.** A URL puts the game in a reproducible place:
+`?capture=1&draftSeed=frames&seed=frames-01&room=6`. Seeded draft through
+the same `playerPick()` the UI uses, muster skipped, simulator ticked in
+a loop rather than on a timer, camera snapped rather than eased.
+`window.__frameReady` / `__frameInfo` report when it has settled and what
+it shows. `FIXTURES` covers all four live themes at three depths;
+`tools/find-frame-seeds.mjs` produced the seeds and `themeCheck()`
+re-asserts them at capture time.
+
+**G2 — exposure and the light rig.** `ACESFilmicToneMapping` at 1.25;
+ambient 1.1 → 0.14, hemisphere 0.9 → 0.22, the `moon` 1.3 → 0.16,
+renamed `shaft`, no longer casting. The torch is the key light and the
+only shadow caster (1024 cube; ~700 triangles, static between rooms).
+Sprites use `SpriteMaterial` and are unlit, so party, monsters and props
+stay fully legible while only the stone goes dark — mood on the
+architecture, clarity on the actors.
+
+**G2b — `fill` and `ground` per theme.** Not in the original plan. Under
+a warm key light every theme became the same orange dungeon, so the
+palettes gained the colour their *shadows* go: the ice caverns are cold
+in the dark and warm only where the party stands; the athanor is warm
+through. This is the cheap version of §4's per-theme LUT and costs no
+post-processing pass — take the LUT when a grading pass exists to hang it
+on.
+
+**G3 — the camera, and the walls that follow from it.** `1.05` → a named
+`CAM_RISE = √2·tan(30°)`, in one constant rather than two literals.
+Verified live: elevation **30.00°**, diamond **2.000 : 1**. `VIEW_HALF`
+7 → 6.2. Then the consequence: at 36.6° a 1.15-unit wall hid little,
+but at 30° it hides `1.15/tan 30° ≈ 2.0` units of floor — two tiles of
+the chamber the party is standing in. The two camera-facing runs
+(`south`, `east`) are now drawn at 0.26 opacity, `depthWrite: false`,
+and do not cast.
+
+### Three things this got wrong, found by doing it
+
+1. **The harness flagged ready before the camera arrived.** The eye eases
+   at 0.12 a frame, so the first captures photographed the *previous*
+   chamber — and in a hidden tab, with rAF throttled, would never have
+   arrived at all. Fixed with `snapCamera()`. The instrument catching its
+   own defect on day one is the argument for building it first.
+2. **"Six palettes are dead" was wrong** (§1, §G6). `registerTheme()`
+   mutates `DUNGEON_THEMES` at load; the alchemy pack is on by default
+   and registers `athanor`. Four themes are reachable, not three, and the
+   remaining five palettes are extension points. Acting on the original
+   G6 would have deleted a live pack's stone.
+3. **The seed names a dungeon, not a delve.** Two runs of one seeded URL
+   give the same party, map, theme and chamber, then diverge on every
+   choice — thirteen `Math.random()` calls sit outside the seeded stream.
+   Written up as `PROBLEMS.md` P8 and deliberately **not** fixed here:
+   threading the rng moves which numbers come up, which moves the
+   99/88/71/45 curve and forces a re-calibrate and a re-stamped
+   `MINING_REPORT.md`. That is a balance job and must not ride along
+   inside a renderer change.
+
+### Not done
+
+G4 (procedural architecture and materials), G5 (the engraving import
+pipeline), the `npm run audit` extension in the revised G6, and the
+Tier 2 skills. G1–G3 were the sitting that proves the direction; the rest
+is the direction.
 
 ---
 

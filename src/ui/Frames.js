@@ -40,14 +40,47 @@
  * query string, and main.js does nothing differently when it does.
  */
 
-/** Fixtures worth photographing — themes × the rooms that differ visually. */
+/**
+ * Fixtures worth photographing: every living theme, and the depths where
+ * a chamber looks different — arrival, mid-delve, and deep enough that
+ * the torch is fighting a bigger room.
+ *
+ * The seeds are not decorative. Each was found by walking seeds until it
+ * produced the theme it claims (`node tools/find-frame-seeds.mjs`), and
+ * `themeCheck()` below re-asserts it at capture time, because a fixture
+ * that names a theme it does not generate makes a sweep look complete
+ * while photographing the same dungeon three times.
+ */
 export const FIXTURES = [
-  { label: 'delve-early', seed: 'frames-01', theme: 'delve', room: 2 },
-  { label: 'delve-fight', seed: 'frames-01', theme: 'delve', room: 5 },
-  { label: 'delve-boss', seed: 'frames-01', theme: 'delve', room: 9 },
-  { label: 'castle', seed: 'frames-02', theme: 'castle', room: 4 },
-  { label: 'icecaverns', seed: 'frames-03', theme: 'icecaverns', room: 4 },
+  { label: 'delve-arrive', seed: 'frames-07', theme: 'delve', room: 1 },
+  { label: 'delve-mid', seed: 'frames-07', theme: 'delve', room: 6 },
+  { label: 'delve-deep', seed: 'frames-07', theme: 'delve', room: 10 },
+  { label: 'castle-mid', seed: 'frames-01', theme: 'castle', room: 6 },
+  { label: 'castle-deep', seed: 'frames-01', theme: 'castle', room: 9 },
+  { label: 'ice-mid', seed: 'frames-08', theme: 'icecaverns', room: 6 },
+  { label: 'ice-deep', seed: 'frames-08', theme: 'icecaverns', room: 11 },
+  { label: 'athanor-mid', seed: 'frames-02', theme: 'athanor', room: 6 },
 ];
+
+/** The capture URL for one fixture, relative to the site root. */
+export function fixtureUrl(f, draftSeed = 'frames') {
+  const q = new URLSearchParams({
+    capture: '1', draftSeed, seed: f.seed, room: String(f.room), label: f.label,
+  });
+  return `/?${q}`;
+}
+
+/**
+ * Did the fixture get the theme it asked for? Returns null when it did,
+ * or a complaint when it did not — so a sweep fails loudly rather than
+ * quietly photographing the wrong place.
+ */
+export function themeCheck(fixture, info) {
+  if (!fixture?.theme || !info?.theme) return null;
+  return fixture.theme === info.theme
+    ? null
+    : `${fixture.label}: wanted theme "${fixture.theme}", got "${info.theme}" — re-run tools/find-frame-seeds.mjs`;
+}
 
 /**
  * The capture request encoded in the URL, or null for a normal session.

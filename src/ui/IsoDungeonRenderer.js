@@ -64,17 +64,37 @@ const CLASS_COLORS = {
   alchemist: 0x3cb8a8,
 };
 
-/* Every theme colors its own stone (v3: the castle is not the bog) */
+/*
+ * Every theme colors its own stone (v3: the castle is not the bog).
+ *
+ * `fill` is new with the G2 relight and it is what keeps a theme legible
+ * now that the torch is the key light. Warm torchlight on grey stone
+ * makes every dungeon the same orange dungeon; the fill is the colour
+ * the *shadows* go, which is where a theme actually lives — the ice
+ * caverns are cold in the dark and warm only where the party is
+ * standing, and the athanor is warm all the way through. `ground` is the
+ * hemisphere's downward half, the bounce off the floor.
+ *
+ * This is the cheap version of the per-theme LUT in GRAPHICS.md §4; it
+ * costs two colours and no post-processing pass. Take the LUT when a
+ * grading pass exists to hang it on.
+ *
+ * Note on the roster: only `delve`, `castle` and `icecaverns` are built
+ * in. `athanor` arrives at runtime from the alchemy pack via
+ * `registerTheme()`, which is on by default — so four of these are
+ * reachable in a normal session. The remaining five are the extension
+ * points a future pack registers into, not dead code.
+ */
 const THEME_PALETTES = {
-  delve: { plat: 0x615b52, wall: 0x35322c, bg: 0x0a0805, boss: 0x5a2626 },
-  crypt: { plat: 0x4e4a56, wall: 0x2c2a33, bg: 0x070609, boss: 0x4a2a4a },
-  volcanic: { plat: 0x5c4038, wall: 0x33211c, bg: 0x0d0503, boss: 0x7a2a1a },
-  library: { plat: 0x3f4a58, wall: 0x232c38, bg: 0x04070b, boss: 0x2a3a5a },
-  madlab: { plat: 0x44584a, wall: 0x24352a, bg: 0x040804, boss: 0x2a5a3a },
-  castle: { plat: 0x3e3a4e, wall: 0x201d2c, bg: 0x050409, boss: 0x5a1a2a },
-  bogcellar: { plat: 0x4a4a34, wall: 0x2a2a1c, bg: 0x060703, boss: 0x4a5a1a },
-  icecaverns: { plat: 0x4a5a66, wall: 0x2a3640, bg: 0x040709, boss: 0x3a5a6a },
-  athanor: { plat: 0x5a4a38, wall: 0x33291c, bg: 0x0a0703, boss: 0x6a4a1a },
+  delve: { plat: 0x615b52, wall: 0x35322c, bg: 0x0a0805, boss: 0x5a2626, fill: 0x3a4250, ground: 0x2a2118 },
+  crypt: { plat: 0x4e4a56, wall: 0x2c2a33, bg: 0x070609, boss: 0x4a2a4a, fill: 0x40384f, ground: 0x231d28 },
+  volcanic: { plat: 0x5c4038, wall: 0x33211c, bg: 0x0d0503, boss: 0x7a2a1a, fill: 0x5a2a1c, ground: 0x3a1408 },
+  library: { plat: 0x3f4a58, wall: 0x232c38, bg: 0x04070b, boss: 0x2a3a5a, fill: 0x2e4260, ground: 0x1d2733 },
+  madlab: { plat: 0x44584a, wall: 0x24352a, bg: 0x040804, boss: 0x2a5a3a, fill: 0x2c4a38, ground: 0x1b2a1f },
+  castle: { plat: 0x3e3a4e, wall: 0x201d2c, bg: 0x050409, boss: 0x5a1a2a, fill: 0x39485e, ground: 0x2a1d12 },
+  bogcellar: { plat: 0x4a4a34, wall: 0x2a2a1c, bg: 0x060703, boss: 0x4a5a1a, fill: 0x3d4227, ground: 0x241f12 },
+  icecaverns: { plat: 0x4a5a66, wall: 0x2a3640, bg: 0x040709, boss: 0x3a5a6a, fill: 0x2f5f80, ground: 0x1c3340 },
+  athanor: { plat: 0x5a4a38, wall: 0x33291c, bg: 0x0a0703, boss: 0x6a4a1a, fill: 0x54381a, ground: 0x33200c },
 };
 const DEFAULT_PALETTE = THEME_PALETTES.delve;
 
@@ -131,8 +151,11 @@ export class IsoDungeonRenderer {
     // Two units of flat fill reached every surface equally, so the torch
     // had no dark to carve anything out of. What is left of it here is a
     // floor to stop unlit stone going pure black, not a light source.
-    this.scene.add(new THREE.AmbientLight(0x2b3038, 0.14));
-    this.scene.add(new THREE.HemisphereLight(0x39485e, 0x2a1d12, 0.22));
+    // Held on `this` because buildDungeon re-tints them per theme: the
+    // colour the shadows go is where a theme survives the torch.
+    this.ambient = new THREE.AmbientLight(0x2b3038, 0.14);
+    this.hemi = new THREE.HemisphereLight(0x39485e, 0x2a1d12, 0.22);
+    this.scene.add(this.ambient, this.hemi);
 
     // What used to be "moonlight from the shaft" at 1.3, casting the
     // only shadows in the game. It stays as a faint cold rake that keeps
@@ -465,11 +488,37 @@ export class IsoDungeonRenderer {
     this.scene.background = new THREE.Color(palette.bg);
     this.scene.fog = new THREE.Fog(palette.bg, 34, 78);
 
+    // The theme colours its own dark, not just its own stone
+    if (this.hemi) {
+      this.hemi.color.set(palette.fill ?? 0x39485e);
+      this.hemi.groundColor.set(palette.ground ?? 0x2a1d12);
+    }
+    if (this.ambient) this.ambient.color.set(palette.fill ?? 0x2b3038);
+
     const hidden = room => room.secret && !room.discovered;
     const edgeList = edges || rooms.slice(1).map((_, i) => ({ a: i, b: i + 1, kind: 'door' }));
     const doors = doorMap(rooms, edgeList, hidden);
     const wallMat = new THREE.MeshStandardMaterial({ color: palette.wall, roughness: 1 });
     const secretWallMat = new THREE.MeshStandardMaterial({ color: palette.wall, roughness: 1 });
+
+    // The two walls between the eye and the room are drawn as ghosts.
+    //
+    // The camera sits at +x, +z looking back at the chamber, so the
+    // 'south' (+hz) and 'east' (+hx) runs stand in front of everything
+    // that matters. At the old 36.6-degree eye that barely mattered —
+    // you looked over them. At Ultima's 30 degrees a WALL_H of 1.15
+    // hides 1.15/tan(30) ≈ 2.0 units of floor behind it, which is two
+    // tiles of the chamber the party is standing in. Cutting the near
+    // walls away is what U7 and U8 do; fading them keeps the room's
+    // outline legible while letting the floor read through.
+    //
+    // They do not cast: a shadow from a wall you can see through reads
+    // as a bug, and the torch is now the only caster (G2).
+    const nearWallMat = new THREE.MeshStandardMaterial({
+      color: palette.wall, roughness: 1,
+      transparent: true, opacity: 0.26, depthWrite: false,
+    });
+    const NEAR_SIDES = new Set(['south', 'east']);
 
     rooms.forEach((room, i) => {
       // Undiscovered secret rooms simply aren't there — that's the point
@@ -537,14 +586,18 @@ export class IsoDungeonRenderer {
           for (const [from, to] of spans) {
             const segLen = to - from;
             if (segLen <= 0.05) continue;
-            const mat = sideDoors.some(dr => dr.secret) ? secretWallMat : wallMat;
+            const near = NEAR_SIDES.has(side.name);
+            const mat = near
+              ? nearWallMat
+              : (sideDoors.some(dr => dr.secret) ? secretWallMat : wallMat);
             const seg = side.axis === 'x'
               ? new THREE.Mesh(new THREE.BoxGeometry(segLen, WALL_H, WALL_T), mat)
               : new THREE.Mesh(new THREE.BoxGeometry(WALL_T, WALL_H, segLen), mat);
             const mid = (from + to) / 2;
             if (side.axis === 'x') seg.position.set(x + mid, fy + WALL_H / 2, z + side.off);
             else seg.position.set(x + side.off, fy + WALL_H / 2, z + mid);
-            seg.castShadow = true;
+            seg.castShadow = !near;
+            seg.renderOrder = near ? 2 : 0;
             this.staticGroup.add(seg);
           }
         }
