@@ -34,7 +34,7 @@ export const ROOM_HELP = {
  * A one-line legend of what the four draft card types do.
  */
 export const CARD_TYPE_HELP = [
-  { type: 'character', label: 'Character', text: 'A named hero of one of five classes. Four march — the rest wait in town as reserves, ready to replace the dead.' },
+  { type: 'character', label: 'Character', text: 'A named hero of one of five classes. Four march — the rest wait in reserve, ready to replace the dead.' },
   { type: 'equipment', label: 'Equipment', text: 'Auto-assigns to the best-fit member. Some items do different things per class.' },
   { type: 'spell', label: 'Spell', text: 'A prepared working in the shared grimoire: reusable, but spent for the room once cast. Power scales with the party\'s sharpest mind, and a loosed working keeps working for the rest of the fight — combat workings go on biting, healing ones go on mending, and a heal fires the moment someone is failing rather than after the dust settles. A wizard amplifies it and opens ordinary fights with two — and at the boss the party looses every working it has. Scrolls found in the dungeon still burn.' },
   { type: 'personality', label: 'Personality', text: 'Biases the whole party\'s decisions. Some look weak but hide an upside.' },
@@ -50,7 +50,7 @@ export const CARD_TYPE_HELP = [
  */
 export const ATTRITION_HELP = [
   { key: 'Oil 🏮', text: 'The lamp burns a unit every march. Run dry and the whole party takes damage every room it walks in the dark. An Everburning Lantern makes it last twice as long; Dancing Light and Eyes of the Mouse answer the dark outright.' },
-  { key: 'Wounds ✚', text: 'A blow worth a quarter of a body leaves a scar, and healing can no longer reach past it — the hatched part of the health bar. Wounds only mend in town, so the delve accumulates.' },
+  { key: 'Wounds ✚', text: 'A blow worth a quarter of a body leaves a scar, and healing can no longer reach past it — the hatched part of the health bar. Nothing in the dungeon mends a wound, so the delve accumulates and the scar is carried to the throne.' },
 ];
 
 export const CONTROL_HELP = [

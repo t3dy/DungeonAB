@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DungeonAB — versions & documentation</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='26'%3E%E2%9A%94%EF%B8%8F%3C/text%3E%3C/svg%3E">
+<style>
+:root{--ink:#e6ddc8;--dim:#8d8069;--gold:#d8a53f;--bg:#0b0a08;--panel:#14110c;
+      --line:#332a1c;--good:#6f9e5a;--bad:#b8523f;--warn:#b4863a;--panel2:#181409}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:'Iowan Old Style',Georgia,serif;
+     line-height:1.6;padding:2rem 1.25rem 5rem}
+a{color:var(--gold)}
+.wrap{max-width:64rem;margin:0 auto}
+h1{font-size:2rem;color:var(--gold);letter-spacing:.01em}
+.tag{color:var(--dim);font-size:1rem;margin:.3rem 0 1.3rem}
+h2{font-size:1.3rem;color:var(--gold);margin:2.6rem 0 .3rem;
+   border-bottom:1px solid var(--line);padding-bottom:.35rem}
+.section-sub{color:var(--dim);font-size:.9rem;margin-bottom:1.1rem}
+.cta{display:inline-block;background:var(--gold);color:#14100a;font-weight:bold;
+     padding:.7rem 1.4rem;border-radius:5px;text-decoration:none;font-family:ui-monospace,monospace;
+     letter-spacing:.02em;margin:.2rem 0 .4rem}
+.cta:hover{background:#e8b954}
+.crumb{font-family:ui-monospace,monospace;font-size:.78rem;color:var(--dim)}
+.crumb a{color:var(--dim);text-decoration:underline}
+
+/* Version gallery */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(17rem,1fr));gap:.9rem;margin-top:.4rem}
+.vcard{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:1rem 1.1rem;
+       display:flex;flex-direction:column;gap:.4rem;transition:border-color .15s,transform .15s}
+.vcard:hover{border-color:var(--gold);transform:translateY(-2px)}
+.vhead{display:flex;align-items:baseline;gap:.5rem}
+.vnum{font-family:ui-monospace,monospace;color:var(--gold);font-weight:bold;font-size:1.05rem}
+.vcur{font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;color:#14100a;background:var(--gold);
+      border-radius:3px;padding:.05rem .4rem;font-family:ui-monospace,monospace}
+.vtitle{font-size:.95rem;color:var(--ink)}
+.vblurb{font-size:.82rem;color:var(--dim);flex:1;line-height:1.5}
+.vplay{align-self:flex-start;font-family:ui-monospace,monospace;font-size:.8rem;text-decoration:none;
+       border:1px solid var(--line);border-radius:4px;padding:.3rem .7rem;color:var(--gold);margin-top:.2rem}
+.vplay:hover{background:var(--panel2);border-color:var(--gold)}
+
+/* Corpus card */
+.corpus{display:block;background:var(--panel);border:1px solid var(--line);border-radius:6px;
+        padding:1rem 1.1rem;text-decoration:none;color:inherit;transition:border-color .15s}
+.corpus:hover{border-color:var(--gold)}
+.corpus strong{color:var(--gold)}
+.corpus span{display:block;color:var(--dim);font-size:.85rem;margin-top:.2rem}
+
+/* Docs browser */
+.browser{display:grid;grid-template-columns:19rem 1fr;gap:1.2rem;margin-top:.6rem;align-items:start}
+.docnav{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:.8rem;
+        position:sticky;top:1rem;max-height:calc(100vh - 2rem);overflow-y:auto}
+.gname{color:var(--gold);font-size:.82rem;text-transform:uppercase;letter-spacing:.07em;margin:.9rem 0 .1rem}
+.gname:first-child{margin-top:0}
+.gblurb{color:var(--dim);font-size:.72rem;margin-bottom:.35rem;line-height:1.4}
+.dlink{display:block;padding:.32rem .5rem;border-radius:4px;color:var(--ink);text-decoration:none;
+       font-size:.86rem;cursor:pointer;border-left:2px solid transparent}
+.dlink:hover{background:var(--panel2)}
+.dlink.active{background:var(--panel2);border-left-color:var(--gold);color:var(--gold)}
+.docpane{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:1.4rem 1.6rem;min-height:60vh}
+.docpane .placeholder{color:var(--dim);font-style:italic}
+.proprow{display:flex;gap:.5rem;align-items:center;margin-bottom:1rem;padding-bottom:.8rem;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.proprow .now{color:var(--dim);font-size:.8rem}
+.toggle{font-family:ui-monospace,monospace;font-size:.78rem;background:var(--panel2);color:var(--gold);
+        border:1px solid var(--line);border-radius:4px;padding:.3rem .7rem;cursor:pointer}
+.toggle:hover{border-color:var(--gold)}
+.toggle.on{background:var(--gold);color:#14100a}
+
+/* Rendered markdown */
+.md-body h1{font-size:1.5rem;margin:.2rem 0 .6rem;border:0}
+.md-body h2{font-size:1.2rem;margin:1.6rem 0 .5rem}
+.md-body h3{font-size:1.02rem;color:var(--ink);margin:1.2rem 0 .35rem}
+.md-body h4{font-size:.92rem;color:var(--warn);margin:1rem 0 .3rem}
+.md-body p,.md-body li{font-size:.92rem}
+.md-body ul,.md-body ol{margin:.4rem 0 .8rem 1.4rem}
+.md-body li{margin:.2rem 0}
+.md-body code{font-family:ui-monospace,'Courier New',monospace;font-size:.85em;background:#0d0b07;
+              border:1px solid var(--line);border-radius:3px;padding:.05rem .3rem;color:#d9c79a}
+.md-body pre{background:#0d0b07;border:1px solid var(--line);border-radius:5px;padding:.8rem 1rem;
+             overflow-x:auto;margin:.7rem 0}
+.md-body pre code{border:0;background:none;padding:0}
+.md-body blockquote{border-left:3px solid var(--line);padding-left:.9rem;color:var(--dim);margin:.7rem 0}
+.md-body a{word-break:break-word}
+.md-body hr{border:0;border-top:1px solid var(--line);margin:1.4rem 0}
+.md-scroll{overflow-x:auto}
+.md-body table{border-collapse:collapse;font-size:.85rem;margin:.7rem 0;min-width:100%}
+.md-body th,.md-body td{text-align:left;padding:.4rem .6rem;border:1px solid var(--line);vertical-align:top}
+.md-body th{color:var(--gold);background:var(--panel2);font-weight:normal}
+.md-body tr:nth-child(even) td{background:#100d08}
+
+@media(max-width:820px){
+  .browser{grid-template-columns:1fr}
+  .docnav{position:static;max-height:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="crumb"><a href="../">▲ back to the game</a> &nbsp;·&nbsp; <a href="../logs/">the transcript corpus</a></div>
+  <h1>⚔️ DungeonAB</h1>
+  <div class="tag">Draft a party of Renaissance magi. Delve one procgen dungeon. Watch the story write itself.
+      This is the hub: every playable version, and the whole working record of how the game was built.</div>
+  <a class="cta" href="../">▶ Play the current version (v8.1)</a>
+
+  <h2>Every playable version</h2>
+  <div class="section-sub">The project kept every past build playable. Each link below runs that release, frozen, exactly as it was.</div>
+  <div class="grid" id="versions"></div>
+
+  <h2>The transcript corpus</h2>
+  <div class="section-sub">Simulated delves, read as a reader would read them — the raw material the narrative design was tuned against.</div>
+  <div id="corpus"></div>
+
+  <h2>Documentation &amp; artifacts</h2>
+  <div class="section-sub">Every readable system file that ships with the game — the design, the trouble log, the architecture, the measured reports. Pick one to read it here; no clone required.</div>
+  <div class="browser">
+    <nav class="docnav" id="docnav"></nav>
+    <article class="docpane" id="docpane"><p class="placeholder">Select a document from the list to read it.</p></article>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+<script>
+const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const DOCS_BASE = '../docs/';
+let CURRENT = null; // {file, proposal, showing}
+
+function renderVersions(versions){
+  document.getElementById('versions').innerHTML = versions.map(v => `
+    <div class="vcard">
+      <div class="vhead">
+        <span class="vnum">${esc(v.v)}</span>
+        ${v.tag ? `<span class="vcur">${esc(v.tag)}</span>` : ''}
+        <span class="vtitle">${esc(v.title)}</span>
+      </div>
+      <div class="vblurb">${esc(v.blurb)}</div>
+      <a class="vplay" href="${esc(v.href)}">▶ Play ${esc(v.v)}</a>
+    </div>`).join('');
+}
+
+function renderCorpus(c){
+  document.getElementById('corpus').innerHTML =
+    `<a class="corpus" href="${esc(c.href)}"><strong>${esc(c.title)} →</strong><span>${esc(c.blurb)}</span></a>`;
+}
+
+function renderNav(groups){
+  const nav = document.getElementById('docnav');
+  nav.innerHTML = groups.map(g => `
+    <div class="gname">${esc(g.group)}</div>
+    <div class="gblurb">${esc(g.blurb)}</div>
+    ${g.docs.map(d => `<a class="dlink" data-file="${esc(d.file)}"
+        data-proposal="${d.proposal ? esc(d.proposal) : ''}">${esc(d.title)}</a>`).join('')}
+  `).join('');
+  nav.querySelectorAll('.dlink').forEach(a => {
+    a.addEventListener('click', () => openDoc(a.dataset.file, a.dataset.proposal || null, a));
+  });
+}
+
+// marked renders the tables; wrap each in a scroll box so a wide table
+// scrolls inside the pane instead of stretching the whole page.
+function mdToHtml(text){
+  const html = marked.parse(text, { gfm: true, breaks: false });
+  const tmp = document.createElement('div');
+  tmp.innerHTML = html;
+  tmp.querySelectorAll('table').forEach(t => {
+    const box = document.createElement('div');
+    box.className = 'md-scroll';
+    t.replaceWith(box);
+    box.appendChild(t);
+  });
+  return tmp.innerHTML;
+}
+
+async function fetchDoc(file){
+  const res = await fetch(DOCS_BASE + file, { cache: 'no-cache' });
+  if(!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+  return res.text();
+}
+
+async function openDoc(file, proposal, linkEl){
+  document.querySelectorAll('.dlink').forEach(a => a.classList.toggle('active', a === linkEl));
+  CURRENT = { file, proposal, showing: file };
+  await paint();
+}
+
+async function paint(){
+  const pane = document.getElementById('docpane');
+  const showing = CURRENT.showing;
+  pane.innerHTML = '<p class="placeholder">Loading…</p>';
+  let head = '';
+  if(CURRENT.proposal){
+    const onDoc = showing === CURRENT.file;
+    head = `<div class="proprow">
+      <span class="now">Reading: <strong>${esc(onDoc ? CURRENT.file : CURRENT.proposal)}</strong></span>
+      <button class="toggle ${onDoc ? '' : 'on'}" id="propToggle">
+        ${onDoc ? 'Read the proposal ▸' : '◂ Back to the problem'}</button>
+    </div>`;
+  }
+  try{
+    const text = await fetchDoc(showing);
+    pane.innerHTML = head + `<div class="md-body">${mdToHtml(text)}</div>`;
+  }catch(e){
+    pane.innerHTML = head + `<p class="placeholder">Could not load ${esc(showing)} — ${esc(e.message)}</p>`;
+  }
+  const tb = document.getElementById('propToggle');
+  if(tb) tb.addEventListener('click', () => {
+    CURRENT.showing = CURRENT.showing === CURRENT.file ? CURRENT.proposal : CURRENT.file;
+    paint();
+  });
+}
+
+(async function init(){
+  try{
+    const m = await (await fetch(DOCS_BASE + 'manifest.json', { cache: 'no-cache' })).json();
+    renderVersions(m.versions);
+    renderCorpus(m.corpus);
+    renderNav(m.groups);
+    // Open the design doc by default so the pane is never empty.
+    const first = document.querySelector('.dlink');
+    if(first) openDoc(first.dataset.file, first.dataset.proposal || null, first);
+  }catch(e){
+    document.getElementById('docpane').innerHTML =
+      `<p class="placeholder">Could not load the manifest — ${esc(e.message)}</p>`;
+  }
+})();
+</script>
+</body>
+</html>

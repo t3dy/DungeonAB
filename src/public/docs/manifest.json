@@ -1,0 +1,198 @@
+{
+  "generated": "2026-09-04T11:40:39.042Z",
+  "versions": [
+    {
+      "v": "v8.1",
+      "href": "../",
+      "tag": "current",
+      "title": "The brass-tacks dungeon simulator",
+      "blurb": "One draft, one single-floor dungeon. The town, campaign, providence, tactic tree, wagers, locks and alchemy economy are cut; twelve capabilities across sixteen Renaissance magi, graded by depth, decide what a party can attempt. Lean and mean."
+    },
+    {
+      "v": "v8.0",
+      "href": "../v8/",
+      "title": "The cut",
+      "blurb": "The same simulator at the moment the systems came out — before the capability vocabulary was compressed to twelve and the card pool to fifty-two."
+    },
+    {
+      "v": "v7.0",
+      "href": "../v7/",
+      "title": "The prototype (pre-cut)",
+      "blurb": "The full game before the knife: riders, the mastery gradient, forward-reaching consequences, the dramaturg, the whole Renaissance apparatus at its most elaborate. The reference the cut was measured against."
+    },
+    {
+      "v": "v6.0",
+      "href": "../v6/",
+      "title": "Preparation: the Renaissance magi",
+      "blurb": "The roster becomes fifteen Renaissance magi, each a capability package rather than a bespoke power. A town that remembers, Providence that leans the world toward a destiny you write, Divination that sells the next descent’s demands."
+    },
+    {
+      "v": "v4.2",
+      "href": "../v4/",
+      "title": "Lock, key, muster and depth",
+      "blurb": "Wings sealed behind doors; the muster where you assign kit and name your party; multi-floor dungeons joined by stairs; positional combat priced by room shape; two attrition clocks; a saga that saves and continues."
+    },
+    {
+      "v": "v3.0",
+      "href": "../v3/",
+      "title": "Integration",
+      "blurb": "Theme-tinted worlds, readable enemies with nature badges and prose tells, element chips on draft cards, element-coloured spell FX, the deeper-systems guide."
+    },
+    {
+      "v": "v2.0",
+      "href": "../v2/",
+      "title": "Systems",
+      "blurb": "Branching dungeons with secret vaults, eight themes, the Bestiary, trap types, treasure finds, the Archive and card editor, the Card Workshop."
+    },
+    {
+      "v": "v1.0",
+      "href": "../v1/",
+      "title": "First public release",
+      "blurb": "The original draft → delve → town campaign loop, with onscreen help."
+    }
+  ],
+  "groups": [
+    {
+      "group": "Design",
+      "blurb": "What the game is, and the argument for why it is that way.",
+      "docs": [
+        {
+          "file": "DESIGN.md",
+          "title": "The design"
+        },
+        {
+          "file": "DESIGN_DIALOGUE.md",
+          "title": "Design dialogue — why things are the way they are"
+        },
+        {
+          "file": "CUTPROPOSAL.md",
+          "title": "The cut proposal, and what it became"
+        },
+        {
+          "file": "DUNGEON_CANON.md",
+          "title": "Dungeon canon"
+        },
+        {
+          "file": "THEME_DESIGNS.md",
+          "title": "Theme designs"
+        }
+      ]
+    },
+    {
+      "group": "The trouble log",
+      "blurb": "Kept live rather than written up at the end. Each has a sister proposal with ranked options.",
+      "docs": [
+        {
+          "file": "BUGS.md",
+          "title": "Bugs — things that do the wrong thing",
+          "proposal": "BUGSPROPOSAL.md"
+        },
+        {
+          "file": "PROBLEMS.md",
+          "title": "Problems — unfinished, with status",
+          "proposal": "PROBLEMSPROPOSAL.md"
+        },
+        {
+          "file": "PERPLEXITIES.md",
+          "title": "Perplexities — open questions",
+          "proposal": "PERPLEXITIESPROPOSAL.md"
+        },
+        {
+          "file": "BALANCEISSUES.md",
+          "title": "Balance issues — measured numbers",
+          "proposal": "BALANCEISSUESPROPOSAL.md"
+        },
+        {
+          "file": "SIMULATIONFINDINGS.md",
+          "title": "Simulation findings",
+          "proposal": "SIMULATIONFINDINGSPROPOSAL.md"
+        },
+        {
+          "file": "DRAMATURGISSUES.md",
+          "title": "Dramaturg issues — defects in the critic",
+          "proposal": "DRAMATURGISSUESPROPOSAL.md"
+        },
+        {
+          "file": "CONTENTREACH.md",
+          "title": "Content reach — what players actually meet",
+          "proposal": "CONTENTREACHPROPOSAL.md"
+        },
+        {
+          "file": "ROUGHEDGES.md",
+          "title": "Rough edges — papercuts and traps",
+          "proposal": "ROUGHEDGESPROPOSAL.md"
+        }
+      ]
+    },
+    {
+      "group": "Architecture & method",
+      "blurb": "How it fits together, what must agree with what, and how to measure without fooling yourself.",
+      "docs": [
+        {
+          "file": "ARCHITECTURE.md",
+          "title": "Architecture — the seams",
+          "proposal": "ARCHITECTUREPROPOSAL.md"
+        },
+        {
+          "file": "DATACONTRACTS.md",
+          "title": "Data contracts — the syncs nobody enforces",
+          "proposal": "DATACONTRACTSPROPOSAL.md"
+        },
+        {
+          "file": "MEASUREMENT.md",
+          "title": "Measurement — how not to fool yourself",
+          "proposal": "MEASUREMENTPROPOSAL.md"
+        }
+      ]
+    },
+    {
+      "group": "Reports & readings",
+      "blurb": "What running it thousands of times, and reading the results, taught.",
+      "docs": [
+        {
+          "file": "MINING_REPORT.md",
+          "title": "Mining report — the measured benchmark"
+        },
+        {
+          "file": "ASSET_REVIEW.md",
+          "title": "Asset review"
+        },
+        {
+          "file": "READING_SAMPLE.md",
+          "title": "A reading sample — five delves, read as a reader"
+        }
+      ]
+    },
+    {
+      "group": "Process",
+      "blurb": "The working record: how the project is run, deployed, and handed off.",
+      "docs": [
+        {
+          "file": "README.md",
+          "title": "Readme"
+        },
+        {
+          "file": "DEPLOY_STATE.md",
+          "title": "Deploy state"
+        },
+        {
+          "file": "HANDOFF_V6_TO_V7.md",
+          "title": "Handoff: v6 to v7"
+        },
+        {
+          "file": "ROGUELIKE_ROADMAP.md",
+          "title": "Roguelike roadmap"
+        },
+        {
+          "file": "RESEARCH_BRIEF.md",
+          "title": "Research brief"
+        }
+      ]
+    }
+  ],
+  "corpus": {
+    "href": "../logs/",
+    "title": "The transcript corpus",
+    "blurb": "120 simulated delves, each reproducible from its seed, read against the house poetics."
+  }
+}

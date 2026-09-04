@@ -314,6 +314,7 @@
       #gameover-display { left: 50%; }
     }
   </style>
+  <script type="module" crossorigin src="./assets/index-CEVpvRFv.js"></script>
 </head>
 <body>
   <div id="app">
@@ -321,12 +322,15 @@
       <h1>⚔️ DungeonAB</h1>
       <p>Draft the party. Delve the dungeon. Watch the story.
         <span style="color:#665;">·</span>
-        <span style="color:#8a7a55;" title="The brass-tacks dungeon simulator: one draft, one dungeon, twelve capabilities">v8.1</span>
+        <span style="color:#8a7a55;" title="Capabilities, situations, and a town that remembers">v6.0</span>
         <span style="color:#665;">·</span>
-        <a href="hub/" style="color:#d8a53f;text-decoration:underline;" title="Every playable version and the whole documentation set">all versions &amp; docs →</a>
+        <a href="v1/" style="color:#665;text-decoration:underline;" title="The first release: the original campaign loop">play v1.0</a>
+        <span style="color:#665;">·</span>
+        <a href="v2/" style="color:#665;text-decoration:underline;" title="The systems release: branching dungeons, the archive, the workshop, the Bestiary">play v2.0</a>
+        <span style="color:#665;">·</span>
+        <a href="v3/" style="color:#665;text-decoration:underline;" title="The integration release: theme-tinted worlds, readable enemies, nature-aware planning">play v3.0</a>
       </p>
       <div class="header-btns">
-        <button id="hub-btn" title="Every playable version and the documentation">📚 Versions &amp; Docs</button>
         <button id="archive-btn">🗺️ Archive</button>
         <button id="cards-btn">🎴 Cards</button>
         <button id="records-btn">🏛️ Records</button>
@@ -343,6 +347,7 @@
           <span>Gold: <strong id="gold-count" style="color:#d8a53f;">0</strong></span>
           <span>Score: <strong id="score-count" style="color:#d8a53f;">0</strong></span>
           <span>Oil: <strong id="supply-count" style="color:#e8c07a;">0</strong></span>
+          <span>Materials: <strong id="materials-count" style="color:#7a9;">0</strong></span>
           <span>Potions: <strong id="potions-count" style="color:#b07ae8;">0</strong></span>
           <span>Trophies: <strong id="trophies-count" style="color:#d88a3f;" title="">0</strong></span>
           <span id="status-badges" style="color:#e08080;"></span>
@@ -399,35 +404,41 @@
       <div class="help-step">
         <h3>1 · Draft at the Table</h3>
         <p>You and three AI rivals pass packs of cards. Take <strong>one</strong> card per pack, then it passes on. Draft characters to grow your party, plus equipment, spells, and personalities to shape it. Packs always hold characters — no dead drafts.</p>
-        <p><strong>Only four adventurers march.</strong> Draft a fifth and they wait in <strong>reserve</strong>, stepping up the moment someone falls — so extra bodies are insurance, not an army. Draft order decides who takes the four field slots, which makes the fifth character a real cost: that pick could have been the blade, the working, or the temper that wins the room.</p>
+        <p><strong>Only four adventurers march.</strong> Draft a fifth and they wait in town as a <strong>reserve</strong>, stepping up the moment someone falls — so extra bodies are insurance, not an army. Draft order decides who takes the four field slots, which makes the fifth character a real cost: that pick could have been the blade, the working, or the temper that wins the room.</p>
         <dl class="help-legend" id="help-card-legend"></dl>
       </div>
 
       <div class="help-step">
         <h3>2 · The Muster — who carries what</h3>
-        <p>Before the march, the <strong>muster</strong> is where the draft becomes a party. Kit is dealt out by best fit when it is drafted; here you overrule that — one piece per slot, and anything you take off waits in the pack. Say <strong>who prepares each working</strong>: a spell's power comes from the mind of the character holding it, so Fireball in the wizard's hands is worth more than Fireball in the fighter's. And <strong>name your own</strong>: rename anybody, and write who they are. The name and the history both go into the saga.</p>
+        <p>Before the march, and again in town, the <strong>muster</strong> is where the draft becomes a party. Kit is dealt out by best fit when it is drafted; here you overrule that — one piece per slot, and anything you take off waits in the pack. Say <strong>who prepares each working</strong>: a spell's power comes from the mind of the character holding it, so Fireball in the wizard's hands is worth more than Fireball in the fighter's. And <strong>name your own</strong>: rename anybody, and write who they are. The name and the history both go into the saga.</p>
+        <p>Drilled <strong>tactics</strong> are not assignable — they are what the party trained together, and everyone carries them.</p>
       </div>
 
       <div class="help-step">
         <h3>3 · Delve the Dungeon</h3>
-        <p>One draft, <strong>one dungeon</strong>. The party crawls it room by room, deciding for itself — weighted by the personalities you drafted and the classes present. Every situation is graded: outcomes are a spectrum, from a scramble to a clean success, not just win or lose. When the throne falls, or the party does, the delve is scored — then draft again and try a better party against a new dungeon.</p>
+        <p>Before you descend, you may lay a <strong>wager</strong> on the dungeon — a condition like Monster Swarms or the Long Throne that makes the delve meaner for a bigger score. You may also <strong>hex a rival's run</strong> — and fair warning, one of them will hex yours (its score premium is yours to keep). Then the party crawls room by room, deciding for itself — weighted by the personalities you drafted and the classes present. Outcomes are a spectrum, not just win or lose.</p>
+      </div>
+
+      <div class="help-step">
+        <h3>4 · Town, then Deeper</h3>
+        <p>Survive and the party carries its loot and scars to town. Heal, buy potions, <strong>hire new blood</strong> from the board, have the <strong>smith sharpen a blade</strong>, or shop the <strong>quartermaster</strong> — three pieces of kit or workings, priced by what they actually do and dearer the deeper you are. A purse holds about one purchase, so town is a choice and not a spree. Then descend to a deeper, meaner dungeon, or retire and bank your score. A wipe ends the campaign.</p>
       </div>
 
       <div class="help-step">
         <h3>The Deeper Systems</h3>
-        <p><strong>Capabilities are the language of the dungeon.</strong> Twelve of them — warcraft, roguery, observation, tinkering, alchemy, medicine, scholarship, astrology, divination, conjuring, correspondence, rhetoric — and every character is three of them. A room asks for one, and how well the party answers depends on who holds it and how deep they go: a capability nobody has can still be <strong>improvised</strong> from a neighbouring skill at a penalty, one character brings the <strong>assisted</strong> option, and real depth unlocks the <strong>mastered</strong> one. Drafting for a spread of capabilities is drafting for the situations you will meet.</p>
-        <p>Monsters have <strong>natures</strong> — armored 🛡️, ethereal 👻, venomous 🐍, swarming 🐝, slow 🐌 — shown over their heads and hinted in the prose, and the party plans around them: nobody rushes the venomous without a cleric, and spells shine against the armored. Spells carry <strong>elements</strong> (🔥❄️⚡🌟); a caster picks the working the foe hates. Traps come in kinds — fire burns, poison lingers, alarms tell the dungeon you're coming. Hoards hide <strong>finds</strong>: scrolls, trinkets, draughts. Your kit is read by every encounter.</p>
+        <p>Monsters have <strong>natures</strong> — armored 🛡️, ethereal 👻, venomous 🐍, swarming 🐝, slow 🐌 — shown over their heads and hinted in the prose, and the party plans around them. Spells carry <strong>elements</strong> (🔥❄️⚡🌟); a caster picks the working the foe hates. Traps come in kinds — fire burns, poison lingers, alarms tell the dungeon you're coming. Hoards hide <strong>finds</strong>: scrolls, trinkets, draughts. Your kit is read by every encounter.</p>
         <p><strong>The grimoire</strong> holds two kinds of working. Spells you <strong>drafted</strong> are prepared: they come back every room, but each can only be cast once before the party moves on. Scrolls <strong>found</strong> in the dungeon burn on use — one shot, then gone. Power is the spell&rsquo;s own plus half the party&rsquo;s sharpest mind, so a high-minded character makes every working better; a <strong>wizard</strong> adds two more and opens an ordinary fight with two workings instead of one. A working that lands <strong>keeps working</strong> — half its force again every round while the fight lasts, whether it is burning the foe or mending the party — and in the <strong>boss chamber the party looses everything it has</strong>. A <strong>healing</strong> working goes off the moment a companion is failing, mid-fight, not after the dust settles. So a grimoire is a reserve you spend down toward the throne: one spell is a tool, three are a plan.</p>
-        <p><strong>The delve wears you down</strong>, on two clocks. The lamp burns <strong>oil</strong> on every march — run dry and the whole party takes damage every room it gropes through the dark, so an Everburning Lantern (which sips), Dancing Light or Eyes of the Mouse are worth real picks. And a blow worth a quarter of a body leaves a <strong>wound</strong>: healing can no longer reach past the hatched part of the health bar, and nothing in the dungeon mends it — the scar is carried all the way to the throne. The throne is not the only thing that can kill you.</p>
+        <p><strong>The delve wears you down</strong>, on two clocks. The lamp burns <strong>oil</strong> on every march — run dry and the whole party takes damage every room it gropes through the dark, so an Everburning Lantern (which sips), Dancing Light or Eyes of the Mouse are worth real picks. And a blow worth a quarter of a body leaves a <strong>wound</strong>: healing can no longer reach past the hatched part of the health bar, and only town mends it. The throne is not the only thing that can kill you.</p>
         <dl class="help-legend" id="help-attrition-legend"></dl>
-        <p>The dungeon itself is built room by room: <strong>halls, chambers, caverns, rotundas and cells</strong>, each sized for what happens in it — a boss gets a great cavern, a vault is a closet. Passages join them through real doorways, and <strong>secret doors</strong> hide side branches. One floor, every room of it earning its place, and the throne room at the end of the spine.</p>
-        <p><strong>The room is a weapon.</strong> A chamber holds up to five pieces of furniture — pillars to fight behind, crates to crack, and <strong>hazards</strong> to put a monster into: an open pit, a bed of rusted floor spikes, a crack across the floor, a brazier still burning. Driving something onto a hazard is a big opening blow — but it takes the right body or the right kit: a fighter's muscle or a rogue's leverage can manage the bare shove, while a <strong>grapple and line</strong>, a <strong>tower shield</strong> or an <strong>athanor charm</strong> does it harder and safer. Rooms are sized so four adventurers, a monster and the furniture all genuinely stand somewhere — except corridors, which stay narrow on purpose, because a passage is where a column is the only formation that fits.</p>
-        <p>Off the spine hang <strong>wings</strong>: two to four rooms with a theme and a payoff — the burial, archive, barracks and flooded wings. An open one is a party vote; a <strong>hidden</strong> one has to be noticed, and always ends in a vault. What the party can do with what it finds there is, again, a question of capabilities and kit.</p>
+        <p>The dungeon itself is built room by room: <strong>halls, chambers, caverns, rotundas and cells</strong>, each sized for what happens in it — a boss gets a great cavern, a vault is a closet. Passages join them through real doorways, <strong>secret doors</strong> hide side branches, and a <strong>trapdoor</strong> in the floor drops the party to the level below, skipping the stair and the rooms between it for a fall. The Craven take it; the Covetous refuse to skip the loot.</p>
+        <p><strong>A dungeon goes down.</strong> Two floors, three once the campaign is deep, and every floor is meaner than the one above it. Each ends at a <strong>stair</strong>, which is the one place stopping is sensible: go down and burn a march of oil on the climb, rope down the shaft beside it if somebody drafted the Grapple and Line, or <strong>camp at the stairhead</strong> — two marches of oil for six health each, and a chance something climbs the stair into the camp. The throne room is always on the bottom floor.</p>
+        <p><strong>The room is a weapon.</strong> A chamber holds up to five pieces of furniture — pillars to fight behind, crates to crack, and <strong>hazards</strong> to put a monster into: an open pit, a bed of rusted floor spikes, a crack across the floor, a brazier still burning. Driving something onto a hazard is a big opening blow, and the <strong>Shove</strong> tactic opens all of them to any class, with no fighter and no rope; <strong>Pinning</strong> means it does not climb straight back out. Rooms are sized so four adventurers, a monster and the furniture all genuinely stand somewhere — except corridors, which stay narrow on purpose, because a passage is where a column is the only formation that fits.</p>
+        <p>Off the spine hang <strong>wings</strong>: two to four rooms with a theme and a payoff — the burial, workshop, archive, barracks and flooded wings. An open one is a party vote; a hidden one has to be noticed, and always ends in a vault. Some are <strong>locked</strong>. Six times in ten the key is lying somewhere back up the passage and the party picks it up on the way past; the rest of the time there is no key in the dungeon at all, and the door wants a <strong>rogue</strong>, a <strong>prybar</strong>, or <strong>Knock</strong> — and the last two are heard by everything below.</p>
       </div>
 
       <div class="help-step">
         <h3>Watching the Delve</h3>
-        <p><strong>The Chronicle</strong> narrates every room in three beats. Toasts flag big moments — a hero falling, or the boss chamber. Use the controls to pause, step, or change speed.</p>
+        <p><strong>The Chronicle</strong> narrates every room in three beats. Toasts flag big moments — a hero falling, the boss chamber, a spell learned. Use the controls to pause, step, or change speed.</p>
       </div>
 
       <button id="help-close-btn">Got it — let's draft</button>
@@ -464,6 +475,5 @@
     </div>
   </div>
 
-  <script type="module" src="./main.js"></script>
 </body>
 </html>

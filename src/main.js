@@ -113,6 +113,7 @@ function init() {
   });
   startNewDraft();
 
+  document.getElementById('hub-btn').addEventListener('click', () => { window.location.href = 'hub/'; });
   document.getElementById('pause-btn').addEventListener('click', togglePause);
   document.getElementById('step-btn').addEventListener('click', stepGame);
   document.getElementById('speed-slider').addEventListener('input', e => {

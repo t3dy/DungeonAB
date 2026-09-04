@@ -21,7 +21,8 @@
     "census": "node tools/census.mjs",
     "simulate": "node tools/simulate.mjs",
     "margins": "node tools/margins.mjs",
-    "audit": "node tools/audit.mjs"
+    "audit": "node tools/audit.mjs",
+    "hub": "node tools/build-hub.mjs"
   },
   "dependencies": {
     "three": "^0.170.0"
