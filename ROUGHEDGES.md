@@ -218,3 +218,26 @@ because a follow-up grep found PREDICAMENTS missing.
 edit, check `wc -l` against expectations, not just the parser. Recovery
 was `git checkout` + redoing the three intended edits — which is also
 the argument for committing between surgical phases.
+
+## R17. `npm run hub` flips the line endings of every published doc
+
+`src/public/docs/` is generated: `tools/build-hub.mjs` copies the source
+markdown verbatim. `.gitattributes` normalises `*.md` to LF everywhere —
+except `src/public/**`, which is pinned `-text` so the frozen v1/v2/v3
+builds keep the bytes they shipped with. Published docs are caught by
+that exemption without being shipped artifacts.
+
+So the copies keep whatever bytes the copier's working tree held, and
+regenerating from a checkout whose sources are CRLF rewrites all 36 of
+them. Running `npm run hub` from a correct LF checkout on 2026-09-04
+flipped `DUNGEON_CANON`, `RESEARCH_BRIEF`, `ROGUELIKE_ROADMAP` and
+`THEME_DESIGNS` back to LF — 1,100 lines of diff that changed no words.
+
+Harmless to the site, and pure noise in review, which is the problem: a
+diff nobody can read is a diff nobody reads.
+
+**Wanted:** either narrow the exemption to the frozen builds
+(`src/public/v*/** -text`) so generated docs normalise like the rest, or
+have `build-hub.mjs` write LF explicitly. The first is one line and also
+stops the next generated thing under `src/public/` inheriting the
+problem.
