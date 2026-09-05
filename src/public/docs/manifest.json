@@ -1,10 +1,16 @@
 {
-  "generated": "2026-09-05T03:30:35.761Z",
+  "generated": "2026-09-05T06:23:57.259Z",
   "versions": [
     {
-      "v": "v8.2",
+      "v": "v9.0",
       "href": "../",
       "tag": "current",
+      "title": "The performed delve",
+      "blurb": "One frame, four screens, and the button that starts the delve always in reach. The picture is the width of the screen with the chronicle beside it, written a line at a time as its beat plays. Every room is performed: the party walks the passage, forms up in the shape the fight calls for, and a fight plays round by round — the front rank swings, the monster’s bar falls, the counter-blow lands, the numbers rise — until it falls or the party runs. Nothing the simulator computes changed."
+    },
+    {
+      "v": "v8.2",
+      "href": "../v82/",
       "title": "The torchlit dungeon",
       "blurb": "The same simulator, seen properly for the first time since v4.1. The outdoor sky rig inherited from SnakeAB is gone: the party’s torch is the key light and the only shadow caster, every theme keeps its own dark, the camera drops to the 30° Ultima eye and the near walls step aside. A capture harness photographs any seeded room reproducibly."
     },
@@ -155,7 +161,7 @@
         },
         {
           "file": "SCREENS.md",
-          "title": "Screens — why the crawl cannot be watched, and the frame that fixes it"
+          "title": "Screens — why the crawl could not be watched, and the frame that fixed it"
         }
       ]
     },

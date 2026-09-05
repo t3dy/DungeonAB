@@ -80,7 +80,7 @@ before pushing to `main`.
 
 ## Deploy procedure
 
-1. `npm test` — must be green (42 files as of v8.2).
+1. `npm test` — must be green (44 files as of v9.0).
 2. `npm run build` — must succeed.
 3. Push to `main`.
 4. Both hosts pick it up automatically. **Confirm the live URL actually shows

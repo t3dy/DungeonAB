@@ -139,3 +139,33 @@ returned 344 KB of bundle.
 
 Always scope searches to the live directories, listed in
 `tools/audit.mjs` as `LIVE_DIRS`.
+
+## The frame and the performance (v9.0, 2026-09-04)
+
+Two modules sit between the simulator and the page now, and neither
+touches a number.
+
+**`ui/Screens.js`** is the frame: four screens as sections under one
+header and one fixed action bar, each screen owning a bar group. Every
+primary action is in the bar (`BAR_PRIMARY`), which is the whole reason
+it exists — see SCREENS.md §2 for the two-and-a-half-screen scroll it
+replaced. `main.js` no longer toggles containers by id; it calls
+`showScreen`.
+
+**`ui/Choreography.js`** is the performance. `planBeats(prev, state)`
+is pure: from two states it returns the ordered beats of the room with
+durations. `Choreographer.play` walks them against three optional
+surfaces — the renderer, the story panel, the HUD — and `main.js`
+`advanceRoom` awaits it before the next tick. The data it plays is
+`narration.rounds`, recorded by `RoomEncounters.resolveFight` as
+`roundLog` and also filed in the ledger, so the ledger, the prose and
+the picture are three readings of one record.
+
+**Where the seam leaks.** The renderer's actors are keyed by *name*, so
+a rename mid-delve (there is none today) would orphan a sprite. The
+performance reads `state.dungeon`, which is the live object, so
+"was this room cleared before this tick" has to be inferred from the
+previous narration rather than read (`roomWasClearedBefore`). And the
+chosen action's *outcome* for the picture is a classification of action
+ids (`PASS_ACTIONS`) rather than a field the resolver sets — a new
+"get past it" action must be added there or it will be drawn as a kill.

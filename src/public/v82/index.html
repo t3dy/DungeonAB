@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='26'%3E%E2%9A%94%EF%B8%8F%3C/text%3E%3C/svg%3E">
+  <title>DungeonAB — Draft. Delve. Watch.</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Courier New', monospace;
+      background: #0a0a0a;
+      color: #e0e0e0;
+      overflow: hidden;
+    }
+    #app { display: flex; flex-direction: column; height: 100vh; }
+    header {
+      background: #16120c;
+      padding: 0.8rem 1rem;
+      border-bottom: 1px solid #3a2f1e;
+      text-align: center;
+    }
+    header h1 { font-size: 1.4rem; color: #d8a53f; margin-bottom: 0.2rem; }
+    header p { font-size: 0.8rem; color: #887755; }
+    main { display: flex; flex: 1; overflow: hidden; }
+
+    /* Draft screen */
+    #draft-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.25rem;
+      max-width: 1100px;
+      margin: 0 auto;
+      width: 100%;
+    }
+    #draft-container:empty { display: none; }
+
+    /* Game screen */
+    #world-container {
+      flex: 0 0 46%;
+      background: #0a0a0a;
+      border-right: 1px solid #3a2f1e;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    canvas { flex: 1; background: #0d0b08; border: 1px solid #3a2f1e; min-height: 0; }
+    #ui-container {
+      flex: 1;
+      background: #12100b;
+      padding: 1rem;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .panel {
+      background: #0a0a0a;
+      border: 1px solid #3a2f1e;
+      border-radius: 4px;
+      padding: 0.9rem;
+    }
+    .panel h2 {
+      color: #d8a53f;
+      font-size: 0.95rem;
+      margin-bottom: 0.6rem;
+      border-bottom: 1px solid #3a2f1e;
+      padding-bottom: 0.4rem;
+    }
+    button {
+      background: #d8a53f;
+      color: #14100a;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: 'Courier New', monospace;
+      font-weight: bold;
+      font-size: 0.85rem;
+      transition: background 0.2s;
+    }
+    button:hover { background: #e8b954; }
+    button:disabled { background: #665; cursor: not-allowed; opacity: 0.5; }
+
+    /* Party roster */
+    .member-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.35rem 0;
+      border-bottom: 1px dashed #2a2318;
+      font-size: 0.82rem;
+    }
+    .member-row:last-child { border-bottom: none; }
+    .member-hp {
+      margin-left: auto;
+      font-weight: bold;
+    }
+    .member-dead { opacity: 0.4; text-decoration: line-through; }
+    .hp-bar {
+      width: 70px; height: 8px;
+      background: #2a1515;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .hp-fill { height: 100%; background: #3ddc84; transition: width 0.3s; }
+
+    /* Story panel */
+    .story {
+      background: #0d1117;
+      border: 1px solid #3a2f1e;
+      border-radius: 4px;
+      padding: 0.75rem;
+      font-size: 0.84rem;
+      max-height: 340px;
+      overflow-y: auto;
+      line-height: 1.55;
+    }
+    .story-empty { color: #555; font-style: italic; }
+    .story-entry { margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px dashed #2a2318; }
+    .story-entry:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+    .story-room { color: #665; font-size: 0.7rem; margin-bottom: 0.3rem; text-transform: uppercase; letter-spacing: 0.08em; }
+    .story-predicament { color: #d8c9a3; margin-bottom: 0.4rem; }
+    .story-deliberation { color: #8fb8dd; font-style: italic; margin-bottom: 0.4rem; }
+    .story-resolution { color: #a8d5b0; }
+    .story-fall { color: #e08080; margin-top: 0.4rem; padding-left: 0.5rem; border-left: 2px solid #6a2a2a; font-style: italic; }
+    .party-tactics { margin-top: 0.5rem; font-size: 0.72rem; color: #9a8; display: flex; flex-wrap: wrap; gap: 0.35rem; }
+    .tactic-chip { background: #23201c; border: 1px solid #3d372e; border-radius: 3px; padding: 0.1rem 0.4rem; }
+    .tactic-chip.idle { color: #8a6a5a; border-color: #4a3228; border-style: dashed; }
+    .saga-row { display: flex; gap: 0.4rem; align-items: center; padding: 0.4rem 0; border-bottom: 1px dashed #2a2318; }
+    .saga-row button { font-size: 0.75rem; padding: 0.25rem 0.45rem; background: #221c14; color: #c0b090; border: 1px solid #3d372e; }
+    .saga-row button:hover { background: #2e2619; }
+    .saga-doc { max-height: 46vh; overflow-y: auto; padding: 0.6rem 0.8rem; background: #16130f; border: 1px solid #2a2318; border-radius: 4px; font-size: 0.78rem; line-height: 1.5; color: #b8ac96; }
+    .saga-doc h2 { color: #d8a53f; font-size: 1rem; margin: 0 0 0.5rem; }
+    .saga-doc h3 { color: #c99b3f; font-size: 0.88rem; margin: 0.9rem 0 0.35rem; border-bottom: 1px solid #2a2318; }
+    .saga-doc h4 { color: #9a8f78; font-size: 0.8rem; margin: 0.6rem 0 0.2rem; }
+    .saga-doc p { margin: 0 0 0.5rem; }
+    .saga-doc li { margin-left: 1rem; color: #a09070; }
+    .saga-doc details { margin: 0.3rem 0 0.6rem; color: #776; }
+    .saga-doc summary { cursor: pointer; font-size: 0.72rem; }
+    .story-wound { color: #cc8877; margin-top: 0.4rem; padding-left: 0.5rem; border-left: 2px solid #6a3a2a; font-style: italic; }
+    .story-aside { color: #d8c26a; margin-top: 0.4rem; padding-left: 0.5rem; border-left: 2px solid #6a5a2a; font-style: italic; }
+
+    .log {
+      background: #000;
+      border: 1px solid #3a2f1e;
+      border-radius: 4px;
+      padding: 0.6rem;
+      font-size: 0.72rem;
+      color: #b8934a;
+      max-height: 140px;
+      overflow-y: auto;
+    }
+    .log-entry { margin-bottom: 0.2rem; word-break: break-word; }
+
+    /* Modal (game over) */
+    #gameover-display {
+      display: none;
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: min(520px, 92vw);
+      max-height: 82vh;
+      overflow-y: auto;
+      background: #14110b;
+      border: 1px solid #d8a53f;
+      border-radius: 8px;
+      padding: 1.5rem;
+      z-index: 100;
+      box-shadow: 0 0 60px rgba(216, 165, 63, 0.3), 0 0 0 100vmax rgba(0,0,0,0.6);
+    }
+    #gameover-display.active { display: block; }
+    @media (min-width: 1025px) {
+      #gameover-display { left: 23%; box-shadow: 0 0 60px rgba(216, 165, 63, 0.3); }
+    }
+    #show-results-btn {
+      display: none;
+      position: fixed; bottom: 1rem; right: 1rem; z-index: 90;
+      padding: 0.7rem 1.2rem;
+      box-shadow: 0 0 20px rgba(216, 165, 63, 0.5);
+    }
+    #show-results-btn.active { display: block; }
+
+    /* Header buttons */
+    .header-btns {
+      position: absolute; top: 0.8rem; right: 1rem;
+      display: flex; gap: 0.4rem;
+    }
+    .header-btns button {
+      padding: 0.35rem 0.7rem; font-size: 0.8rem;
+      background: #2a2213; color: #d8a53f; border: 1px solid #3a2f1e;
+    }
+    .header-btns button:hover { background: #3a2f1e; }
+    header { position: relative; }
+
+    /* How-to-play overlay */
+    #help-overlay, #records-overlay, #archive-overlay, #cards-overlay {
+      display: none;
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,0.75);
+      overflow-y: auto;
+      padding: 2rem 1rem;
+    }
+    #help-overlay.active, #records-overlay.active, #archive-overlay.active, #cards-overlay.active {
+      display: flex; align-items: flex-start; justify-content: center;
+    }
+    .arch-item {
+      display: flex; gap: 0.7rem; align-items: flex-start;
+      padding: 0.55rem 0; border-bottom: 1px dashed #2a2318;
+    }
+    .arch-item canvas { border: 1px solid #3a2f1e; border-radius: 4px; flex-shrink: 0; }
+
+    /* Records table */
+    .records-best { display: grid; grid-template-columns: 1fr auto; gap: 0.25rem 1rem; font-size: 0.85rem; margin-bottom: 1rem; }
+    .records-best dt { color: #b8a888; }
+    .records-best dd { color: #d8a53f; font-weight: bold; text-align: right; }
+    .records-run { display: flex; gap: 0.5rem; align-items: baseline; font-size: 0.8rem; padding: 0.35rem 0; border-bottom: 1px dashed #2a2318; }
+    .records-run:last-child { border-bottom: none; }
+    .records-run .rr-score { color: #d8a53f; font-weight: bold; margin-left: auto; }
+    .records-empty { color: #776; font-style: italic; font-size: 0.85rem; }
+    .help-card {
+      background: #14110b;
+      border: 1px solid #d8a53f;
+      border-radius: 8px;
+      padding: 1.75rem;
+      max-width: 640px;
+      width: 100%;
+      box-shadow: 0 0 60px rgba(216, 165, 63, 0.25);
+    }
+    .help-card h2 { color: #d8a53f; font-size: 1.4rem; margin-bottom: 0.3rem; text-align: center; }
+    .help-card .help-sub { color: #887755; font-size: 0.85rem; text-align: center; margin-bottom: 1.25rem; }
+    .help-step { margin-bottom: 1rem; padding-left: 0.6rem; border-left: 2px solid #3a2f1e; }
+    .help-step h3 { color: #e8b954; font-size: 0.95rem; margin-bottom: 0.25rem; }
+    .help-step p { color: #c8b89a; font-size: 0.83rem; line-height: 1.55; }
+    .help-legend { display: grid; grid-template-columns: auto 1fr; gap: 0.3rem 0.7rem; font-size: 0.8rem; margin-top: 0.4rem; }
+    .help-legend dt { color: #d8a53f; font-weight: bold; white-space: nowrap; }
+    .help-legend dd { color: #b8a888; }
+    .help-card button { width: 100%; margin-top: 1.25rem; padding: 0.9rem; font-size: 1rem; }
+
+    /* Event toasts */
+    #toast-stack {
+      /* Over the map, not over the party. Centred on the viewport, the
+         stack sat on top of the roster and the tactics chips — the two
+         panels a player checks while the toasts are still up. */
+      position: fixed; top: 4.5rem; left: 1.25rem;
+      z-index: 150; display: flex; flex-direction: column; gap: 0.4rem;
+      pointer-events: none; width: min(420px, 46vw);
+    }
+    @media (max-width: 900px) {
+      #toast-stack { left: 50%; transform: translateX(-50%); width: min(420px, 92vw); }
+    }
+    .toast {
+      background: #1a1610; border: 1px solid #d8a53f; border-radius: 6px;
+      padding: 0.55rem 0.85rem; font-size: 0.82rem; color: #e8d9b3;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+      display: flex; gap: 0.5rem; align-items: center;
+      animation: toast-in 0.25s ease-out;
+    }
+    .toast.fade { animation: toast-out 0.5s ease-in forwards; }
+    .toast-icon { font-size: 1.1rem; }
+    .toast-death { border-color: #e05555; color: #f0b0b0; }
+    .toast-boss { border-color: #e8724a; color: #f0c0a0; }
+    .toast-room { border-color: #6a7f9a; color: #c0d0e0; }
+    @keyframes toast-in { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes toast-out { to { opacity: 0; transform: translateY(-8px); } }
+
+    /* Draft cards */
+    .pack-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.6rem;
+    }
+    .draft-card {
+      background: #14110b;
+      border: 2px solid #3a2f1e;
+      border-radius: 6px;
+      padding: 0.7rem;
+      cursor: pointer;
+      transition: all 0.15s;
+      min-height: 120px;
+      display: flex;
+      flex-direction: column;
+    }
+    .draft-card:hover { border-color: #d8a53f; transform: translateY(-3px); }
+    .card-type {
+      font-size: 0.62rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 0.3rem;
+    }
+    .type-character { color: #e8724a; }
+    .type-equipment { color: #8fb8dd; }
+    .type-spell { color: #b07ae8; }
+    .type-personality { color: #d8a53f; }
+    .card-name { font-weight: bold; font-size: 0.85rem; margin-bottom: 0.3rem; }
+    .card-text { font-size: 0.72rem; color: #998866; line-height: 1.4; flex: 1; }
+    .card-stats { font-size: 0.7rem; color: #7a9; margin-top: 0.4rem; }
+
+    @media (max-width: 1024px) {
+      main { flex-direction: column; }
+      /* The corner buttons were absolutely positioned assuming a wide
+         header; on a narrow one they overlapped the centered title
+         instead of pushing it down — the "can't see the dungeon"
+         reports traced to this: the canvas below inherited whatever
+         sliver of height was left. Back to normal flow, wraps below
+         the title instead of on top of it. */
+      .header-btns { position: static; justify-content: center; flex-wrap: wrap; margin-top: 0.5rem; }
+      /* A real floor on the canvas's height, tied to the viewport
+         (not a % of whatever space the header happened to leave) —
+         short/landscape windows still show a usable dungeon. */
+      #world-container { flex: 1 1 42vh; min-height: 220px; max-height: 48vh; border-right: none; border-bottom: 1px solid #3a2f1e; }
+      .pack-grid { grid-template-columns: repeat(2, 1fr); }
+      #gameover-display { left: 50%; }
+    }
+  </style>
+  <script type="module" crossorigin src="./assets/index-M4oS7ST2.js"></script>
+</head>
+<body>
+  <div id="app">
+    <header>
+      <h1>⚔️ DungeonAB</h1>
+      <p>Draft the party. Delve the dungeon. Watch the story.
+        <span style="color:#665;">·</span>
+        <span style="color:#8a7a55;" title="The torchlit dungeon: one draft, one dungeon, twelve capabilities, and a torch that finally carves the dark">v8.2</span>
+        <span style="color:#665;">·</span>
+        <a href="hub/" style="color:#d8a53f;text-decoration:underline;" title="Every playable version and the whole documentation set">all versions &amp; docs →</a>
+      </p>
+      <div class="header-btns">
+        <button id="hub-btn" title="Every playable version and the documentation">📚 Versions &amp; Docs</button>
+        <button id="archive-btn">🗺️ Archive</button>
+        <button id="cards-btn">🎴 Cards</button>
+        <button id="records-btn">🏛️ Records</button>
+        <button id="help-btn">? How to Play</button>
+      </div>
+    </header>
+    <main>
+      <div id="draft-container"></div>
+      <div id="world-container" style="display: none;">
+        <canvas id="game-canvas" width="500" height="420"></canvas>
+        <div class="panel" style="display:flex;gap:1.25rem;font-size:0.8rem;flex-wrap:wrap;">
+          <span>Room: <strong id="room-count" style="color:#d8a53f;">0</strong></span>
+          <span>Floor: <strong id="floor-count" style="color:#9aa3b0;" title="A dungeon goes down. Every floor is meaner than the one above it.">1</strong></span>
+          <span>Gold: <strong id="gold-count" style="color:#d8a53f;">0</strong></span>
+          <span>Score: <strong id="score-count" style="color:#d8a53f;">0</strong></span>
+          <span>Oil: <strong id="supply-count" style="color:#e8c07a;">0</strong></span>
+          <span>Potions: <strong id="potions-count" style="color:#b07ae8;">0</strong></span>
+          <span>Trophies: <strong id="trophies-count" style="color:#d88a3f;" title="">0</strong></span>
+          <span id="status-badges" style="color:#e08080;"></span>
+        </div>
+      </div>
+      <div id="ui-container" style="display: none;">
+        <div class="panel">
+          <h2>🎭 The Party</h2>
+          <div id="party-roster"></div>
+          <div id="party-tactics" class="party-tactics"></div>
+        </div>
+        <div class="panel">
+          <h2>Controls</h2>
+          <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
+            <button id="pause-btn" disabled>Pause</button>
+            <button id="step-btn" disabled>Step</button>
+            <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.8rem;">
+              Speed <input type="range" id="speed-slider" min="0.25" max="4" step="0.25" value="1" />
+              <span id="speed-label">1.0x</span>
+            </label>
+          </div>
+          <div style="margin-top:0.5rem;font-size:0.72rem;color:#887755;line-height:1.5;">
+            The party crawls on its own. <strong style="color:#a89868;">Pause</strong> to read,
+            <strong style="color:#a89868;">Step</strong> one room at a time, or set the
+            <strong style="color:#a89868;">Speed</strong>. Watch <span style="color:#d8a53f;">The Chronicle</span> below for what unfolds.
+          </div>
+        </div>
+        <div class="panel">
+          <h2>📖 The Chronicle</h2>
+          <div id="story-panel" class="story">
+            <div class="story-empty">The chronicle of this delve is not yet written…</div>
+          </div>
+        </div>
+        <div class="panel">
+          <h2>Log</h2>
+          <div id="debug-log" class="log"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div id="gameover-display"></div>
+  <button id="show-results-btn">🏆 Show Results</button>
+
+  <!-- Onscreen event messages -->
+  <div id="toast-stack"></div>
+
+  <!-- How-to-play overlay -->
+  <div id="help-overlay">
+    <div class="help-card">
+      <h2>⚔️ How to Play</h2>
+      <div class="help-sub">Draft a party, then watch it delve. You set it up; the dungeon does the rest.</div>
+
+      <div class="help-step">
+        <h3>1 · Draft at the Table</h3>
+        <p>You and three AI rivals pass packs of cards. Take <strong>one</strong> card per pack, then it passes on. Draft characters to grow your party, plus equipment, spells, and personalities to shape it. Packs always hold characters — no dead drafts.</p>
+        <p><strong>Only four adventurers march.</strong> Draft a fifth and they wait in <strong>reserve</strong>, stepping up the moment someone falls — so extra bodies are insurance, not an army. Draft order decides who takes the four field slots, which makes the fifth character a real cost: that pick could have been the blade, the working, or the temper that wins the room.</p>
+        <dl class="help-legend" id="help-card-legend"></dl>
+      </div>
+
+      <div class="help-step">
+        <h3>2 · The Muster — who carries what</h3>
+        <p>Before the march, the <strong>muster</strong> is where the draft becomes a party. Kit is dealt out by best fit when it is drafted; here you overrule that — one piece per slot, and anything you take off waits in the pack. Say <strong>who prepares each working</strong>: a spell's power comes from the mind of the character holding it, so Fireball in the wizard's hands is worth more than Fireball in the fighter's. And <strong>name your own</strong>: rename anybody, and write who they are. The name and the history both go into the saga.</p>
+      </div>
+
+      <div class="help-step">
+        <h3>3 · Delve the Dungeon</h3>
+        <p>One draft, <strong>one dungeon</strong>. The party crawls it room by room, deciding for itself — weighted by the personalities you drafted and the classes present. Every situation is graded: outcomes are a spectrum, from a scramble to a clean success, not just win or lose. When the throne falls, or the party does, the delve is scored — then draft again and try a better party against a new dungeon.</p>
+      </div>
+
+      <div class="help-step">
+        <h3>The Deeper Systems</h3>
+        <p><strong>Capabilities are the language of the dungeon.</strong> Twelve of them — warcraft, roguery, observation, tinkering, alchemy, medicine, scholarship, astrology, divination, conjuring, correspondence, rhetoric — and every character is three of them. A room asks for one, and how well the party answers depends on who holds it and how deep they go: a capability nobody has can still be <strong>improvised</strong> from a neighbouring skill at a penalty, one character brings the <strong>assisted</strong> option, and real depth unlocks the <strong>mastered</strong> one. Drafting for a spread of capabilities is drafting for the situations you will meet.</p>
+        <p>Monsters have <strong>natures</strong> — armored 🛡️, ethereal 👻, venomous 🐍, swarming 🐝, slow 🐌 — shown over their heads and hinted in the prose, and the party plans around them: nobody rushes the venomous without a cleric, and spells shine against the armored. Spells carry <strong>elements</strong> (🔥❄️⚡🌟); a caster picks the working the foe hates. Traps come in kinds — fire burns, poison lingers, alarms tell the dungeon you're coming. Hoards hide <strong>finds</strong>: scrolls, trinkets, draughts. Your kit is read by every encounter.</p>
+        <p><strong>The grimoire</strong> holds two kinds of working. Spells you <strong>drafted</strong> are prepared: they come back every room, but each can only be cast once before the party moves on. Scrolls <strong>found</strong> in the dungeon burn on use — one shot, then gone. Power is the spell&rsquo;s own plus half the party&rsquo;s sharpest mind, so a high-minded character makes every working better; a <strong>wizard</strong> adds two more and opens an ordinary fight with two workings instead of one. A working that lands <strong>keeps working</strong> — half its force again every round while the fight lasts, whether it is burning the foe or mending the party — and in the <strong>boss chamber the party looses everything it has</strong>. A <strong>healing</strong> working goes off the moment a companion is failing, mid-fight, not after the dust settles. So a grimoire is a reserve you spend down toward the throne: one spell is a tool, three are a plan.</p>
+        <p><strong>The delve wears you down</strong>, on two clocks. The lamp burns <strong>oil</strong> on every march — run dry and the whole party takes damage every room it gropes through the dark, so an Everburning Lantern (which sips), Dancing Light or Eyes of the Mouse are worth real picks. And a blow worth a quarter of a body leaves a <strong>wound</strong>: healing can no longer reach past the hatched part of the health bar, and nothing in the dungeon mends it — the scar is carried all the way to the throne. The throne is not the only thing that can kill you.</p>
+        <dl class="help-legend" id="help-attrition-legend"></dl>
+        <p>The dungeon itself is built room by room: <strong>halls, chambers, caverns, rotundas and cells</strong>, each sized for what happens in it — a boss gets a great cavern, a vault is a closet. Passages join them through real doorways, and <strong>secret doors</strong> hide side branches. One floor, every room of it earning its place, and the throne room at the end of the spine.</p>
+        <p><strong>The room is a weapon.</strong> A chamber holds up to five pieces of furniture — pillars to fight behind, crates to crack, and <strong>hazards</strong> to put a monster into: an open pit, a bed of rusted floor spikes, a crack across the floor, a brazier still burning. Driving something onto a hazard is a big opening blow — but it takes the right body or the right kit: a fighter's muscle or a rogue's leverage can manage the bare shove, while a <strong>grapple and line</strong>, a <strong>tower shield</strong> or an <strong>athanor charm</strong> does it harder and safer. Rooms are sized so four adventurers, a monster and the furniture all genuinely stand somewhere — except corridors, which stay narrow on purpose, because a passage is where a column is the only formation that fits.</p>
+        <p>Off the spine hang <strong>wings</strong>: two to four rooms with a theme and a payoff — the burial, archive, barracks and flooded wings. An open one is a party vote; a <strong>hidden</strong> one has to be noticed, and always ends in a vault. What the party can do with what it finds there is, again, a question of capabilities and kit.</p>
+      </div>
+
+      <div class="help-step">
+        <h3>Watching the Delve</h3>
+        <p><strong>The Chronicle</strong> narrates every room in three beats. Toasts flag big moments — a hero falling, or the boss chamber. Use the controls to pause, step, or change speed.</p>
+      </div>
+
+      <button id="help-close-btn">Got it — let's draft</button>
+    </div>
+  </div>
+
+  <!-- Hall of Records overlay -->
+  <div id="records-overlay">
+    <div class="help-card">
+      <h2>🏛️ Hall of Records</h2>
+      <div class="help-sub">Best scores, the campaigns that earned them, and every saga kept.</div>
+      <div id="records-body"></div>
+      <button id="records-close-btn">Close</button>
+    </div>
+  </div>
+
+  <!-- Dungeon Archive overlay -->
+  <div id="archive-overlay">
+    <div class="help-card">
+      <h2>🗺️ Dungeon Archive</h2>
+      <div class="help-sub">Every design the party has walked — re-enterable, editable, yours.</div>
+      <div id="archive-body"></div>
+      <button id="archive-close-btn">Close</button>
+    </div>
+  </div>
+
+  <!-- Card Workshop overlay -->
+  <div id="cards-overlay">
+    <div class="help-card">
+      <h2>🎴 Card Workshop</h2>
+      <div class="help-sub">Forge your own cards, manage content packs, import and export designs.</div>
+      <div id="cards-body"></div>
+      <button id="cards-close-btn">Close</button>
+    </div>
+  </div>
+
+</body>
+</html>

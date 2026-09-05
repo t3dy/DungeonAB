@@ -28,7 +28,9 @@ const DOCS_OUT = path.join(ROOT, 'src/public/docs');
  * one line: what that release was.
  */
 const VERSIONS = [
-  { v: 'v8.2', href: '../', tag: 'current', title: 'The torchlit dungeon',
+  { v: 'v9.0', href: '../', tag: 'current', title: 'The performed delve',
+    blurb: 'One frame, four screens, and the button that starts the delve always in reach. The picture is the width of the screen with the chronicle beside it, written a line at a time as its beat plays. Every room is performed: the party walks the passage, forms up in the shape the fight calls for, and a fight plays round by round — the front rank swings, the monster’s bar falls, the counter-blow lands, the numbers rise — until it falls or the party runs. Nothing the simulator computes changed.' },
+  { v: 'v8.2', href: '../v82/', title: 'The torchlit dungeon',
     blurb: 'The same simulator, seen properly for the first time since v4.1. The outdoor sky rig inherited from SnakeAB is gone: the party’s torch is the key light and the only shadow caster, every theme keeps its own dark, the camera drops to the 30° Ultima eye and the near walls step aside. A capture harness photographs any seeded room reproducibly.' },
   { v: 'v8.1', href: '../v81/', title: 'The brass-tacks dungeon simulator',
     blurb: 'One draft, one single-floor dungeon. The town, campaign, providence, tactic tree, wagers, locks and alchemy economy are cut; twelve capabilities across sixteen Renaissance magi, graded by depth, decide what a party can attempt. Lean and mean.' },
@@ -88,7 +90,7 @@ const GROUPS = [
       ['DATACONTRACTS.md', 'Data contracts — the syncs nobody enforces', 'DATACONTRACTSPROPOSAL.md'],
       ['MEASUREMENT.md', 'Measurement — how not to fool yourself', 'MEASUREMENTPROPOSAL.md'],
       ['GRAPHICS.md', 'Graphics — the renderer, measured, and what it would take'],
-      ['SCREENS.md', 'Screens — why the crawl cannot be watched, and the frame that fixes it'],
+      ['SCREENS.md', 'Screens — why the crawl could not be watched, and the frame that fixed it'],
     ],
   },
   {
