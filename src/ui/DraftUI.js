@@ -39,14 +39,23 @@ export class DraftUI {
     container.innerHTML = '';
     container.style.display = 'block';
 
+    // The packs have run dry: the Muster screen takes it from here
+    // (ui/MusterUI.js). No "draft complete" page — the pool is shown
+    // there, mustered, with March in the action bar.
     if (this.draft.finished) {
-      this.renderDraftComplete(container);
+      if (!this.completed) {
+        this.completed = true;
+        this.onComplete({ pool: this.draft.getPlayerPool().all });
+      }
       return;
     }
 
     const round = this.draft.round + 1;
     const pick = this.draft.pickInRound + 1;
     const dir = this.draft.passDirection() === 1 ? '→ passing left' : '← passing right';
+
+    const status = document.getElementById('bar-draft-status');
+    if (status) status.textContent = `Pack ${round} of ${this.draft.numRounds} · Pick ${pick} · ${dir}`;
 
     const title = document.createElement('div');
     title.style.cssText = 'text-align:center;margin-bottom:1rem;';
@@ -152,67 +161,5 @@ export class DraftUI {
     container.appendChild(panel);
   }
 
-  renderDraftComplete(container) {
-    const pool = this.draft.getPlayerPool();
 
-    const title = document.createElement('div');
-    title.style.cssText = 'text-align:center;margin-bottom:1.25rem;';
-    title.innerHTML = `
-      <div style="color:#d8a53f;font-size:1.2rem;font-weight:bold;">The Draft Is Done</div>
-      <div style="color:#887755;font-size:0.85rem;">Party of ${Math.max(1, pool.characters.length)} · ${pool.equipment.length} equipment · ${pool.spells.length} spells · ${pool.personalities.length} personalities</div>
-    `;
-    container.appendChild(title);
-
-    // Final pool, full cards
-    const grid = document.createElement('div');
-    grid.className = 'pack-grid';
-    for (const card of pool.all) {
-      const el = this.renderCard(card, () => {});
-      el.style.cursor = 'default';
-      grid.appendChild(el);
-    }
-    container.appendChild(grid);
-
-    // Rival pools summary
-    const rivals = document.createElement('div');
-    rivals.className = 'panel';
-    rivals.style.cssText = 'margin-top:1rem;';
-    rivals.innerHTML = `<h2>The Rest of the Table</h2>` + this.draft.getTableSummary()
-      .filter(s => s.isAI)
-      .map(s => `<div style="font-size:0.8rem;padding:0.2rem 0;color:#998866;">${s.icon} ${s.name}: party of ${s.counts.characters}, ${s.counts.equipment} equipment, ${s.counts.spells} spells</div>`)
-      .join('');
-    container.appendChild(rivals);
-
-    // Difficulty + seed + go
-    const setup = document.createElement('div');
-    setup.className = 'panel';
-    setup.style.cssText = 'margin-top:1rem;';
-    setup.innerHTML = `
-      <h2>The Delve</h2>
-      <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;font-size:0.85rem;">
-        <label>Difficulty
-          <select id="difficulty-select" style="background:#14110b;color:#e0e0e0;border:1px solid #3a2f1e;padding:0.4rem;border-radius:4px;font-family:inherit;">
-            <option value="easy">Easy</option>
-            <option value="medium" selected>Medium</option>
-            <option value="hard">Hard</option>
-            <option value="nightmare">Nightmare</option>
-          </select>
-        </label>
-        <label style="flex:1;">Seed
-          <input id="seed-input" type="text" placeholder="blank = random dungeon" style="width:100%;background:#14110b;color:#e0e0e0;border:1px solid #3a2f1e;padding:0.4rem;border-radius:4px;font-family:inherit;" />
-        </label>
-      </div>
-    `;
-    container.appendChild(setup);
-
-    const goBtn = document.createElement('button');
-    goBtn.textContent = '🏰 Enter the Dungeon';
-    goBtn.style.cssText = 'width:100%;margin-top:1rem;padding:1rem;font-size:1rem;';
-    goBtn.addEventListener('click', () => {
-      const difficulty = document.getElementById('difficulty-select').value;
-      const seed = document.getElementById('seed-input').value.trim() || `delve-${Date.now().toString(36)}`;
-      this.onComplete({ pool: pool.all, difficulty, seed });
-    });
-    container.appendChild(goBtn);
-  }
 }

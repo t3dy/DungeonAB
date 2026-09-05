@@ -187,6 +187,16 @@ Docs and tests are safe to edit during; anything under `src/` is not.
 
 ## R15. The game's loop does not run in a hidden Browser pane
 
+**Status (v9.0, 2026-09-04): mostly gone.** The loop is a timer-paced
+`async` walk now (`main.js` `runLoop` → `advanceRoom` → the
+performance), and timers fire in a hidden tab (throttled to once a
+second). What does not run hidden is the sprite tweening, which lives in
+`requestAnimationFrame`; `IsoDungeonRenderer.settle()` snaps every
+tween to its end as each beat closes, so a delve watched from a hidden
+pane arrives at the right places with the motion missing, and the
+chronicle is written regardless. Step still performs exactly one room.
+The original entry follows.
+
 `src/main.js` drives the crawl with `requestAnimationFrame`, which does
 not fire while `document.visibilityState === 'hidden'` — and the Browser
 pane is hidden whenever it is not fronted. A delve therefore appears to

@@ -23,6 +23,7 @@ _🛡️ Michael Maier takes the front of the march, and the rest fall in behind
 - 🎒 1 piece of kit taken up.
 - 🚪 1 more room behind them.
 - · 👹 Room 1: monster — spell-strike
+- 🎒 ⚔️ Round by round — 1: 55 dealt.
 - 🎒 ✨ The working holds: +26 damage every round while the fight lasts.
 - 🎒 🐀 A chittering rat swarm drops the rat-king's knot: a trinket (+1 mind), now worn by Paracelsus.
 
@@ -119,6 +120,7 @@ They might have chosen to stand and fight, or fall back — Giordano Bruno made 
 - 🎒 1 piece of kit taken up.
 - 🚪 1 more room behind them.
 - · 👹 Room 6: monster — spell-strike
+- 🎒 ⚔️ Round by round — 1: 41 dealt.
 - 🎒 ✨ The working holds: +14 damage every round while the fight lasts.
 - 🎒 🦴 A rattling skeleton patrol drops a femur of surprising balance: a trinket (+1 attack), now worn by Michael Maier.
 
@@ -282,6 +284,7 @@ _🛡️ With Michael Maier down, Robert Fludd takes the front. The next thing t
 - 🚪 1 more room behind them.
 - · 🐉 Room 15: boss — drop-portcullis
 - · 🏆 The dungeon is beaten!
+- 🎒 ⚔️ Round by round — 1: 13 dealt, the boss turns · 2: 13 dealt.
 - 🎒 🔨 The Blessed Mace sanctifies the room between swings: whatever was stirring in the stone settles.
 - 🎒 ⏸️ The hall is too tight to spread out: the party files up, one blade forward.
 - 🎒 💢 At half health, the Ogre King Under the Stair turns fierce: attack +2 for the rest of the fight.

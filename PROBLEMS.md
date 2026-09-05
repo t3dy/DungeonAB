@@ -207,7 +207,7 @@ dungeon. If a delve — thread `this.rng` from `Simulator` into
 
 ## P9. The crawl is a slideshow: a room resolves in one call and is drawn as one frame
 
-**Status: open, reported by Ted 2026-09-04, design in SCREENS.md §1 and §S3.**
+**Status: fixed in v9.0, 2026-09-04 — SCREENS.md S3, verified in the browser.** The room is performed between ticks from a per-round record the resolver already computed; nothing the simulator computes changed. What follows is the problem as found.
 
 `mainLoop` ticks every 1400 ms; one tick is one room resolved whole in
 `Simulator._tick`, fight rounds included (`resolveFight` counts rounds
@@ -228,7 +228,7 @@ keep. The simulator's arithmetic is not to change (rule 10, P8).
 
 ## P10. The button that starts the delve is below the fold, twice
 
-**Status: open, reported by Ted 2026-09-04, design in SCREENS.md §2 and §S1–S2.**
+**Status: fixed in v9.0, 2026-09-04 — SCREENS.md S1 + S2.** Measured after: March at 713 px in a 768 px viewport on a page that does not scroll; canvas 929×638. What follows is the problem as found.
 
 At 1366×768: 🏰 Enter the Dungeon sits at 1763 px in a 692 px scroll
 container (the 27-card pool, the rivals and the delve panel come first);

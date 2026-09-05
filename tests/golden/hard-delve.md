@@ -311,6 +311,7 @@ _🕯️ The wick is well down the oil. 1 more march of light, then none._
 - · 🕯️ The wick is well down the oil. 1 more march of light, then none.
 - · 🐉 Room 16: boss — shove-into-brazier
 - · 🏆 The dungeon is beaten!
+- 🎒 ⚔️ Round by round — 1: 12 dealt, 7 taken, the boss turns · 2: 8 dealt, 9 taken, 13 healed · 3: 10 dealt.
 - 🎒 🧱 The party fights from behind a row of squat pillars: 1 less damage per round.
 - 🎒 🪞 A tall silvered mirror shows the ethereal where it truly stands: weapons do full damage.
 - 🎒 ⏸️ The cavern is too tight to spread out: the party files up, one blade forward.

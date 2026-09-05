@@ -234,6 +234,7 @@ _🕯️ The flame stands up, thins, and is gone. The party is out of oil._
 - 🚪 1 more room behind them.
 - · 🕯️ The flame stands up, thins, and is gone. The party is out of oil.
 - · 👹 Room 12: monster — fight
+- 🎒 ⚔️ Round by round — 1: 23 dealt, 9 taken · 2: 17 dealt.
 - 🎒 🧱 The party fights from behind a fall of rubble: 1 less damage per round.
 - 🎒 🪞 A tall silvered mirror shows the ethereal where it truly stands: weapons do full damage.
 - 🎒 🔺 The party drives in as a wedge, everything committed forward.
@@ -262,6 +263,7 @@ _🛡️ Michael Sendivogius steps into the gap John Napier left, and the party 
 - ❤️ 13 health taken.
 - 🚪 1 more room behind them.
 - · 👹 Room 13: monster — shove-into-brazier
+- 🎒 ⚔️ Round by round — 1: 11 dealt, 13 taken · 2: 10 dealt.
 - 🎒 🔺 The party drives in as a wedge, everything committed forward.
 - 🎒 🪙 One of the thawed dead, steaming gently drops a frozen soldier's pay: 10 gold.
 - 🎒 🐍 The monster was venomous, but the cleric cures the poison before it can act.
@@ -304,6 +306,7 @@ _🛡️ Paracelsus steps into the gap Michael Sendivogius left, and the party r
 - ❤️ 27 health taken.
 - · 🐉 Room 15: boss — spell-strike
 - · ☠️ The party has fallen.
+- 🎒 ⚔️ Round by round — 1: 23 dealt, 36 taken, the boss turns.
 - 🎒 🌟 The light soaks into a row of squat pillars. Whatever was going to rise out of it stays put, and the working bites for 3.
 - 🎒 🌡️ A bed of rusted floor spikes glows and spits where the working lands: 2 damage to whatever is near it.
 - 🎒 🔺 The party drives in as a wedge, everything committed forward.

@@ -12,6 +12,11 @@ primary action is always the last thing on a scrolling page.
 House pattern: **the trouble first, then ranked proposals** (§S at the
 bottom), with a recommendation and a phasing.
 
+**Status (2026-09-04): built and shipped as v9.0.** Ted's answer to the
+recommendation was "do it all, and then some": S1, S2, S3 (both halves)
+and S5 are in; S4 stays rejected. What was built, and what it measured,
+is in the last section.
+
 ---
 
 ## 1. The crawl is a slideshow
@@ -289,3 +294,59 @@ The pacing and drawing models are read from `main.js`, `Simulator.js`,
 ~10 s twelve-round ceiling are targets, not measurements. The speed
 slider's range (0.5×–3×) may need re-thinking once beats replace the
 interval: at 3× a performed fight is a blur, at 0.5× a march is a wait.
+
+## What was built (v9.0, 2026-09-04)
+
+**S1 — the frame.** `ui/Screens.js`: four screens (Table, Muster,
+Delve, Reckoning) as sections under one header, with a fixed action bar
+that each screen owns (`data-screen` groups). The draft-complete page
+and the muster overlay are one screen, `ui/MusterUI.js`: the four who
+march as a row with kit and workings, the rest of the pool as lines,
+the kit editor and the rivals folded away. Difficulty, seed and March
+are in the bar. `tests/screens.test.js` holds the markup to the
+contract.
+
+| Measured, 1366×768 | before | after |
+|---|---|---|
+| Scrolls to start the delve | 2 (2.5 + 1.9 screens) | **0** — March at 713–759 px, page 655 px of 655 |
+| Canvas | 593 × 565 (32% of viewport) | **929 × 638** (56%) |
+| Chronicle | 135 px, last panel in a scrolling column | full-height column, nothing else in it |
+
+**S2 — the delve screen.** Canvas ≈ 68% and full height, the chronicle a
+column beside it, the roster a HUD strip over the picture's foot with
+the formation chip, the stat line in the header, the log under a
+disclosure, controls in the bar.
+
+**S3 — beats.** `RoomEncounters.resolveFight` records `roundLog` —
+one entry per round with the swing, the incoming, the mid-heal and the
+phase, plus the opening blow and the monster's starting health — and the
+narration carries it as `rounds`; the ledger gets one "Round by round"
+line per fight (three goldens re-blessed for exactly that line, seven
+insertions). `ui/Choreography.js` plans the room as beats — march
+(scaled by corridor length), arrival, form-up, deliberation, opening,
+each round, resolution, wounds, falls, aside — and plays them against
+the renderer, the story panel and the HUD, so the next tick waits on
+the performance. The renderer keeps persistent actors keyed by name and
+tweens them: down the corridor in file, into formation slots, lunging
+at the monster and recoiling from its counter; the monster of the room
+is held on screen with a health bar until it falls, fades, or the party
+runs back down the passage. Numbers rise off the hit. The story panel
+writes each line on its beat and each round as it plays.
+`tests/choreography.test.js` holds one beat per recorded round, the
+resolution on the resolve beat, a bounded total (a twelve-round fight
+under ten seconds), and a headless play-through.
+
+**S5 — the eye.** On a fight the camera aims between the ranks and the
+monster's end and pulls in, cancelling the room's size zoom-out; it
+releases on the resolution.
+
+**Verified in the browser** (2026-09-04, dev build, 1366×768): the party
+files down corridors; a boss fight held the Ogre King in frame with his
+bar, the HUD health falling per round, "it turns" on the phase, and the
+party fled the throne room and walked back out; the reckoning screen and
+its bar. Capture URLs still work and Step performs one room.
+
+**Not done:** a `beat=` capture parameter for mid-round screenshots
+(a fight is caught by stepping at 0.5× instead); the 2D fallback plays
+the beats in the chronicle and HUD only; PROBLEMS P8 stands, so which
+rooms fight is not reproducible from a seed.

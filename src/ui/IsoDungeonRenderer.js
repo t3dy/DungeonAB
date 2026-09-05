@@ -20,7 +20,7 @@ import { ATLAS, FX_TILES, getClassTile, getMonsterTile, getRoomProp, getFeatureT
 import { getFeature } from '../world/RoomFeatures.js';
 import {
   TILE, DOOR_W, roomHalf, roomAxis, monsterSpot, partySlots, wallSpans, doorMap,
-  featureSlots,
+  featureSlots, frontCount, marchingOrder,
 } from './RoomLayout.js';
 
 // Half-height of the view, in world units, before the room adds to it.
@@ -190,6 +190,23 @@ export class IsoDungeonRenderer {
     this.clock = new THREE.Clock();
     this.effects = [];
 
+    // The performance (ui/Choreography.js). Party sprites used to be
+    // rebuilt at the new room's slots every tick, which is why the
+    // party never walked anywhere: there was nothing to move. Now they
+    // are persistent actors keyed by name and *tweened* between slots,
+    // down corridors and into lunges; the monster of the room being
+    // fought is held on screen until the resolution beat says what
+    // became of it; and its health bar is a sprite that ticks down a
+    // round at a time.
+    this.supportsBeats = true;
+    this.actors = new Map();          // name → { sprite, base, cls, dead }
+    this.tweens = [];
+    this.held = null;                 // room index whose monster stays drawn
+    this.monsterSprites = new Map();  // room index → sprite
+    this.bar = null;                  // the held monster's health bar
+    this.zoomBias = 0;                // the camera's per-beat push in or out
+    this.zoomBiasTarget = 0;
+
     // The Tiny Dungeon sheet (Kenney, CC0): pixel-crisp, re-render on arrival
     this.tileMats = new Map();
     this.atlasReady = false;
@@ -226,7 +243,17 @@ export class IsoDungeonRenderer {
     if (typeof window !== 'undefined') window.__iso = this;
   }
 
-  render(state) {
+  /**
+   * Draw the state.
+   *
+   *   opts.perform — the performance will move the party itself: sync
+   *                  the actors (new members appear) but do not snap
+   *                  them to the room's slots, and keep the dead until
+   *                  their fall beat plays.
+   *   opts.hold    — room index whose monster must stay drawn even if
+   *                  the state already says it is cleared.
+   */
+  render(state, opts = {}) {
     this.lastState = state;
     const rooms = state.dungeon.rooms;
 
@@ -242,17 +269,30 @@ export class IsoDungeonRenderer {
     if (this.builtKey !== key) {
       this.buildDungeon(rooms, state.dungeon.edges, themeId, state.dungeon.trapdoors || []);
       this.builtKey = key;
+      // A rebuilt dungeon has fresh floor positions; the actors stand on
+      // the old ones until placed again
+      this.actors.clear();
+      this.partyGroup.clear();
     }
 
+    if (opts.hold !== undefined && opts.hold !== null) this.held = opts.hold;
     this.updateIcons(state);
     this.updateOccupants(state);
-    this.updateParty(state);
+    this.syncActors(state, { pruneDead: !opts.perform });
+    if (!opts.perform) {
+      const idx = state.currentRoomIndex ?? Math.min(state.roomIndex, rooms.length - 1);
+      const room = rooms[idx];
+      const facing = !!room && room.monster && !room.cleared && (room.type === 'monster' || room.type === 'boss');
+      this.placeParty(idx, facing, state?.party?.formation || 'line', { ms: 0 });
+      this.setZoomBias(0);
+    }
 
     // The camera rides with the party
     const idx = state.currentRoomIndex ?? Math.min(state.roomIndex, rooms.length - 1);
     this.focusOn(rooms[idx]);
     this.animateFrame();
   }
+
 
   /**
    * A sprite material showing one 16px tile of the Tiny Dungeon sheet
@@ -306,6 +346,8 @@ export class IsoDungeonRenderer {
    */
   updateOccupants(state) {
     this.occupantGroup.clear();
+    this.monsterSprites.clear();
+    if (this.bar) { this.bar = null; }
     if (!this.atlasReady) return;
     const rooms = state.dungeon.rooms;
     const knownRooms = this.knownSet(state);
@@ -317,13 +359,19 @@ export class IsoDungeonRenderer {
       if (!known) return;
 
       let sprite = null;
-      if ((room.type === 'monster' || room.type === 'boss') && room.monster && !room.cleared) {
+      const heldHere = this.held === i;
+      if ((room.type === 'monster' || room.type === 'boss') && room.monster && (!room.cleared || heldHere)) {
         const scale = room.type === 'boss' ? 1.7 : 1.05;
         // The monster holds its end of the room; the party gets the other
         const { mx, mz } = monsterSpot(room, x, z);
         sprite = this.tileSprite(getMonsterTile(room.monster.kind), scale);
+        sprite.material = sprite.material.clone();   // its own tint, for the hit flash
         sprite.position.set(mx, fy + 0.2 + scale / 2, mz);
         sprite.userData.sway = true;
+        sprite.userData.home = { x: mx, z: mz };
+        sprite.userData.scale = scale;
+        this.monsterSprites.set(i, sprite);
+        if (heldHere) this.ensureBar(i, sprite, scale);
 
         // Its nature shows over its head — a readable enemy is a plan
         const badges = [];
@@ -430,6 +478,10 @@ export class IsoDungeonRenderer {
     this.lastH = h;
     this.renderer.setSize(w, h, false);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    // A re-fit mid-delve (the grid changed, the window did) keeps the
+    // eye where it is: animateFrame reads the new aspect from lastW/H.
+    // Only the first call builds the camera.
+    if (this.camera) return;
 
     // Roughly two rooms and their corridors, top to bottom
     const aspect = w / h;
@@ -457,8 +509,10 @@ export class IsoDungeonRenderer {
     // The camera follows the party down: it tracks the floor they stand
     // on, so the level below is not framed from the ceiling of the one above
     if (!this.camTarget) this.camTarget = new THREE.Vector3(x, y, z);
-    this.camTarget.set(x, y, z);
     this.camZoom = zoomOut;
+    // A fight in progress keeps its aim (aimFight) until released
+    if (this.camAim) this.camTarget.set(this.camAim.x, this.camAim.y, this.camAim.z);
+    else this.camTarget.set(x, y, z);
   }
 
   /**
@@ -740,66 +794,439 @@ export class IsoDungeonRenderer {
     });
   }
 
-  updateParty(state) {
-    this.partyGroup.clear();
-    const idx = state.currentRoomIndex ?? Math.min(state.roomIndex, state.dungeon.rooms.length - 1);
-    const { x, y: fy, z } = this.roomPositions[idx] || { x: 0, y: 0, z: 0 };
-    const room = state.dungeon.rooms[idx];
+  /**
+   * The actors: one persistent sprite (and class-coloured base disc) per
+   * living member, keyed by name, so the performance can move them.
+   * New members appear; the dead are pruned only when asked, because in
+   * a performance they fall on their own beat (dropActor).
+   */
+  syncActors(state, { pruneDead = false } = {}) {
+    const members = state.party.members;
+    const names = new Set(members.map(m => m.name));
+    for (const [name, actor] of this.actors) {
+      const m = members.find(x => x.name === name);
+      if (!m || (pruneDead && !m.alive)) {
+        this.partyGroup.remove(actor.sprite);
+        if (actor.base) this.partyGroup.remove(actor.base);
+        this.actors.delete(name);
+      }
+    }
+    for (const m of members) {
+      if (!m.alive && !this.actors.has(m.name)) continue;
+      let actor = this.actors.get(m.name);
+      if (!actor) {
+        actor = this.makeActor(m);
+        this.actors.set(m.name, actor);
+      }
+      // Wounded: the sprite dims and shrinks a little, as before
+      const wounded = m.alive && m.health / m.maxHealth <= 0.35;
+      if (actor.sprite.isSprite && !actor.dead) {
+        actor.sprite.material.color.set(wounded ? 0xb98080 : 0xffffff);
+        actor.sprite.scale.y = actor.sprite.scale.x * (wounded ? 0.83 : 1);
+      }
+    }
+    void names;
+  }
+
+  makeActor(m) {
+    const actor = { name: m.name, cls: m.class, dead: false, base: null };
+    if (this.atlasReady) {
+      const sprite = this.tileSprite(getClassTile(m.class), 0.82);
+      sprite.material = sprite.material.clone();
+      sprite.userData.baseY = 0.72;
+      sprite.userData.phase = this.actors.size * 1.7;
+      actor.sprite = sprite;
+      const base = new THREE.Mesh(this.baseGeo, this.baseMats[m.class] || this.baseMats.fighter);
+      base.castShadow = true;
+      actor.base = base;
+      this.partyGroup.add(sprite, base);
+    } else {
+      const meeple = new THREE.Mesh(this.meepleGeo, this.meepleMats[m.class] || this.meepleMats.fighter);
+      meeple.castShadow = true;
+      meeple.userData.baseY = 0.55;
+      meeple.userData.phase = this.actors.size * 1.7;
+      actor.sprite = meeple;
+      this.partyGroup.add(meeple);
+    }
+    return actor;
+  }
+
+  /** The living actors in marching order (fighters to the front). */
+  livingActors() {
+    const members = (this.lastState?.party?.members || []).filter(m => this.actors.has(m.name) && !this.actors.get(m.name).dead);
+    return marchingOrder(members).map(m => this.actors.get(m.name));
+  }
+
+  /** Move an actor (sprite + base) to a floor position, now or over ms. */
+  moveActor(actor, x, z, fy, ms = 0, delay = 0, onDone = null) {
+    const y = fy + (actor.sprite.isSprite ? 0.72 : 0.55);
+    const targets = [[actor.sprite, y]];
+    if (actor.base) targets.push([actor.base, fy + 0.24]);
+    for (const [obj, ty] of targets) {
+      if (ms <= 0) {
+        obj.position.set(x, ty, z);
+        obj.userData.baseY = ty;
+        continue;
+      }
+      const from = obj.position.clone();
+      this.tweens.push({
+        obj, ms, delay, start: this.clock.getElapsedTime() * 1000, onDone: obj === actor.sprite ? onDone : null,
+        step: t => {
+          obj.position.x = from.x + (x - from.x) * t;
+          obj.position.z = from.z + (z - from.z) * t;
+          obj.userData.baseY = ty;
+        },
+      });
+    }
+  }
+
+  /**
+   * Stand the party in the room in its formation. The torch goes with
+   * them. `ms` 0 snaps (a capture, the first frame); otherwise the
+   * actors step into their slots.
+   */
+  placeParty(roomIdx, facingMonster, formation = 'line', { ms = 0 } = {}) {
+    const room = this.lastState?.dungeon?.rooms?.[roomIdx];
+    const pos = this.roomPositions[roomIdx];
+    if (!room || !pos) return;
+    const { x, y: fy, z } = pos;
 
     // The torch has to light the whole chamber now, not a platform
-    const reach = room ? Math.max(roomHalf(room).hx, roomHalf(room).hz) : 4;
+    const reach = Math.max(roomHalf(room).hx, roomHalf(room).hz);
     this.torch.position.set(x, fy + 2.4, z);
     this.torch.distance = Math.max(12, reach * 3.4);
     this.torchBase = 24 + reach * 2.2;
 
-    const facingMonster = room && room.monster && !room.cleared &&
-      (room.type === 'monster' || room.type === 'boss');
-
-    // Fighters to the front rank; the fragile behind them
-    const living = state.party.members
-      .filter(m => m.alive)
-      .slice()
-      .sort((a, b) => (a.class === 'fighter' ? -1 : 0) - (b.class === 'fighter' ? -1 : 0));
-    const n = living.length;
-    // Stand them the way they are actually fighting: the formation the
-    // party chose is on the state, and the drawing agrees with the maths
-    const slots = room
-      ? partySlots(room, x, z, n, facingMonster, state?.party?.formation || 'line')
-      : living.map(() => ({ mx: x, mz: z }));
-
-    living.forEach((m, i) => {
+    const actors = this.livingActors();
+    const slots = partySlots(room, x, z, actors.length, facingMonster, formation);
+    actors.forEach((actor, i) => {
       const { mx, mz } = slots[i];
-      const wounded = m.health / m.maxHealth <= 0.35;
-
-      if (this.atlasReady) {
-        // The adventurer, in the flesh (well, in 16 pixels of it)
-        const sprite = this.tileSprite(getClassTile(m.class), 0.82);
-        sprite.position.set(mx, fy + 0.72, mz);
-        sprite.userData.baseY = fy + 0.72;
-        sprite.userData.phase = i * 1.7;
-        if (wounded) {
-          sprite.material = sprite.material.clone();
-          sprite.material.color.set(0xb98080);
-          sprite.scale.y = 0.68;
-        }
-        this.partyGroup.add(sprite);
-
-        // Class-colored base disc under their feet
-        const base = new THREE.Mesh(this.baseGeo, this.baseMats[m.class] || this.baseMats.fighter);
-        base.position.set(mx, fy + 0.24, mz);
-        base.castShadow = true;
-        this.partyGroup.add(base);
-      } else {
-        // Fallback meeple for the beat before the sheet loads
-        const meeple = new THREE.Mesh(this.meepleGeo, this.meepleMats[m.class] || this.meepleMats.fighter);
-        meeple.position.set(mx, fy + 0.55, mz);
-        meeple.castShadow = true;
-        meeple.userData.baseY = fy + 0.55;
-        meeple.userData.phase = i * 1.7;
-        this.partyGroup.add(meeple);
-      }
+      actor.slot = { x: mx, z: mz, fy };
+      this.moveActor(actor, mx, mz, fy, ms, i * ms * 0.08);
     });
   }
+
+  /**
+   * Walk the party from one room to another: out through the doorway,
+   * down the passage, in through the next, and into the slots there.
+   * Rooms are placed by axis moves, so the centre-to-centre line runs
+   * along the corridor. Staggered, so it reads as a file and not a
+   * block sliding.
+   */
+  marchParty(fromIdx, toIdx, ms, { flee = false } = {}) {
+    const rooms = this.lastState?.dungeon?.rooms || [];
+    const a = this.roomPositions[fromIdx];
+    const b = this.roomPositions[toIdx];
+    const room = rooms[toIdx];
+    if (!a || !b || !room) return;
+    const facing = !flee && !!room.monster && (!room.cleared || this.held === toIdx)
+      && (room.type === 'monster' || room.type === 'boss');
+    const actors = this.livingActors();
+    const slots = partySlots(room, b.x, b.z, actors.length, facing, this.lastState?.party?.formation || 'line');
+    // The torch walks too
+    this.tweens.push({
+      obj: this.torch, ms, delay: 0, start: this.clock.getElapsedTime() * 1000,
+      step: t => { this.torch.position.x = a.x + (b.x - a.x) * t; this.torch.position.z = a.z + (b.z - a.z) * t; },
+    });
+    const dx = b.x - a.x, dz = b.z - a.z;
+    // Lateral offset keeps the file inside the corridor's width
+    const across = Math.abs(dx) >= Math.abs(dz) ? { x: 0, z: 1 } : { x: 1, z: 0 };
+    actors.forEach((actor, i) => {
+      const { mx, mz } = slots[i];
+      const side = ((i % 2) * 2 - 1) * 0.28;
+      const p0 = actor.sprite.position.clone();
+      const p1 = { x: a.x + across.x * side, z: a.z + across.z * side };
+      const p2 = { x: b.x + across.x * side, z: b.z + across.z * side };
+      const p3 = { x: mx, z: mz };
+      actor.slot = { x: mx, z: mz, fy: b.y };
+      this.pathActor(actor, [{ x: p0.x, z: p0.z }, p1, p2, p3], b.y, ms * (flee ? 0.9 : 0.88), i * ms * 0.07);
+    });
+  }
+
+  /** Tween an actor along waypoints, time split by segment length. */
+  pathActor(actor, points, fy, ms, delay = 0) {
+    const lens = [];
+    let total = 0;
+    for (let i = 1; i < points.length; i++) {
+      const l = Math.hypot(points[i].x - points[i - 1].x, points[i].z - points[i - 1].z);
+      lens.push(l); total += l;
+    }
+    if (total < 1e-3) { this.moveActor(actor, points.at(-1).x, points.at(-1).z, fy, 0); return; }
+    const y = fy + (actor.sprite.isSprite ? 0.72 : 0.55);
+    const at = t => {
+      let d = t * total;
+      for (let i = 0; i < lens.length; i++) {
+        if (d <= lens[i] || i === lens.length - 1) {
+          const u = lens[i] > 0 ? Math.min(1, d / lens[i]) : 1;
+          return { x: points[i].x + (points[i + 1].x - points[i].x) * u, z: points[i].z + (points[i + 1].z - points[i].z) * u };
+        }
+        d -= lens[i];
+      }
+      return points.at(-1);
+    };
+    const objs = [[actor.sprite, y]];
+    if (actor.base) objs.push([actor.base, fy + 0.24]);
+    for (const [obj, ty] of objs) {
+      this.tweens.push({
+        obj, ms, delay, start: this.clock.getElapsedTime() * 1000, linear: true,
+        step: t => { const p = at(t); obj.position.x = p.x; obj.position.z = p.z; obj.userData.baseY = ty; },
+      });
+    }
+  }
+
+  /** The front rank steps in at the monster and back: the swing. */
+  lungeFront(roomIdx, names, ms) {
+    const room = this.lastState?.dungeon?.rooms?.[roomIdx];
+    const pos = this.roomPositions[roomIdx];
+    if (!room || !pos) return;
+    const { mx, mz } = monsterSpot(room, pos.x, pos.z);
+    for (const name of names) {
+      const actor = this.actors.get(name);
+      if (!actor || actor.dead || !actor.slot) continue;
+      const { x, z, fy } = actor.slot;
+      const dx = mx - x, dz = mz - z;
+      const len = Math.hypot(dx, dz) || 1;
+      const reach = Math.min(0.6, len * 0.55);
+      const tx = x + dx / len * reach, tz = z + dz / len * reach;
+      this.moveActor(actor, tx, tz, fy, ms * 0.45, 0);
+      this.moveActor(actor, x, z, fy, ms * 0.55, ms * 0.45);
+    }
+  }
+
+  /** The monster's counter-blow: it lunges, the front rank recoils. */
+  monsterStrike(roomIdx, names, text, ms) {
+    const sprite = this.monsterSprites.get(roomIdx);
+    const pos = this.roomPositions[roomIdx];
+    if (!sprite || !pos) return;
+    const home = sprite.userData.home;
+    const dx = pos.x - home.x, dz = pos.z - home.z;
+    const len = Math.hypot(dx, dz) || 1;
+    const tx = home.x + dx / len * 0.5, tz = home.z + dz / len * 0.5;
+    const now = this.clock.getElapsedTime() * 1000;
+    this.tweens.push({ obj: sprite, ms: ms * 0.4, delay: 0, start: now, step: t => { sprite.position.x = home.x + (tx - home.x) * t; sprite.position.z = home.z + (tz - home.z) * t; } });
+    this.tweens.push({ obj: sprite, ms: ms * 0.6, delay: ms * 0.4, start: now, step: t => { sprite.position.x = tx + (home.x - tx) * t; sprite.position.z = tz + (home.z - tz) * t; } });
+    let shown = false;
+    for (const name of names) {
+      const actor = this.actors.get(name);
+      if (!actor || actor.dead || !actor.slot) continue;
+      const { x, z, fy } = actor.slot;
+      const bx = x - dx / len * 0.3, bz = z - dz / len * 0.3;
+      this.moveActor(actor, bx, bz, fy, ms * 0.3, ms * 0.35);
+      this.moveActor(actor, x, z, fy, ms * 0.4, ms * 0.65);
+      this.flash(actor.sprite, 0xff6a5a, 160, ms * 0.35);
+      if (!shown && text) { this.floatText(x, fy + 1.3, z, text, '#ff7a6a', ms * 0.35); shown = true; }
+    }
+  }
+
+  /** The monster takes the round's damage: flash, bar, number. */
+  monsterHit(roomIdx, frac, text, phased = false) {
+    const sprite = this.monsterSprites.get(roomIdx);
+    if (!sprite) return;
+    this.flash(sprite, 0xffffff, 140);
+    if (this.bar && this.bar.room === roomIdx) this.setBar(frac);
+    const p = sprite.position;
+    if (text) this.floatText(p.x, p.y + 0.5, p.z, text, phased ? '#ffb347' : '#ffe9a0');
+    if (phased) {
+      sprite.userData.swayFast = true;
+      this.floatText(p.x, p.y + 1.0, p.z, 'it turns', '#ff8a3c', 200);
+    }
+  }
+
+  /** A mid-fight heal lands on somebody. */
+  healActor(name, text) {
+    const actor = this.actors.get(name);
+    if (!actor || actor.dead) return;
+    this.flash(actor.sprite, 0x8dffb0, 220);
+    const p = actor.sprite.position;
+    this.floatText(p.x, p.y + 0.5, p.z, text, '#8dffb0');
+  }
+
+  /** The monster falls: it tips, fades and is gone; the bar with it. */
+  monsterFall(roomIdx, ms) {
+    const sprite = this.monsterSprites.get(roomIdx);
+    if (!sprite) { this.releaseHold(); return; }
+    const sy = sprite.scale.y, sx = sprite.scale.x;
+    const baseY = sprite.userData.baseY;
+    sprite.userData.sway = false;
+    this.tweens.push({
+      obj: sprite, ms: ms * 0.7, delay: 0, start: this.clock.getElapsedTime() * 1000,
+      step: t => {
+        sprite.scale.y = sy * (1 - t * 0.9);
+        sprite.scale.x = sx * (1 + t * 0.25);
+        sprite.position.y = baseY - t * sy * 0.45;
+        sprite.material.opacity = 1 - t;
+      },
+      onDone: () => {
+        this.occupantGroup.remove(sprite);
+        this.monsterSprites.delete(roomIdx);
+        this.releaseHold();
+      },
+    });
+    if (this.bar && this.bar.room === roomIdx) {
+      const bar = this.bar.sprite;
+      this.tweens.push({ obj: bar, ms: ms * 0.5, delay: 0, start: this.clock.getElapsedTime() * 1000, step: t => { bar.material.opacity = 1 - t; } });
+    }
+  }
+
+  /** The party slips past: the monster stays, dimmed. */
+  monsterFade(roomIdx, ms) {
+    const sprite = this.monsterSprites.get(roomIdx);
+    if (sprite) {
+      this.tweens.push({ obj: sprite, ms, delay: 0, start: this.clock.getElapsedTime() * 1000, step: t => { sprite.material.opacity = 1 - t * 0.6; } });
+    }
+    this.releaseHold();
+  }
+
+  holdRoom(idx) { this.held = idx; }
+
+  releaseHold() {
+    this.held = null;
+    if (this.bar) {
+      this.occupantGroup.remove(this.bar.sprite);
+      this.bar = null;
+    }
+  }
+
+  /** A fallen actor drops where they stand and stays as a marker. */
+  dropActor(name, ms) {
+    const actor = this.actors.get(name);
+    if (!actor || actor.dead) return;
+    actor.dead = true;
+    const sprite = actor.sprite;
+    const sy = sprite.scale.y;
+    const baseY = sprite.userData.baseY ?? sprite.position.y;
+    this.tweens.push({
+      obj: sprite, ms: ms * 0.6, delay: 0, start: this.clock.getElapsedTime() * 1000,
+      step: t => {
+        sprite.scale.y = sy * (1 - t * 0.8);
+        sprite.position.y = baseY - t * sy * 0.4;
+        if (sprite.material?.color) sprite.material.color.setRGB(1 - t * 0.55, 1 - t * 0.7, 1 - t * 0.7);
+        if (sprite.material) sprite.material.opacity = 1 - t * 0.45;
+      },
+      onDone: () => { sprite.userData.baseY = undefined; },   // no more bob
+    });
+    this.flash(sprite, 0xff4040, 200);
+  }
+
+  /** Tint a sprite for a moment. */
+  flash(sprite, color, ms, delay = 0) {
+    if (!sprite?.material?.color) return;
+    const original = sprite.material.color.clone();
+    this.tweens.push({
+      obj: sprite, ms, delay, start: this.clock.getElapsedTime() * 1000,
+      step: t => { sprite.material.color.copy(original).lerp(new THREE.Color(color), t < 0.5 ? 1 : (1 - t) * 2); },
+      onDone: () => sprite.material.color.copy(original),
+    });
+  }
+
+  /** A number rises off a point and fades. */
+  floatText(x, y, z, text, color = '#ffe9a0', delay = 0) {
+    const sprite = new THREE.Sprite(this.textMaterial(text, color));
+    sprite.scale.set(1.1, 0.55, 1);
+    sprite.position.set(x, y, z);
+    sprite.visible = delay <= 0;
+    this.fxGroup.add(sprite);
+    this.effects.push({ sprite, born: this.clock.getElapsedTime() + delay / 1000, life: 0.9, kind: 'float', y0: y });
+  }
+
+  textMaterial(text, color) {
+    const key = `txt:${color}:${text}`;
+    if (!this.spriteMaterials.has(key)) {
+      const c = document.createElement('canvas');
+      c.width = 256; c.height = 128;
+      const ctx = c.getContext('2d');
+      ctx.font = 'bold 72px "Courier New", monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.lineWidth = 10;
+      ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+      ctx.strokeText(text, 128, 66);
+      ctx.fillStyle = color;
+      ctx.fillText(text, 128, 66);
+      const tex = new THREE.CanvasTexture(c);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      this.spriteMaterials.set(key, new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false }));
+    }
+    return this.spriteMaterials.get(key).clone();
+  }
+
+  /** The held monster's health bar, a sprite above its head. */
+  ensureBar(roomIdx, monster, scale) {
+    const c = document.createElement('canvas');
+    c.width = 128; c.height = 16;
+    const tex = new THREE.CanvasTexture(c);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.magFilter = THREE.NearestFilter;
+    const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false }));
+    sprite.scale.set(1.3, 0.16, 1);
+    sprite.position.set(monster.position.x, monster.position.y + scale / 2 + 0.18, monster.position.z);
+    this.occupantGroup.add(sprite);
+    this.bar = { room: roomIdx, sprite, canvas: c, ctx: c.getContext('2d'), tex };
+    this.setBar(1);
+  }
+
+  setBar(frac) {
+    if (!this.bar) return;
+    const { ctx, canvas, tex } = this.bar;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = 'rgba(0,0,0,0.8)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = frac > 0.5 ? '#c84c3c' : frac > 0.25 ? '#e0803a' : '#f0c040';
+    ctx.fillRect(2, 2, Math.max(0, (canvas.width - 4) * Math.max(0, Math.min(1, frac))), canvas.height - 4);
+    tex.needsUpdate = true;
+  }
+
+  /** Finish every tween now — the performance moved on. */
+  settle() {
+    const now = this.clock.getElapsedTime() * 1000;
+    for (const tw of this.tweens) {
+      // Only tweens that should have finished by now; a lunge that has
+      // not started yet keeps its cue
+      if (now - tw.start - tw.delay >= tw.ms) { tw.step(1); tw.onDone?.(); tw.done = true; }
+    }
+    this.tweens = this.tweens.filter(tw => !tw.done);
+  }
+
+  /** Push the eye in (negative) or out (positive) for a beat. */
+  setZoomBias(v) { this.zoomBiasTarget = v; }
+
+  /**
+   * Frame a fight: aim between the party's slots and the monster's end,
+   * and pull in. A boss cavern is framed wide by focusOn because it is
+   * big; the fight in it happens across three tiles, and that is what
+   * the eye should be on (SCREENS.md S5).
+   */
+  aimFight(roomIdx) {
+    const room = this.lastState?.dungeon?.rooms?.[roomIdx];
+    const pos = this.roomPositions[roomIdx];
+    if (!room || !pos || !this.camTarget) return;
+    const { mx, mz } = monsterSpot(room, pos.x, pos.z);
+    const actors = this.livingActors().filter(a => a.slot);
+    const px = actors.length ? actors.reduce((s, a) => s + a.slot.x, 0) / actors.length : pos.x;
+    const pz = actors.length ? actors.reduce((s, a) => s + a.slot.z, 0) / actors.length : pos.z;
+    this.camAim = { x: (mx + px) / 2, y: pos.y, z: (mz + pz) / 2 };
+    this.camTarget.set(this.camAim.x, this.camAim.y, this.camAim.z);
+    // Close enough that four sprites and a monster fill the frame; the
+    // room's own zoom-out is cancelled, whatever its size
+    this.zoomBiasTarget = -(this.camZoom || 0) - (room.type === 'boss' ? 0.6 : 1.4);
+  }
+
+  releaseAim() {
+    this.camAim = null;
+    this.zoomBiasTarget = 0;
+    if (this.lastState) {
+      const rooms = this.lastState.dungeon.rooms;
+      const idx = this.lastState.currentRoomIndex ?? Math.min(this.lastState.roomIndex, rooms.length - 1);
+      this.focusOn(rooms[idx]);
+    }
+  }
+
+  /** Re-fit the canvas after a layout change, without re-placing anyone. */
+  refit() {
+    this.lastW = null;
+    if (this.lastState) this.resize(this.lastState.dungeon.rooms);
+  }
+
 
   /**
    * Play a transient effect over the party's room: the sheet's slash
@@ -823,7 +1250,10 @@ export class IsoDungeonRenderer {
       sprite = new THREE.Sprite(this.glowMaterial(color || '#ffffff').clone());
       sprite.scale.set(1.1, 1.1, 1);
     }
-    sprite.position.set(x, fy + 1.0, z);
+    // Steel lands on the thing it hit, not the middle of the floor
+    const target = this.monsterSprites.get(roomIndex);
+    if (target && style.kind === 'slash') sprite.position.set(target.position.x, target.position.y + 0.1, target.position.z);
+    else sprite.position.set(x, fy + 1.0, z);
     this.fxGroup.add(sprite);
     this.effects.push({ sprite, born: this.clock.getElapsedTime(), life: 0.7 });
   }
@@ -852,6 +1282,10 @@ export class IsoDungeonRenderer {
 
   animateFrame() {
     if (!this.camera) return;
+    // The canvas follows the grid; the buffer follows the canvas
+    if (this.lastState && (this.canvas.clientWidth !== this.lastW || this.canvas.clientHeight !== this.lastH)) {
+      this.resize(this.lastState.dungeon.rooms);
+    }
     const t = this.clock.getElapsedTime();
 
     // Glide the camera to the room the party is in
@@ -867,7 +1301,9 @@ export class IsoDungeonRenderer {
       if (!this.camLook) this.camLook = this.camTarget.clone();
       this.camLook.lerp(this.camTarget, ease);
       this.camera.lookAt(this.camLook);
-      const zoom = VIEW_HALF + (this.camZoom || 0);
+      // The per-beat push: in on a fight, out on a throne room (SCREENS.md S5)
+      this.zoomBias += (this.zoomBiasTarget - this.zoomBias) * 0.08;
+      const zoom = Math.max(3.5, VIEW_HALF + (this.camZoom || 0) + this.zoomBias);
       const aspect = (this.lastW || 500) / (this.lastH || 420);
       this.camera.top = zoom;
       this.camera.bottom = -zoom;
@@ -885,25 +1321,43 @@ export class IsoDungeonRenderer {
     for (const s of this.iconGroup.children) {
       s.position.y = s.userData.baseY + Math.sin(t * 1.6 + s.userData.phase) * 0.06;
     }
+    // The performance's tweens: positions, tints, falls
+    const nowMs = t * 1000;
+    for (let i = this.tweens.length - 1; i >= 0; i--) {
+      const tw = this.tweens[i];
+      const u = (nowMs - tw.start - tw.delay) / tw.ms;
+      if (u < 0) continue;
+      const k = Math.min(1, u);
+      tw.step(tw.linear ? k : 1 - (1 - k) * (1 - k));
+      if (k >= 1) { tw.onDone?.(); this.tweens.splice(i, 1); }
+    }
     // Party bob (they shift their feet, waiting)
     for (const m of this.partyGroup.children) {
       if (m.userData.baseY !== undefined) {
         m.position.y = m.userData.baseY + Math.abs(Math.sin(t * 2.2 + m.userData.phase)) * 0.05;
       }
     }
-    // Monsters sway; props hold still
+    // Monsters sway; props hold still; a turned boss shakes
     for (const o of this.occupantGroup.children) {
       if (o.userData.sway) {
-        o.position.y = o.userData.baseY + Math.sin(t * 2.8 + o.userData.phase) * 0.07;
+        const rate = o.userData.swayFast ? 7 : 2.8;
+        o.position.y = o.userData.baseY + Math.sin(t * rate + o.userData.phase) * 0.07;
       }
     }
-    // Effects bloom and die
+    // Effects bloom and die; numbers rise and fade
     for (let i = this.effects.length - 1; i >= 0; i--) {
       const fx = this.effects[i];
       const age = (t - fx.born) / fx.life;
+      if (age < 0) { fx.sprite.visible = false; continue; }
+      fx.sprite.visible = true;
       if (age >= 1) {
         this.fxGroup.remove(fx.sprite);
         this.effects.splice(i, 1);
+        continue;
+      }
+      if (fx.kind === 'float') {
+        fx.sprite.position.y = fx.y0 + age * 0.9;
+        fx.sprite.material.opacity = age < 0.15 ? age / 0.15 : 1 - ((age - 0.15) / 0.85) ** 2;
         continue;
       }
       const s = 0.9 + age * 1.6;

@@ -309,6 +309,15 @@ export class Simulator {
     const result = resolveRoomAction(room, this.party, chosen);
     this.lastResult = result;   // structured outcome, for analytics/mining
 
+    // A fight's rounds go to the ledger whole — the record misses
+    // nothing (rule 7) — and to the narration payload, where the
+    // performance reads them (ui/Choreography.js). Same numbers, twice.
+    if (result.roundLog?.length) {
+      this.pendingLedger.push('⚔️ Round by round — ' + result.roundLog.map(r =>
+        `${r.round}: ${r.swing} dealt${r.incoming ? `, ${r.incoming} taken` : ''}${r.heal ? `, ${r.heal.amount} healed` : ''}${r.phased ? ', the boss turns' : ''}`
+      ).join(' · ') + '.');
+    }
+
     // The editor's pass: the resolution prose keeps the preps worth a
     // sentence (carries, card promises, the two best generics) and the
     // rest go to the ledger whole. The mechanics already applied every
@@ -386,6 +395,18 @@ export class Simulator {
       // an option nobody takes.
       offered: options.map(o => o.id),
       spellElement: result.spellElement || null,   // colors the strike FX
+      // The performance: what the picture plays between this tick and
+      // the next (ui/Choreography.js). Rounds are the fight's own
+      // record; the monster's bar needs its starting health; the
+      // outcome says whether it falls, is passed, or is fled from.
+      rounds: result.roundLog || null,
+      opening: result.opening || 0,
+      monster: room.monster
+        ? { name: room.monster.name, kind: room.monster.kind, health: result.monsterHealthMax ?? room.monster.health, isBoss: !!room.monster.isBoss }
+        : null,
+      retreated: !!result.retreated,
+      success: result.success !== false,
+      formation: result.formation || this.lastFormation || 'line',
       predicament,
       deliberation: composeDeliberation(chosen, options, this.party),
       resolution: composeResolution(room, chosen, result, this.party),

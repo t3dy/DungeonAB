@@ -11,9 +11,15 @@ export class DungeonRenderer {
   constructor(canvasId) {
     this.canvas = document.getElementById(canvasId);
     this.ctx = this.canvas.getContext('2d');
+    // The performance (ui/Choreography.js) animates sprites the 3D
+    // renderer owns; here the floorplan just redraws per room, so the
+    // beats play in the chronicle and the HUD alone.
+    this.supportsBeats = false;
   }
+  refit() { if (this.lastState) this.render(this.lastState); }
 
   render(state) {
+    this.lastState = state;
     const ctx = this.ctx;
     const { dungeon, roomIndex, party } = state;
 

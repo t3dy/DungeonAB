@@ -1,6 +1,13 @@
 /**
  * DungeonAB — application entry point
- * Draft at the table → delve the dungeon → read the chronicle.
+ * Draft at the table → muster → delve the dungeon → the reckoning.
+ *
+ * Four screens in one frame (ui/Screens.js): the Table, the Muster,
+ * the Delve and the Reckoning. Each renders into its own section and
+ * owns a group in the action bar, so the button that starts the delve
+ * is never at the end of a scroll (SCREENS.md S1). The delve is
+ * performed rather than shown: every room the simulator resolves is
+ * played back as beats before the next tick (ui/Choreography.js).
  */
 
 import { PackDraft } from './draft/PackDraft.js';
@@ -8,30 +15,29 @@ import { DraftUI } from './ui/DraftUI.js';
 import { DungeonRenderer } from './ui/DungeonRenderer.js';
 import { IsoDungeonRenderer } from './ui/IsoDungeonRenderer.js';
 import { captureRequest, autoDraft, tickToRoom, markReady } from './ui/Frames.js';
-import { renderOutfitting } from './ui/OutfitUI.js';
+import { renderMuster, openKit } from './ui/MusterUI.js';
+import { showScreen, currentScreen, onScreenChange } from './ui/Screens.js';
+import { planBeats, Choreographer } from './ui/Choreography.js';
 import { Simulator } from './sim/Simulator.js';
-import { Party, PARTY_CAP } from './agents/Party.js';
+import { Party } from './agents/Party.js';
 import { progression, DIFFICULTIES } from './game/Progression.js';
 import { computeStandings } from './game/Standings.js';
-import { SeededRandom } from './draft/PackDraft.js';
 import { archive } from './game/Archive.js';
 import { serializeDungeon } from './world/DungeonGen.js';
 import { setupArchive } from './ui/ArchiveUI.js';
 import { setupCardEditor, loadPlayerPacks } from './ui/CardEditorUI.js';
 import { installAlchemyPack } from './packs/alchemyPack.js';
 import { ROOM_HELP, CARD_TYPE_HELP, ATTRITION_HELP, describeTickEvents } from './ui/GameGuide.js';
-import { composeMend } from './narrative/Narrator.js';
 import { ChronicleLibrary, chronicleFilename } from './game/Chronicles.js';
 import { FORMATIONS } from './agents/Formation.js';
+import { toMarkdown } from './narrative/Chronicle.js';
+import { getEncounterTrace, clearEncounterTrace, capabilityUsageSummary } from './encounters/EncounterEngine.js';
 
-/* Where the party is standing, for the party panel */
+/* Where the party is standing, for the HUD */
 const FORMATION_GLYPH = Object.fromEntries(
   Object.entries(FORMATIONS).map(([id, f]) => [id, f.icon]));
 const FORMATION_LABEL = Object.fromEntries(
   Object.entries(FORMATIONS).map(([id, f]) => [id, f.name]));
-import { toMarkdown } from './narrative/Chronicle.js';
-import { CAPABILITIES } from './game/Capabilities.js';
-import { getEncounterTrace, clearEncounterTrace, capabilityUsageSummary } from './encounters/EncounterEngine.js';
 
 // Developer visibility for the capability system, from the console:
 //   v6debug.summary() — per-capability optionsUnlocked / chosen
@@ -60,9 +66,8 @@ function offerDownload(filename, text, mime = 'text/markdown') {
 }
 
 /**
- * Write the run to the shelf. Called at the end of every delve and
- * again when the campaign closes, so a refresh never costs the story.
- * Returns the stored record, or null if there is nothing to save.
+ * Write the run to the shelf. Called at the end of every delve, so a
+ * refresh never costs the story. Returns the stored record, or null.
  */
 function saveChronicle() {
   const sim = appState.simulator;
@@ -86,14 +91,21 @@ const HELP_SEEN_KEY = 'dungeonab_help_seen';
 const appState = {
   draft: null,
   draftUI: null,
+  party: null,
   simulator: null,
   renderer: null,
+  choreographer: null,
   gameRunning: false,
-  lastTickTime: 0,
+  paused: false,
+  performing: false,
+  delveToken: 0,          // a new delve or draft invalidates the old loop
   speedMultiplier: 1,
   prevState: null,        // last tick's state, for event diffing
-  seenRoomTypes: null,    // room types explained this campaign
+  seenRoomTypes: null,    // room types explained this run
+  savedRecord: null,      // the shelf record of the finished delve
 };
+
+const wait = ms => new Promise(r => setTimeout(r, ms));
 
 function init() {
   console.log('⚔️ DungeonAB initializing…');
@@ -117,19 +129,36 @@ function init() {
       startNewDraft();
     },
   });
-  if (capture) runCapture(capture); else startNewDraft();
 
+  // The action bar. Every screen's primary action is wired once, here.
   document.getElementById('hub-btn').addEventListener('click', () => { window.location.href = 'hub/'; });
+  document.getElementById('march-btn').addEventListener('click', marchFromMuster);
+  document.getElementById('muster-kit-btn').addEventListener('click', openKit);
   document.getElementById('pause-btn').addEventListener('click', togglePause);
   document.getElementById('step-btn').addEventListener('click', stepGame);
   document.getElementById('speed-slider').addEventListener('input', e => {
     appState.speedMultiplier = parseFloat(e.target.value);
     document.getElementById('speed-label').textContent = `${appState.speedMultiplier.toFixed(1)}x`;
   });
-  document.getElementById('show-results-btn').addEventListener('click', () => {
-    document.getElementById('show-results-btn').classList.remove('active');
-    document.getElementById('gameover-display').classList.add('active');
+  document.getElementById('results-btn').addEventListener('click', () => showScreen('reckoning'));
+  document.getElementById('read-btn').addEventListener('click', () => showScreen('delve'));
+  document.getElementById('again-btn').addEventListener('click', startNewDraft);
+  document.getElementById('chron-md-btn').addEventListener('click', () => {
+    const chronicle = appState.simulator?.getChronicle?.();
+    if (chronicle) offerDownload(chronicleFilename(chronicle, 'md'), toMarkdown(chronicle, { ledger: true }));
   });
+  document.getElementById('chron-json-btn').addEventListener('click', () => {
+    const chronicle = appState.simulator?.getChronicle?.();
+    if (chronicle && appState.savedRecord) {
+      offerDownload(chronicleFilename(chronicle, 'json'), chronicles.exportJSON(appState.savedRecord.id), 'application/json');
+    }
+  });
+
+  // The canvas fills whatever the grid gives it; re-fit when that changes
+  window.addEventListener('resize', () => appState.renderer?.refit?.());
+  onScreenChange(id => { if (id === 'delve') requestAnimationFrame(() => appState.renderer?.refit?.()); });
+
+  if (capture) runCapture(capture); else startNewDraft();
 }
 
 /* -------------------------------------------------------------- */
@@ -192,11 +221,9 @@ function setupRecords() {
     const runRows = runs.length
       ? runs.map(r => {
           const diff = DIFFICULTIES[(r.difficulty || '').toUpperCase()] || { icon: '•' };
-          const cond = null;
           const outcome = r.victory ? '🏆' : '☠️';
-          const condTag = cond && cond.id !== 'none' ? ` · ${cond.icon}` : '';
           return `<div class="records-run">
-            <span>${outcome} ${diff.icon} depth ${r.depth || 1} · ${r.roomsCleared} rooms${condTag}</span>
+            <span>${outcome} ${diff.icon} depth ${r.depth || 1} · ${r.roomsCleared} rooms</span>
             <span class="rr-score">${r.score}</span>
           </div>`;
         }).join('')
@@ -358,30 +385,59 @@ function announceEvents(prevState, state) {
   }
 }
 
-function startNewDraft() {
-  appState.draft = new PackDraft(`table-${Date.now().toString(36)}`);
-  appState.draftUI = new DraftUI(appState.draft, startDelve);
-  appState.draftUI.render();
+/* -------------------------------------------------------------- */
+/* The Table                                                       */
+/* -------------------------------------------------------------- */
 
-  document.getElementById('world-container').style.display = 'none';
-  document.getElementById('ui-container').style.display = 'none';
+function startNewDraft() {
+  appState.delveToken++;               // any delve still running stops
+  appState.choreographer?.cancel();
+  appState.gameRunning = false;
+  appState.draft = new PackDraft(`table-${Date.now().toString(36)}`);
+  appState.draftUI = new DraftUI(appState.draft, enterMuster);
+  showScreen('table');
+  appState.draftUI.render();
 }
 
+/* -------------------------------------------------------------- */
+/* The Muster                                                      */
+/* -------------------------------------------------------------- */
+
 /**
- * Capture mode (dev): draft, march and stop, all seeded and all
- * synchronous, then flag the page ready for a screenshot. See
- * ui/Frames.js and GRAPHICS.md §G1.
+ * The packs have run dry: the party is built, kit dealt by best fit,
+ * and shown mustered with March in the bar (ui/MusterUI.js).
+ */
+function enterMuster({ pool }) {
+  appState.party = new Party(pool);
+  renderMuster(document.getElementById('muster-container'), appState.party, { draft: appState.draft });
+  document.getElementById('seed-input').value = '';
+  showScreen('muster');
+}
+
+function marchFromMuster() {
+  if (!appState.party) return;
+  const difficulty = document.getElementById('difficulty-select').value;
+  const seed = document.getElementById('seed-input').value.trim() || `delve-${Date.now().toString(36)}`;
+  startDelve({ party: appState.party, difficulty, seed });
+}
+
+/* -------------------------------------------------------------- */
+/* Capture mode (dev)                                              */
+/* -------------------------------------------------------------- */
+
+/**
+ * Draft, march and stop, all seeded and all synchronous, then flag the
+ * page ready for a screenshot. See ui/Frames.js and GRAPHICS.md §G1.
  */
 function runCapture(req) {
   console.log('[frames] capture', req);
   const draft = new PackDraft(req.draftSeed);
   const pool = autoDraft(draft);
-
-  document.getElementById('draft-container').style.display = 'none';
+  const party = new Party(pool);
   startDelve({
-    pool, difficulty: req.difficulty, seed: req.seed, skipMuster: true,
+    party, difficulty: req.difficulty, seed: req.seed,
     onReady: (sim) => {
-      appState.gameRunning = false;              // no timer; we step by hand
+      appState.gameRunning = false;              // no loop; we step by hand
       const state = tickToRoom(sim, req.room);
       appState.renderer.render(state);
       // render() eases the camera toward the room; a capture wants it
@@ -393,69 +449,36 @@ function runCapture(req) {
   });
 }
 
-function startDelve({ pool, difficulty, seed, skipMuster = false, onReady = null }) {
-  console.log(`Delve begins: difficulty=${difficulty}, seed=${seed}`);
+/* -------------------------------------------------------------- */
+/* The Delve                                                       */
+/* -------------------------------------------------------------- */
 
-  const draftContainer = document.getElementById('draft-container');
-  draftContainer.innerHTML = '';
-  draftContainer.style.display = 'none';
-  document.getElementById('world-container').style.display = 'flex';
-  document.getElementById('ui-container').style.display = 'flex';
+function startDelve({ party, difficulty, seed, onReady = null }) {
+  console.log(`Delve begins: difficulty=${difficulty}, seed=${seed}`);
 
   // An archived/edited design replays instead of a generated dungeon
   const replay = appState.pendingReplay || null;
   appState.pendingReplay = null;
-  if (replay) showToast('🗺️', `Delving the archived design: "${replay.name}"`, 'room');
 
-  // One draft, one dungeon (v8): the party is built here, mustered, and
-  // marched. There is no town and no second descent — the delve is the
-  // run, and what it costs is what it cost.
-  const party = new Party(pool);
   appState.difficulty = difficulty;
   appState.runRecorded = false;
   appState.standings = null;            // recomputed when the run ends
   appState.seenRoomTypes = new Set();   // explain each room once per run
+  appState.savedRecord = null;
+  appState.sagaId = null;
 
-  // The muster: kit is dealt out by best fit, and this is where the
-  // player overrules that, says who prepares which working, and names
-  // their own (ui/OutfitUI.js). Skippable in one click.
-  const march = () => {
-    const sim = new Simulator(party, seed, difficulty, {
-      layout: replay ? replay.layout : null,
-    });
-    beginDelve(sim);
-    if (onReady) onReady(sim);
-  };
-  if (skipMuster) march(); else showMuster(party, '⛏️ March on the Dungeon', march);
-}
-
-/**
- * The outfitting screen, over the same panel the town uses.
- */
-function showMuster(party, doneLabel, onDone) {
-  const display = document.getElementById('gameover-display');
-  display.innerHTML = '';
-  const body = document.createElement('div');
-  display.appendChild(body);
-  renderOutfitting(body, party, {
-    doneLabel,
-    onChange: () => {
-      if (appState.simulator) updateUI(appState.simulator.getState());
-    },
-    onDone: () => {
-      display.classList.remove('active');
-      display.innerHTML = '';
-      onDone();
-    },
+  const sim = new Simulator(party, seed, difficulty, {
+    layout: replay ? replay.layout : null,
   });
-  display.classList.add('active');
+  showScreen('delve');
+  if (replay) showToast('🗺️', `Delving the archived design: "${replay.name}"`, 'room');
+  beginDelve(sim, { autoplay: !onReady });
+  if (onReady) onReady(sim);
 }
 
-/**
- * Run one dungeon of the campaign — depth 1 or depth 9, same loop
- */
-function beginDelve(sim) {
+function beginDelve(sim, { autoplay = true } = {}) {
   appState.simulator = sim;
+  appState.choreographer?.cancel();
 
   // Torchlit isometric 3D, with the 2D map as a WebGL fallback
   if (!appState.renderer) {
@@ -466,6 +489,12 @@ function beginDelve(sim) {
       appState.renderer = new DungeonRenderer('game-canvas');
     }
   }
+  appState.choreographer = new Choreographer({
+    renderer: appState.renderer,
+    story,
+    hud,
+    speed: () => appState.speedMultiplier,
+  });
 
   const state = sim.getState();
   appState.prevState = state;   // baseline for event diffing this delve
@@ -473,79 +502,85 @@ function beginDelve(sim) {
   document.getElementById('pause-btn').disabled = false;
   document.getElementById('step-btn').disabled = false;
   document.getElementById('pause-btn').textContent = 'Pause';
+  document.getElementById('results-btn').hidden = true;
+  appState.paused = false;
+  sim.setPaused(false);
+  appState.renderer.refit?.();
   appState.renderer.render(state);
   updateUI(state);
 
-  appState.gameRunning = true;
-  appState.lastTickTime = performance.now();
-  mainLoop();
+  if (autoplay) {
+    appState.gameRunning = true;
+    runLoop(++appState.delveToken);
+  }
 }
 
-function mainLoop() {
-  if (!appState.gameRunning) return;
-
-  const now = performance.now();
-  const tickInterval = 1400 / appState.speedMultiplier;
-
-  if (now - appState.lastTickTime >= tickInterval) {
-    appState.lastTickTime = now;
-    appState.simulator.tick();
-    const ended = processTickResult();
+/**
+ * The loop: tick, perform, tick, perform. The next room is not taken
+ * until the last one has been seen through — that is the whole change
+ * from the 1400 ms slideshow (SCREENS.md S3).
+ */
+async function runLoop(token) {
+  await wait(500);
+  while (appState.gameRunning && token === appState.delveToken) {
+    if (appState.paused) { await wait(120); continue; }
+    const ended = await advanceRoom(token);
     if (ended) return;
+    await wait(360 / Math.max(0.25, appState.speedMultiplier));
   }
-
-  requestAnimationFrame(mainLoop);
 }
 
-function processTickResult() {
-  const state = appState.simulator.getState();
-  appState.renderer.render(state);
-  updateUI(state);
-
-  if (state.narration) {
-    appendStory(state.narration, state.roomIndex);
-    announceEvents(appState.prevState, state);
-    // Spell bursts, sword slashes, gold glints — over the room it happened in
-    appState.renderer.playEffect?.(state.narration.action, state.narration.roomIndex, state.narration.spellElement);
-    // Secret doors and side passages get an onscreen flag too
-    if (state.narration.aside) {
-      const icon = state.narration.aside.startsWith('🕳️') ? '🕳️' : '🧭';
-      showToast(icon, state.narration.aside.replace(/^[^ ]+ /, ''), 'room');
+/** One room: tick the simulator, then perform what it resolved. */
+async function advanceRoom(token) {
+  if (appState.performing) return false;
+  appState.performing = true;
+  try {
+    const sim = appState.simulator;
+    const prev = appState.prevState;
+    sim.tick();
+    const state = sim.getState();
+    const beats = planBeats(prev, state);
+    const hold = beats.find(b => b.type === 'line' && b.hold)?.room ?? null;
+    appState.renderer.render(state, { perform: true, hold });
+    updateStats(state);
+    await appState.choreographer.play(beats, prev, state);
+    if (token !== appState.delveToken) return true;
+    appState.renderer.releaseAim?.();
+    updateUI(state);
+    announceEvents(prev, state);
+    appState.prevState = state;
+    if (state.gameOver) {
+      endGame(state);
+      return true;
     }
+    return false;
+  } finally {
+    appState.performing = false;
   }
-  appState.prevState = state;
-
-  if (state.gameOver) {
-    endGame(state);
-    return true;
-  }
-  return false;
 }
 
 function stepGame() {
-  if (!appState.simulator || !appState.gameRunning) return;
-  appState.simulator.tick();
-  processTickResult();
+  if (!appState.simulator || appState.performing || appState.simulator.gameOver) return;
+  if (!appState.paused) togglePause();
+  appState.simulator.setPaused(false);
+  advanceRoom(appState.delveToken).then(() => {
+    if (appState.simulator && !appState.simulator.gameOver) appState.simulator.setPaused(appState.paused);
+  });
 }
 
 function togglePause() {
   if (!appState.simulator) return;
-  const paused = !appState.simulator.paused;
-  appState.simulator.setPaused(paused);
-  document.getElementById('pause-btn').textContent = paused ? 'Resume' : 'Pause';
-  if (!paused) {
-    appState.lastTickTime = performance.now();
-  }
+  appState.paused = !appState.paused;
+  appState.simulator.setPaused(appState.paused);
+  document.getElementById('pause-btn').textContent = appState.paused ? 'Resume' : 'Pause';
 }
 
-function updateUI(state) {
+/* -------------------------------------------------------------- */
+/* The header strip and the HUD                                    */
+/* -------------------------------------------------------------- */
+
+function updateStats(state) {
   document.getElementById('room-count').textContent = `${state.roomIndex} / ${(state.pathLength || state.dungeon.length) - 1}`;
-  // How deep they are. The floor the party stands on is the one thing
-  // the panel could not say when floors landed (world/DungeonGen.js).
-  const floors = Math.max(...(state.dungeon.rooms || []).map(r => (r.floor || 0) + 1), 1);
-  const floorEl = document.getElementById('floor-count');
-  floorEl.textContent = `${(state.floor || 0) + 1} / ${floors}`;
-  floorEl.style.color = (state.floor || 0) + 1 === floors ? '#d88a3f' : '#9aa3b0';
   document.getElementById('gold-count').textContent = state.party.gold;
   document.getElementById('score-count').textContent = state.party.score;
   // The lamp. Amber while it lasts, red once the party is in the dark.
@@ -568,66 +603,44 @@ function updateUI(state) {
   if (state.party.poisonLinger > 0) badges.push('🐍 venom working');
   if (state.party.alarmed) badges.push('🔔 alarm raised');
   document.getElementById('status-badges').textContent = badges.join(' · ');
+}
 
-  // Roster (the four who march; reserves listed under them)
+function updateUI(state) {
+  updateStats(state);
+
+  // The HUD strip over the picture: the four who march, and the reserve
   const roster = document.getElementById('party-roster');
-  const reserveRows = (state.party.reserve || []).map(r => `
-      <div class="member-row" style="opacity:0.5;">
-        <span>${r.icon}</span>
-        <span style="flex:1;min-width:0;">
-          <div>${r.name} <span style="color:#665;font-size:0.7rem;">(${r.class})</span></div>
-          <div style="color:#556;font-size:0.68rem;">in reserve — waits in town for a place in the four</div>
-        </span>
-      </div>`).join('');
+  const reserveRows = (state.party.reserve || []).map(r =>
+    `<span class="hud-reserve" title="In reserve — steps up the moment someone falls">${r.icon} ${escapeHtml(r.name)} · reserve</span>`).join('');
   roster.innerHTML = state.party.members.map(m => {
     const pct = Math.round((m.health / m.maxHealth) * 100);
     const barColor = pct > 60 ? '#3ddc84' : pct > 30 ? '#d8a53f' : '#e05555';
     const kit = [...m.equipment, ...m.weaponMods].join(', ');
     // Wounds close off the top of the bar: healing cannot reach past
-    // the scar until town (Adventurer.effectiveMax)
+    // the scar (Adventurer.effectiveMax)
     const ceiling = m.effectiveMax ?? m.maxHealth;
     const scarPct = Math.max(0, Math.round(((m.maxHealth - ceiling) / m.maxHealth) * 100));
     const scar = scarPct > 0
       ? `<span class="hp-scar" style="position:absolute;right:0;top:0;bottom:0;width:${scarPct}%;background:repeating-linear-gradient(45deg,#5a2a2a,#5a2a2a 2px,#3a1c1c 2px,#3a1c1c 4px);"></span>`
       : '';
     const scarNote = m.wounds
-      ? `<span title="${m.wounds} wound${m.wounds === 1 ? '' : 's'} — healing cannot pass ${ceiling} until town" style="color:#c76;font-size:0.68rem;">${'✚'.repeat(Math.min(m.wounds, 4))}</span>`
+      ? `<span title="${m.wounds} wound${m.wounds === 1 ? '' : 's'} — healing cannot pass ${ceiling}" style="color:#c76;font-size:0.68rem;">${'✚'.repeat(Math.min(m.wounds, 4))}</span>`
       : '';
     return `
-      <div class="member-row ${m.alive ? '' : 'member-dead'}">
-        <span>${m.icon}</span>
-        <span style="flex:1;min-width:0;">
-          <div>${m.name} <span style="color:#665;font-size:0.7rem;">(${m.class})</span></div>
-          ${kit ? `<div style="color:#556;font-size:0.68rem;">${kit}</div>` : ''}
+      <div class="hud-member ${m.alive ? '' : 'member-dead'}" data-name="${escapeHtml(m.name)}" data-max="${m.maxHealth}" title="${escapeHtml(kit || 'bare hands')}">
+        <span class="hud-icon">${m.icon}</span>
+        <span class="hud-body">
+          <span class="hud-name">${escapeHtml(m.name)} <small>${m.class}</small></span>
+          <span class="hp-bar"><span class="hp-fill" style="width:${pct}%;background:${barColor};"></span>${scar}</span>
         </span>
         ${scarNote}
-        <span class="hp-bar" style="position:relative;overflow:hidden;"><span class="hp-fill" style="width:${pct}%;background:${barColor};"></span>${scar}</span>
-        <span class="member-hp" style="color:${barColor};">${m.health}</span>
+        <span class="hud-hp" style="color:${barColor};">${m.health}</span>
       </div>
     `;
   }).join('') + reserveRows;
 
-  // Where the party is standing right now (agents/Formation.js). The
-  // chip sits with the drills because it is the same kind of fact: a
-  // choice the party made that the player should be able to see.
-  const formationChip = state.party.formation && state.party.formation !== 'line'
-    ? `<span class="tactic-chip" title="The room allowed this shape, and the party took it">${FORMATION_GLYPH[state.party.formation] || ''} ${escapeHtml(FORMATION_LABEL[state.party.formation] || '')}</span>`
-    : '';
-
-  // Drilled technique, and anything drafted that cannot fire. An idle
-  // tactic is shown dashed with its reason on hover, because a silently
-  // dead card reads as a bug (game/Tactics.js).
-  const tacticsEl = document.getElementById('party-tactics');
-  const live = state.party.tactics || [];
-  const idle = state.party.dormantTactics || [];
-  tacticsEl.innerHTML = [
-    formationChip,
-    ...live.map(t => `<span class="tactic-chip">${t.icon} ${escapeHtml(t.name)}</span>`),
-    ...idle.map(text => {
-      const name = (text.match(/^\S+\s(.+?) is drafted/) || [])[1] || 'A tactic';
-      return `<span class="tactic-chip idle" title="${escapeHtml(text)}">${escapeHtml(name)} · idle</span>`;
-    }),
-  ].join('');
+  // Where the party is standing right now (agents/Formation.js)
+  hud.formation(state.party.formation);
 
   // Log
   const log = document.getElementById('debug-log');
@@ -635,55 +648,95 @@ function updateUI(state) {
   log.scrollTop = log.scrollHeight;
 }
 
-function appendStory(narration, roomIndex) {
-  const panel = document.getElementById('story-panel');
-  const empty = panel.querySelector('.story-empty');
-  if (empty) empty.remove();
+/**
+ * The HUD, as the performance drives it: who is swinging, who is hit,
+ * and health that moves when the blow lands rather than at the end.
+ */
+const hud = {
+  acting(names) {
+    document.querySelectorAll('.hud-member').forEach(el => {
+      el.classList.toggle('acting', names.includes(el.dataset.name));
+    });
+  },
+  hurt(names) {
+    document.querySelectorAll('.hud-member').forEach(el => {
+      el.classList.toggle('hurt', names.includes(el.dataset.name));
+    });
+  },
+  health(name, hp) {
+    const el = document.querySelector(`.hud-member[data-name="${CSS.escape(name)}"]`);
+    if (!el) return;
+    const max = parseInt(el.dataset.max, 10) || 1;
+    const pct = Math.max(0, Math.round((hp / max) * 100));
+    const color = pct > 60 ? '#3ddc84' : pct > 30 ? '#d8a53f' : '#e05555';
+    const fill = el.querySelector('.hp-fill');
+    if (fill) { fill.style.width = `${pct}%`; fill.style.background = color; }
+    const num = el.querySelector('.hud-hp');
+    if (num) { num.textContent = Math.max(0, hp); num.style.color = color; }
+  },
+  hint(text) {
+    const el = document.getElementById('beat-hint');
+    if (el) el.textContent = text ? `· ${text}` : '';
+  },
+  formation(id) {
+    const el = document.getElementById('party-tactics');
+    if (!el) return;
+    el.innerHTML = id && id !== 'line'
+      ? `<span class="tactic-chip" title="The room allowed this shape, and the party took it">${FORMATION_GLYPH[id] || ''} ${escapeHtml(FORMATION_LABEL[id] || '')}</span>`
+      : '';
+  },
+};
 
-  const fallLines = (narration.falls || [])
-    .map(f => `<div class="story-fall">${escapeHtml(f)}</div>`)
-    .join('');
-  // Wounds sit between the outcome and the deaths: worse than a scratch,
-  // short of a fall (Narrator.composeWound)
-  const woundLines = (narration.wounds || [])
-    .map(w => `<div class="story-wound">${escapeHtml(w)}</div>`)
-    .join('');
-  const asideLine = narration.aside
-    ? `<div class="story-aside">${escapeHtml(narration.aside)}</div>`
-    : '';
+/* -------------------------------------------------------------- */
+/* The Chronicle column                                            */
+/* -------------------------------------------------------------- */
 
-  const entry = document.createElement('div');
-  entry.className = 'story-entry';
-  entry.innerHTML = `
-    <div class="story-room">${narration.icon} Room ${roomIndex} — ${narration.room}</div>
-    <div class="story-predicament">${escapeHtml(narration.predicament)}</div>
-    <div class="story-deliberation">${escapeHtml(narration.deliberation)}</div>
-    <div class="story-resolution">${escapeHtml(narration.resolution)}</div>
-    ${woundLines}
-    ${fallLines}
-    ${asideLine}
-  `;
-  panel.appendChild(entry);
-  while (panel.children.length > 14) panel.removeChild(panel.firstChild);
-  panel.scrollTop = panel.scrollHeight;
-}
+/**
+ * The story panel, written a line at a time as the beats play, so the
+ * prose and the picture agree on when a thing happened.
+ */
+const story = {
+  open(narration, roomIndex) {
+    const panel = document.getElementById('story-panel');
+    const empty = panel.querySelector('.story-empty');
+    if (empty) empty.remove();
+    const entry = document.createElement('div');
+    entry.className = 'story-entry live';
+    entry.innerHTML = `<div class="story-room">${narration.icon} Room ${roomIndex} — ${escapeHtml(narration.room)}</div>`;
+    panel.appendChild(entry);
+    while (panel.children.length > 16) panel.removeChild(panel.firstChild);
+    panel.scrollTop = panel.scrollHeight;
+    return entry;
+  },
+  line(entry, kind, text) {
+    if (!entry || !text) return;
+    const div = document.createElement('div');
+    div.className = `story-${kind} story-line`;
+    div.textContent = text;
+    entry.appendChild(div);
+    const panel = document.getElementById('story-panel');
+    panel.scrollTop = panel.scrollHeight;
+  },
+  close(entry) {
+    if (entry) entry.classList.remove('live');
+  },
+};
 
 function resetStory(theme = null) {
-  const depth = 1, condition = null;
-  const depthBadge = depth > 1 ? ` — Depth ${depth}` : '';
-  const conditionLine = condition
-    ? `<div style="margin-top:0.4rem;font-size:0.8rem;color:#e8724a;">${condition.icon} Wager — ${escapeHtml(condition.name)}</div>`
-    : '';
   const banner = theme
-    ? `<div class="story-entry" style="border-left:3px solid #d8a53f;">
-         <div class="story-room" style="font-size:1rem;">${theme.icon} ${escapeHtml(theme.name)}${depthBadge}</div>
+    ? `<div class="story-entry" style="border-left:3px solid #d8a53f;padding-left:0.5rem;">
+         <div class="story-room" style="font-size:1rem;">${theme.icon} ${escapeHtml(theme.name)}</div>
          <div class="story-predicament" style="font-style:italic;">${escapeHtml(theme.tagline)}</div>
-         ${conditionLine}
        </div>`
     : '';
   document.getElementById('story-panel').innerHTML =
     banner + '<div class="story-empty">The chronicle of this delve is not yet written…</div>';
+  document.getElementById('chronicle-theme').textContent = theme ? `${theme.icon} ${theme.name}` : '';
 }
+
+/* -------------------------------------------------------------- */
+/* The Reckoning                                                   */
+/* -------------------------------------------------------------- */
 
 function endGame(state) {
   appState.gameRunning = false;
@@ -698,23 +751,23 @@ function endGame(state) {
     outcome: { victory: state.victory, score: state.party.score, depth: state.depth },
   });
 
-  // The saga goes on the shelf at the end of EVERY delve, not only when
-  // the campaign closes. A player who shuts the tab in town used to lose
-  // the whole story, which is the same silence problem one layer up.
-  saveChronicle();
+  // The saga goes on the shelf at the end of EVERY delve. A player who
+  // shuts the tab used to lose the whole story, which is the same
+  // silence problem one layer up.
+  appState.savedRecord = saveChronicle();
 
   showFinal(state);
 }
 
 /**
- * The campaign's last page: a wipe, or a retirement with the loot
+ * The delve's last page: a wipe, or a retirement with the loot
  */
 function showFinal(state) {
   const result = appState.simulator.getRunResult();
   const summary = { ...result, depth: 1, retired: result.victory };
   const retired = summary.retired;
 
-  // Record the campaign once
+  // Record the run once
   if (!appState.runRecorded) {
     appState.runRecorded = true;
     progression.recordRun(appState.difficulty, {
@@ -732,8 +785,6 @@ function showFinal(state) {
   const stats = progression.getStats();
 
   // The rivals finally delve their drafts — compare scores at the table.
-  // The player's hex lands on its target; the hex laid on the player is
-  // already baked into their real run.
   if (!appState.standings && appState.draft) {
     appState.standings = computeStandings(
       appState.draft,
@@ -748,92 +799,44 @@ function showFinal(state) {
       <span style="margin-left:auto;">${r.score} <span style="color:#776;font-size:0.82em;">· depth ${r.depthReached}</span></span>
     </div>`).join('');
 
-  const display = document.getElementById('gameover-display');
-
-  display.innerHTML = `
-    <h2 style="color:${retired ? '#3ddc84' : '#e05555'};font-size:1.35rem;margin-bottom:1rem;text-align:center;">
-      ${retired ? '🏆 Out of the Dungeon, Alive' : '☠️ The Run Ends in the Dark'}
-    </h2>
-    <div style="margin-bottom:1.25rem;padding:0.9rem;background:#151b10;border-left:3px solid ${retired ? '#3ddc84' : '#aa5544'};border-radius:4px;color:#d8c9a3;font-style:italic;line-height:1.6;">
-      ${escapeHtml(result.epitaph || '')}
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem 1.5rem;font-size:0.92rem;">
-      <span style="color:#887755;">Score</span><strong style="color:#d8a53f;text-align:right;">${summary.score}${isNewBest ? ' ⭐ New Best!' : ''}</strong>
-      <span style="color:#887755;">Gold</span><strong style="text-align:right;">${summary.gold}</strong>
-      <span style="color:#887755;">Rooms conquered</span><strong style="text-align:right;">${summary.roomsCleared}</strong>
-      <span style="color:#887755;">Survivors</span><strong style="text-align:right;">${summary.survivors} / ${summary.partySize}</strong>
-      <span style="color:#887755;">Spells learned</span><strong style="text-align:right;">${summary.spellsLearned}</strong>
-      <span style="color:#887755;">Trophies claimed</span><strong style="text-align:right;">${summary.trophies}</strong>
-      <span style="color:#887755;">Best on ${appState.difficulty}</span><strong style="text-align:right;">${Math.max(best, summary.score)}</strong>
-      <span style="color:#887755;">Career</span><strong style="text-align:right;">${stats.totalVictories} escapes / ${stats.totalRuns} runs</strong>
-    </div>
-    ${trophyCaseHtml(appState.simulator.party.trophies, retired)}
-    <div style="margin-top:1.25rem;">
-      <div style="color:#d8a53f;font-size:0.85rem;margin-bottom:0.4rem;border-top:1px solid #3a2f1e;padding-top:0.8rem;">🎲 At the Table — how the draft played out</div>
-      ${standingsRows}
+  const saved = appState.savedRecord;
+  const body = document.getElementById('reckoning-body');
+  body.innerHTML = `
+    <div class="reck-card">
+      <h2 style="color:${retired ? '#3ddc84' : '#e05555'};font-size:1.35rem;margin-bottom:1rem;text-align:center;">
+        ${retired ? '🏆 Out of the Dungeon, Alive' : '☠️ The Run Ends in the Dark'}
+      </h2>
+      <div style="margin-bottom:1.25rem;padding:0.9rem;background:#151b10;border-left:3px solid ${retired ? '#3ddc84' : '#aa5544'};border-radius:4px;color:#d8c9a3;font-style:italic;line-height:1.6;">
+        ${escapeHtml(result.epitaph || '')}
+      </div>
+      <div class="reck-grid">
+        <span style="color:#887755;">Score</span><strong style="color:#d8a53f;text-align:right;">${summary.score}${isNewBest ? ' ⭐ New Best!' : ''}</strong>
+        <span style="color:#887755;">Gold</span><strong style="text-align:right;">${summary.gold}</strong>
+        <span style="color:#887755;">Rooms conquered</span><strong style="text-align:right;">${summary.roomsCleared}</strong>
+        <span style="color:#887755;">Survivors</span><strong style="text-align:right;">${summary.survivors} / ${summary.partySize}</strong>
+        <span style="color:#887755;">Spells learned</span><strong style="text-align:right;">${summary.spellsLearned}</strong>
+        <span style="color:#887755;">Trophies claimed</span><strong style="text-align:right;">${summary.trophies}</strong>
+        <span style="color:#887755;">Best on ${appState.difficulty}</span><strong style="text-align:right;">${Math.max(best, summary.score)}</strong>
+        <span style="color:#887755;">Career</span><strong style="text-align:right;">${stats.totalVictories} escapes / ${stats.totalRuns} runs</strong>
+      </div>
+      ${trophyCaseHtml(appState.simulator.party.trophies, retired)}
+      <div style="margin-top:1.25rem;">
+        <div style="color:#d8a53f;font-size:0.85rem;margin-bottom:0.4rem;border-top:1px solid #3a2f1e;padding-top:0.8rem;">🎲 At the Table — how the draft played out</div>
+        ${standingsRows}
+      </div>
+      ${saved ? `<div class="reck-note">Saved as "${escapeHtml(saved.partyName.split(',')[0])}" — delve ${saved.delves}. Find it under 🏛️ Records.</div>` : ''}
     </div>
   `;
 
-  const againBtn = document.createElement('button');
-  againBtn.textContent = '🃏 Draft a New Party';
-  againBtn.style.cssText = 'width:100%;margin-top:1.5rem;padding:0.9rem;font-size:1rem;';
-  againBtn.addEventListener('click', () => {
-    display.classList.remove('active');
-    document.getElementById('show-results-btn').classList.remove('active');
-    startNewDraft();
-  });
-  display.appendChild(againBtn);
-
-  const storyBtn = document.createElement('button');
-  storyBtn.textContent = '📖 Read the Chronicle';
-  storyBtn.style.cssText = 'width:100%;margin-top:0.5rem;padding:0.7rem;font-size:0.9rem;background:#2a2213;color:#d8a53f;';
-  storyBtn.addEventListener('click', () => {
-    display.classList.remove('active');
-    document.getElementById('show-results-btn').classList.add('active');
-  });
-  display.appendChild(storyBtn);
-
-  // The saga goes on the shelf whether they won or not, and can be
-  // carried out of the browser (game/Chronicles.js)
-  const saved = saveChronicle();
-  if (saved) {
-    const chronicle = appState.simulator.getChronicle();
-    const row = document.createElement('div');
-    row.style.cssText = 'display:flex;gap:0.5rem;margin-top:0.5rem;';
-
-    const mdBtn = document.createElement('button');
-    mdBtn.textContent = '📖 Download the chronicle';
-    mdBtn.title = 'The whole saga as a document you can read';
-    mdBtn.style.cssText = 'flex:1;padding:0.7rem;font-size:0.82rem;background:#221c14;color:#c0b090;';
-    mdBtn.addEventListener('click', () => {
-      offerDownload(chronicleFilename(chronicle, 'md'), toMarkdown(chronicle, { ledger: true }));
-    });
-
-    const jsonBtn = document.createElement('button');
-    jsonBtn.textContent = '💾 Save file';
-    jsonBtn.title = 'A save you can keep, share, or load back in to delve again with this party';
-    jsonBtn.style.cssText = 'flex:1;padding:0.7rem;font-size:0.82rem;background:#221c14;color:#c0b090;';
-    jsonBtn.addEventListener('click', () => {
-      offerDownload(chronicleFilename(chronicle, 'json'),
-        chronicles.exportJSON(saved.id), 'application/json');
-    });
-
-    row.append(mdBtn, jsonBtn);
-    display.appendChild(row);
-
-    const note = document.createElement('div');
-    note.style.cssText = 'margin-top:0.4rem;font-size:0.7rem;color:#776;text-align:center;';
-    note.textContent = `Saved as "${saved.partyName.split(',')[0]}" — delve ${saved.delves}. Find it under 🏛️ Records.`;
-    display.appendChild(note);
-  }
-
-  display.classList.add('active');
+  document.getElementById('chron-json-btn').hidden = !saved;
+  document.getElementById('results-btn').hidden = false;
+  showScreen('reckoning');
 }
 
 /**
- * The trophy case, laid out on the campaign's last page: what the
- * dead of the dungeon paid, newest first. Wipes show it too — an
- * inventory of everything the dark just took back.
+ * The trophy case, laid out on the last page: what the dead of the
+ * dungeon paid, newest first. Wipes show it too — an inventory of
+ * everything the dark just took back.
  */
 function trophyCaseHtml(trophies, retired) {
   if (!trophies || trophies.length === 0) return '';

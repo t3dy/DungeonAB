@@ -13,121 +13,209 @@
       color: #e0e0e0;
       overflow: hidden;
     }
-    #app { display: flex; flex-direction: column; height: 100vh; }
+
+    /* ------------------------------------------------------------------
+       The frame. One header, one body, one action bar — every screen
+       renders into the body and owns the bar's contents, so the primary
+       action is always in the bar and never at the end of a scroll
+       (SCREENS.md S1).
+       ------------------------------------------------------------------ */
+    #app {
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      height: 100vh;
+      height: 100dvh;
+    }
     header {
       background: #16120c;
-      padding: 0.8rem 1rem;
       border-bottom: 1px solid #3a2f1e;
-      text-align: center;
+      display: flex; align-items: center; gap: 1rem;
+      padding: 0.45rem 1rem;
+      min-height: 3rem;
     }
-    header h1 { font-size: 1.4rem; color: #d8a53f; margin-bottom: 0.2rem; }
-    header p { font-size: 0.8rem; color: #887755; }
-    main { display: flex; flex: 1; overflow: hidden; }
+    .brand { display: flex; align-items: baseline; gap: 0.6rem; white-space: nowrap; }
+    .brand h1 { font-size: 1.15rem; color: #d8a53f; }
+    .brand .tag { font-size: 0.74rem; color: #887755; }
+    .brand .ver { font-size: 0.72rem; color: #8a7a55; }
+    .brand a { color: #d8a53f; font-size: 0.72rem; text-decoration: underline; }
+    .stat-strip {
+      display: flex; gap: 1rem; flex-wrap: wrap; align-items: baseline;
+      font-size: 0.78rem; color: #b8a888; margin: 0 auto;
+    }
+    .stat-strip strong { color: #d8a53f; }
+    .stat-strip[hidden] { display: none; }
+    .header-btns { display: flex; gap: 0.35rem; margin-left: auto; flex-wrap: wrap; justify-content: flex-end; }
+    .header-btns button {
+      padding: 0.3rem 0.6rem; font-size: 0.74rem;
+      background: #2a2213; color: #d8a53f; border: 1px solid #3a2f1e;
+    }
+    .header-btns button:hover { background: #3a2f1e; }
 
-    /* Draft screen */
-    #draft-container {
-      flex: 1;
-      overflow-y: auto;
-      padding: 1.25rem;
-      max-width: 1100px;
-      margin: 0 auto;
-      width: 100%;
-    }
-    #draft-container:empty { display: none; }
+    main { min-height: 0; position: relative; }
+    .screen { display: none; height: 100%; min-height: 0; overflow-y: auto; }
+    .screen.active { display: block; }
 
-    /* Game screen */
-    #world-container {
-      flex: 0 0 46%;
-      background: #0a0a0a;
-      border-right: 1px solid #3a2f1e;
-      padding: 1rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
+    #action-bar {
+      background: #16120c;
+      border-top: 1px solid #3a2f1e;
+      padding: 0.55rem 1rem;
+      display: flex; align-items: center; gap: 0.75rem;
+      min-height: 3.4rem;
     }
-    canvas { flex: 1; background: #0d0b08; border: 1px solid #3a2f1e; min-height: 0; }
-    #ui-container {
-      flex: 1;
-      background: #12100b;
-      padding: 1rem;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
+    .bar-for { display: none; width: 100%; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+    .bar-for.active { display: flex; }
+    .bar-left, .bar-right { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+    .bar-main { display: flex; align-items: center; gap: 0.6rem; margin: 0 auto; }
+    .bar-right { margin-left: auto; }
+    .bar-hint { font-size: 0.76rem; color: #887755; }
+    .bar-primary { padding: 0.75rem 1.6rem; font-size: 1rem; box-shadow: 0 0 18px rgba(216, 165, 63, 0.25); }
+    .bar-quiet { background: #2a2213; color: #d8a53f; border: 1px solid #3a2f1e; }
+    .bar-quiet:hover { background: #3a2f1e; }
+    #action-bar select, #action-bar input[type=text] {
+      background: #14110b; color: #e0e0e0; border: 1px solid #3a2f1e;
+      padding: 0.4rem; border-radius: 4px; font-family: inherit; font-size: 0.82rem;
     }
-    .panel {
-      background: #0a0a0a;
-      border: 1px solid #3a2f1e;
-      border-radius: 4px;
-      padding: 0.9rem;
-    }
-    .panel h2 {
-      color: #d8a53f;
-      font-size: 0.95rem;
-      margin-bottom: 0.6rem;
-      border-bottom: 1px solid #3a2f1e;
-      padding-bottom: 0.4rem;
-    }
-    button {
-      background: #d8a53f;
-      color: #14100a;
-      border: none;
-      padding: 0.5rem 1rem;
-      border-radius: 4px;
-      cursor: pointer;
-      font-family: 'Courier New', monospace;
-      font-weight: bold;
-      font-size: 0.85rem;
-      transition: background 0.2s;
-    }
-    button:hover { background: #e8b954; }
-    button:disabled { background: #665; cursor: not-allowed; opacity: 0.5; }
+    #action-bar label { font-size: 0.78rem; color: #b8a888; display: flex; align-items: center; gap: 0.35rem; }
 
-    /* Party roster */
-    .member-row {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0.35rem 0;
-      border-bottom: 1px dashed #2a2318;
-      font-size: 0.82rem;
+    /* ------------------------------------------------------------------
+       The Table (the draft)
+       ------------------------------------------------------------------ */
+    #draft-container { padding: 1rem 1.25rem; max-width: 1100px; margin: 0 auto; width: 100%; }
+
+    /* ------------------------------------------------------------------
+       The Muster (draft complete + kit, one screen)
+       ------------------------------------------------------------------ */
+    #muster-container { padding: 1rem 1.25rem; max-width: 1180px; margin: 0 auto; width: 100%; }
+    .muster-title { text-align: center; margin-bottom: 0.9rem; }
+    .muster-title h2 { color: #d8a53f; font-size: 1.2rem; }
+    .muster-title p { color: #887755; font-size: 0.82rem; }
+    .muster-party { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.6rem; }
+    .muster-member {
+      background: #14110b; border: 1px solid #3a2f1e; border-radius: 6px; padding: 0.7rem;
+      display: flex; flex-direction: column; gap: 0.35rem; min-height: 150px;
     }
-    .member-row:last-child { border-bottom: none; }
-    .member-hp {
-      margin-left: auto;
-      font-weight: bold;
+    .muster-member .mm-head { display: flex; align-items: baseline; gap: 0.4rem; }
+    .muster-member .mm-icon { font-size: 1.3rem; }
+    .muster-member .mm-name { font-weight: bold; color: #e8d9b3; font-size: 0.9rem; }
+    .muster-member .mm-class { color: #887755; font-size: 0.72rem; margin-left: auto; }
+    .muster-member .mm-stats { font-size: 0.74rem; color: #9a8f78; }
+    .muster-member .mm-kit { font-size: 0.74rem; color: #b8a888; line-height: 1.45; }
+    .muster-member .mm-kit .slot { color: #665; }
+    .muster-member .mm-caps { display: flex; gap: 0.3rem; flex-wrap: wrap; font-size: 0.66rem; }
+    .muster-member .mm-caps span { color: #9fc4a8; border: 1px solid #3a4a3e; border-radius: 3px; padding: 0 0.3rem; }
+    .muster-pool { margin-top: 0.7rem; }
+    .muster-pool .panel { padding: 0.7rem 0.9rem; }
+    .muster-pool h2 { font-size: 0.85rem; }
+    .muster-pool .pool-row { font-size: 0.78rem; line-height: 1.6; color: #b8a888; }
+    .muster-pool .pool-row .k { color: #887755; font-size: 0.72rem; }
+    .muster-fold { margin-top: 0.6rem; }
+    .muster-fold summary {
+      cursor: pointer; color: #d8a53f; font-size: 0.85rem; padding: 0.55rem 0.9rem;
+      background: #14110b; border: 1px solid #3a2f1e; border-radius: 4px;
     }
-    .member-dead { opacity: 0.4; text-decoration: line-through; }
-    .hp-bar {
-      width: 70px; height: 8px;
-      background: #2a1515;
-      border-radius: 4px;
+    .muster-fold[open] summary { border-radius: 4px 4px 0 0; }
+    .muster-fold .fold-body { border: 1px solid #3a2f1e; border-top: none; border-radius: 0 0 4px 4px; padding: 0.8rem; background: #0f0d09; }
+    .rival-row { font-size: 0.8rem; padding: 0.2rem 0; color: #998866; }
+
+    /* ------------------------------------------------------------------
+       The Delve: the picture, the chronicle beside it (SCREENS.md S2)
+       ------------------------------------------------------------------ */
+    #screen-delve.active {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) clamp(300px, 32%, 480px);
       overflow: hidden;
     }
+    #world { position: relative; min-width: 0; min-height: 0; background: #0a0805; }
+    #game-canvas { display: block; width: 100%; height: 100%; background: #0d0b08; }
+    #hud {
+      position: absolute; left: 0; right: 0; bottom: 0;
+      display: flex; align-items: flex-end; gap: 0.5rem; flex-wrap: wrap;
+      padding: 0.5rem 0.75rem;
+      background: linear-gradient(to top, rgba(6,5,3,0.92), rgba(6,5,3,0.55) 70%, rgba(6,5,3,0));
+      pointer-events: none;
+    }
+    #party-roster { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .hud-member {
+      pointer-events: auto;
+      display: flex; align-items: center; gap: 0.45rem;
+      background: rgba(20, 17, 11, 0.85); border: 1px solid #3a2f1e; border-radius: 5px;
+      padding: 0.3rem 0.55rem; min-width: 168px; font-size: 0.76rem;
+      transition: box-shadow 0.25s, border-color 0.25s;
+    }
+    .hud-member.member-dead { opacity: 0.45; }
+    .hud-member.member-dead .hud-name { text-decoration: line-through; }
+    .hud-member.acting { border-color: #d8a53f; box-shadow: 0 0 14px rgba(216,165,63,0.45); }
+    .hud-member.hurt { border-color: #e05555; box-shadow: 0 0 14px rgba(224,85,85,0.5); }
+    .hud-icon { font-size: 1.15rem; }
+    .hud-body { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
+    .hud-name { color: #e8d9b3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; }
+    .hud-name small { color: #776; font-size: 0.66rem; }
+    .hud-hp { margin-left: auto; font-weight: bold; }
+    .hud-reserve { font-size: 0.7rem; color: #776; align-self: center; pointer-events: auto; }
+    .hp-bar { width: 84px; height: 7px; background: #2a1515; border-radius: 4px; overflow: hidden; position: relative; }
     .hp-fill { height: 100%; background: #3ddc84; transition: width 0.3s; }
+    #party-tactics { display: flex; flex-wrap: wrap; gap: 0.35rem; font-size: 0.7rem; color: #9a8; pointer-events: auto; margin-left: auto; }
+    .tactic-chip { background: rgba(35,32,28,0.9); border: 1px solid #3d372e; border-radius: 3px; padding: 0.1rem 0.4rem; }
+    .tactic-chip.idle { color: #8a6a5a; border-color: #4a3228; border-style: dashed; }
 
-    /* Story panel */
+    #chronicle-col {
+      display: flex; flex-direction: column; min-height: 0;
+      background: #12100b; border-left: 1px solid #3a2f1e;
+    }
+    .col-head {
+      color: #d8a53f; font-size: 0.9rem; padding: 0.6rem 0.9rem;
+      border-bottom: 1px solid #3a2f1e; display: flex; align-items: baseline; gap: 0.5rem;
+    }
+    .col-head .theme-name { color: #b8a888; font-size: 0.74rem; margin-left: auto; text-align: right; }
     .story {
+      flex: 1; min-height: 0; overflow-y: auto;
+      padding: 0.8rem 0.9rem; font-size: 0.84rem; line-height: 1.55;
       background: #0d1117;
-      border: 1px solid #3a2f1e;
-      border-radius: 4px;
-      padding: 0.75rem;
-      font-size: 0.84rem;
-      max-height: 340px;
-      overflow-y: auto;
-      line-height: 1.55;
     }
     .story-empty { color: #555; font-style: italic; }
     .story-entry { margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px dashed #2a2318; }
     .story-entry:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+    .story-entry.live { border-left: 2px solid #d8a53f; padding-left: 0.5rem; }
     .story-room { color: #665; font-size: 0.7rem; margin-bottom: 0.3rem; text-transform: uppercase; letter-spacing: 0.08em; }
     .story-predicament { color: #d8c9a3; margin-bottom: 0.4rem; }
     .story-deliberation { color: #8fb8dd; font-style: italic; margin-bottom: 0.4rem; }
     .story-resolution { color: #a8d5b0; }
+    .story-round { color: #c9b08a; font-size: 0.76rem; padding-left: 0.5rem; border-left: 2px solid #4a3a22; margin-top: 0.25rem; }
     .story-fall { color: #e08080; margin-top: 0.4rem; padding-left: 0.5rem; border-left: 2px solid #6a2a2a; font-style: italic; }
-    .party-tactics { margin-top: 0.5rem; font-size: 0.72rem; color: #9a8; display: flex; flex-wrap: wrap; gap: 0.35rem; }
-    .tactic-chip { background: #23201c; border: 1px solid #3d372e; border-radius: 3px; padding: 0.1rem 0.4rem; }
-    .tactic-chip.idle { color: #8a6a5a; border-color: #4a3228; border-style: dashed; }
+    .story-wound { color: #cc8877; margin-top: 0.4rem; padding-left: 0.5rem; border-left: 2px solid #6a3a2a; font-style: italic; }
+    .story-aside { color: #d8c26a; margin-top: 0.4rem; padding-left: 0.5rem; border-left: 2px solid #6a5a2a; font-style: italic; }
+    .story-line { animation: line-in 0.3s ease-out; }
+    @keyframes line-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+    #log-fold { border-top: 1px solid #3a2f1e; font-size: 0.72rem; }
+    #log-fold summary { cursor: pointer; color: #776; padding: 0.35rem 0.9rem; }
+    .log { background: #000; padding: 0.5rem 0.9rem; font-size: 0.7rem; color: #b8934a; max-height: 140px; overflow-y: auto; }
+    .log-entry { margin-bottom: 0.2rem; word-break: break-word; }
+    .speed-label { min-width: 2.6rem; text-align: right; }
+
+    /* ------------------------------------------------------------------
+       The Reckoning
+       ------------------------------------------------------------------ */
+    #reckoning-body { padding: 1.25rem; max-width: 760px; margin: 0 auto; width: 100%; }
+    .reck-card { background: #14110b; border: 1px solid #d8a53f; border-radius: 8px; padding: 1.5rem; box-shadow: 0 0 60px rgba(216, 165, 63, 0.18); }
+    .reck-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem 1.5rem; font-size: 0.92rem; }
+    .reck-note { margin-top: 0.6rem; font-size: 0.72rem; color: #776; text-align: center; }
+
+    /* ------------------------------------------------------------------
+       Shared bits
+       ------------------------------------------------------------------ */
+    .panel { background: #0a0a0a; border: 1px solid #3a2f1e; border-radius: 4px; padding: 0.9rem; }
+    .panel h2 { color: #d8a53f; font-size: 0.95rem; margin-bottom: 0.6rem; border-bottom: 1px solid #3a2f1e; padding-bottom: 0.4rem; }
+    button {
+      background: #d8a53f; color: #14100a; border: none;
+      padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;
+      font-family: 'Courier New', monospace; font-weight: bold; font-size: 0.85rem;
+      transition: background 0.2s;
+    }
+    button:hover { background: #e8b954; }
+    button:disabled { background: #665; cursor: not-allowed; opacity: 0.5; }
+    .member-row { display: flex; align-items: center; gap: 0.5rem; padding: 0.35rem 0; border-bottom: 1px dashed #2a2318; font-size: 0.82rem; }
+    .member-row:last-child { border-bottom: none; }
+    .member-dead { opacity: 0.4; }
     .saga-row { display: flex; gap: 0.4rem; align-items: center; padding: 0.4rem 0; border-bottom: 1px dashed #2a2318; }
     .saga-row button { font-size: 0.75rem; padding: 0.25rem 0.45rem; background: #221c14; color: #c0b090; border: 1px solid #3d372e; }
     .saga-row button:hover { background: #2e2619; }
@@ -139,79 +227,17 @@
     .saga-doc li { margin-left: 1rem; color: #a09070; }
     .saga-doc details { margin: 0.3rem 0 0.6rem; color: #776; }
     .saga-doc summary { cursor: pointer; font-size: 0.72rem; }
-    .story-wound { color: #cc8877; margin-top: 0.4rem; padding-left: 0.5rem; border-left: 2px solid #6a3a2a; font-style: italic; }
-    .story-aside { color: #d8c26a; margin-top: 0.4rem; padding-left: 0.5rem; border-left: 2px solid #6a5a2a; font-style: italic; }
 
-    .log {
-      background: #000;
-      border: 1px solid #3a2f1e;
-      border-radius: 4px;
-      padding: 0.6rem;
-      font-size: 0.72rem;
-      color: #b8934a;
-      max-height: 140px;
-      overflow-y: auto;
-    }
-    .log-entry { margin-bottom: 0.2rem; word-break: break-word; }
-
-    /* Modal (game over) */
-    #gameover-display {
-      display: none;
-      position: fixed;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      width: min(520px, 92vw);
-      max-height: 82vh;
-      overflow-y: auto;
-      background: #14110b;
-      border: 1px solid #d8a53f;
-      border-radius: 8px;
-      padding: 1.5rem;
-      z-index: 100;
-      box-shadow: 0 0 60px rgba(216, 165, 63, 0.3), 0 0 0 100vmax rgba(0,0,0,0.6);
-    }
-    #gameover-display.active { display: block; }
-    @media (min-width: 1025px) {
-      #gameover-display { left: 23%; box-shadow: 0 0 60px rgba(216, 165, 63, 0.3); }
-    }
-    #show-results-btn {
-      display: none;
-      position: fixed; bottom: 1rem; right: 1rem; z-index: 90;
-      padding: 0.7rem 1.2rem;
-      box-shadow: 0 0 20px rgba(216, 165, 63, 0.5);
-    }
-    #show-results-btn.active { display: block; }
-
-    /* Header buttons */
-    .header-btns {
-      position: absolute; top: 0.8rem; right: 1rem;
-      display: flex; gap: 0.4rem;
-    }
-    .header-btns button {
-      padding: 0.35rem 0.7rem; font-size: 0.8rem;
-      background: #2a2213; color: #d8a53f; border: 1px solid #3a2f1e;
-    }
-    .header-btns button:hover { background: #3a2f1e; }
-    header { position: relative; }
-
-    /* How-to-play overlay */
+    /* Overlays: help, records, archive, cards */
     #help-overlay, #records-overlay, #archive-overlay, #cards-overlay {
-      display: none;
-      position: fixed; inset: 0; z-index: 200;
-      background: rgba(0,0,0,0.75);
-      overflow-y: auto;
-      padding: 2rem 1rem;
+      display: none; position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,0.75); overflow-y: auto; padding: 2rem 1rem;
     }
     #help-overlay.active, #records-overlay.active, #archive-overlay.active, #cards-overlay.active {
       display: flex; align-items: flex-start; justify-content: center;
     }
-    .arch-item {
-      display: flex; gap: 0.7rem; align-items: flex-start;
-      padding: 0.55rem 0; border-bottom: 1px dashed #2a2318;
-    }
+    .arch-item { display: flex; gap: 0.7rem; align-items: flex-start; padding: 0.55rem 0; border-bottom: 1px dashed #2a2318; }
     .arch-item canvas { border: 1px solid #3a2f1e; border-radius: 4px; flex-shrink: 0; }
-
-    /* Records table */
     .records-best { display: grid; grid-template-columns: 1fr auto; gap: 0.25rem 1rem; font-size: 0.85rem; margin-bottom: 1rem; }
     .records-best dt { color: #b8a888; }
     .records-best dd { color: #d8a53f; font-weight: bold; text-align: right; }
@@ -220,13 +246,8 @@
     .records-run .rr-score { color: #d8a53f; font-weight: bold; margin-left: auto; }
     .records-empty { color: #776; font-style: italic; font-size: 0.85rem; }
     .help-card {
-      background: #14110b;
-      border: 1px solid #d8a53f;
-      border-radius: 8px;
-      padding: 1.75rem;
-      max-width: 640px;
-      width: 100%;
-      box-shadow: 0 0 60px rgba(216, 165, 63, 0.25);
+      background: #14110b; border: 1px solid #d8a53f; border-radius: 8px; padding: 1.75rem;
+      max-width: 640px; width: 100%; box-shadow: 0 0 60px rgba(216, 165, 63, 0.25);
     }
     .help-card h2 { color: #d8a53f; font-size: 1.4rem; margin-bottom: 0.3rem; text-align: center; }
     .help-card .help-sub { color: #887755; font-size: 0.85rem; text-align: center; margin-bottom: 1.25rem; }
@@ -238,17 +259,11 @@
     .help-legend dd { color: #b8a888; }
     .help-card button { width: 100%; margin-top: 1.25rem; padding: 0.9rem; font-size: 1rem; }
 
-    /* Event toasts */
+    /* Event toasts: over the picture, top-left, clear of the HUD */
     #toast-stack {
-      /* Over the map, not over the party. Centred on the viewport, the
-         stack sat on top of the roster and the tactics chips — the two
-         panels a player checks while the toasts are still up. */
-      position: fixed; top: 4.5rem; left: 1.25rem;
+      position: fixed; top: 3.6rem; left: 1rem;
       z-index: 150; display: flex; flex-direction: column; gap: 0.4rem;
       pointer-events: none; width: min(420px, 46vw);
-    }
-    @media (max-width: 900px) {
-      #toast-stack { left: 50%; transform: translateX(-50%); width: min(420px, 92vw); }
     }
     .toast {
       background: #1a1610; border: 1px solid #d8a53f; border-radius: 6px;
@@ -266,29 +281,13 @@
     @keyframes toast-out { to { opacity: 0; transform: translateY(-8px); } }
 
     /* Draft cards */
-    .pack-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 0.6rem;
-    }
+    .pack-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.6rem; }
     .draft-card {
-      background: #14110b;
-      border: 2px solid #3a2f1e;
-      border-radius: 6px;
-      padding: 0.7rem;
-      cursor: pointer;
-      transition: all 0.15s;
-      min-height: 120px;
-      display: flex;
-      flex-direction: column;
+      background: #14110b; border: 2px solid #3a2f1e; border-radius: 6px; padding: 0.7rem;
+      cursor: pointer; transition: all 0.15s; min-height: 120px; display: flex; flex-direction: column;
     }
     .draft-card:hover { border-color: #d8a53f; transform: translateY(-3px); }
-    .card-type {
-      font-size: 0.62rem;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      margin-bottom: 0.3rem;
-    }
+    .card-type { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.3rem; }
     .type-character { color: #e8724a; }
     .type-equipment { color: #8fb8dd; }
     .type-spell { color: #b07ae8; }
@@ -298,33 +297,34 @@
     .card-stats { font-size: 0.7rem; color: #7a9; margin-top: 0.4rem; }
 
     @media (max-width: 1024px) {
-      main { flex-direction: column; }
-      /* The corner buttons were absolutely positioned assuming a wide
-         header; on a narrow one they overlapped the centered title
-         instead of pushing it down — the "can't see the dungeon"
-         reports traced to this: the canvas below inherited whatever
-         sliver of height was left. Back to normal flow, wraps below
-         the title instead of on top of it. */
-      .header-btns { position: static; justify-content: center; flex-wrap: wrap; margin-top: 0.5rem; }
-      /* A real floor on the canvas's height, tied to the viewport
-         (not a % of whatever space the header happened to leave) —
-         short/landscape windows still show a usable dungeon. */
-      #world-container { flex: 1 1 42vh; min-height: 220px; max-height: 48vh; border-right: none; border-bottom: 1px solid #3a2f1e; }
+      header { flex-wrap: wrap; gap: 0.5rem; }
+      .stat-strip { order: 3; width: 100%; margin: 0; }
+      #screen-delve.active { grid-template-columns: 1fr; grid-template-rows: minmax(0, 52%) minmax(0, 48%); }
+      #chronicle-col { border-left: none; border-top: 1px solid #3a2f1e; }
+      .muster-party { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .pack-grid { grid-template-columns: repeat(2, 1fr); }
-      #gameover-display { left: 50%; }
+      #toast-stack { left: 50%; transform: translateX(-50%); width: min(420px, 92vw); }
     }
   </style>
 </head>
 <body>
   <div id="app">
     <header>
-      <h1>⚔️ DungeonAB</h1>
-      <p>Draft the party. Delve the dungeon. Watch the story.
-        <span style="color:#665;">·</span>
-        <span style="color:#8a7a55;" title="The torchlit dungeon: one draft, one dungeon, twelve capabilities, and a torch that finally carves the dark">v8.2</span>
-        <span style="color:#665;">·</span>
-        <a href="hub/" style="color:#d8a53f;text-decoration:underline;" title="Every playable version and the whole documentation set">all versions &amp; docs →</a>
-      </p>
+      <div class="brand">
+        <h1>⚔️ DungeonAB</h1>
+        <span class="tag">Draft. Delve. Watch.</span>
+        <span class="ver" title="The performed delve: one frame, the picture the width of the screen, and every room played out as beats — the march, the formation, the rounds, the fall">v9.0</span>
+        <a href="hub/" title="Every playable version and the whole documentation set">all versions &amp; docs →</a>
+      </div>
+      <div id="stat-strip" class="stat-strip" hidden>
+        <span>Room <strong id="room-count">0</strong></span>
+        <span>Gold <strong id="gold-count">0</strong></span>
+        <span>Score <strong id="score-count">0</strong></span>
+        <span>Oil <strong id="supply-count" style="color:#e8c07a;">0</strong></span>
+        <span>Potions <strong id="potions-count" style="color:#b07ae8;">0</strong></span>
+        <span>Trophies <strong id="trophies-count" style="color:#d88a3f;" title="">0</strong></span>
+        <span id="status-badges" style="color:#e08080;"></span>
+      </div>
       <div class="header-btns">
         <button id="hub-btn" title="Every playable version and the documentation">📚 Versions &amp; Docs</button>
         <button id="archive-btn">🗺️ Archive</button>
@@ -333,59 +333,84 @@
         <button id="help-btn">? How to Play</button>
       </div>
     </header>
+
     <main>
-      <div id="draft-container"></div>
-      <div id="world-container" style="display: none;">
-        <canvas id="game-canvas" width="500" height="420"></canvas>
-        <div class="panel" style="display:flex;gap:1.25rem;font-size:0.8rem;flex-wrap:wrap;">
-          <span>Room: <strong id="room-count" style="color:#d8a53f;">0</strong></span>
-          <span>Floor: <strong id="floor-count" style="color:#9aa3b0;" title="A dungeon goes down. Every floor is meaner than the one above it.">1</strong></span>
-          <span>Gold: <strong id="gold-count" style="color:#d8a53f;">0</strong></span>
-          <span>Score: <strong id="score-count" style="color:#d8a53f;">0</strong></span>
-          <span>Oil: <strong id="supply-count" style="color:#e8c07a;">0</strong></span>
-          <span>Potions: <strong id="potions-count" style="color:#b07ae8;">0</strong></span>
-          <span>Trophies: <strong id="trophies-count" style="color:#d88a3f;" title="">0</strong></span>
-          <span id="status-badges" style="color:#e08080;"></span>
-        </div>
-      </div>
-      <div id="ui-container" style="display: none;">
-        <div class="panel">
-          <h2>🎭 The Party</h2>
-          <div id="party-roster"></div>
-          <div id="party-tactics" class="party-tactics"></div>
-        </div>
-        <div class="panel">
-          <h2>Controls</h2>
-          <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
-            <button id="pause-btn" disabled>Pause</button>
-            <button id="step-btn" disabled>Step</button>
-            <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.8rem;">
-              Speed <input type="range" id="speed-slider" min="0.25" max="4" step="0.25" value="1" />
-              <span id="speed-label">1.0x</span>
-            </label>
-          </div>
-          <div style="margin-top:0.5rem;font-size:0.72rem;color:#887755;line-height:1.5;">
-            The party crawls on its own. <strong style="color:#a89868;">Pause</strong> to read,
-            <strong style="color:#a89868;">Step</strong> one room at a time, or set the
-            <strong style="color:#a89868;">Speed</strong>. Watch <span style="color:#d8a53f;">The Chronicle</span> below for what unfolds.
+      <section id="screen-table" class="screen">
+        <div id="draft-container"></div>
+      </section>
+
+      <section id="screen-muster" class="screen">
+        <div id="muster-container"></div>
+      </section>
+
+      <section id="screen-delve" class="screen">
+        <div id="world">
+          <canvas id="game-canvas" width="500" height="420"></canvas>
+          <div id="hud">
+            <div id="party-roster"></div>
+            <div id="party-tactics"></div>
           </div>
         </div>
-        <div class="panel">
-          <h2>📖 The Chronicle</h2>
+        <aside id="chronicle-col">
+          <div class="col-head">📖 The Chronicle <span class="theme-name" id="chronicle-theme"></span></div>
           <div id="story-panel" class="story">
             <div class="story-empty">The chronicle of this delve is not yet written…</div>
           </div>
+          <details id="log-fold">
+            <summary>Log</summary>
+            <div id="debug-log" class="log"></div>
+          </details>
+        </aside>
+      </section>
+
+      <section id="screen-reckoning" class="screen">
+        <div id="reckoning-body"></div>
+      </section>
+    </main>
+
+    <footer id="action-bar">
+      <div class="bar-for" data-screen="table">
+        <div class="bar-left"><span class="bar-hint" id="bar-draft-status">The packs are being dealt…</span></div>
+        <div class="bar-main"><span class="bar-hint">Click one card to take it — the pack passes on. Packs always hold characters, so no draft is dead.</span></div>
+        <div class="bar-right"></div>
+      </div>
+      <div class="bar-for" data-screen="muster">
+        <div class="bar-left">
+          <label>Difficulty
+            <select id="difficulty-select">
+              <option value="easy">Easy</option>
+              <option value="medium" selected>Medium</option>
+              <option value="hard">Hard</option>
+              <option value="nightmare">Nightmare</option>
+            </select>
+          </label>
+          <label>Seed <input id="seed-input" type="text" placeholder="blank = random dungeon" size="18" /></label>
         </div>
-        <div class="panel">
-          <h2>Log</h2>
-          <div id="debug-log" class="log"></div>
+        <div class="bar-main"><button id="march-btn" class="bar-primary">⛏️ March on the Dungeon</button></div>
+        <div class="bar-right"><button id="muster-kit-btn" class="bar-quiet" title="Kit is dealt by best fit already. Overrule it here.">🎒 Change kit &amp; names</button></div>
+      </div>
+      <div class="bar-for" data-screen="delve">
+        <div class="bar-left">
+          <button id="pause-btn" disabled>Pause</button>
+          <button id="step-btn" disabled title="Play one room and stop">Step</button>
+        </div>
+        <div class="bar-main">
+          <label>Speed <input type="range" id="speed-slider" min="0.5" max="4" step="0.5" value="1" />
+            <span id="speed-label" class="speed-label">1.0x</span></label>
+          <span class="bar-hint" id="beat-hint"></span>
+        </div>
+        <div class="bar-right"><button id="results-btn" class="bar-primary" hidden>🏆 The Reckoning</button></div>
+      </div>
+      <div class="bar-for" data-screen="reckoning">
+        <div class="bar-left"><button id="read-btn" class="bar-quiet">📖 Back to the Chronicle</button></div>
+        <div class="bar-main"><button id="again-btn" class="bar-primary">🃏 Draft a New Party</button></div>
+        <div class="bar-right">
+          <button id="chron-md-btn" class="bar-quiet" title="The whole saga as a document you can read">📖 Download the chronicle</button>
+          <button id="chron-json-btn" class="bar-quiet" title="A save you can keep, share, or load back in">💾 Save file</button>
         </div>
       </div>
-    </main>
+    </footer>
   </div>
-
-  <div id="gameover-display"></div>
-  <button id="show-results-btn">🏆 Show Results</button>
 
   <!-- Onscreen event messages -->
   <div id="toast-stack"></div>
@@ -404,8 +429,8 @@
       </div>
 
       <div class="help-step">
-        <h3>2 · The Muster — who carries what</h3>
-        <p>Before the march, the <strong>muster</strong> is where the draft becomes a party. Kit is dealt out by best fit when it is drafted; here you overrule that — one piece per slot, and anything you take off waits in the pack. Say <strong>who prepares each working</strong>: a spell's power comes from the mind of the character holding it, so Fireball in the wizard's hands is worth more than Fireball in the fighter's. And <strong>name your own</strong>: rename anybody, and write who they are. The name and the history both go into the saga.</p>
+        <h3>2 · The Muster — and the march</h3>
+        <p>When the packs run dry the party stands mustered: kit dealt out by best fit, every working prepared by the sharpest mind that holds it. Pick a difficulty and <strong>march</strong>. If you want to overrule the dealing — put the Tower Shield on whoever holds the door, hand Fireball to the wizard rather than whoever picked it up, rename anybody and write who they are — open <strong>Change kit &amp; names</strong> first. The name and the history both go into the saga.</p>
       </div>
 
       <div class="help-step">
@@ -427,7 +452,7 @@
 
       <div class="help-step">
         <h3>Watching the Delve</h3>
-        <p><strong>The Chronicle</strong> narrates every room in three beats. Toasts flag big moments — a hero falling, or the boss chamber. Use the controls to pause, step, or change speed.</p>
+        <p>Every room is <strong>performed</strong>: the party walks the passage, forms up in the shape the fight calls for — one blade forward in a column, three in a wedge — and a fight plays out <strong>round by round</strong>: the front rank swings, the monster's health falls, the counter-blow lands and the numbers rise off the wounded. <strong>The Chronicle</strong> writes each line as its beat plays, so what you read is what you just saw. Pause to read, Step one room at a time, or set the speed.</p>
       </div>
 
       <button id="help-close-btn">Got it — let's draft</button>

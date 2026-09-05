@@ -56,6 +56,23 @@ const FRONT_BY_FORMATION = {
   column: 1, line: 2, shieldwall: 2, wedge: 3, loose: 2,
 };
 
+/** How many stand in the front rank in this formation. */
+export function frontCount(formation) {
+  return FRONT_BY_FORMATION[formation] ?? 2;
+}
+
+/**
+ * The order the party stands in: fighters to the front rank, everyone
+ * else behind in draft order. The renderer draws it and the performance
+ * animates it, so the two agree on who is in front (SCREENS.md S3).
+ */
+export function marchingOrder(members) {
+  return members
+    .filter(m => m.alive ?? (typeof m.isAlive === 'function' ? m.isAlive() : true))
+    .slice()
+    .sort((a, b) => (a.class === 'fighter' ? -1 : 0) - (b.class === 'fighter' ? -1 : 0));
+}
+
 export function partySlots(room, x, z, n, facingMonster, formation = 'line') {
   const { axis, far, wide } = roomAxis(room);
   // Stand off the far wall; square up when there's something to fight

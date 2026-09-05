@@ -854,6 +854,11 @@ export function resolveRoomAction(room, party, optionId, options = null) {
       const monster = room.monster;
       let monsterHealth = monster.health;
       let partyDamageTaken = 0;
+      // The fight, round by round. Every number here is one the loop
+      // below already computes; recording them is what lets the room be
+      // *performed* rather than summarised (ui/Choreography.js,
+      // SCREENS.md S3). The arithmetic does not change.
+      const roundLog = [];
 
       // Who is actually being hit. Party.takeDamage sends blows to the
       // front rank first, so one body absorbs most of a fight — and
@@ -878,6 +883,7 @@ export function resolveRoomAction(room, party, optionId, options = null) {
       }
       monsterHealth -= opening;
       monsterHealth = bossFloor(monster, monsterHealth, false);
+      const openingBlow = opening;
 
       // Natures shape the fight (see Bestiary): the armored shave
       // blows; the ethereal ignore steel unless faith gives the
@@ -1074,25 +1080,30 @@ export function resolveRoomAction(room, party, optionId, options = null) {
         const swing = Math.max(1, Math.round((party.combatAttack(form.frontage) + summon + coating.bonus + spellSustain + tactical + Math.floor(roll() / 3)) * etherealMult * form.attackMult) - armorShave);
         monsterHealth -= swing;
         monsterHealth = bossFloor(monster, monsterHealth, phased);
+        const entry = { round: rounds, swing, monsterHealth: Math.max(0, monsterHealth), incoming: 0, heal: null, mend: 0, phased: false };
+        roundLog.push(entry);
         if (monsterHealth <= 0) break;
         if (monster.isBoss && !phased && monsterHealth <= monster.health / 2) {
           phased = true;
+          entry.phased = true;
           monsterAtk += 2;
           preps.push({ source: monster.name, text: bossPhaseLine(monster) });
         }
-        if (mend > 0) party.healParty(mend);
+        if (mend > 0) { party.healParty(mend); entry.mend = mend; }
         // The slow strike last, and so does anything the quicksilver
         // daggers got in front of: no incoming damage on the first round
         if ((monster.trait === 'slow' || quicksilver) && rounds === 1) continue;
         const incoming = Math.max(1, Math.round((monsterAtk - Math.floor(party.totalDefense() / 3) - ward - cover - tac.cover - castWard - (starBlessed ? 1 : 0)) * form.incomingMult));
         party.takeDamage(incoming);
         partyDamageTaken += incoming;
+        entry.incoming = incoming;
         // Mend the badly hurt while the fight is still on — a working
         // spent after the fight is a working that never saved anybody
         const mid = party.castHealIfNeeded();
         if (mid) {
           const holds = Math.round(mid.spell.effectivePower * SPELL_SUSTAIN_SHARE);
           mend += holds;
+          entry.heal = { target: mid.target.name, amount: mid.spell.effectivePower };
           preps.push({
             source: mid.spell.name,
             text: `💚 ${mid.spell.name} closes ${mid.target.name}'s wounds mid-fight: ${mid.spell.effectivePower} healed in round ${rounds}, then ${holds} a round while it holds${mid.spell.consumed ? ' (the scroll is consumed)' : ''}.`,
@@ -1165,7 +1176,11 @@ export function resolveRoomAction(room, party, optionId, options = null) {
         if (lost > 0 && (!brunt || lost > brunt.lost)) brunt = { name: m.name, lost };
       }
 
-      return { success: won, rounds, damage: partyDamageTaken, monster: monster.name, itemActions, preps, drop, bossPhased: phased, formation: form.id, brunt };
+      return {
+        success: won, rounds, damage: partyDamageTaken, monster: monster.name, itemActions, preps, drop,
+        bossPhased: phased, formation: form.id, brunt,
+        roundLog, opening: openingBlow, monsterHealthMax: monster.health,
+      };
     }
 
     case 'cause-fear': {
