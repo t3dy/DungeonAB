@@ -149,6 +149,14 @@ decision about whether score baselines matter.
 
 **Status: open, found 2026-09-04, not yet scoped.**
 
+**Seen in the tests, 2026-09-04 (v8.2 release).** `tests/crawl.test.js`
+"looting treasure pays out" failed once in three full runs with
+`party.gold` 45 instead of 30: `rollFind` rolled its own unseeded
+`Math.random()`, fired (35%), and drew the 15-gold purse (one in four).
+About one run in eleven. The test now pins `Math.random` above the find
+threshold for the loot call; that is a bandage on the fixture, not on the
+seam — the seam is this entry.
+
 Building the capture harness (`src/ui/Frames.js`, GRAPHICS.md §G1)
 turned this up. Two runs of one seeded URL —
 

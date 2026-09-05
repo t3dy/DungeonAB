@@ -136,7 +136,15 @@ describe('Room encounters', () => {
   test('looting treasure pays out', () => {
     const party = new Party([fighter, rogue]);
     const room = { type: ROOM_TYPES.TREASURE, gold: 30, mimicChance: 0 };
-    const result = resolveRoomAction(room, party, 'loot');
+    // The hoard find (rollFind) rolls Math.random() outside any seeded
+    // stream (PROBLEMS P8) and one find in four is a 15-gold purse, so
+    // an unpinned roll makes party.gold 45 about one run in eleven. Pin
+    // it above the 0.35 find threshold for the duration of the loot.
+    const realRandom = Math.random;
+    Math.random = () => 0.99;
+    let result;
+    try { result = resolveRoomAction(room, party, 'loot'); }
+    finally { Math.random = realRandom; }
     assert.equal(result.gold, 30);
     assert.equal(party.gold, 30);
   });
