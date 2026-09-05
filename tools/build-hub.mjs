@@ -88,6 +88,7 @@ const GROUPS = [
       ['DATACONTRACTS.md', 'Data contracts — the syncs nobody enforces', 'DATACONTRACTSPROPOSAL.md'],
       ['MEASUREMENT.md', 'Measurement — how not to fool yourself', 'MEASUREMENTPROPOSAL.md'],
       ['GRAPHICS.md', 'Graphics — the renderer, measured, and what it would take'],
+      ['SCREENS.md', 'Screens — why the crawl cannot be watched, and the frame that fixes it'],
     ],
   },
   {

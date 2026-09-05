@@ -87,3 +87,42 @@ whole class's signature move.
 **★ Run `npm run bench` and read the drift.** One command, outstanding
 since the mastery band landed. Nothing reads score, so nothing failed and
 nothing checked.
+
+---
+
+## For P8 — the seed names a dungeon, not a delve
+
+**★ Decide first, then thread.** If a seed is to name a delve, thread
+`Simulator.rng` through `RoomEncounters` and `rollFind` in one commit
+with the re-calibrate and re-stamped `MINING_REPORT.md`, so the number
+shift is attributed. If not, say so in `MEASUREMENT.md`. Do not fix it
+inside any other change.
+
+---
+
+## For P9 — the crawl is a slideshow
+
+**★ `SCREENS.md` S3, in two halves.** (a) Persistent sprites and the
+march tween, with beats for arrival and resolution — the party visibly
+walks and fights once. (b) A `rounds[]` record from `resolveFight` and
+per-round beats — the fight is performed in the formation the maths
+chose. The simulator's arithmetic does not change; the next tick waits
+on the performance instead of a 1400 ms interval.
+
+**Option 2: a real tactical layer** (S4). Rejected for now — it replaces
+the resolver and moves every number.
+
+---
+
+## For P10 — the start button is below the fold, twice
+
+**★ `SCREENS.md` S1 + S2 as one change.** One frame with a fixed action
+bar that every screen owns; draft-complete and muster merged, the muster
+skipped by default (kit is already dealt by best fit); the delve screen
+inverted so the canvas is ≈ 68% and the chronicle a full-height column.
+Target: March visible without scrolling at 1280×720.
+
+**Option 2: sticky buttons only.** A `position: sticky` bar on the two
+existing pages. An afternoon, and it leaves the screen model as it is —
+acceptable as a stopgap if S1 slips, not as the fix.
+

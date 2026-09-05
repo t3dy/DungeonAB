@@ -204,3 +204,44 @@ would confuse two effects that must stay separable.
 dungeon. If a delve — thread `this.rng` from `Simulator` into
 `RoomEncounters`, re-calibrate, re-stamp. If a dungeon — say so in
 `MEASUREMENT.md` and stop anyone quoting run outcomes by seed.
+
+## P9. The crawl is a slideshow: a room resolves in one call and is drawn as one frame
+
+**Status: open, reported by Ted 2026-09-04, design in SCREENS.md §1 and §S3.**
+
+`mainLoop` ticks every 1400 ms; one tick is one room resolved whole in
+`Simulator._tick`, fight rounds included (`resolveFight` counts rounds
+in a `while` loop and returns totals). `IsoDungeonRenderer.updateParty`
+rebuilds the party sprites at the new room's slots each tick — only the
+camera eases. A fight is one slash sprite for 0.7 s; the monster vanishes
+on the next render. The formation is drawn as a pose (`partySlots`
+honours frontage and spacing) and nothing moves inside it.
+
+Measured: canvas 593×565 of 1366×768, party sprites ≈ 22 px, one drawn
+beat per fight. The chronicle narrates three rounds, a mid-heal and a
+boss phase; the picture shows a flash. Rule 13 gates the prose on
+accuracy; nothing gates the picture on the prose.
+
+**Wanted:** SCREENS.md S3 — perform the room as beats between ticks,
+from a per-round record `resolveFight` already computes and does not
+keep. The simulator's arithmetic is not to change (rule 10, P8).
+
+## P10. The button that starts the delve is below the fold, twice
+
+**Status: open, reported by Ted 2026-09-04, design in SCREENS.md §2 and §S1–S2.**
+
+At 1366×768: 🏰 Enter the Dungeon sits at 1763 px in a 692 px scroll
+container (the 27-card pool, the rivals and the delve panel come first);
+then ⛏️ March on the Dungeon sits at 1211 px in the 628 px muster
+overlay, below one tall card per adventurer, for a kit that was already
+dealt by best fit. On the delve screen the chronicle — rule 6's product
+surface — is the last panel in a scrolling column, 135 px tall.
+
+There is no screen model: five surfaces, three mechanisms, and
+`main.js` toggling `display` by id, so each surface put its primary
+action at the bottom of its own content.
+
+**Wanted:** SCREENS.md S1 (one frame with a fixed action bar; merge
+draft-complete and muster; skip the muster by default) and S2 (the
+delve screen is the picture: canvas ≈ 68%, chronicle a full-height
+column, roster a HUD strip).
