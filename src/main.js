@@ -7,6 +7,7 @@ import { PackDraft } from './draft/PackDraft.js';
 import { DraftUI } from './ui/DraftUI.js';
 import { DungeonRenderer } from './ui/DungeonRenderer.js';
 import { IsoDungeonRenderer } from './ui/IsoDungeonRenderer.js';
+import { captureRequest, autoDraft, tickToRoom, markReady } from './ui/Frames.js';
 import { renderOutfitting } from './ui/OutfitUI.js';
 import { Simulator } from './sim/Simulator.js';
 import { Party, PARTY_CAP } from './agents/Party.js';
@@ -101,7 +102,12 @@ function init() {
   const prefs = loadPlayerPacks();
   installAlchemyPack({ enabled: prefs['alchemy-17c'] !== false });
 
-  setupHelp();
+  // A capture URL puts the game in a reproducible place instead of a
+  // fresh draft, so two builds can be photographed from the same spot
+  // (ui/Frames.js). Absent `?capture`, nothing below changes.
+  const capture = captureRequest();
+
+  setupHelp({ autoOpen: !capture });
   setupRecords();
   setupCardEditor();
   setupArchive({
@@ -111,7 +117,7 @@ function init() {
       startNewDraft();
     },
   });
-  startNewDraft();
+  if (capture) runCapture(capture); else startNewDraft();
 
   document.getElementById('hub-btn').addEventListener('click', () => { window.location.href = 'hub/'; });
   document.getElementById('pause-btn').addEventListener('click', togglePause);
@@ -130,7 +136,7 @@ function init() {
 /* How-to-play overlay                                             */
 /* -------------------------------------------------------------- */
 
-function setupHelp() {
+function setupHelp({ autoOpen = true } = {}) {
   const overlay = document.getElementById('help-overlay');
   const openBtn = document.getElementById('help-btn');
   const closeBtn = document.getElementById('help-close-btn');
@@ -153,10 +159,11 @@ function setupHelp() {
   closeBtn.addEventListener('click', close);
   overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
 
-  // First-time visitors get the rules before their first pack
+  // First-time visitors get the rules before their first pack — but a
+  // capture is photographing the dungeon, not the onboarding.
   let seen = false;
   try { seen = localStorage.getItem(HELP_SEEN_KEY) === '1'; } catch (e) { /* private mode */ }
-  if (!seen) open();
+  if (!seen && autoOpen) open();
 }
 
 /* -------------------------------------------------------------- */
@@ -360,7 +367,33 @@ function startNewDraft() {
   document.getElementById('ui-container').style.display = 'none';
 }
 
-function startDelve({ pool, difficulty, seed }) {
+/**
+ * Capture mode (dev): draft, march and stop, all seeded and all
+ * synchronous, then flag the page ready for a screenshot. See
+ * ui/Frames.js and GRAPHICS.md §G1.
+ */
+function runCapture(req) {
+  console.log('[frames] capture', req);
+  const draft = new PackDraft(req.draftSeed);
+  const pool = autoDraft(draft);
+
+  document.getElementById('draft-container').style.display = 'none';
+  startDelve({
+    pool, difficulty: req.difficulty, seed: req.seed, skipMuster: true,
+    onReady: (sim) => {
+      appState.gameRunning = false;              // no timer; we step by hand
+      const state = tickToRoom(sim, req.room);
+      appState.renderer.render(state);
+      // render() eases the camera toward the room; a capture wants it
+      // there, not on its way (IsoDungeonRenderer.snapCamera).
+      appState.renderer.snapCamera?.();
+      updateUI(state);
+      markReady(state, req);
+    },
+  });
+}
+
+function startDelve({ pool, difficulty, seed, skipMuster = false, onReady = null }) {
   console.log(`Delve begins: difficulty=${difficulty}, seed=${seed}`);
 
   const draftContainer = document.getElementById('draft-container');
@@ -386,11 +419,14 @@ function startDelve({ pool, difficulty, seed }) {
   // The muster: kit is dealt out by best fit, and this is where the
   // player overrules that, says who prepares which working, and names
   // their own (ui/OutfitUI.js). Skippable in one click.
-  showMuster(party, '⛏️ March on the Dungeon', () => {
-    beginDelve(new Simulator(party, seed, difficulty, {
+  const march = () => {
+    const sim = new Simulator(party, seed, difficulty, {
       layout: replay ? replay.layout : null,
-    }));
-  });
+    });
+    beginDelve(sim);
+    if (onReady) onReady(sim);
+  };
+  if (skipMuster) march(); else showMuster(party, '⛏️ March on the Dungeon', march);
 }
 
 /**

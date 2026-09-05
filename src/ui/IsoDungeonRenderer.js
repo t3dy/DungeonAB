@@ -27,8 +27,29 @@ import {
 // Rooms are half again as big as they were, and a fixed wide view drew
 // four adventurers as six pixels each — which is no good to anyone
 // trying to read where the party is standing.
-const VIEW_HALF = 7;
+const VIEW_HALF = 6.2;
 const CAM_BACK = 26;        // how far back the iso eye sits
+
+/**
+ * How high the eye rides, as a multiple of CAM_BACK.
+ *
+ * For a camera at 45° azimuth, a ground tile projects to a diamond whose
+ * height-to-width ratio is exactly sin(elevation): the diamond is √2
+ * wide and √2·sinθ tall. Ultima VII and VIII use the 2:1 convention — a
+ * tile twice as wide as it is tall — which needs sin θ = 0.5, θ = 30°.
+ *
+ *   y = CAM_BACK·k,  ground run = CAM_BACK·√2,  tan 30° = k/√2
+ *   → k = √2 · tan 30° = 0.8165
+ *
+ * This was 1.05 from v1.0 to v8.1: θ = 36.6°, a 1.68:1 diamond, which is
+ * near true isometric — the SimCity eye, looking down at the floor. The
+ * flatter Ultima eye looks *across* the chamber, which is why its
+ * interiors read as rooms you stand in rather than plans you hover over.
+ *
+ * It lives here as one constant because resize() and animateFrame() both
+ * need it and must never disagree about it.
+ */
+const CAM_RISE = Math.SQRT2 * Math.tan(Math.PI / 6);   // 0.8165 → θ = 30°
 const WALL_H = 1.15;        // wall height in world units
 const WALL_T = 0.28;        // wall thickness
 const CORRIDOR_W = 1.7;     // connecting passage width
@@ -43,17 +64,37 @@ const CLASS_COLORS = {
   alchemist: 0x3cb8a8,
 };
 
-/* Every theme colors its own stone (v3: the castle is not the bog) */
+/*
+ * Every theme colors its own stone (v3: the castle is not the bog).
+ *
+ * `fill` is new with the G2 relight and it is what keeps a theme legible
+ * now that the torch is the key light. Warm torchlight on grey stone
+ * makes every dungeon the same orange dungeon; the fill is the colour
+ * the *shadows* go, which is where a theme actually lives — the ice
+ * caverns are cold in the dark and warm only where the party is
+ * standing, and the athanor is warm all the way through. `ground` is the
+ * hemisphere's downward half, the bounce off the floor.
+ *
+ * This is the cheap version of the per-theme LUT in GRAPHICS.md §4; it
+ * costs two colours and no post-processing pass. Take the LUT when a
+ * grading pass exists to hang it on.
+ *
+ * Note on the roster: only `delve`, `castle` and `icecaverns` are built
+ * in. `athanor` arrives at runtime from the alchemy pack via
+ * `registerTheme()`, which is on by default — so four of these are
+ * reachable in a normal session. The remaining five are the extension
+ * points a future pack registers into, not dead code.
+ */
 const THEME_PALETTES = {
-  delve: { plat: 0x615b52, wall: 0x35322c, bg: 0x0a0805, boss: 0x5a2626 },
-  crypt: { plat: 0x4e4a56, wall: 0x2c2a33, bg: 0x070609, boss: 0x4a2a4a },
-  volcanic: { plat: 0x5c4038, wall: 0x33211c, bg: 0x0d0503, boss: 0x7a2a1a },
-  library: { plat: 0x3f4a58, wall: 0x232c38, bg: 0x04070b, boss: 0x2a3a5a },
-  madlab: { plat: 0x44584a, wall: 0x24352a, bg: 0x040804, boss: 0x2a5a3a },
-  castle: { plat: 0x3e3a4e, wall: 0x201d2c, bg: 0x050409, boss: 0x5a1a2a },
-  bogcellar: { plat: 0x4a4a34, wall: 0x2a2a1c, bg: 0x060703, boss: 0x4a5a1a },
-  icecaverns: { plat: 0x4a5a66, wall: 0x2a3640, bg: 0x040709, boss: 0x3a5a6a },
-  athanor: { plat: 0x5a4a38, wall: 0x33291c, bg: 0x0a0703, boss: 0x6a4a1a },
+  delve: { plat: 0x615b52, wall: 0x35322c, bg: 0x0a0805, boss: 0x5a2626, fill: 0x3a4250, ground: 0x2a2118 },
+  crypt: { plat: 0x4e4a56, wall: 0x2c2a33, bg: 0x070609, boss: 0x4a2a4a, fill: 0x40384f, ground: 0x231d28 },
+  volcanic: { plat: 0x5c4038, wall: 0x33211c, bg: 0x0d0503, boss: 0x7a2a1a, fill: 0x5a2a1c, ground: 0x3a1408 },
+  library: { plat: 0x3f4a58, wall: 0x232c38, bg: 0x04070b, boss: 0x2a3a5a, fill: 0x2e4260, ground: 0x1d2733 },
+  madlab: { plat: 0x44584a, wall: 0x24352a, bg: 0x040804, boss: 0x2a5a3a, fill: 0x2c4a38, ground: 0x1b2a1f },
+  castle: { plat: 0x3e3a4e, wall: 0x201d2c, bg: 0x050409, boss: 0x5a1a2a, fill: 0x39485e, ground: 0x2a1d12 },
+  bogcellar: { plat: 0x4a4a34, wall: 0x2a2a1c, bg: 0x060703, boss: 0x4a5a1a, fill: 0x3d4227, ground: 0x241f12 },
+  icecaverns: { plat: 0x4a5a66, wall: 0x2a3640, bg: 0x040709, boss: 0x3a5a6a, fill: 0x2f5f80, ground: 0x1c3340 },
+  athanor: { plat: 0x5a4a38, wall: 0x33291c, bg: 0x0a0703, boss: 0x6a4a1a, fill: 0x54381a, ground: 0x33200c },
 };
 const DEFAULT_PALETTE = THEME_PALETTES.delve;
 
@@ -87,6 +128,16 @@ export class IsoDungeonRenderer {
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
+    // A torch is a high-dynamic-range object: bright core, fast falloff,
+    // deep shadow. Rendered with NoToneMapping — which is what this
+    // scene did from v1.0 to v8.1 — the bright end clamps to white and
+    // the dark end has nowhere to go, so the range collapses and the
+    // torch reads as an orange smudge on evenly grey stone. The curve is
+    // what buys back the range. Own it here and nowhere else, so a
+    // later post-processing pass cannot double up on it.
+    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    this.renderer.toneMappingExposure = 1.25;
+
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(0x0a0805);
     // The camera sits ~26 units back and rides with the party, so fog
@@ -94,22 +145,36 @@ export class IsoDungeonRenderer {
     // which is what a torch in the dark actually does
     this.scene.fog = new THREE.Fog(0x0a0805, 34, 78);
 
-    // Cold ambient + hemisphere skylight + moonlight from the shaft
-    this.scene.add(new THREE.AmbientLight(0xaab4d0, 1.1));
-    this.scene.add(new THREE.HemisphereLight(0x8a9aba, 0x3a3028, 0.9));
-    const moon = new THREE.DirectionalLight(0xaabbdd, 1.3);
-    moon.position.set(-10, 20, 6);
-    moon.castShadow = true;
-    moon.shadow.mapSize.set(2048, 2048);
-    moon.shadow.camera.left = -30;
-    moon.shadow.camera.right = 30;
-    moon.shadow.camera.top = 30;
-    moon.shadow.camera.bottom = -30;
-    this.scene.add(moon);
+    // The rig this replaces was SnakeAB's, inherited whole at v1.0 and
+    // never revisited: AmbientLight(0xaab4d0, 1.1) plus a hemisphere at
+    // 0.9 — the colours of a cold outdoor sky, in a hole in the ground.
+    // Two units of flat fill reached every surface equally, so the torch
+    // had no dark to carve anything out of. What is left of it here is a
+    // floor to stop unlit stone going pure black, not a light source.
+    // Held on `this` because buildDungeon re-tints them per theme: the
+    // colour the shadows go is where a theme survives the torch.
+    this.ambient = new THREE.AmbientLight(0x2b3038, 0.14);
+    this.hemi = new THREE.HemisphereLight(0x39485e, 0x2a1d12, 0.22);
+    this.scene.add(this.ambient, this.hemi);
 
-    // The party's torch: warm point light that travels with them
+    // What used to be "moonlight from the shaft" at 1.3, casting the
+    // only shadows in the game. It stays as a faint cold rake that keeps
+    // wall tops legible against the fog — the shadows now come from the
+    // thing the party is actually carrying.
+    const shaft = new THREE.DirectionalLight(0x8fa6c4, 0.16);
+    shaft.position.set(-10, 20, 6);
+    this.scene.add(shaft);
+
+    // The party's torch: warm point light that travels with them, and
+    // now the scene's key light and its only shadow caster. A point
+    // shadow is a cube map, which would be a real cost in a busy scene;
+    // this one is ~700 triangles and static between rooms, so it is not.
     this.torch = new THREE.PointLight(0xff9a3c, 30, 12, 1.8);
     this.torch.position.set(0, 2.2, 0);
+    this.torch.castShadow = true;
+    this.torch.shadow.mapSize.set(1024, 1024);
+    this.torch.shadow.camera.near = 0.4;
+    this.torch.shadow.bias = -0.004;
     this.scene.add(this.torch);
 
     this.staticGroup = new THREE.Group();   // Platforms, walkways — built once per dungeon
@@ -372,7 +437,7 @@ export class IsoDungeonRenderer {
     this.camera = new THREE.OrthographicCamera(
       -vertHalf * aspect, vertHalf * aspect, vertHalf, -vertHalf, 0.1, 400
     );
-    this.camera.position.set(CAM_BACK, CAM_BACK * 1.05, CAM_BACK);
+    this.camera.position.set(CAM_BACK, CAM_BACK * CAM_RISE, CAM_BACK);
     this.camera.lookAt(0, 0, 0);
     this.camTarget = new THREE.Vector3(0, 0, 0);
   }
@@ -396,6 +461,24 @@ export class IsoDungeonRenderer {
     this.camZoom = zoomOut;
   }
 
+  /**
+   * Put the eye where it is heading, now, instead of gliding there.
+   *
+   * The camera eases toward the room the party is in at 0.12 a frame,
+   * which is right for watching a delve and wrong for photographing one:
+   * a capture that fires before the glide finishes frames the previous
+   * chamber, and if the tab is hidden — rAF throttled — it may never
+   * finish at all. The capture harness calls this so a frame depends on
+   * the scene and not on how many animation frames the browser felt like
+   * granting (ui/Frames.js).
+   */
+  snapCamera() {
+    if (!this.camera || !this.camTarget) return;
+    this.camLook = this.camTarget.clone();
+    this.camPlaced = false;    // animateFrame's "first frame snaps" path
+    this.animateFrame();
+  }
+
   buildDungeon(rooms, edges = null, themeId = 'delve', trapdoors = []) {
     this.staticGroup.clear();
     this.roomPositions = rooms.map(r => this.roomWorldPos(r));
@@ -405,11 +488,37 @@ export class IsoDungeonRenderer {
     this.scene.background = new THREE.Color(palette.bg);
     this.scene.fog = new THREE.Fog(palette.bg, 34, 78);
 
+    // The theme colours its own dark, not just its own stone
+    if (this.hemi) {
+      this.hemi.color.set(palette.fill ?? 0x39485e);
+      this.hemi.groundColor.set(palette.ground ?? 0x2a1d12);
+    }
+    if (this.ambient) this.ambient.color.set(palette.fill ?? 0x2b3038);
+
     const hidden = room => room.secret && !room.discovered;
     const edgeList = edges || rooms.slice(1).map((_, i) => ({ a: i, b: i + 1, kind: 'door' }));
     const doors = doorMap(rooms, edgeList, hidden);
     const wallMat = new THREE.MeshStandardMaterial({ color: palette.wall, roughness: 1 });
     const secretWallMat = new THREE.MeshStandardMaterial({ color: palette.wall, roughness: 1 });
+
+    // The two walls between the eye and the room are drawn as ghosts.
+    //
+    // The camera sits at +x, +z looking back at the chamber, so the
+    // 'south' (+hz) and 'east' (+hx) runs stand in front of everything
+    // that matters. At the old 36.6-degree eye that barely mattered —
+    // you looked over them. At Ultima's 30 degrees a WALL_H of 1.15
+    // hides 1.15/tan(30) ≈ 2.0 units of floor behind it, which is two
+    // tiles of the chamber the party is standing in. Cutting the near
+    // walls away is what U7 and U8 do; fading them keeps the room's
+    // outline legible while letting the floor read through.
+    //
+    // They do not cast: a shadow from a wall you can see through reads
+    // as a bug, and the torch is now the only caster (G2).
+    const nearWallMat = new THREE.MeshStandardMaterial({
+      color: palette.wall, roughness: 1,
+      transparent: true, opacity: 0.26, depthWrite: false,
+    });
+    const NEAR_SIDES = new Set(['south', 'east']);
 
     rooms.forEach((room, i) => {
       // Undiscovered secret rooms simply aren't there — that's the point
@@ -477,14 +586,18 @@ export class IsoDungeonRenderer {
           for (const [from, to] of spans) {
             const segLen = to - from;
             if (segLen <= 0.05) continue;
-            const mat = sideDoors.some(dr => dr.secret) ? secretWallMat : wallMat;
+            const near = NEAR_SIDES.has(side.name);
+            const mat = near
+              ? nearWallMat
+              : (sideDoors.some(dr => dr.secret) ? secretWallMat : wallMat);
             const seg = side.axis === 'x'
               ? new THREE.Mesh(new THREE.BoxGeometry(segLen, WALL_H, WALL_T), mat)
               : new THREE.Mesh(new THREE.BoxGeometry(WALL_T, WALL_H, segLen), mat);
             const mid = (from + to) / 2;
             if (side.axis === 'x') seg.position.set(x + mid, fy + WALL_H / 2, z + side.off);
             else seg.position.set(x + side.off, fy + WALL_H / 2, z + mid);
-            seg.castShadow = true;
+            seg.castShadow = !near;
+            seg.renderOrder = near ? 2 : 0;
             this.staticGroup.add(seg);
           }
         }
@@ -745,7 +858,7 @@ export class IsoDungeonRenderer {
     if (this.camTarget) {
       const back = CAM_BACK + (this.camZoom || 0) * 2;
       const want = new THREE.Vector3(
-        this.camTarget.x + back, this.camTarget.y + back * 1.05, this.camTarget.z + back
+        this.camTarget.x + back, this.camTarget.y + back * CAM_RISE, this.camTarget.z + back
       );
       // First frame snaps; after that it eases
       const ease = this.camPlaced ? 0.12 : 1;

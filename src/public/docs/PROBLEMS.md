@@ -142,3 +142,57 @@ gates win rate), so nothing failed — which means nothing checked either.
 
 **Wanted:** `npm run bench` re-run and the report re-stamped, with a
 decision about whether score baselines matter.
+
+---
+
+## P8. The seed does not reproduce a delve — only its dungeon
+
+**Status: open, found 2026-09-04, not yet scoped.**
+
+Building the capture harness (`src/ui/Frames.js`, GRAPHICS.md §G1)
+turned this up. Two runs of one seeded URL —
+
+```
+?capture=1&draftSeed=frames&seed=frames-01&room=6
+```
+
+— give the same party, the same 13-room castle, the same theme and the
+same chamber, and then diverge:
+
+| | run A | run B |
+|---|---|---|
+| Room 1 · trap | `spell-bypass` | `sift-rubble` |
+| Room 3 · monster | `sneak` | `sift-rubble` |
+| Room 4 · situation | `force-the-door` | `planetary-sequence` |
+| Room 5 · situation | `put-it-down` | `strip-insignia` |
+
+The layout is seeded; the resolution is not. Thirteen `Math.random()`
+calls live outside the seeded stream, the load-bearing ones being
+`encounters/RoomEncounters.js:37` (the roll the graded options are
+scored against), `:549` (weighted pick), `:1469` and `:1513` (mimic),
+`:1531` (found-spell school) and `sim/Simulator.js:58` (variant pick).
+`Formation.chooseFormation`, `Barks.getBark` and `rollFind` already take
+an injectable `rng` and default to `Math.random` — so the seam exists in
+three places and was never run through the others.
+
+**Why it is worse than it looks.** `MEASUREMENT.md` is the file that
+tells the next person how to measure without fooling themselves, and a
+seed that names a *dungeon* but not a *delve* is exactly the kind of
+thing it exists to catch. Anything that quotes a seeded transcript — a
+golden, a `census` sample cited by seed, a bug report that says "seed X,
+room 6" — is reproducible in its map and not in its outcome, and nothing
+currently says so. No test catches it because the goldens compare a run
+to itself within one process, where `Math.random` is never re-seeded
+between the two halves.
+
+**Not fixed here, deliberately.** Threading the simulator's `rng` through
+the encounter layer changes which numbers come up, which moves the
+99/88/71/45 curve, which means `npm run calibrate` and `npm run bench`
+both have to be re-run and `MINING_REPORT.md` re-stamped. That is a
+balance job, not a graphics one, and doing it inside a renderer change
+would confuse two effects that must stay separable.
+
+**Wanted:** decide whether the seed is meant to name a delve or a
+dungeon. If a delve — thread `this.rng` from `Simulator` into
+`RoomEncounters`, re-calibrate, re-stamp. If a dungeon — say so in
+`MEASUREMENT.md` and stop anyone quoting run outcomes by seed.
