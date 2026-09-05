@@ -31,8 +31,17 @@ then copy `dist/index.html` and `dist/assets/` to `src/public/vNN/`. The
 relative base is the point: the normal build emits `/assets/…`, which looks
 fine locally and 404s from the subpath. Check with
 `grep -o 'src="[^"]*"' src/public/vNN/index.html` — it must say `./assets/…`.
-Then add the version in `tools/build-hub.mjs` (`VERSIONS`) and the README
-table, and run `npm run hub`.
+Then bump the version in **all five** places that name it — two of them are
+hand-written and easy to miss:
+
+1. `tools/build-hub.mjs` — `VERSIONS` (new entry as `current`, old entry re-pointed at `../vNN/`)
+2. `README.md` — the `▶️ Play` link at the top and the versions table
+3. `src/index.html` — the version badge in the game header
+4. `src/public/hub/index.html` — the `▶ Play the current version (…)` button
+5. `package.json` — `version`
+
+then `npm run hub`, `npm test`, `npm run build`, and check `dist/vNN/` from a
+`vite preview` before pushing.
 
 ## Build
 
