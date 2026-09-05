@@ -157,6 +157,15 @@ About one run in eleven. The test now pins `Math.random` above the find
 threshold for the loot call; that is a bandage on the fixture, not on the
 seam — the seam is this entry.
 
+**And in CI, 2026-09-04 (v9.0 release).** `tests/cardfixture.test.js`
+measures 120 unpinned delves per difficulty against a 25–75% band and
+the medium fixture sits at the edge (75.8% on the failing run, one run
+in five on untouched v8.2). It failed the Pages deploy of v9.0 on code
+that had not touched a number. Pinned the same way as the goldens; the
+seam is still this entry. `tests/features.test.js` ("the carried mirror ends an
+ethereal fight faster", 12 < 12 on a twelve-round cap) tied once in the
+same hour and passed three reruns — the same seam, unpinned.
+
 Building the capture harness (`src/ui/Frames.js`, GRAPHICS.md §G1)
 turned this up. Two runs of one seeded URL —
 

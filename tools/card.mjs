@@ -58,9 +58,11 @@ const BASE_BY_DIFFICULTY = {
   easy: () => [...CHARACTER_CARDS.slice(0, 2)],                                   // re-fit for v8
   medium: () => [...CHARACTER_CARDS.slice(0, 4)],                                 // ~48%
   hard: () => [...CHARACTER_CARDS.slice(0, 4), ...EQUIPMENT_CARDS.slice(0, 7)],   // re-fit v8.1
-  nightmare: () => [                                                              // ~35%
+  // Re-searched 2026-09-04 under pinned rolls (tests/cardfixture.test.js):
+  // nine equipment measured 73-78%, out of the band; seven measures 49%.
+  nightmare: () => [                                                              // ~49%
     ...CHARACTER_CARDS.slice(0, 4),
-    ...EQUIPMENT_CARDS.slice(0, 9),
+    ...EQUIPMENT_CARDS.slice(0, 7),
     ...SPELL_CARDS.slice(0, 6),
   ],
 };

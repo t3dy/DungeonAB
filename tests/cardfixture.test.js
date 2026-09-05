@@ -19,6 +19,7 @@
 import { strict as assert } from 'assert';
 import { winRate, baseFor, MEASURABLE } from '../tools/card.mjs';
 import { STAT_SCALE } from '../src/world/DungeonGen.js';
+import { SeededRandom } from '../src/draft/PackDraft.js';
 
 /*
  * Small enough to run on every test pass, which makes it noisy: two
@@ -33,13 +34,26 @@ describe('A card can be measured at every difficulty', () => {
   const measured = {};
 
   test('every fixture sits where a card could help or hurt', () => {
+    // The encounter layer still rolls on Math.random outside the seeded
+    // stream (PROBLEMS P8), so 120 delves land within a few points of
+    // the band edge and the medium fixture failed one run in five on
+    // untouched v8.2 — enough to block a CI deploy on 2026-09-04. The
+    // rolls are pinned here the way the goldens pin theirs (tools/bless.mjs),
+    // so the measurement is the same measurement every time.
+    const real = Math.random;
+    const rng = new SeededRandom('fixture-rolls');
+    Math.random = () => rng.next();
     const bad = [];
-    for (const difficulty of Object.keys(STAT_SCALE)) {
-      const wr = winRate([], { difficulty, n: N, seedPrefix: `fixture-${difficulty}` });
-      measured[difficulty] = wr;
-      if (wr < MEASURABLE.lo || wr > MEASURABLE.hi) {
-        bad.push(`${difficulty} ${wr.toFixed(1)}% (want ${MEASURABLE.lo}-${MEASURABLE.hi}%)`);
+    try {
+      for (const difficulty of Object.keys(STAT_SCALE)) {
+        const wr = winRate([], { difficulty, n: N, seedPrefix: `fixture-${difficulty}` });
+        measured[difficulty] = wr;
+        if (wr < MEASURABLE.lo || wr > MEASURABLE.hi) {
+          bad.push(`${difficulty} ${wr.toFixed(1)}% (want ${MEASURABLE.lo}-${MEASURABLE.hi}%)`);
+        }
       }
+    } finally {
+      Math.random = real;
     }
     assert.deepEqual(bad, [],
       'card fixtures have drifted out of the measurable band — re-search '
