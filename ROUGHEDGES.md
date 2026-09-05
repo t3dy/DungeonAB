@@ -241,3 +241,9 @@ diff nobody can read is a diff nobody reads.
 have `build-hub.mjs` write LF explicitly. The first is one line and also
 stops the next generated thing under `src/public/` inheriting the
 problem.
+
+**Status (2026-09-04, v8.2): fixed the first way.** `.gitattributes` now
+exempts only `src/public/v*/**`; generated docs normalise to LF like the
+rest. The one-time renormalisation of the published copies rode in the
+v8.2 release commit, and `npm run hub` from any checkout now yields a
+diff that is only words.

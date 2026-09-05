@@ -1,6 +1,6 @@
 # ⚔️ DungeonAB — Dungeon-Crawling Autobattler
 
-**▶️ Play v8.1: https://dungeon-ab.vercel.app** &nbsp;·&nbsp; [**all versions &amp; docs**](https://dungeon-ab.vercel.app/hub/) &nbsp;·&nbsp; [mirror](https://t3dy.github.io/DungeonAB/)
+**▶️ Play v8.2: https://dungeon-ab.vercel.app** &nbsp;·&nbsp; [**all versions &amp; docs**](https://dungeon-ab.vercel.app/hub/) &nbsp;·&nbsp; [mirror](https://t3dy.github.io/DungeonAB/)
 
 Draft a party of Renaissance magi MTG-style — packs passed around a table of AI rivals, one pick per pack — then watch them auto-crawl one procedurally generated dungeon, deciding for themselves. One draft, one delve, a score. Draft a better party and try again.
 
@@ -12,7 +12,8 @@ Each link runs that release, frozen, exactly as it was. The [hub](https://dungeo
 
 | Version | Play | What it is |
 |---|---|---|
-| **v8.1** (current) | [dungeon-ab.vercel.app](https://dungeon-ab.vercel.app) | **The brass-tacks dungeon simulator.** One draft, one single-floor dungeon. Twelve **capabilities** — warcraft, roguery, observation, tinkering, alchemy, medicine, scholarship, astrology, divination, conjuring, correspondence, rhetoric — across sixteen Renaissance magi; every situation is graded on who holds the needed capability and how deeply (improvised → assisted → mastered). Fifty-two cards compressed toward five distinct traditions of magic. Lean and mean. |
+| **v8.2** (current) | [dungeon-ab.vercel.app](https://dungeon-ab.vercel.app) | **The torchlit dungeon.** The same simulator, seen properly for the first time since v4.1. The outdoor sky rig inherited from SnakeAB is gone: the party’s torch is the key light and the only shadow caster, every theme keeps its own dark (the ice caverns are cold except where the party stands), the camera drops to the 30° Ultima VII eye and the near walls step aside so the floor can be seen. A capture harness (`?capture=1&draftSeed=frames&seed=frames-01&room=6`) photographs any seeded room reproducibly. Research and the ranked next steps in [`GRAPHICS.md`](GRAPHICS.md). |
+| **v8.1** | [/v81/](https://dungeon-ab.vercel.app/v81/) | **The brass-tacks dungeon simulator.** One draft, one single-floor dungeon. Twelve **capabilities** — warcraft, roguery, observation, tinkering, alchemy, medicine, scholarship, astrology, divination, conjuring, correspondence, rhetoric — across sixteen Renaissance magi; every situation is graded on who holds the needed capability and how deeply (improvised → assisted → mastered). Fifty-two cards compressed toward five distinct traditions of magic. Lean and mean. |
 | **v8.0** | [/v8/](https://dungeon-ab.vercel.app/v8/) | The cut at the moment the systems came out — before the capability vocabulary was compressed to twelve words and the card pool to fifty-two. |
 | **v7.0** | [/v7/](https://dungeon-ab.vercel.app/v7/) | The full game before the knife: riders, the mastery gradient, forward-reaching consequences, the dramaturg, the whole Renaissance apparatus at its most elaborate — the reference the cut was measured against. |
 | **v6.0** | [/v6/](https://dungeon-ab.vercel.app/v6/) | The preparation release: the roster becomes fifteen **Renaissance magi**, each a **capability package** rather than a bespoke power. A **town that remembers** (six factions, a reputation that moves every price), **Providence** that leans the world toward a destiny you write, and **Divination** that sells the next descent's demands while you can still prepare. |
@@ -21,7 +22,7 @@ Each link runs that release, frozen, exactly as it was. The [hub](https://dungeo
 | **v2.0** | [/v2/](https://dungeon-ab.vercel.app/v2/) | The systems release: branching dungeons with secret vaults, eight themes, the Bestiary, trap types, treasure finds, the Archive &amp; editor, the Card Workshop, the Alchemy Pack. |
 | **v1.0** | [/v1/](https://dungeon-ab.vercel.app/v1/) | The first public release: the original draft → delve → town campaign loop with onscreen help. |
 
-Git tags `v1.0`–`v4.2`, `v7.0-prototype` and `v8.0` mark the exact sources; the frozen builds are served from `src/public/vN/`.
+Git tags `v1.0`–`v4.2`, `v7.0-prototype` and `v8.0`–`v8.2` mark the exact sources; the frozen builds are served from `src/public/vN/`.
 
 **Sibling project**: [SnakeAB](https://github.com/t3dy/SnakeAB) — same engine philosophy (personality-driven AI, three-beat narration, gradient outcomes), a different genre.
 

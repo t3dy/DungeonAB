@@ -28,7 +28,9 @@ const DOCS_OUT = path.join(ROOT, 'src/public/docs');
  * one line: what that release was.
  */
 const VERSIONS = [
-  { v: 'v8.1', href: '../', tag: 'current', title: 'The brass-tacks dungeon simulator',
+  { v: 'v8.2', href: '../', tag: 'current', title: 'The torchlit dungeon',
+    blurb: 'The same simulator, seen properly for the first time since v4.1. The outdoor sky rig inherited from SnakeAB is gone: the party’s torch is the key light and the only shadow caster, every theme keeps its own dark, the camera drops to the 30° Ultima eye and the near walls step aside. A capture harness photographs any seeded room reproducibly.' },
+  { v: 'v8.1', href: '../v81/', title: 'The brass-tacks dungeon simulator',
     blurb: 'One draft, one single-floor dungeon. The town, campaign, providence, tactic tree, wagers, locks and alchemy economy are cut; twelve capabilities across sixteen Renaissance magi, graded by depth, decide what a party can attempt. Lean and mean.' },
   { v: 'v8.0', href: '../v8/', title: 'The cut',
     blurb: 'The same simulator at the moment the systems came out — before the capability vocabulary was compressed to twelve and the card pool to fifty-two.' },

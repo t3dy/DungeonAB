@@ -1,10 +1,16 @@
 {
-  "generated": "2026-09-04T22:37:41.937Z",
+  "generated": "2026-09-05T02:25:32.991Z",
   "versions": [
     {
-      "v": "v8.1",
+      "v": "v8.2",
       "href": "../",
       "tag": "current",
+      "title": "The torchlit dungeon",
+      "blurb": "The same simulator, seen properly for the first time since v4.1. The outdoor sky rig inherited from SnakeAB is gone: the party’s torch is the key light and the only shadow caster, every theme keeps its own dark, the camera drops to the 30° Ultima eye and the near walls step aside. A capture harness photographs any seeded room reproducibly."
+    },
+    {
+      "v": "v8.1",
+      "href": "../v81/",
       "title": "The brass-tacks dungeon simulator",
       "blurb": "One draft, one single-floor dungeon. The town, campaign, providence, tactic tree, wagers, locks and alchemy economy are cut; twelve capabilities across sixteen Renaissance magi, graded by depth, decide what a party can attempt. Lean and mean."
     },

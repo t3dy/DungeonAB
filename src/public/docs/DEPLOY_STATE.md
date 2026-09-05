@@ -18,8 +18,21 @@ Vercel project `dungeon-ab` (`.vercel/project.json`).
 
 ### Versioned archives (Vercel only)
 
-`/v1/`, `/v2/`, `/v3/` are frozen builds committed under `src/public/`. CI does
-not rebuild them. Git tags mark the exact sources.
+`/v1/` … `/v8/` and `/v81/` are frozen builds committed under `src/public/vN/`.
+CI does not rebuild them. Git tags mark the exact sources.
+
+To freeze the current root build before the root moves on:
+
+```bash
+npx vite build --base=./
+```
+
+then copy `dist/index.html` and `dist/assets/` to `src/public/vNN/`. The
+relative base is the point: the normal build emits `/assets/…`, which looks
+fine locally and 404s from the subpath. Check with
+`grep -o 'src="[^"]*"' src/public/vNN/index.html` — it must say `./assets/…`.
+Then add the version in `tools/build-hub.mjs` (`VERSIONS`) and the README
+table, and run `npm run hub`.
 
 ## Build
 
@@ -58,7 +71,7 @@ before pushing to `main`.
 
 ## Deploy procedure
 
-1. `npm test` — must be green (44 suites as of v6.0).
+1. `npm test` — must be green (42 files as of v8.2).
 2. `npm run build` — must succeed.
 3. Push to `main`.
 4. Both hosts pick it up automatically. **Confirm the live URL actually shows
